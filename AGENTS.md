@@ -181,6 +181,10 @@ Do not add 3D runtime dependencies to support the asset-generation pipeline.
 
 ## 12. Development workflow
 
+For roadmap work, read `docs/EXECUTION.md` and the active GitHub issue. Issue #2 is the canonical live execution index; do not skip its dependency order because a later feature looks more interesting.
+
+If a canonical issue already has an open PR, continue/review that PR before starting parallel implementation for the same scope.
+
 For each task:
 
 1. inspect current code/docs relevant to the task;
@@ -188,9 +192,11 @@ For each task:
 3. add/update tests;
 4. run focused checks first;
 5. run broader checks appropriate to the touched packages;
-6. report exact evidence: changed files, tests, failures, and unresolved risks.
+6. report exact evidence: changed files, tests, failures, and unresolved risks;
+7. reference the issue in the PR and keep the PR scoped to that issue's acceptance gate;
+8. after merge, recheck Issue #2 before selecting the next unblocked issue.
 
-Avoid broad repo-wide audits when the current task is narrow.
+Avoid broad repo-wide audits when the current task is narrow. Do not create speculative child issues for distant phases merely to look organized.
 
 ## 13. Documentation
 
