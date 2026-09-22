@@ -2,6 +2,12 @@ import type { Content, MachineDefinition } from "@site/content";
 export type Point = { x: number; y: number };
 export type Rect = Point & { width: number; height: number };
 export type Inventory = Record<string, number>;
+export type FlowTotals = {
+  consumed: Inventory;
+  produced: Inventory;
+  exported: Inventory;
+  discarded: Inventory;
+};
 export type Port = Point & { id: string; direction: number };
 export type Factory = Rect & { id: string; ports: Port[] };
 export type Job = { remaining: number; reaction: string | null };
@@ -31,6 +37,7 @@ export type Save = {
   fuel: number;
   debt: number;
   exported: number;
+  flows: FlowTotals;
   stock: Inventory;
   knowledge: string[];
   deposits: Inventory;
@@ -103,4 +110,7 @@ export function change(inv: Inventory, id: string, delta: number) {
   const n = amount(inv, id) + delta;
   if (n === 0) delete inv[id];
   else inv[id] = n;
+}
+export function emptyFlows(): FlowTotals {
+  return { consumed: {}, produced: {}, exported: {}, discarded: {} };
 }

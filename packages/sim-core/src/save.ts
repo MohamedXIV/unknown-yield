@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { Content } from "@site/content";
-import { total, type Save } from "./types";
+import { emptyFlows, total, type Save } from "./types";
 import {
   factoryError,
   machinePlacement,
@@ -17,6 +17,12 @@ const safeId = z
 const point = { x: count, y: count },
   direction = z.number().int().min(0).max(3);
 const inventory = z.record(safeId, count);
+const flows = z.object({
+  consumed: inventory,
+  produced: inventory,
+  exported: inventory,
+  discarded: inventory,
+});
 const port = z.object({ ...point, id: safeId, direction });
 const factory = z.object({
   ...point,
@@ -47,7 +53,7 @@ const belt = z.object({
   cargo: safeId.nullable(),
 });
 const schema = z.object({
-  schemaVersion: z.literal(2),
+  schemaVersion: z.literal(3),
   contentVersion: z.string(),
   tick: count,
   remainder: z.number().finite().nonnegative(),
@@ -55,6 +61,7 @@ const schema = z.object({
   fuel: count,
   debt: count,
   exported: count,
+  flows,
   stock: inventory,
   knowledge: z.array(safeId),
   deposits: inventory,
@@ -73,6 +80,7 @@ export function initialState(c: Content): Save {
     fuel: c.economy.startFuel,
     debt: 0,
     exported: 0,
+    flows: emptyFlows(),
     stock: { [c.site.buildMaterial]: c.site.startStock },
     knowledge: c.reactions.filter((r) => r.known).map((r) => r.id),
     deposits: Object.fromEntries(c.site.deposits.map((d) => [d.id, d.units])),
@@ -189,6 +197,7 @@ export function parseSave(input: unknown, c: Content): Save {
   }
   for (const inv of [
     s.stock,
+    ...Object.values(s.flows),
     ...Object.values(s.machines).flatMap((m) => [m.input, m.output]),
   ])
     if (Object.keys(inv).some((id) => !known.has(id)))
