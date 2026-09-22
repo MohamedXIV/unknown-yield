@@ -380,7 +380,7 @@ Any of these requires a later design decision backed by a proven need.
 
 ## 11. Current playable foundation
 
-The accepted scope is [WORLD_BUILDING.md](WORLD_BUILDING.md). The player is a camera and builder: no character, crew simulation or robots. An authored 80×60 grid starts with the company terminal, deposits and construction stock. The player places all other equipment.
+The accepted scope is [FIRST_PLAYABLE.md](FIRST_PLAYABLE.md). The player is a camera and builder: no character, crew simulation or robots. An authored 80×60 grid starts with the company terminal, deposits and construction stock. The player places all other equipment.
 
 Factories are rectangles of 6–20 cells per side. Their roofs reveal the same-scale interior on the same map. Processors belong inside; extractors cover deposits. Directional floor belts enter walls only through matching ports. Building and dismantling are atomic and consume/refund content-defined material costs.
 
