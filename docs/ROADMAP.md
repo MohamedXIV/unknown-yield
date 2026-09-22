@@ -43,7 +43,7 @@ A trivial test fixture can:
 
 No production art required.
 
-## Phase 1 — Spatial construction and automation
+## Phase 1 — Spatial construction and automation (implemented)
 
 ### Question
 
@@ -51,11 +51,30 @@ Is discovering an unknown process and turning it into repeatable export producti
 
 ### Active scope and gate
 
-[WORLD_BUILDING.md](WORLD_BUILDING.md) replaces the old fixed-site milestone. Implement the 80×60 authored world, free camera, player-built equipment, factories and ports, directional ground belts, construction economy, autonomous processing and observed discovery. No characters or robots.
+[FIRST_PLAYABLE.md](FIRST_PLAYABLE.md) records the accepted slice: an authored world, free camera, player-built equipment, factories and ports, directional ground belts, construction economy, autonomous processing and observed discovery. No characters or robots.
 
 A fresh expedition must build both the local construction and alien export chains without debug commands, earn expansion materials and fuel, diagnose a blocked line from the map, and save/restore running batches and belt cargo. Closing roofs must preserve detailed simulation. Domain tests, browser acceptance, TypeScript, lint and player-only production export form the implementation gate.
 
 This is the continuing game foundation, not another disposable dashboard experiment. Visual polish, content breadth and enjoyment/balance testing remain follow-up development.
+
+## Phase 1.5 — Physical inventory and flexible routing
+
+### Question
+
+Can the accepted first-playable loop obey the long-term economic invariant without turning inventory into UI bookkeeping?
+
+### Scope
+
+- replace the explicit discard path with defined handling/disposal behavior;
+- stop treating non-construction materials as magical global site inventory;
+- introduce at least one physical storage form and terminal staging;
+- preserve stopped-factory buffers;
+- add split/reroute capability sufficient to redirect a shared feed between persistent factories;
+- add conservation-ledger tests for extraction, transit, buffers, storage, transformation and export.
+
+### Exit criteria
+
+No normal gameplay action can silently delete material. A player can stop one line, preserve its contents, redirect future input to another line, and later resume the original line. Save/load preserves the same accounting.
 
 ## Phase 2 — Experimentation and discovery depth
 
@@ -132,7 +151,8 @@ Do not build every future editor screen yet.
 - milestone graph;
 - unlock rules;
 - terminal capability modules;
-- company requests;
+- Materials Exchange with demand + saturation;
+- corporate orders and special directives;
 - bailout/obligation loop;
 - additional fuel classes;
 - import/export handling classes.
@@ -230,6 +250,6 @@ The following should not be treated as progress during foundation unless require
 
 ## Near-term implementation order
 
-The active construction implementation and acceptance evidence are tracked in [WORLD_BUILDING.md](WORLD_BUILDING.md) and [IMPLEMENTATION_LOG.md](IMPLEMENTATION_LOG.md). Continue from this game foundation after verification; do not rebuild the retired fixed-site prototype or expand Content Studio as a prerequisite to gameplay.
+The accepted implementation and evidence are summarized in [FIRST_PLAYABLE.md](FIRST_PLAYABLE.md) and [BROWSER_SMOKE.md](BROWSER_SMOKE.md). Continue from this foundation; do not rebuild the retired dashboard prototype.
 
-Subsequent work should be driven by playtest findings, then visual identity and additional industrial content within the existing boundaries.
+The immediate design correction is Phase 1.5: physical persistence/storage and flexible rerouting. After that, deepen experimentation/discovery and market/company systems without turning the game into a dashboard or stock-trading simulator.
