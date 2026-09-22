@@ -10,7 +10,7 @@ Use `npm run dev` and http://127.0.0.1:3000. All gameplay actions below use the 
 6. Save with jobs/cargo present; reload the page and use Load saved world. Verify all construction and knowledge return and processing continues. The saved roof-independent world can be reopened immediately.
 7. Set conductive granules policy to Keep, verify accumulation, then Auto-export and verify stock leaves and fuel rises. A fuel-starved line resumes automatically.
 8. Resize with a contextual panel open; verify one canvas, preserved world state, working selection and continuing production. Check browser error logs.
-9. For code changes, run the repository checks listed in IMPLEMENTATION_LOG.md. The completed production export contains no Studio route or authoring component.
+9. For code changes, run `npm test`, `npm run typecheck`, `npm run lint`, and `npm run build`. The completed production export contains no Studio route or authoring component.
 
 ## Observed on 2026-09-22
 
