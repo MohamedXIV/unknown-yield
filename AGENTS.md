@@ -93,6 +93,19 @@ Examples that generally belong in content:
 
 Avoid magic numbers.
 
+### Stable IDs and localization
+
+Treat machine-readable content IDs as canonical identity and player-facing wording as replaceable presentation data.
+
+- saves, references and simulation rules use stable IDs;
+- do not use display names, translated strings or array positions as identity;
+- new player-facing authored text should use localization keys/resources rather than being embedded as English simulation truth;
+- keep localization resolution outside authoritative `sim-core` logic;
+- a visible rename/translation should not require a save migration unless the stable ID itself truly changes;
+- do not choose final content names merely to satisfy an internal identifier. A neutral ID such as `fuel-0` may outlive several display-name iterations.
+
+Localization-ready does not mean translating the whole game during foundation work. Prefer a small validated resource boundary over a heavyweight framework unless requirements justify one.
+
 ## 6. Hidden knowledge rule
 
 Do not leak authored reaction truth directly into player UI.
