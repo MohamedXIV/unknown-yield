@@ -104,6 +104,16 @@ Keep separate:
 
 Tests should cover this boundary.
 
+### Material conservation
+
+The target simulation obeys a material-conservation invariant:
+
+> Nothing disappears. Every produced material remains in a tracked physical location until it is transformed, consumed by a defined process, stored, or exported off-map.
+
+Do not add generic delete/discard mechanics as final gameplay. Waste and dead stock are gameplay state. Storage is geography, not a magical global inventory. Prototype shortcuts must be explicitly documented and must not be expanded as if they were accepted design.
+
+When inventory systems change, add conservation/regression tests that reconcile extraction, transformation, storage, transit, factory buffers, export, and defined consumption.
+
 ## 7. Scope discipline
 
 Do not add a generic framework, subsystem, dependency, or abstraction solely for hypothetical future use.

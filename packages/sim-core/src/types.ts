@@ -1,0 +1,106 @@
+import type { Content, MachineDefinition } from "@site/content";
+export type Point = { x: number; y: number };
+export type Rect = Point & { width: number; height: number };
+export type Inventory = Record<string, number>;
+export type Port = Point & { id: string; direction: number };
+export type Factory = Rect & { id: string; ports: Port[] };
+export type Job = { remaining: number; reaction: string | null };
+export type Machine = Point & {
+  id: string;
+  definitionId: string;
+  direction: number;
+  factoryId: string | null;
+  depositId: string | null;
+  operation: string | null;
+  enabled: boolean;
+  input: Inventory;
+  output: Inventory;
+  job: Job | null;
+};
+export type Belt = Point & {
+  id: string;
+  direction: number;
+  cargo: string | null;
+};
+export type Save = {
+  schemaVersion: number;
+  contentVersion: string;
+  tick: number;
+  remainder: number;
+  nextId: number;
+  fuel: number;
+  debt: number;
+  exported: number;
+  stock: Inventory;
+  knowledge: string[];
+  deposits: Inventory;
+  machines: Record<string, Machine>;
+  factories: Record<string, Factory>;
+  belts: Record<string, Belt>;
+  policies: Record<string, "keep" | "export">;
+};
+export type CommandResult = {
+  ok: boolean;
+  message: string;
+  id?: string;
+  cost?: number;
+};
+export type GameCommand =
+  | ({ type: "placeMachine"; definitionId: string; direction: number } & Point)
+  | ({ type: "placeFactory" } & Rect)
+  | ({ type: "placePort"; factoryId: string; direction: number } & Point)
+  | { type: "placeBelts"; points: Point[]; direction: number }
+  | { type: "dismantle"; id: string }
+  | { type: "setEnabled"; machineId: string; enabled: boolean }
+  | { type: "setOperation"; machineId: string; operation: string }
+  | { type: "discard"; machineId: string; buffer: "input" | "output" }
+  | { type: "setPolicy"; materialId: string; policy: "keep" | "export" }
+  | { type: "assistance" };
+export type MachineView = Omit<Machine, "job"> & {
+  job: { remaining: number } | null;
+  name: string;
+  role: "extractor" | "processor";
+  width: number;
+  height: number;
+  capacity: number;
+  durationTicks: number;
+  durationMs: number;
+  fuelCost: number;
+  status: string;
+  progress: number;
+};
+export type Observation = {
+  operation: string;
+  input: string;
+  output: string;
+  text: string;
+  initial: boolean;
+  observedAt?: Point;
+};
+export type PlayerSnapshot = {
+  tick: number;
+  fuel: number;
+  debt: number;
+  stock: Inventory;
+  exported: number;
+  milestone: boolean;
+  map: Content["site"];
+  deposits: (Content["site"]["deposits"][number] & { remaining: number })[];
+  definitions: MachineDefinition[];
+  operations: Content["operations"];
+  materials: Content["materials"];
+  machines: MachineView[];
+  factories: Factory[];
+  belts: Belt[];
+  policies: Record<string, "keep" | "export">;
+  observations: Observation[];
+};
+export const total = (inv: Inventory) =>
+  Object.values(inv).reduce((a, b) => a + b, 0);
+export const amount = (inv: Inventory, id: string) =>
+  Object.hasOwn(inv, id) ? inv[id] : 0;
+export function change(inv: Inventory, id: string, delta: number) {
+  const n = amount(inv, id) + delta;
+  if (n === 0) delete inv[id];
+  else inv[id] = n;
+}

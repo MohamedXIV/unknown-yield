@@ -8,7 +8,9 @@ Each phase must answer a design or architecture question. Do not build a large e
 
 The roadmap below is intentionally implementation-focused and may later be mirrored into GitHub Issues/Projects.
 
-## Phase 0 — Foundation
+## Phase 0 — Foundation (implemented)
+
+The shared app, package boundaries, authored fixture and test/check scripts now run. The original foundation outline below records their intent; the approved spatial scope and its completed gate follow in Phase 1.
 
 ### Goal
 
@@ -41,57 +43,57 @@ A trivial test fixture can:
 
 No production art required.
 
-## Phase 1 — Core industrial vertical slice
+## Phase 1 — Spatial construction and automation (implemented)
 
 ### Question
 
-Is the basic production loop understandable and satisfying?
+Is discovering an unknown process and turning it into repeatable export production understandable and satisfying?
+
+### Active scope and gate
+
+[FIRST_PLAYABLE.md](FIRST_PLAYABLE.md) records the accepted slice: an authored world, free camera, player-built equipment, factories and ports, directional ground belts, construction economy, autonomous processing and observed discovery. No characters or robots.
+
+A fresh expedition must build both the local construction and alien export chains without debug commands, earn expansion materials and fuel, diagnose a blocked line from the map, and save/restore running batches and belt cargo. Closing roofs must preserve detailed simulation. Domain tests, browser acceptance, TypeScript, lint and player-only production export form the implementation gate.
+
+This is the continuing game foundation, not another disposable dashboard experiment. Visual polish, content breadth and enjoyment/balance testing remain follow-up development.
+
+## Phase 1.5 — Physical inventory and flexible routing
+
+### Question
+
+Can the accepted first-playable loop obey the long-term economic invariant without turning inventory into UI bookkeeping?
 
 ### Scope
 
-- tiny map;
-- terminal;
-- one extractable deposit family;
-- small set of materials;
-- basic extractor;
-- one factory shell;
-- a few operation machines;
-- simple solid transport;
-- inventory/buffers;
-- one useful output;
-- basic export;
-- basic fuel consumption/allocation.
+- replace the explicit discard path with defined handling/disposal behavior;
+- stop treating non-construction materials as magical global site inventory;
+- introduce at least one physical storage form and terminal staging;
+- preserve stopped-factory buffers;
+- add split/reroute capability sufficient to redirect a shared feed between persistent factories;
+- add conservation-ledger tests for extraction, transit, buffers, storage, transformation and export.
 
 ### Exit criteria
 
-The player can:
+No normal gameplay action can silently delete material. A player can stop one line, preserve its contents, redirect future input to another line, and later resume the original line. Save/load preserves the same accounting.
 
-```text
-extract -> process -> produce -> transport -> export -> receive fuel
-```
-
-without debug commands.
-
-## Phase 2 — Experimentation and discovery
+## Phase 2 — Experimentation and discovery depth
 
 ### Question
 
-Is hidden material behavior fun to discover rather than frustrating?
+Does expanding the discovery model create meaningful choices beyond the first slice?
 
 ### Scope
 
-- experiment command/workflow;
-- authored reaction matching;
-- observations;
-- player knowledge state;
+- richer experiment conditions and authored reaction matching;
+- additional observations and knowledge relationships;
 - unknown/hinted/confirmed presentation;
-- one harmless failure;
-- one hazardous failure;
-- knowledge-based unlock.
+- additional harmless failures;
+- one explainable hazardous failure;
+- additional knowledge-based unlocks.
 
 ### Exit criteria
 
-A player can discover a useful transformation without the UI directly exposing its recipe first.
+The Phase 1 hidden-reaction boundary remains intact as conditions and content expand.
 
 A failed experiment teaches something visible.
 
@@ -149,7 +151,8 @@ Do not build every future editor screen yet.
 - milestone graph;
 - unlock rules;
 - terminal capability modules;
-- company requests;
+- Materials Exchange with demand + saturation;
+- corporate orders and special directives;
 - bailout/obligation loop;
 - additional fuel classes;
 - import/export handling classes.
@@ -247,17 +250,6 @@ The following should not be treated as progress during foundation unless require
 
 ## Near-term implementation order
 
-Recommended first implementation sequence:
+The accepted implementation and evidence are summarized in [FIRST_PLAYABLE.md](FIRST_PLAYABLE.md) and [BROWSER_SMOKE.md](BROWSER_SMOKE.md). Continue from this foundation; do not rebuild the retired dashboard prototype.
 
-1. workspace/package skeleton;
-2. sim-core fixed-step world;
-3. minimal content schema + TinyBase loader;
-4. Zod + semantic validation;
-5. Next app + stable Phaser host;
-6. one simulated extractor/process/output;
-7. React inspector fed by coarse simulation state;
-8. minimal Studio material/reaction page;
-9. save/content version primitives;
-10. playable Phase 1 loop.
-
-At every step, prefer working vertical integration over isolated framework construction.
+The immediate design correction is Phase 1.5: physical persistence/storage and flexible rerouting. After that, deepen experimentation/discovery and market/company systems without turning the game into a dashboard or stock-trading simulator.

@@ -1,32 +1,38 @@
 # Unknown Yield Documentation
 
-This directory is the project design and engineering source of truth. Documents should describe **current decisions**, distinguish them from experiments, and avoid turning provisional examples into hard-coded rules.
+This directory is the project design and engineering source of truth. Documents describe **current decisions**, distinguish implementation proof from target design, and avoid turning provisional fixture values into sacred content.
 
 ## Reading order
 
-1. [GAME_DESIGN.md](GAME_DESIGN.md) — what the game is, what the player does, and what is intentionally out of scope.
-2. [TECHNICAL_ARCHITECTURE.md](TECHNICAL_ARCHITECTURE.md) — boundaries between Next/React, Phaser, simulation, TinyBase, persistence, workers, and possible Rust/WASM.
-3. [CONTENT_MODEL.md](CONTENT_MODEL.md) — how materials, operations, reactions, machines, milestones, contracts, and terminal capabilities are represented as data.
-4. [SIMULATION.md](SIMULATION.md) — simulation time, factory abstraction, logistics, determinism, scale, and performance rules.
-5. [ART_PIPELINE.md](ART_PIPELINE.md) — 2D presentation and the 3D-blockout-to-2D AI-assisted asset workflow.
-6. [ROADMAP.md](ROADMAP.md) — implementation phases and acceptance gates.
-7. [DECISIONS.md](DECISIONS.md) — decisions that should not be casually reopened without new evidence.
-8. [../AGENTS.md](../AGENTS.md) — implementation rules for humans and coding agents.
+1. [GAME_DESIGN.md](GAME_DESIGN.md) — player fantasy, pillars, core loop, progression and scope.
+2. [ECONOMY.md](ECONOMY.md) — company economy, Materials Exchange, orders/directives, fuel, physical inventory, storage and conservation.
+3. [FIRST_PLAYABLE.md](FIRST_PLAYABLE.md) — what the accepted playable foundation proves, its verification evidence, and its explicit temporary shortcuts.
+4. [TECHNICAL_ARCHITECTURE.md](TECHNICAL_ARCHITECTURE.md) — Next/React, Phaser, simulation, TinyBase, persistence, workers and possible Rust/WASM.
+5. [CONTENT_MODEL.md](CONTENT_MODEL.md) — materials, operations, reactions, machines, market definitions, milestones and contracts as data.
+6. [SIMULATION.md](SIMULATION.md) — simulation time, logistics, determinism, conservation, factory abstraction and performance rules.
+7. [ART_PIPELINE.md](ART_PIPELINE.md) — 2D presentation and the 3D-blockout-to-2D AI-assisted asset workflow.
+8. [ROADMAP.md](ROADMAP.md) — proof-driven implementation phases and acceptance gates.
+9. [DECISIONS.md](DECISIONS.md) — accepted decisions that should not be casually reopened.
+10. [../AGENTS.md](../AGENTS.md) — implementation rules for humans and coding agents.
 
 ## Documentation principles
 
+### Current design beats implementation accidents
+
+The first playable contains deliberate shortcuts. A shortcut is not a design decision merely because code exists for it. `FIRST_PLAYABLE.md` identifies those exceptions; `DECISIONS.md` and the domain docs define the forward contract.
+
 ### Describe systems, not sacred examples
 
-Names such as `Keralith`, example map directions, sample recipes, exact fuel values, exact bailout counts, or machine names may be useful to explain a system. Unless a document explicitly marks one as locked content, examples are **not canonical content**.
+Names such as sample materials, map dimensions, exact fuel values, bailout counts, or machine names may explain a system. Unless explicitly locked, they are **not canonical final content**.
 
 ### Data before hard-coding
 
-If a value, relationship, unlock condition, material property, process, hazard, contract, or balance number is likely to change through design work, it belongs in content data rather than in renderer or UI code.
+If a value, relationship, unlock condition, material property, process, hazard, market rule, contract, or balance number is likely to change, it belongs in content data rather than renderer/UI code.
 
 ### Gameplay truth is not renderer truth
 
-A sprite existing on screen does not make it authoritative simulation state. The simulation owns gameplay truth. Phaser presents it. React presents application UI. TinyBase owns editable content definitions, not per-frame world state.
+The simulation owns gameplay truth. Phaser presents the world. React presents game UI and tools. TinyBase owns editable content definitions, not high-frequency world state.
 
 ### Scope is a feature
 
-The project should prefer a small complete loop over a wide collection of half-built systems. New infrastructure must justify itself against the current vertical slice.
+Prefer a small complete loop over broad half-built systems. New infrastructure must justify itself against the current proof target.

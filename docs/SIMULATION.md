@@ -1,5 +1,25 @@
 # Simulation Model
 
+## Implemented spatial contract (2026-09-22)
+
+Commands cover placeMachine, placeFactory, placePort, placeBelts, dismantle, setEnabled, setOperation, discard, setPolicy and assistance. Preview and commit share validation. Placement checks bounds, rotated footprints, occupancy, deposit/factory membership and complete material cost before changing state.
+
+Every content-defined tick increments time, completes current batches and records observations, runs transport when due, then starts eligible batches. Starting charges fuel and inputs once and reserves output capacity. Stopping prevents new batches while the current batch finishes. Dismantling running equipment is refused; an empty factory can be reclaimed after machines, belts and ports are removed.
+
+Each directional belt cell has one cargo slot. Transport plans against previous occupancy, resolves arrivals deterministically in row/column order, clears sources, applies arrivals, and finally emits machine outputs. Cargo moves at most one edge per transport update. Occupied cells block upstream movement even if they will vacate this update. Walls require a port with matching outgoing direction. There is no remote source/destination link.
+
+Terminal arrivals become site stock. Eligible export policies exchange stock for fuel after repaying assistance debt. Construction stock is retained by default. Roof state is entirely presentation; factories always run their full internal simulation.
+
+Save schema 2 records topology, identities, inventories, cargo, jobs, knowledge, policies, deposits, fuel/debt, tick and fractional remainder. Loading validates compatibility, topology, material knowledge, capacities and active-job legality before replacing live state. Schema 1 is rejected without migration. Discovery popup locations are transient and are not replayed when loading.
+
+### Prototype exceptions after acceptance
+
+Two implemented conveniences are **not** forward design commitments: terminal arrivals currently enter a global `site stock`, and machines expose an explicit `discard` command. They exist to keep the first slice playable before physical storage/routing depth exists.
+
+Do not expand either shortcut. The target economy requires physical storage and material conservation; see [ECONOMY.md](ECONOMY.md). A later migration may intentionally break disposable prototype saves again if needed to establish that stronger invariant.
+
+The models below describe longer-term options where they exceed this implemented contract.
+
 ## 1. Purpose
 
 Unknown Yield can become simulation-heavy, but it should not become heavy by accident.
@@ -9,6 +29,12 @@ The project should model what creates meaningful industrial decisions while abst
 ## 2. Fundamental rule
 
 > The simulation owns gameplay truth. Rendering only presents it.
+
+The economy also adopts a second invariant:
+
+> **Nothing disappears. Every produced material remains accounted for until transformed, consumed by a defined process, stored, or exported off-map.**
+
+This does not require one object per kilogram. Efficient batches/segments are allowed, but accounting must remain exact enough for save/load and automated conservation tests.
 
 A belt animation, moving truck sprite, warning light, roof state, or particle effect must not silently become the source of truth for production.
 
@@ -64,7 +90,9 @@ Do not serialize presentation state unless a feature explicitly needs it.
 
 ## 5. Factory abstraction
 
-Factory-as-function is also the main scaling strategy.
+Factory-as-function first describes a player-facing contract. Closing a roof or displaying a production summary must not change simulation semantics. Aggregate simulation is a later candidate scaling strategy, not a prerequisite for this design.
+
+The first playable uses detailed simulation whether a factory is open or closed. Before introducing aggregate mode, compare it against detailed mode for input starvation, blocked outputs, fuel exhaustion, partial batches, hazards, and save/load. Do not claim equivalent behavior or a performance benefit without measurements and tests.
 
 A factory can have multiple simulation modes.
 
