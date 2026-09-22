@@ -325,19 +325,19 @@ Show actionable errors and warnings, for example:
 
 ```text
 ERROR
-reaction.thermal_042
-references missing material: volatile_keral_gas
+reaction-thermal-042
+references missing material: volatile-keral-gas
 
 ERROR
-machine.press_01
+machine-press-01
 cannot provide reaction required pressure range
 
 WARNING
-material.crystal_17
+material-crystal-17
 has no extraction source and no producing reaction
 
 WARNING
-milestone.deep_scan
+milestone-deep-scan
 is not reachable from the current starting content
 ```
 
