@@ -223,6 +223,45 @@ Definitions and placed instances are separate. Machines operate automatically fr
 
 Spatial saves use schema 2, separate from content version. Schema 1 is incompatible and rejected without replacing a running site. No migration work is allocated to the retired prototype. Content Studio remains development-only and receives no scope expansion.
 
+## D-019 — Material conservation is a design invariant
+
+**Status:** accepted, 2026-09-22
+
+Nothing produced may silently disappear. Material remains in tracked transit, machine/factory buffers, physical storage, terminal staging, or another defined location until it is transformed, consumed by a defined process, or exported off-map.
+
+### Consequence
+
+The first playable's explicit buffer `discard` and global site-stock convenience are prototype exceptions, not systems to expand. Waste/dead stock require storage, processing, recycling, export or defined disposal. Conservation should become an automated simulation invariant.
+
+---
+
+## D-020 — Company economy has three market layers
+
+**Status:** accepted, 2026-09-22
+
+Known products participate through **Materials Exchange + Corporate Orders + Special Directives**.
+
+The exchange uses understandable demand/saturation behavior over industrially meaningful time scales. Orders provide temporary procurement premiums. Directives provide differentiated research/prototype/property-based opportunities and may reward capability, not only fuel.
+
+### Consequence
+
+A product cannot be demanded before the company knows it exists. Market movement should encourage diversification without becoming rapid chart-chasing.
+
+---
+
+## D-021 — Factories are persistent capital
+
+**Status:** accepted, 2026-09-22
+
+Market changes should primarily cause suspension/resumption and logistics rerouting, not demolition/rebuilding of solved factories.
+
+### Consequence
+
+Stopped factories preserve their internal state. Flexible splitters/switches/valves and physical storage become meaningful progression. A factory may be off for a long period and resume from its preserved state.
+
+---
+
+
 ## How to change a decision
 
 When evidence requires a change:
