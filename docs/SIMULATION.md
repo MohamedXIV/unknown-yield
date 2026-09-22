@@ -10,7 +10,11 @@ Each directional belt cell has one cargo slot. Transport plans against previous 
 
 Terminal arrivals become site stock. Eligible export policies exchange stock for fuel after repaying assistance debt. Construction stock is retained by default. Roof state is entirely presentation; factories always run their full internal simulation.
 
-Save schema 2 records topology, identities, inventories, cargo, jobs, knowledge, policies, deposits, fuel/debt, tick and fractional remainder. Loading validates compatibility, topology, material knowledge, capacities and active-job legality before replacing live state. Schema 1 is rejected without migration. Discovery popup locations are transient and are not replayed when loading.
+Save schema 3 records topology, identities, inventories, cargo, jobs, knowledge, policies, deposits, fuel/debt, tick, fractional remainder and cumulative material flow totals (`consumed`, `produced`, per-material `exported`, `discarded`). Loading validates compatibility, topology, material knowledge, capacities and active-job legality before replacing live state. Schemas 1 and 2 are rejected without migration: their saves cannot reconstruct transformation history. Discovery popup locations are transient and are not replayed when loading.
+
+### Material ledger (Issue #3)
+
+`packages/sim-core/src/ledger.ts` exposes `collectLedger`/`auditLedger`: pure, aggregate-per-material accounting with no per-unit objects. Holdings cover remaining deposits, site stock, machine input/output buffers, belt cargo, in-flight escrow (extractor jobs hold one deposit unit; processor jobs hold their reaction input amount), and embodied construction plates. Cumulative flows record reaction inputs/outputs at batch completion, per-material exports, and discards as an explicit sink. The per-material invariant is `deposits + stock + machineInput + machineOutput + belts + escrow + embodied + exported + discarded + consumed = initial + produced`; mismatches report the material, delta and full category breakdown. Extraction outputs are sourced via deposits, never double-counted in `produced`. `packages/sim-core/test/ledger.test.ts` pins conservation across extraction, transit, transformation, export, blocked/in-flight states, construction reclaim, save/load round-trips and corruption diagnostics.
 
 ### Prototype exceptions after acceptance
 

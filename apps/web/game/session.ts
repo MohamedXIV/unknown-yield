@@ -4,7 +4,7 @@ import {
   type GameCommand,
   type CommandResult,
 } from "@site/sim-core";
-const SAVE_KEY = "industrial-site-save-v2";
+const SAVE_KEY = "industrial-site-save-v3";
 type StorageReader = { getItem(key: string): string | null };
 type StorageWriter = { setItem(key: string, value: string): void };
 export class Session {
@@ -63,9 +63,11 @@ export class Session {
       if (!raw)
         return {
           ok: false,
-          message: storage.getItem("industrial-site-save-v1")
-            ? "The old fixed-site save is incompatible with this world. Start a new site."
-            : "No world saved on this device",
+          message:
+            storage.getItem("industrial-site-save-v2") ||
+            storage.getItem("industrial-site-save-v1")
+              ? "This field record uses an older world format (schema 1 or 2) and cannot be loaded. Start a new site."
+              : "No world saved on this device",
         };
       const result = this.sim.load(JSON.parse(raw));
       if (result.ok) {
