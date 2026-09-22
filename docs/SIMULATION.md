@@ -12,6 +12,12 @@ Terminal arrivals become site stock. Eligible export policies exchange stock for
 
 Save schema 2 records topology, identities, inventories, cargo, jobs, knowledge, policies, deposits, fuel/debt, tick and fractional remainder. Loading validates compatibility, topology, material knowledge, capacities and active-job legality before replacing live state. Schema 1 is rejected without migration. Discovery popup locations are transient and are not replayed when loading.
 
+### Prototype exceptions after acceptance
+
+Two implemented conveniences are **not** forward design commitments: terminal arrivals currently enter a global `site stock`, and machines expose an explicit `discard` command. They exist to keep the first slice playable before physical storage/routing depth exists.
+
+Do not expand either shortcut. The target economy requires physical storage and material conservation; see [ECONOMY.md](ECONOMY.md). A later migration may intentionally break disposable prototype saves again if needed to establish that stronger invariant.
+
 The models below describe longer-term options where they exceed this implemented contract.
 
 ## 1. Purpose
@@ -23,6 +29,12 @@ The project should model what creates meaningful industrial decisions while abst
 ## 2. Fundamental rule
 
 > The simulation owns gameplay truth. Rendering only presents it.
+
+The economy also adopts a second invariant:
+
+> **Nothing disappears. Every produced material remains accounted for until transformed, consumed by a defined process, stored, or exported off-map.**
+
+This does not require one object per kilogram. Efficient batches/segments are allowed, but accounting must remain exact enough for save/load and automated conservation tests.
 
 A belt animation, moving truck sprite, warning light, roof state, or particle effect must not silently become the source of truth for production.
 
