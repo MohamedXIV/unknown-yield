@@ -1,9 +1,69 @@
-# Archived fixed-site prototype scope
+# First Playable — accepted foundation
 
-Superseded on 2026-09-22 by [WORLD_BUILDING.md](WORLD_BUILDING.md), following the user's approved construction-and-automation plan.
+**Status:** accepted foundation, 2026-09-22.
 
-The former prototype used preplaced machines, explicit source/destination links and a dashboard. Those choices are retired. Its pure TypeScript boundary, content validation, discovery separation and useful regression checks were retained and expanded.
+This slice replaces the retired fixed-site/dashboard prototype. The game is now a full-screen spatial automation world: the player is the camera/builder, places extractors and factories, opens factory roofs to edit interiors, routes physical belts through wall ports, observes automatic production, discovers hidden outcomes, exports useful material for company fuel, and saves/restores the running site.
 
-The current game uses player-built spatial equipment, ground-cell belts, automatic batches, construction costs and a full-screen world. Save schema 1 is intentionally incompatible with schema 2. No migration is planned for disposable prototype saves.
+## What this slice proves
 
-Historical planning files under `superpowers/plans/` describe the retired prototype, not the current acceptance gate.
+- **Game-first presentation:** the world is the primary surface. React panels are overlays/inspectors, not a SaaS dashboard containing the game.
+- **Architecture:** `sim-core` owns gameplay truth; Phaser owns world rendering/input; React owns UI; TinyBase is authoring/content tooling.
+- **Spatial construction:** player-built factories, machines, wall ports and directional belts with atomic placement/refunds.
+- **Automatic industry:** machines consume physical input and fuel, run batches automatically, block on capacity, and continue independent of roof presentation.
+- **Discovery boundary:** authored reactions can be hidden; results become player knowledge only after a real process occurs.
+- **Economic loop proof:** one local chain creates construction material; one discovered chain exports for fuel; assistance debt is repaid before new fuel is credited.
+- **Persistence:** save schema 2 restores topology, cargo, active batches, knowledge and fractional simulation time without replaying hidden truth.
+- **Development tooling boundary:** the minimal Studio proof is excluded from the player production export.
+
+## Verification recorded for the accepted head
+
+The implementation was exercised through the UI and domain checks before documentation cleanup:
+
+- `npm test` — 35 tests across content, simulation, session and interaction helpers;
+- `npm run typecheck` — passed;
+- `npm run lint` — passed;
+- `npm run build` — successful static player export with Studio leakage check;
+- browser smoke — real mouse construction of both lines, discovery, export, local expansion, roof reveal, save/reload, terminal policy changes and responsive resize; browser error log remained empty.
+
+See [BROWSER_SMOKE.md](BROWSER_SMOKE.md) for the observed browser path.
+
+## What is intentionally *not* locked by this slice
+
+The following are proof-fixture choices, not final design commitments:
+
+- the 80×60 map and exact deposit layout;
+- current material names, values and balance;
+- one-slot belt cells and current turn placement UX;
+- current procedural/temporary art;
+- automatic export policy details;
+- `localStorage` as final persistence;
+- the current global `site stock` convenience;
+- the explicit machine-buffer `discard` escape hatch.
+
+The last two are particularly important: they predate the accepted material-conservation direction. They must not be expanded into the long-term economy.
+
+## Forward contract after acceptance
+
+> **Nothing disappears. Everything produced exists somewhere until it is transformed, consumed by a defined process, stored, or exported off-map.**
+
+That means physical storage, tracked terminal buffers, conserved machine/belt cargo, meaningful waste/dead stock, and a material ledger. Market changes should be handled by suspending/resuming persistent factories and rerouting logistics, not by deleting factories or inventory.
+
+See [ECONOMY.md](ECONOMY.md) and [SIMULATION.md](SIMULATION.md).
+
+## Run
+
+```sh
+npm install
+npm run dev
+```
+
+Open `http://127.0.0.1:3000`.
+
+## Verify
+
+```sh
+npm test
+npm run typecheck
+npm run lint
+npm run build
+```
