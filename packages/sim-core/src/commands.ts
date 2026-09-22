@@ -187,7 +187,15 @@ export function applyCommand(
       return ok("Operation selected");
     }
     case "discard":
-      if (apply) s.machines[cmd.machineId][cmd.buffer] = {};
+      if (apply) {
+        // Prototype shortcut (see Issue #5): account every discarded unit as
+        // an explicit sink instead of silently deleting it.
+        for (const [id, n] of Object.entries(
+          s.machines[cmd.machineId][cmd.buffer],
+        ))
+          change(s.flows.discarded, id, n);
+        s.machines[cmd.machineId][cmd.buffer] = {};
+      }
       return ok("Buffer discarded");
     case "setPolicy": {
       const mat = c.materials.find((m) => m.id === cmd.materialId);

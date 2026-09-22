@@ -72,7 +72,7 @@ const schema = z.object({
 });
 export function initialState(c: Content): Save {
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     contentVersion: c.version,
     tick: 0,
     remainder: 0,

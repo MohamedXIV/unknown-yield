@@ -35,6 +35,12 @@ export function completeAndStart(
         const material =
           r?.output ??
           c.site.deposits.find((a) => a.id === m.depositId)!.material;
+        if (r) {
+          // A defined transformation: record the consumed inputs and the
+          // created outputs so the ledger can reconcile the identity change.
+          change(s.flows.consumed, r.input, r.inputAmount);
+          change(s.flows.produced, material, r.outputAmount);
+        }
         change(m.output, material, r?.outputAmount ?? 1);
         if (r && !s.knowledge.includes(r.id)) {
           s.knowledge.push(r.id);
@@ -139,6 +145,7 @@ export function transport(c: Content, s: Save) {
       s.debt -= repaid;
       s.fuel += value - repaid;
       s.exported += n;
+      change(s.flows.exported, material.id, n);
       change(s.stock, material.id, -n);
     }
   }

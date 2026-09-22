@@ -102,7 +102,7 @@ export class Simulation {
       return {
         ok: false,
         message:
-          "Save rejected (requires schema 2): " +
+          "Save rejected (requires schema 3): " +
           (error instanceof Error ? error.message : "Invalid data"),
       };
     }
