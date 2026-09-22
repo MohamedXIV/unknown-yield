@@ -44,6 +44,8 @@ Key documents:
 - [Technical Architecture](docs/TECHNICAL_ARCHITECTURE.md)
 - [Content Model](docs/CONTENT_MODEL.md)
 - [Simulation Model](docs/SIMULATION.md)
+- [Economy & Physical Inventory](docs/ECONOMY.md)
+- [First Playable](docs/FIRST_PLAYABLE.md)
 - [Art Pipeline](docs/ART_PIPELINE.md)
 - [Roadmap](docs/ROADMAP.md)
 - [Decision Log](docs/DECISIONS.md)
@@ -79,6 +81,6 @@ npm run build
 
 ## Project status
 
-The ongoing game foundation is the spatial construction and automation implementation described in [World building](docs/WORLD_BUILDING.md). The earlier fixed-site dashboard is superseded. Art remains temporary; balance and playtest enjoyment are not yet validated. Future content and visual development should build on this implementation.
+The accepted game foundation is the spatial first playable described in [First Playable](docs/FIRST_PLAYABLE.md). It proves the world-first UI, pure simulation boundary, construction/automation loop, hidden discovery, export/fuel loop, and save/load path. Art, balance, market depth, physical storage, flexible routing, and large-scale performance remain follow-up work.
 
 The working title may change. Package naming remains independent of it.
