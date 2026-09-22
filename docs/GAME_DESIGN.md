@@ -268,11 +268,21 @@ These should solve real spatial or throughput problems rather than exist as cosm
 
 ## 7. Terminal and economy
 
+The detailed accepted economy contract lives in [ECONOMY.md](ECONOMY.md). The key rule is that economic change should create industrial/logistics decisions in the world rather than turn the game into a dashboard market simulator.
+
 ### 7.1 Construction
 
 Most ordinary construction should be paid in **locally produced materials**, not abstract gold.
 
-### 7.2 Fuel allocation
+### 7.2 Materials Exchange, orders and directives
+
+Known products can enter a **Materials Exchange** whose compensation responds to demand and saturation over industrially meaningful time scales. Repeated oversupply can reduce marginal value; stopping supply allows recovery toward baseline demand.
+
+The company can also issue **Corporate Orders** for known products and **Special Directives** for research samples, prototypes, quality targets or experimental/property-based problems. These are opportunities, not a generic quest treadmill.
+
+A newly discovered material can create a new market only after the company learns enough about it.
+
+### 7.3 Fuel allocation
 
 Industrial operation depends on company-supplied fuel/energy that the player earns through useful exports.
 
@@ -286,7 +296,7 @@ Names and exact rules remain content decisions.
 
 Higher fuel classes should enable qualitatively different operations or infrastructure rather than only multiplying output.
 
-### 7.3 Terminal as a real system
+### 7.4 Terminal as a real system
 
 The terminal handles both directions:
 
@@ -306,7 +316,7 @@ Terminal capability can expand through modules such as:
 
 The terminal should create logistics and capability constraints without becoming a waiting-game timer.
 
-### 7.4 Corporate assistance / bailout
+### 7.5 Corporate assistance / bailout
 
 A player who collapses the fuel loop should have a recovery path rather than a hidden soft-lock.
 
@@ -374,8 +384,10 @@ The accepted scope is [WORLD_BUILDING.md](WORLD_BUILDING.md). The player is a ca
 
 Factories are rectangles of 6–20 cells per side. Their roofs reveal the same-scale interior on the same map. Processors belong inside; extractors cover deposits. Directional floor belts enter walls only through matching ports. Building and dismantling are atomic and consume/refund content-defined material costs.
 
-All enabled equipment runs when inputs, fuel and output capacity permit. Operations act on physical inputs regardless of discovered knowledge. A known ferrite-to-plate chain supplies local expansion; veined ore demonstrates a useful crushing result and an unhelpful heating result. Waste remains visible until explicitly discarded, stored in buffers or reclaimed to site stock.
+All enabled equipment runs when inputs, fuel and output capacity permit. Operations act on physical inputs regardless of discovered knowledge. A known ferrite-to-plate chain supplies local expansion; veined ore demonstrates a useful crushing result and an unhelpful heating result. The current slice still contains a temporary global site-stock convenience and an explicit buffer-discard escape hatch. Those are implementation shortcuts, not target design.
 
-The terminal retains construction stock and exports eligible discovered products automatically according to per-material policies. Exports repay emergency fuel assistance first. The world fills the screen; the HUD, notebook and contextual panels support direct spatial interaction.
+The accepted forward rule is material conservation: produced material persists in transit, factory buffers, physical storage, terminal staging, or another defined location until a process transforms/consumes it or an export removes it from the map. Waste and dead stock are real industrial state.
+
+The terminal currently demonstrates automatic export policy as a loop proof. Future economy work replaces this shortcut with physical terminal staging plus the Materials Exchange, orders and directives defined in [ECONOMY.md](ECONOMY.md). Exports repay emergency fuel assistance first. The world fills the screen; the HUD, notebook and contextual panels support direct spatial interaction.
 
 Temporary art and the compact content fixture are implementation choices, not final balance or visual direction. Whether experimenting and scaling feels satisfying still requires user playtesting.
