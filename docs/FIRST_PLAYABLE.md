@@ -19,11 +19,13 @@ This slice replaces the retired fixed-site/dashboard prototype. The game is now 
 
 The implementation was exercised through the UI and domain checks before documentation cleanup:
 
-- `npm test` — 35 tests across content, simulation, session and interaction helpers;
-- `npm run typecheck` — passed;
-- `npm run lint` — passed;
-- `npm run build` — successful static player export with Studio leakage check;
-- browser smoke — real mouse construction of both lines, discovery, export, local expansion, roof reveal, save/reload, terminal policy changes and responsive resize; browser error log remained empty.
+- `npm test` — 35 tests passed across content, simulation, session and interaction helpers before the final renderer-only drag-gesture adjustment;
+- `npm run typecheck` — passed on the final gameplay code;
+- `npm run lint` — passed on the final gameplay code;
+- `npm run build` — successful final static player export with Studio leakage check;
+- browser smoke — real mouse construction of both lines, discovery, export, local expansion, roof reveal, save/reload, terminal policy changes, the drag-gesture regression path and responsive resize; browser error log remained empty.
+
+No remote CI workflow is configured on this branch; the recorded gate is local/domain + browser evidence.
 
 See [BROWSER_SMOKE.md](BROWSER_SMOKE.md) for the observed browser path.
 
