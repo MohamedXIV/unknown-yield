@@ -200,17 +200,32 @@ Possible conditions:
 
 Milestones may unlock machines, terminal modules, infrastructure, analysis capability, or company allocation classes.
 
-### Corporate request / contract
+### Materials Exchange definition
 
-Defines temporary or persistent company demand.
+Defines economic behavior for a discovered/listed product without hard-coding market logic in UI.
 
-Possible purposes:
+Potential fields:
 
-- request samples;
-- create an export incentive;
-- require proof of capability;
-- unlock analysis;
-- diversify production.
+- material/product reference;
+- baseline compensation;
+- utility floor;
+- demand class/curve;
+- saturation sensitivity;
+- recovery rate;
+- volatility bounds;
+- eligible company programs.
+
+Runtime demand/saturation is save/economy state; authored curves and constraints are content.
+
+### Corporate order
+
+Defines temporary procurement for a **known** product: quantity, optional handling/quality requirements, duration and premium/allocation reward.
+
+### Special directive
+
+Defines a differentiated company opportunity such as a research sample, prototype, quality challenge, recovery request or property-based/experimental industrial problem.
+
+Directives may reward capability, terminal modules, imported components, catalysts or unique equipment as well as fuel.
 
 Avoid reducing the whole game to rotating quest chores.
 
