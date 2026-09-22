@@ -1,5 +1,13 @@
 # Content Model
 
+## Implemented content contract (2026-09-22)
+
+The current Zod contract lives in `packages/content/src/schema.ts`. It separates machine definitions (footprint, operations, buffers, fuel, duration and build cost) from placed runtime instances. Materials, operations, reactions, authored site/deposits, terminal bounds, factory limits, belt/port costs and fuel assistance are editable data.
+
+The starter fixture contains a known construction chain plus two hidden outcomes of the same alien input. A crusher accepts different physical inputs; recipes are not baked into the renderer. `known` marks initial knowledge only. Runtime observations unlock public material metadata and notebook entries; authored truth never goes straight to player UI.
+
+Content version `world-01-v2` is independent of save schema 2. The existing TinyBase material-edit/validate/import/export proof remains development-only. The wider authoring concepts below are future scope, not current requirements.
+
 ## 1. Purpose
 
 Unknown Yield depends on a large amount of interconnected content. The project should treat this content as a first-class database rather than scattering balance and recipe logic across scene code.

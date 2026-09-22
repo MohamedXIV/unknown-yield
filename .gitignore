@@ -34,3 +34,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+# Local tooling
+.npm-cache/
+*.tsbuildinfo
+apps/web/app/studio-entry/
+artifacts/
+**/.next/
+**/out/
+**/node_modules/

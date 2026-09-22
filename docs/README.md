@@ -15,6 +15,8 @@ This directory is the project design and engineering source of truth. Documents 
 
 ## Documentation principles
 
+For the approved active scope and acceptance checks, see [WORLD_BUILDING.md](WORLD_BUILDING.md). FIRST_PLAYABLE.md records the retired prototype scope.
+
 ### Describe systems, not sacred examples
 
 Names such as `Keralith`, example map directions, sample recipes, exact fuel values, exact bailout counts, or machine names may be useful to explain a system. Unless a document explicitly marks one as locked content, examples are **not canonical content**.

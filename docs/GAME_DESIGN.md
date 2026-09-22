@@ -368,23 +368,14 @@ Do not assume the game needs:
 
 Any of these requires a later design decision backed by a proven need.
 
-## 11. First playable target
+## 11. Current playable foundation
 
-A good first playable slice should prove the loop with deliberately tiny content:
+The accepted scope is [WORLD_BUILDING.md](WORLD_BUILDING.md). The player is a camera and builder: no character, crew simulation or robots. An authored 80×60 grid starts with the company terminal, deposits and construction stock. The player places all other equipment.
 
-- one small map;
-- one terminal;
-- a few deposits;
-- a small material set;
-- a small operation set;
-- one editable factory;
-- a basic transport path;
-- one unknown-to-known reaction;
-- one useful export;
-- one fuel feedback loop;
-- one harmless or recoverable failure mode;
-- one milestone unlock.
+Factories are rectangles of 6–20 cells per side. Their roofs reveal the same-scale interior on the same map. Processors belong inside; extractors cover deposits. Directional floor belts enter walls only through matching ports. Building and dismantling are atomic and consume/refund content-defined material costs.
 
-The goal is not content quantity. The goal is to answer:
+All enabled equipment runs when inputs, fuel and output capacity permit. Operations act on physical inputs regardless of discovered knowledge. A known ferrite-to-plate chain supplies local expansion; veined ore demonstrates a useful crushing result and an unhelpful heating result. Waste remains visible until explicitly discarded, stored in buffers or reclaimed to site stock.
 
-> Is discovering an unknown process, stabilizing it, and turning it into an export line fun?
+The terminal retains construction stock and exports eligible discovered products automatically according to per-material policies. Exports repay emergency fuel assistance first. The world fills the screen; the HUD, notebook and contextual panels support direct spatial interaction.
+
+Temporary art and the compact content fixture are implementation choices, not final balance or visual direction. Whether experimenting and scaling feels satisfying still requires user playtesting.

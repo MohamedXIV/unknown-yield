@@ -1,5 +1,15 @@
 # Technical Architecture
 
+## Implemented world boundary (2026-09-22)
+
+`packages/content` contains versioned definitions and Zod validation. `packages/sim-core` owns placed instances, grid topology, costs, batches, cargo, knowledge and economy. `apps/web/game/session.ts` hosts coarse stepping; Phaser owns only input, camera and drawing. React owns the small HUD and optional panels. TinyBase remains authoring-only.
+
+The world is created once per Session. Resize, selection, roof state and panel updates do not recreate it. Late renderer loading consumes the latest mode/snapshot. Teardown unsubscribes and destroys Phaser; hidden tabs reset the session clock, without offline production. No per-frame transforms go through React.
+
+Public snapshots omit active reaction IDs and unknown material/reaction definitions. Discovery locations are transient presentation metadata after observation, not persisted truth. Save schema 2 validates a replacement completely before applying it. The player export excludes the opt-in Studio route.
+
+The broader architecture below describes possible evolution; it does not authorize additional systems beyond WORLD_BUILDING.md.
+
 ## 1. Goals
 
 The architecture should optimize for:

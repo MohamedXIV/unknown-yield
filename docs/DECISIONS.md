@@ -189,6 +189,40 @@ Do not add genre-standard systems merely because comparable games contain them.
 
 ---
 
+## D-014 — Prove discovery in the first industrial slice
+
+**Status:** accepted, 2026-09-22
+
+Previously the roadmap deferred experimentation and knowledge to Phase 2, despite the first-playable goal in GAME_DESIGN requiring them. Phase 1 now includes one hidden useful transformation, an informative failed experiment, one milestone, and fuel recovery. Phase 2 expands these systems.
+
+### Reason
+
+A known-recipe production line tests factory plumbing but does not test this game's central discovery-to-industry promise. Fuel recovery must accompany fuel depletion to avoid an accidental soft-lock.
+
+## D-015 — Factory presentation does not select simulation accuracy
+
+**Status:** accepted, 2026-09-22
+
+The initial factory remains fully simulated when its interior is hidden. The previous description of black-box factories as a scaling strategy is a future optimization hypothesis, not an initial implementation requirement. Aggregate execution needs behavioral equivalence tests and profiling evidence.
+
+## D-016 — Build the ongoing game in the world
+
+**Status:** accepted, 2026-09-22
+
+The fixed-site dashboard is replaced by a full-screen spatial building game. There are no characters or robots. The player controls a free camera on a fixed three-quarter 2D map and places all equipment beyond the company terminal. Factories reveal their interior on the same map and scale. This implementation is the continuing foundation.
+
+## D-017 — Automatic batches, physical belts and construction economy
+
+**Status:** accepted, 2026-09-22
+
+Definitions and placed instances are separate. Machines operate automatically from physical inputs, without knowledge-gating outcomes. Directional single-slot ground belts connect adjacent cells; factory walls require player-built ports. Build/refund operations are atomic. Local structural-plate production funds expansion. Terminal policies retain materials or export discovered valuable outputs for fuel; exports repay assistance debt first.
+
+## D-018 — Explicitly retire disposable saves
+
+**Status:** accepted, 2026-09-22
+
+Spatial saves use schema 2, separate from content version. Schema 1 is incompatible and rejected without replacing a running site. No migration work is allocated to the retired prototype. Content Studio remains development-only and receives no scope expansion.
+
 ## How to change a decision
 
 When evidence requires a change:
