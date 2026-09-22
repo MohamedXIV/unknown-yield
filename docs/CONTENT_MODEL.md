@@ -6,7 +6,7 @@ The current Zod contract lives in `packages/content/src/schema.ts`. It separates
 
 The starter fixture contains a known construction chain plus two hidden outcomes of the same alien input. A crusher accepts different physical inputs; recipes are not baked into the renderer. `known` marks initial knowledge only. Runtime observations unlock public material metadata and notebook entries; authored truth never goes straight to player UI.
 
-Content version `world-01-v2` is independent of save schema 2. The existing TinyBase material-edit/validate/import/export proof remains development-only. The wider authoring concepts below are future scope, not current requirements.
+Content version `world-01-v2` is independent of save schema 2. The existing TinyBase material-edit/validate/import/export proof remains development-only. The current schema still carries literal English `name` and `observation` strings; Issue #14 records the near-term migration to stable IDs plus localization-ready presentation keys. The wider authoring concepts below are future scope, not current requirements.
 
 ## 1. Purpose
 
@@ -182,7 +182,7 @@ Defines a new import/export handling capability, capacity, or service.
 
 Defines company-provided operational resources.
 
-Fuel should be data-driven rather than represented as hard-coded `fuel1/fuel2/fuel3` branches.
+Fuel should be data-driven rather than represented as hard-coded `fuel1/fuel2/fuel3` branches. Fuel-class identity must also be independent from the eventual player-facing name; a neutral stable ID such as `fuel-0` may remain unchanged even if its displayed name is redesigned later.
 
 ### Milestone
 
@@ -325,39 +325,69 @@ Show actionable errors and warnings, for example:
 
 ```text
 ERROR
-reaction.thermal_042
-references missing material: volatile_keral_gas
+reaction-thermal-042
+references missing material: volatile-keral-gas
 
 ERROR
-machine.press_01
+machine-press-01
 cannot provide reaction required pressure range
 
 WARNING
-material.crystal_17
+material-crystal-17
 has no extraction source and no producing reaction
 
 WARNING
-milestone.deep_scan
+milestone-deep-scan
 is not reachable from the current starting content
 ```
 
-## 6. IDs and references
+## 6. IDs, presentation and localization
 
-Use stable machine-readable IDs independent of display names.
+Use stable machine-readable IDs independent of display names, descriptions and translations.
 
-Good:
+The current implementation accepts lowercase hyphenated IDs. The exact namespace syntax may evolve, but the contract does not:
 
-```text
-material.keralith_raw
-operation.crush
-machine.basic_crusher
-reaction.keralith_crush
-milestone.first_stable_powder
+- IDs are canonical simulation/reference/save identity;
+- player-facing text is presentation data;
+- translated text is never identity;
+- no gameplay rule may branch on an English or localized string;
+- changing visible wording must not require changing an ID.
+
+Illustrative content:
+
+```ts
+{
+  id: "fuel-0",
+  nameKey: "material.fuel-0.name",
+  descriptionKey: "material.fuel-0.description"
+}
 ```
+
+An English resource may later map `material.fuel-0.name` to `Petroleum`, `Industrial Feed`, or another final name without changing `fuel-0`.
+
+This example does **not** lock the final fuel count, names, chemistry or ordering. `fuel-0` is a stable string ID, not permission to use array position `fuels[0]` as identity.
+
+The same rule applies to:
+
+- materials;
+- machines;
+- operations;
+- fuel classes;
+- terminal modules;
+- milestones;
+- observations/discoveries;
+- contracts/directives;
+- other player-facing authored content.
+
+Observations should ultimately be referenced by stable identity/localization key rather than persisting English prose in authoritative save state.
+
+Localization resources belong at the presentation/content boundary. `sim-core` may carry stable IDs or localization keys as data, but it must not import a localization/UI framework or depend on the rendered wording.
+
+Missing localization keys should fail visibly in development and have a readable fallback policy in player builds; silently substituting a different content identity is never valid.
 
 Do not use array index position as identity.
 
-Renaming display text must not break saves or references.
+Renaming or translating display text must not break saves or references.
 
 ## 7. Content versioning
 

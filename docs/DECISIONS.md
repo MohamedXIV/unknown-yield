@@ -262,6 +262,22 @@ Stopped factories preserve their internal state. Flexible splitters/switches/val
 ---
 
 
+## D-022 — Content identity is independent from localized presentation
+
+**Status:** accepted, 2026-09-22
+
+Gameplay/content entities use stable machine-readable IDs. Player-facing names, descriptions, observations and similar copy are presentation/localization data and may change without changing the underlying identity.
+
+A placeholder ID such as `fuel-0` may therefore remain stable while the eventual displayed fuel name is still undecided.
+
+### Consequence
+
+Saves, references and simulation rules use stable IDs rather than visible text or array positions. UI resolves display text through localization resources/keys. `sim-core` must not depend on a localization framework or branch on translated strings.
+
+The project should become localization-ready before content breadth grows, without requiring complete translations now.
+
+---
+
 ## How to change a decision
 
 When evidence requires a change:
