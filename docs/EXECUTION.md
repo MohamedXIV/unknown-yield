@@ -13,14 +13,17 @@ This document is intentionally procedural. Game/design truth lives in the domain
 
 ```text
 #3 conservation ledger
+        │
+        v
+#14 stable IDs + localization-ready presentation
  ├─> #4 physical storage + terminal staging ─> #5 remove generic discard
  ├─> #6 flexible belt routing ───────────────┐
  └──────────────────────────────────────────> #7 persistent factory state
                                               │
-#3 + #4 + #5 + #6 + #7 ────────────────────> #8 exit review
+#3 + #14 + #4 + #5 + #6 + #7 ─────────────> #8 exit review
 ```
 
-#4 and #6 can proceed after #3 if they remain independent. #5 needs legitimate storage/handling destinations. #7 should integrate with #6 rather than invent a separate rerouting model.
+#14 follows #3 and should land before #4/#6 expand content/UI surfaces. #4 and #6 can then proceed independently. #5 needs legitimate storage/handling destinations. #7 should integrate with #6 rather than invent a separate rerouting model.
 
 ## Agent loop
 
@@ -55,6 +58,7 @@ There is currently no remote CI workflow. Do not represent absent checks as gree
 - No generic discard or silent material loss.
 - Storage is physical geography, not a global inventory abstraction.
 - Preserve hidden authored truth vs player knowledge.
+- Stable content IDs are simulation/save identity; localized/player-facing wording is presentation data.
 - React stays out of per-frame world transforms.
 - Do not add Rust/WASM without benchmark/profiler evidence.
 - Do not expand Content Studio, advanced logistics, or market depth as a prerequisite to Phase 1.5.
