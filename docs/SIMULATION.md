@@ -1,0 +1,386 @@
+# Simulation Model
+
+## 1. Purpose
+
+Unknown Yield can become simulation-heavy, but it should not become heavy by accident.
+
+The project should model what creates meaningful industrial decisions while abstracting details that do not improve play. A lower-frequency deterministic simulation is preferred over attaching gameplay logic to every rendered sprite.
+
+## 2. Fundamental rule
+
+> The simulation owns gameplay truth. Rendering only presents it.
+
+A belt animation, moving truck sprite, warning light, roof state, or particle effect must not silently become the source of truth for production.
+
+## 3. Tick model
+
+Industrial systems generally do not need a 60 Hz gameplay update.
+
+A useful starting model is:
+
+- render/input: frame rate;
+- movement presentation: interpolated every frame;
+- core industrial simulation: fixed tick, initially around 5–10 Hz;
+- slow economy / company systems: event-driven or lower-frequency;
+- discovery and milestones: event-driven.
+
+The exact rates are performance/design values and should be configurable.
+
+Fixed-step simulation makes:
+
+- tests easier;
+- replays easier;
+- save/load behavior clearer;
+- benchmark comparisons meaningful.
+
+## 4. State categories
+
+### Authoritative world state
+
+Examples:
+
+- machine operating state;
+- inventories and buffers;
+- factory state;
+- transport reservations;
+- production rates;
+- terminal stock;
+- company obligation;
+- discoveries;
+- milestone state.
+
+### Presentation state
+
+Examples:
+
+- sprite interpolation;
+- animation phase;
+- particle lifetime;
+- UI panel open/closed state;
+- camera easing;
+- hover state.
+
+Do not serialize presentation state unless a feature explicitly needs it.
+
+## 5. Factory abstraction
+
+Factory-as-function is also the main scaling strategy.
+
+A factory can have multiple simulation modes.
+
+### Detailed mode
+
+Used while the player is editing, troubleshooting, or inspecting internals.
+
+The simulation may track:
+
+- individual machines;
+- internal buffers;
+- routing;
+- local bottlenecks;
+- internal hazard state.
+
+### Stable / abstracted mode
+
+Once a layout has proven stable, the system may derive a factory contract:
+
+```text
+consumes:
+  ore A: 12/min
+  brine: 4/min
+
+produces:
+  product C: 7/min
+  waste gas: 2/min
+
+constraints:
+  fuel: advanced
+  max input interruption: X
+  hazard: pressure
+```
+
+A stable factory can update using aggregate math instead of simulating every internal visual event forever.
+
+Abstraction must preserve gameplay-significant constraints. It is not permission to generate free output.
+
+### Wake-up conditions
+
+An abstracted factory may return to detailed resolution when:
+
+- an input becomes invalid;
+- an output is blocked;
+- damage occurs;
+- the player edits it;
+- a hazardous condition crosses a threshold;
+- content changes require recomputation.
+
+The exact mechanism should be driven by tests and profiling.
+
+## 6. Production
+
+Production should be expressed through rates, batches, capacities, and conditions rather than frame time.
+
+A machine/process may depend on:
+
+- input availability;
+- output capacity;
+- fuel/energy;
+- machine capability;
+- operation duration;
+- temperature/pressure bands if relevant;
+- catalyst/secondary input;
+- damage / fouling;
+- player-discovered or undiscovered state only for UI, not physical truth.
+
+The process should continue to behave physically according to content even if the player does not yet understand it.
+
+## 7. Reactions and hazards
+
+Reaction resolution should be deterministic from authoritative conditions as much as practical.
+
+The player should be able to understand a failure retrospectively.
+
+Bad:
+
+```text
+5% random chance each second -> factory explodes
+```
+
+Better:
+
+```text
+unstable output accumulated
++ containment exceeded
++ high temperature
+-> pressure event
+
+randomness may vary:
+- exact damage;
+- debris presentation;
+- which adjacent cosmetic prop breaks.
+```
+
+Hazards can include:
+
+- heat;
+- pressure;
+- corrosion;
+- contamination;
+- volatility;
+- electrical instability;
+- biological growth;
+- unknown exotic effects.
+
+Only implement hazards that create distinct decisions.
+
+## 8. Logistics simulation
+
+Logistics is the most likely system to become expensive if implemented naively.
+
+### Belts
+
+Do not assume every visible item needs a full object with an update function.
+
+Possible models, from simple to more scalable:
+
+1. discrete slot/cell movement;
+2. segment queues with item positions derived for rendering;
+3. flow/batch abstraction on long hidden routes;
+4. fully aggregated factory-to-factory links where detail adds no gameplay.
+
+Start simple and benchmark before adding complexity.
+
+### Pipes
+
+Do not begin with fluid dynamics.
+
+A practical first model can use:
+
+- capacity;
+- throughput;
+- connectivity;
+- buffer amount;
+- material compatibility;
+- optional pressure class.
+
+Only add richer network solving if gameplay requires it.
+
+### Vehicles
+
+Pathfinding can become a hot spot.
+
+Prefer:
+
+- cached paths;
+- route graphs;
+- limited replanning;
+- job batching;
+- spatial partitioning.
+
+Do not run global pathfinding for every vehicle every tick.
+
+### Rail / advanced logistics
+
+These are later systems. Their implementation should fit the same simulation contract rather than requiring a new engine architecture.
+
+## 9. World partitioning
+
+If the map grows, systems should be designed to allow chunking or activity regions.
+
+Possible categories:
+
+- visible active area;
+- nearby simulated detail;
+- distant aggregate production;
+- dormant region.
+
+Do not implement a complex streaming system until the vertical slice proves the map scale needs it.
+
+## 10. Determinism
+
+Strict bit-for-bit cross-platform determinism is not an initial requirement.
+
+However, the simulation should be deterministic enough for:
+
+- reproducible tests;
+- fixed-seed scenarios;
+- reliable bug reports;
+- save/load consistency;
+- benchmark comparison.
+
+Random decisions should go through explicit seeded RNG owned by the simulation rather than ad-hoc `Math.random()` calls scattered through code.
+
+## 11. Commands and events
+
+External systems should manipulate the world through commands.
+
+Examples:
+
+```text
+PlaceFactory
+ResizeFactory
+PlaceMachine
+ConnectPort
+StartExperiment
+SetMachineMode
+RequestCorporateAssistance
+CreateExportManifest
+```
+
+The simulation emits domain events:
+
+```text
+MaterialDiscovered
+ReactionObserved
+FactoryBecameStable
+FactoryFaulted
+TerminalShipmentCompleted
+MilestoneUnlocked
+CorporateStandingChanged
+```
+
+These events feed UI, presentation, audio, and analytics.
+
+## 12. Snapshot strategy
+
+Do not copy the entire simulation into React every frame.
+
+Provide fit-for-purpose views:
+
+- selected-factory summary;
+- terminal summary;
+- visible-world presentation snapshot;
+- knowledge summary;
+- debug snapshot.
+
+The Phaser view may use a compact world delta or shared cache owned outside React.
+
+## 13. Benchmark ladder
+
+Before any Rust/WASM migration, establish reproducible scenarios.
+
+Suggested ladder:
+
+### A. Production-only
+- 1,000 machines;
+- 10,000 machines;
+- 100,000 logical machines.
+
+### B. Logistics
+- many belt segments with representative item density;
+- many pipe nodes;
+- vehicle route stress.
+
+### C. Factory abstraction
+Compare:
+- all interiors detailed;
+- stable factories abstracted.
+
+### D. Snapshot/worker cost
+Measure:
+- simulation step time;
+- serialization time;
+- transfer size;
+- main-thread application cost;
+- memory allocation.
+
+## 14. Performance escalation order
+
+When a budget fails:
+
+1. verify the profiler result;
+2. remove accidental per-frame work;
+3. reduce allocations;
+4. improve data layout;
+5. reduce update frequency;
+6. aggregate stable systems;
+7. move simulation to a Web Worker;
+8. optimize the identified algorithm;
+9. consider Rust/WASM for proven hot paths.
+
+Do not jump directly from "this might be big" to Rust.
+
+## 15. Rust/WASM compatibility
+
+The TypeScript simulation should use a coarse facade so an implementation can later move.
+
+Current conceptual API:
+
+```ts
+interface Simulation {
+  command(command: GameCommand): CommandResult;
+  step(deltaMs: number): SimulationEvents;
+  snapshot(scope?: SnapshotScope): WorldSnapshot;
+  serialize(): SerializedWorld;
+}
+```
+
+A future Rust implementation should preserve equivalent semantics.
+
+Avoid designs that require JavaScript-to-WASM calls per entity.
+
+## 16. Save/load
+
+The serialized world should contain gameplay truth only and include:
+
+- save schema version;
+- content version;
+- RNG state if needed;
+- world state;
+- knowledge state;
+- factory layouts/blueprints;
+- company progression;
+- terminal state.
+
+Load must validate versions before mutating a live world.
+
+## 17. Simulation success criteria
+
+The simulation architecture is successful when:
+
+- sim-core tests run without a browser;
+- the same fixture produces reproducible outcomes;
+- Phaser can be removed from a test and production math still works;
+- Content Studio can run a reaction/factory preview without booting a full game scene;
+- a future worker can host sim-core without redesigning the domain;
+- performance work remains targeted rather than architectural panic.
