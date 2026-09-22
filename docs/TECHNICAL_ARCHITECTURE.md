@@ -8,7 +8,7 @@ The world is created once per Session. Resize, selection, roof state and panel u
 
 Public snapshots omit active reaction IDs and unknown material/reaction definitions. Discovery locations are transient presentation metadata after observation, not persisted truth. Save schema 2 validates a replacement completely before applying it. The player export excludes the opt-in Studio route.
 
-The broader architecture below describes possible evolution; it does not authorize additional systems beyond WORLD_BUILDING.md.
+The broader architecture below describes possible evolution; it does not authorize systems outside the active roadmap/issues and accepted design documents.
 
 ## 1. Goals
 
@@ -94,7 +94,7 @@ TinyBase must **not** become the high-frequency world simulation store by defaul
 
 ### Validation: Zod
 
-Zod validates content and serialized boundaries.
+Zod validates content and serialized boundaries. This includes localization-ready content/resource structures introduced by Issue #14; localization does not replace the existing content-validation path.
 
 It should catch errors such as:
 
@@ -256,6 +256,8 @@ TinyBase is excellent for:
 Do not default to representing every runtime machine tick, belt item, or vehicle transform as reactive TinyBase rows.
 
 The runtime should consume a validated, versioned content snapshot or content service interface.
+
+Localization-ready presentation follows the same direction of authority: TinyBase authors stable content records and localization-key references; Zod validates exported/versioned structures; presentation resolves keys to locale text. TinyBase is not bypassed by a separate gameplay-content database, and translated strings do not become simulation identity.
 
 ## 9. Save data and content are different things
 
