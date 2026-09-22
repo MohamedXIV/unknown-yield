@@ -12,8 +12,9 @@ This directory is the project design and engineering source of truth. Documents 
 6. [SIMULATION.md](SIMULATION.md) — simulation time, logistics, determinism, conservation, factory abstraction and performance rules.
 7. [ART_PIPELINE.md](ART_PIPELINE.md) — 2D presentation and the 3D-blockout-to-2D AI-assisted asset workflow.
 8. [ROADMAP.md](ROADMAP.md) — proof-driven implementation phases and acceptance gates.
-9. [DECISIONS.md](DECISIONS.md) — accepted decisions that should not be casually reopened.
-10. [../AGENTS.md](../AGENTS.md) — implementation rules for humans and coding agents.
+9. [EXECUTION.md](EXECUTION.md) — live issue order and execution workflow for humans/agents.
+10. [DECISIONS.md](DECISIONS.md) — accepted decisions that should not be casually reopened.
+11. [../AGENTS.md](../AGENTS.md) — implementation rules for humans and coding agents.
 
 ## Documentation principles
 
