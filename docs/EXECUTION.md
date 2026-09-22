@@ -6,16 +6,17 @@ This document is intentionally procedural. Game/design truth lives in the domain
 
 - First playable: accepted and merged.
 - Active phase: **Phase 1.5 — physical inventory and flexible routing**.
-- Active issue: **#3 — material ledger and conservation invariants**.
+- Completed foundation: **#3 — material ledger and conservation invariants** (merged via PR #17).
+- Active issue: **#14 — stable content IDs and localization-ready presentation**.
 - Phase 1.5 closes only through **#8 — end-to-end exit review**.
 
 ## Phase 1.5 dependency graph
 
 ```text
-#3 conservation ledger
+#3 conservation ledger ✓
         │
         v
-#14 stable IDs + localization-ready presentation
+#14 stable IDs + localization-ready presentation ← ACTIVE
  ├─> #4 physical storage + terminal staging ─> #5 remove generic discard
  ├─> #6 flexible belt routing ───────────────┐
  └──────────────────────────────────────────> #7 persistent factory state
