@@ -2,8 +2,9 @@ import { validateContent, type Content } from "@site/content";
 import { initialState, parseSave } from "./save";
 import { applyCommand } from "./commands";
 import { completeAndStart, transport, status } from "./production";
+import { auditLedger } from "./ledger";
 import { footprint } from "./geometry";
-import type { Save, CommandResult, PlayerSnapshot } from "./types";
+import { total, type Save, type CommandResult, type PlayerSnapshot } from "./types";
 export class Simulation {
   private readonly content: Content;
   private state: Save;
@@ -95,6 +96,16 @@ export class Simulation {
   load(input: unknown): CommandResult {
     try {
       const next = parseSave(input, this.content);
+      const report = auditLedger(this.content, next);
+      if (!report.ok) {
+        const detail = report.mismatches
+          .slice(0, 3)
+          .map((r) => r.material + ": off by " + r.delta)
+          .join("; ");
+        throw new Error("Material ledger does not reconcile (" + detail + ")");
+      }
+      if (next.exported !== total(next.flows.exported))
+        throw new Error("Export total disagrees with ledger export history");
       this.state = next;
       this.discoveryLocations.clear();
       return { ok: true, message: "Site restored" };

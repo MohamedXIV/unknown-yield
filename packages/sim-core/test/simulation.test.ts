@@ -409,21 +409,76 @@ describe("world acceptance regressions", () => {
     const c = structuredClone(fixture);
     c.tickMs = 200;
     const s = new Simulation(c);
-    const { processor } = line(s, true, true);
+    const factory = build(s, {
+      type: "placeFactory",
+      x: 24,
+      y: 33,
+      width: 10,
+      height: 10,
+    });
+    for (const [x, y] of [
+      [24, 37],
+      [33, 37],
+      [24, 38],
+    ])
+      build(s, { type: "placePort", factoryId: factory, x, y, direction: 0 });
+    build(s, {
+      type: "placeMachine",
+      definitionId: "extractor",
+      x: 18,
+      y: 36,
+      direction: 0,
+    });
     const crusher = build(s, {
       type: "placeMachine",
       definitionId: "crusher",
+      x: 27,
+      y: 36,
+      direction: 0,
+    });
+    const furnace = build(s, {
+      type: "placeMachine",
+      definitionId: "furnace",
       x: 30,
       y: 36,
       direction: 0,
     });
-    const save = s.serialize();
-    for (const id of [processor, crusher]) save.machines[id].input.raw = 2;
-    expect(s.load(save).ok).toBe(true);
+    build(s, path(20, 37, 26, 37));
+    build(s, {
+      type: "placeMachine",
+      definitionId: "extractor",
+      x: 15,
+      y: 35,
+      direction: 0,
+    });
+    // Both processors are belt-fed from dedicated extractors so every input
+    // unit arrives through real transport instead of fabricated inventory.
+    build(s, {
+      type: "placeBelts",
+      points: [
+        { x: 17, y: 36 },
+        { x: 17, y: 37 },
+        { x: 17, y: 38 },
+        { x: 18, y: 38 },
+        { x: 19, y: 38 },
+        { x: 20, y: 38 },
+        { x: 21, y: 38 },
+        { x: 22, y: 38 },
+        { x: 23, y: 38 },
+        { x: 24, y: 38 },
+        { x: 25, y: 38 },
+        { x: 26, y: 38 },
+        { x: 27, y: 38 },
+        { x: 28, y: 38 },
+        { x: 29, y: 38 },
+        { x: 29, y: 37 },
+      ],
+      direction: 0,
+    });
     expect(s.snapshot().observations).not.toContainEqual(
       expect.objectContaining({ output: "Vitrified residue" }),
     );
-    s.step(6200);
+    s.step(60000);
     const observed = s.snapshot().observations.filter((o) => !o.initial);
     expect(observed).toHaveLength(2);
     expect(observed.map((o) => o.observedAt)).toEqual(
@@ -434,6 +489,9 @@ describe("world acceptance regressions", () => {
     );
     expect(
       s.snapshot().machines.find((m) => m.id === crusher)?.durationMs,
+    ).toBe(6000);
+    expect(
+      s.snapshot().machines.find((m) => m.id === furnace)?.durationMs,
     ).toBe(6000);
   });
   it("rejects incompatible active batches, undiscovered cargo and overfull buffers atomically", () => {

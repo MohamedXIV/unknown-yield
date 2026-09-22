@@ -213,3 +213,49 @@ describe("material ledger", () => {
     ).toBe(-1);
   });
 });
+
+describe("conservation load boundary", () => {
+  it("rejects validation-passing saves with added material and keeps live state", () => {
+    const { s } = line();
+    s.step(20000);
+    const before = s.serialize();
+    const created = structuredClone(before);
+    created.stock.plates += 5;
+    expect(s.load(created).ok).toBe(false);
+    expect(s.serialize()).toEqual(before);
+  });
+
+  it("rejects validation-passing saves with removed material and keeps live state", () => {
+    const { s } = line();
+    s.step(20000);
+    const before = s.serialize();
+    const removed = structuredClone(before);
+    const loaded = Object.values(removed.belts).find((b) => b.cargo);
+    expect(loaded?.cargo).toBeTruthy();
+    loaded!.cargo = null;
+    expect(s.load(removed).ok).toBe(false);
+    expect(s.serialize()).toEqual(before);
+  });
+
+  it("rejects saves where the export total disagrees with ledger history", () => {
+    const { s } = line(make(), true);
+    s.step(90000);
+    const before = s.serialize();
+    expect(before.exported).toBeGreaterThan(0);
+    // Ledger itself still reconciles; only the duplicated total is wrong.
+    expect(auditLedger(fixture, before).ok).toBe(true);
+    const tampered = structuredClone(before);
+    tampered.exported += 1;
+    expect(s.load(tampered).ok).toBe(false);
+    expect(s.serialize()).toEqual(before);
+  });
+
+  it("still round-trips a legitimate schema-3 save", () => {
+    const { s: a } = line(make(), true);
+    a.step(30000);
+    const b = make();
+    expect(b.load(JSON.parse(JSON.stringify(a.serialize()))).ok).toBe(true);
+    expect(b.serialize()).toEqual(a.serialize());
+    expect(auditLedger(fixture, b.serialize()).ok).toBe(true);
+  });
+});
