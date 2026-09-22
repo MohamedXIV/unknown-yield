@@ -6,7 +6,7 @@ The project should move by **proof**, not by feature accumulation.
 
 Each phase must answer a design or architecture question. Do not build a large engine foundation that is only theoretically useful.
 
-The roadmap below is intentionally implementation-focused and may later be mirrored into GitHub Issues/Projects.
+The roadmap below is intentionally implementation-focused. Live execution is mirrored in GitHub Issue #2; `docs/EXECUTION.md` defines how humans and agents advance it.
 
 ## Phase 0 — Foundation (implemented)
 
@@ -59,6 +59,8 @@ This is the continuing game foundation, not another disposable dashboard experim
 
 ## Phase 1.5 — Physical inventory and flexible routing
 
+**Live execution:** #3 → #4/#6 → #5/#7 → #8. See GitHub Issue #2 and [EXECUTION.md](EXECUTION.md).
+
 ### Question
 
 Can the accepted first-playable loop obey the long-term economic invariant without turning inventory into UI bookkeeping?
@@ -77,6 +79,8 @@ Can the accepted first-playable loop obey the long-term economic invariant witho
 No normal gameplay action can silently delete material. A player can stop one line, preserve its contents, redirect future input to another line, and later resume the original line. Save/load preserves the same accounting.
 
 ## Phase 2 — Experimentation and discovery depth
+
+**Epic:** GitHub Issue #9. Keep it coarse until Phase 1.5 closes.
 
 ### Question
 
@@ -98,6 +102,8 @@ The Phase 1 hidden-reaction boundary remains intact as conditions and content ex
 A failed experiment teaches something visible.
 
 ## Phase 3 — Factory as function
+
+**Epic:** GitHub Issue #10. Split into executable children only after Phase 2 is stable.
 
 ### Question
 
@@ -123,6 +129,8 @@ Editing it again restores enough detail to diagnose problems.
 
 ## Phase 4 — Content Studio v1
 
+**Epic:** GitHub Issue #11. Split when gameplay/content-authoring pain justifies concrete tooling work.
+
 ### Question
 
 Can content scale without code edits?
@@ -145,6 +153,8 @@ A new material + reaction chain can be authored and validated through the Studio
 Do not build every future editor screen yet.
 
 ## Phase 5 — Progression and company systems
+
+**Epic:** GitHub Issue #12. Do not start market depth before the physical-inventory and discovery gates are ready.
 
 ### Scope
 
@@ -252,4 +262,4 @@ The following should not be treated as progress during foundation unless require
 
 The accepted implementation and evidence are summarized in [FIRST_PLAYABLE.md](FIRST_PLAYABLE.md) and [BROWSER_SMOKE.md](BROWSER_SMOKE.md). Continue from this foundation; do not rebuild the retired dashboard prototype.
 
-The immediate design correction is Phase 1.5: physical persistence/storage and flexible rerouting. After that, deepen experimentation/discovery and market/company systems without turning the game into a dashboard or stock-trading simulator.
+The immediate execution target is Issue #3, then the remaining Phase 1.5 children under Issue #2. Phase 1.5 closes only through Issue #8. After that, deepen experimentation/discovery and later market/company systems without turning the game into a dashboard or stock-trading simulator.
