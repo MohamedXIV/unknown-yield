@@ -59,7 +59,7 @@ This is the continuing game foundation, not another disposable dashboard experim
 
 ## Phase 1.5 — Physical inventory and flexible routing
 
-**Live execution:** #3 → #4/#6 → #5/#7 → #8. See GitHub Issue #2 and [EXECUTION.md](EXECUTION.md).
+**Live execution:** #3 → #14 → #4/#6 → #5/#7 → #8. See GitHub Issue #2 and [EXECUTION.md](EXECUTION.md).
 
 ### Question
 
@@ -72,11 +72,12 @@ Can the accepted first-playable loop obey the long-term economic invariant witho
 - introduce at least one physical storage form and terminal staging;
 - preserve stopped-factory buffers;
 - add split/reroute capability sufficient to redirect a shared feed between persistent factories;
-- add conservation-ledger tests for extraction, transit, buffers, storage, transformation and export.
+- add conservation-ledger tests for extraction, transit, buffers, storage, transformation and export;
+- before content/UI breadth grows, complete #14 so stable content IDs are independent from display/localized text.
 
 ### Exit criteria
 
-No normal gameplay action can silently delete material. A player can stop one line, preserve its contents, redirect future input to another line, and later resume the original line. Save/load preserves the same accounting.
+No normal gameplay action can silently delete material. A player can stop one line, preserve its contents, redirect future input to another line, and later resume the original line. Save/load preserves the same accounting. New content introduced after this gate must not use player-facing strings or array positions as simulation/save identity.
 
 ## Phase 2 — Experimentation and discovery depth
 
@@ -262,4 +263,4 @@ The following should not be treated as progress during foundation unless require
 
 The accepted implementation and evidence are summarized in [FIRST_PLAYABLE.md](FIRST_PLAYABLE.md) and [BROWSER_SMOKE.md](BROWSER_SMOKE.md). Continue from this foundation; do not rebuild the retired dashboard prototype.
 
-The immediate execution target is Issue #3, then the remaining Phase 1.5 children under Issue #2. Phase 1.5 closes only through Issue #8. After that, deepen experimentation/discovery and later market/company systems without turning the game into a dashboard or stock-trading simulator.
+The immediate execution target is Issue #3, then the cross-cutting stable-ID/localization foundation in Issue #14, then the remaining Phase 1.5 children under Issue #2. Phase 1.5 closes only through Issue #8. After that, deepen experimentation/discovery and later market/company systems without turning the game into a dashboard or stock-trading simulator.
