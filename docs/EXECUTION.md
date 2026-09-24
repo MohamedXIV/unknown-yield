@@ -7,7 +7,8 @@ This document is intentionally procedural. Game/design truth lives in the domain
 - First playable: accepted and merged.
 - Active phase: **Phase 1.5 — physical inventory and flexible routing**.
 - Completed foundation: **#3 — material ledger and conservation invariants** (merged via PR #17).
-- Active issue: **#14 — stable content IDs and localization-ready presentation**.
+- Completed foundation: **#14 — stable content IDs and localization-ready presentation** (merged via PR #19).
+- Active issue: **#4 — physical storage and terminal staging**.
 - Phase 1.5 closes only through **#8 — end-to-end exit review**.
 
 ## Phase 1.5 dependency graph
@@ -16,15 +17,15 @@ This document is intentionally procedural. Game/design truth lives in the domain
 #3 conservation ledger ✓
         │
         v
-#14 stable IDs + localization-ready presentation ← ACTIVE
- ├─> #4 physical storage + terminal staging ─> #5 remove generic discard
+#14 stable IDs + localization-ready presentation ✓
+ ├─> #4 physical storage + terminal staging ← ACTIVE ─> #5 remove generic discard
  ├─> #6 flexible belt routing ───────────────┐
  └──────────────────────────────────────────> #7 persistent factory state
                                               │
 #3 + #14 + #4 + #5 + #6 + #7 ─────────────> #8 exit review
 ```
 
-#14 follows #3 and should land before #4/#6 expand content/UI surfaces. #4 and #6 can then proceed independently. #5 needs legitimate storage/handling destinations. #7 should integrate with #6 rather than invent a separate rerouting model.
+#14 is complete. #4 and #6 are now unblocked; #4 is the current active issue because it establishes legitimate physical destinations required by #5. #5 needs legitimate storage/handling destinations. #7 should integrate with #6 rather than invent a separate rerouting model.
 
 ## Agent loop
 
