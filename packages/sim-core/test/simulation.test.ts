@@ -253,7 +253,7 @@ describe("automatic industry", () => {
     const { processor } = line(s, true);
     s.step(60000);
     expect(
-      s.snapshot().observations.some((o) => o.output === "Conductive granules"),
+      s.snapshot().observations.some((o) => o.outputId === "granules"),
     ).toBe(true);
     expect(s.snapshot().exported).toBeGreaterThan(0);
     expect(s.snapshot().milestone).toBe(true);
@@ -265,7 +265,9 @@ describe("automatic industry", () => {
     const { s, processor } = line(make(), true, true);
     s.step(20000);
     expect(
-      s.snapshot().observations.some((o) => o.text.includes("vitrifies")),
+      s.snapshot().observations.some(
+        (o) => o.textKey === "reaction.heat-raw.observation",
+      ),
     ).toBe(true);
     expect(
       s.snapshot().machines.find((m) => m.id === processor)?.output.residue,
@@ -476,7 +478,7 @@ describe("world acceptance regressions", () => {
       direction: 0,
     });
     expect(s.snapshot().observations).not.toContainEqual(
-      expect.objectContaining({ output: "Vitrified residue" }),
+      expect.objectContaining({ outputId: "residue" }),
     );
     s.step(60000);
     const observed = s.snapshot().observations.filter((o) => !o.initial);

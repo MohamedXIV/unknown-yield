@@ -65,7 +65,7 @@ export type GameCommand =
   | { type: "assistance" };
 export type MachineView = Omit<Machine, "job"> & {
   job: { remaining: number } | null;
-  name: string;
+  nameKey: string;
   role: "extractor" | "processor";
   width: number;
   height: number;
@@ -77,10 +77,10 @@ export type MachineView = Omit<Machine, "job"> & {
   progress: number;
 };
 export type Observation = {
-  operation: string;
-  input: string;
-  output: string;
-  text: string;
+  operationId: string;
+  inputId: string;
+  outputId: string;
+  textKey: string;
   initial: boolean;
   observedAt?: Point;
 };
