@@ -1,11 +1,12 @@
 import { z } from "zod";
 import type { Content } from "@site/content";
-import { amount, change, type Save, type CommandResult } from "./types";
+import { amount, change, total, type Save, type CommandResult } from "./types";
 import {
   factoryError,
   machinePlacement,
   portError,
   beltError,
+  storageError,
   key,
   contains,
 } from "./geometry";
@@ -21,6 +22,12 @@ const schema = z.discriminatedUnion("type", [
   }),
   z.object({
     type: z.literal("placeMachine"),
+    ...point,
+    definitionId: z.string(),
+    direction,
+  }),
+  z.object({
+    type: z.literal("placeStorage"),
     ...point,
     definitionId: z.string(),
     direction,
@@ -123,6 +130,25 @@ export function applyCommand(
         job: null,
       };
       return ok("Machine placed", def.cost, id);
+    }
+    case "placeStorage": {
+      const def = c.storages.find((d) => d.id === cmd.definitionId);
+      if (!def) return fail("Unknown storage type");
+      const error = storageError(c, s, def, cmd);
+      if (error) return fail(error);
+      if (!affordable(def.cost)) return fail("Not enough structural plates");
+      if (!apply) return ok("Place storage", def.cost);
+      const id = issue("s");
+      pay(def.cost);
+      s.storages[id] = {
+        id,
+        x: cmd.x,
+        y: cmd.y,
+        direction: cmd.direction,
+        definitionId: def.id,
+        inventory: {},
+      };
+      return ok("Storage placed", def.cost, id);
     }
     case "placePort": {
       const f = Object.hasOwn(s.factories, cmd.factoryId)
@@ -251,7 +277,17 @@ export function applyCommand(
         return ok("Factory reclaimed");
       }
       const belt = Object.values(s.belts).find((b) => b.id === cmd.id);
-      if (belt) {
+      if (Object.hasOwn(s.storages, cmd.id)) {
+        const t = s.storages[cmd.id],
+          def = c.storages.find((d) => d.id === t.definitionId)!;
+        if (total(t.inventory) > 0)
+          return fail("Empty storage contents before dismantling");
+        if (apply) {
+          change(s.stock, c.site.buildMaterial, def.cost);
+          delete s.storages[cmd.id];
+        }
+        return ok("Storage reclaimed");
+      }      if (belt) {
         if (apply) {
           if (belt.cargo) change(s.stock, belt.cargo, 1);
           change(s.stock, c.site.buildMaterial, c.site.beltCost);

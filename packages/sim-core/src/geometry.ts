@@ -1,5 +1,6 @@
-import type { Content, MachineDefinition } from "@site/content";
+import type { Content } from "@site/content";
 import type { Point, Rect, Save, Factory } from "./types";
+export type FootprintDef = { width: number; height: number };
 export const key = (p: Point) => p.x + "," + p.y;
 export const vectors = [
   { x: 1, y: 0 },
@@ -20,7 +21,7 @@ export const overlaps = (a: Rect, b: Rect) =>
   a.y + a.height > b.y;
 export const footprint = (
   m: Point & { direction: number },
-  d: MachineDefinition,
+  d: FootprintDef,
 ): Rect => ({
   ...m,
   width: m.direction % 2 ? d.height : d.width,
@@ -28,7 +29,7 @@ export const footprint = (
 });
 export function socket(
   m: Point & { direction: number },
-  d: MachineDefinition,
+  d: FootprintDef,
   output: boolean,
 ): Point {
   const r = footprint(m, d),
@@ -87,6 +88,53 @@ export function factoryError(c: Content, s: Save, r: Rect): string | null {
         ),
       ),
     ) ||
+    Object.values(s.storages).some((t) =>
+      overlaps(
+        r,
+        footprint(
+          t,
+          c.storages.find((d) => d.id === t.definitionId)!,
+        ),
+      ),
+    ) ||
+    Object.values(s.belts).some((b) => contains(r, b))
+  )
+    return "Space is already occupied";
+  return null;
+}
+export function storageError(
+  c: Content,
+  s: Save,
+  d: FootprintDef,
+  p: Point & { direction: number },
+): string | null {
+  const r = footprint(p, d);
+  if (!bounds(c, r)) return "Outside the site boundary";
+  if (
+    overlaps(r, c.site.terminal) ||
+    c.site.deposits.some((a) => overlaps(r, a))
+  )
+    return "Keep buildings clear of the terminal and deposits";
+  if (
+    Object.values(s.factories).some((f) => overlaps(r, f)) ||
+    Object.values(s.machines).some((m) =>
+      overlaps(
+        r,
+        footprint(
+          m,
+          c.machines.find((a) => a.id === m.definitionId)!,
+        ),
+      ),
+    ) ||
+    Object.values(s.storages).some((t) =>
+      overlaps(
+        r,
+        footprint(
+          t,
+          c.storages.find((a) => a.id === t.definitionId)!,
+        ),
+      ),
+    ) ||
     Object.values(s.belts).some((b) => contains(r, b))
   )
     return "Space is already occupied";
@@ -110,6 +158,15 @@ export function machinePlacement(
         footprint(
           m,
           c.machines.find((d) => d.id === m.definitionId)!,
+        ),
+      ),
+    ) ||
+    Object.values(s.storages).some((t) =>
+      overlaps(
+        r,
+        footprint(
+          t,
+          c.storages.find((d) => d.id === t.definitionId)!,
         ),
       ),
     ) ||
@@ -169,6 +226,18 @@ export function beltError(
     )
   )
     return "A machine occupies this cell";
+  if (
+    Object.values(s.storages).some((t) =>
+      contains(
+        footprint(
+          t,
+          c.storages.find((d) => d.id === t.definitionId)!,
+        ),
+        p,
+      ),
+    )
+  )
+    return "A structure occupies this cell";
   if (Object.hasOwn(s.belts, key(p)))
     return "A belt already occupies this cell";
   const f = Object.values(s.factories).find((f) => wall(f, p));

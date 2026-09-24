@@ -5,7 +5,15 @@ export type {
   LedgerSnapshot,
   LedgerReport,
 } from "./ledger";
-export { socket, footprint, contains, wall, key, vectors } from "./geometry";
+export {
+  socket,
+  footprint,
+  contains,
+  wall,
+  key,
+  vectors,
+  type FootprintDef,
+} from "./geometry";
 export { MACHINE_STATUSES } from "./types";
 export type {
   GameCommand,
@@ -13,6 +21,8 @@ export type {
   PlayerSnapshot,
   MachineView,
   MachineStatus,
+  StorageView,
+  Storage,
   Inventory,
   FlowTotals,
   Save,

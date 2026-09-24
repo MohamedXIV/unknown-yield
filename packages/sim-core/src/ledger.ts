@@ -2,13 +2,14 @@ import type { Content } from "@site/content";
 import type { Save } from "./types";
 
 /**
- * Material ledger (Issue #3).
+ * Material ledger (Issues #3–#4).
  *
  * Every produced unit must remain accounted for until it is transformed by a
  * defined reaction, consumed by a defined sink, stored, or exported off-map.
  * The per-material invariant is:
  *
- *   deposits + stock + machineInput + machineOutput + belts + escrow + embodied
+ *   deposits + stock + staging + machineInput + machineOutput + belts
+ *     + storage + escrow + embodied
  *     + flows.exported + flows.discarded + flows.consumed
  *       = initial + flows.produced
  *
@@ -30,9 +31,11 @@ export type LedgerRow = {
   deposits: number;
   initial: number;
   stock: number;
+  staging: number;
   machineInput: number;
   machineOutput: number;
   belts: number;
+  storage: number;
   escrow: number;
   embodied: number;
   consumed: number;
@@ -56,9 +59,11 @@ function blank(material: string): LedgerRow {
     deposits: 0,
     initial: 0,
     stock: 0,
+    staging: 0,
     machineInput: 0,
     machineOutput: 0,
     belts: 0,
+    storage: 0,
     escrow: 0,
     embodied: 0,
     consumed: 0,
@@ -92,8 +97,9 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
     if (d) row(d.material).deposits += n;
   }
 
-  // Terminal/site holdings.
+  // Terminal/site holdings: construction reserve plus tracked staging.
   for (const [id, n] of Object.entries(s.stock ?? {})) row(id).stock += n;
+  for (const [id, n] of Object.entries(s.staging ?? {})) row(id).staging += n;
 
   // Machine buffers.
   for (const m of Object.values(s.machines ?? {})) {
@@ -105,6 +111,12 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
   // Belt/transit cargo.
   for (const b of Object.values(s.belts ?? {})) {
     if (b.cargo) row(b.cargo).belts += 1;
+  }
+
+  // Physical bulk storage contents.
+  for (const t of Object.values(s.storages ?? {})) {
+    for (const [id, n] of Object.entries(t.inventory ?? {}))
+      row(id).storage += n;
   }
 
   // In-flight batches: reserved material not yet in any buffer.
@@ -123,6 +135,10 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
   let embodied = 0;
   for (const m of Object.values(s.machines ?? {})) {
     const d = c.machines.find((a) => a.id === m.definitionId);
+    if (d) embodied += d.cost;
+  }
+  for (const t of Object.values(s.storages ?? {})) {
+    const d = c.storages.find((a) => a.id === t.definitionId);
     if (d) embodied += d.cost;
   }
   for (const f of Object.values(s.factories ?? {})) {
@@ -145,9 +161,11 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
     r.held =
       r.deposits +
       r.stock +
+      r.staging +
       r.machineInput +
       r.machineOutput +
       r.belts +
+      r.storage +
       r.escrow +
       r.embodied +
       r.exported +

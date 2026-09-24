@@ -6,6 +6,7 @@ import {
   machinePlacement,
   portError,
   beltError,
+  storageError,
   key,
 } from "./geometry";
 const count = z.number().int().nonnegative().max(1000000000),
@@ -52,8 +53,15 @@ const belt = z.object({
   direction,
   cargo: safeId.nullable(),
 });
+const storage = z.object({
+  ...point,
+  id: safeId,
+  definitionId: safeId,
+  direction,
+  inventory,
+});
 const schema = z.object({
-  schemaVersion: z.literal(3),
+  schemaVersion: z.literal(4),
   contentVersion: z.string(),
   tick: count,
   remainder: z.number().finite().nonnegative(),
@@ -68,11 +76,13 @@ const schema = z.object({
   machines: z.record(safeId, machine),
   factories: z.record(safeId, factory),
   belts: z.record(z.string().regex(/^\d+,\d+$/), belt),
+  storages: z.record(safeId, storage),
+  staging: inventory,
   policies: z.record(safeId, z.enum(["keep", "export"])),
 });
 export function initialState(c: Content): Save {
   return {
-    schemaVersion: 3,
+    schemaVersion: 4,
     contentVersion: c.version,
     tick: 0,
     remainder: 0,
@@ -87,6 +97,8 @@ export function initialState(c: Content): Save {
     machines: {},
     factories: {},
     belts: {},
+    storages: {},
+    staging: {},
     policies: Object.fromEntries(
       c.materials.filter((m) => m.known).map((m) => [m.id, "keep"]),
     ),
@@ -195,10 +207,25 @@ export function parseSave(input: unknown, c: Content): Save {
     if (b.cargo && !known.has(b.cargo)) throw new Error("Unknown cargo");
     stage.belts[location] = b;
   }
+  for (const [id, t] of Object.entries(s.storages)) {
+    takeId(id, "s");
+    if (t.id !== id) throw new Error("Mismatched storage ID");
+    const def = c.storages.find((d) => d.id === t.definitionId);
+    if (!def) throw new Error("Unknown storage type");
+    const error = storageError(c, stage, def, t);
+    if (error) throw new Error(error);
+    if (total(t.inventory) > def.capacity)
+      throw new Error("Storage capacity exceeded");
+    stage.storages[id] = t;
+  }
+  if (total(s.staging) > c.site.stagingCapacity)
+    throw new Error("Terminal staging capacity exceeded");
   for (const inv of [
     s.stock,
+    s.staging,
     ...Object.values(s.flows),
     ...Object.values(s.machines).flatMap((m) => [m.input, m.output]),
+    ...Object.values(s.storages).map((t) => t.inventory),
   ])
     if (Object.keys(inv).some((id) => !known.has(id)))
       throw new Error("Unknown inventory material");
