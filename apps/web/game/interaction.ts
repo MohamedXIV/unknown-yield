@@ -26,6 +26,20 @@ export const TOOL_HOTKEYS: Record<Tool, string> = {
   depot: "7",
   demolish: "X",
 };
+/**
+ * Stable structural fingerprint for Phaser rebuild invalidation.
+ * Every placed-geometry collection the renderer draws must appear here;
+ * otherwise topology edits leave stale world visuals until an unrelated
+ * change happens to invalidate.
+ */
+export function structureKey(s: PlayerSnapshot): string {
+  return JSON.stringify([
+    s.machines.map((m) => [m.id, m.x, m.y, m.direction]),
+    s.factories,
+    s.belts.map((b) => [b.id, b.direction]),
+    s.storages.map((t) => [t.id, t.definitionId, t.x, t.y, t.direction]),
+  ]);
+}
 export type WorldMode = {
   tool: Tool;
   direction: number;

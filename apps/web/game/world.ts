@@ -13,6 +13,7 @@ import {
   hitTest,
   DEFAULT_MODE,
   TOOL_HOTKEYS,
+  structureKey as computeStructureKey,
   type WorldMode,
   type Tool,
 } from "./interaction";
@@ -679,6 +680,7 @@ export function createWorld(
       const selected =
         snapshot.machines.find((m) => m.id === mode.selected) ??
         snapshot.factories.find((f) => f.id === mode.selected) ??
+        snapshot.storages.find((t) => t.id === mode.selected) ??
         (mode.selected === "terminal" ? snapshot.map.terminal : null);
       if (selected)
         g.lineStyle(2, 0xe3c78a, 0.85).strokeRect(
@@ -799,11 +801,7 @@ export function createWorld(
   return {
     setSnapshot: (s) => {
       snapshot = s;
-      const k = JSON.stringify([
-        s.machines.map((m) => [m.id, m.x, m.y, m.direction]),
-        s.factories,
-        s.belts.map((b) => [b.id, b.direction]),
-      ]);
+      const k = computeStructureKey(s);
       if (k !== structureKey) {
         structureKey = k;
         scene?.markDirty();

@@ -3,6 +3,7 @@ import {
   beltPath,
   buildCommand,
   hitTest,
+  structureKey,
   DEFAULT_MODE,
   TOOL_HOTKEYS,
 } from "../game/interaction";
@@ -73,4 +74,34 @@ it("hit-tests storage footprints by id", () => {
   const s = sim.snapshot();
   expect(hitTest(s, { x: 11, y: 21 }, [])).toBe(placed.id);
   expect(hitTest(s, { x: 0, y: 0 }, [])).toBeNull();
+});
+it("invalidates world geometry on storage-only topology edits", () => {
+  const sim = new Simulation(fixture);
+  const before = structureKey(sim.snapshot());
+  const first = sim.command({
+    type: "placeStorage",
+    definitionId: "depot",
+    x: 10,
+    y: 20,
+    direction: 0,
+  });
+  expect(first.ok).toBe(true);
+  const one = structureKey(sim.snapshot());
+  expect(one).not.toBe(before);
+  const second = sim.command({
+    type: "placeStorage",
+    definitionId: "depot",
+    x: 30,
+    y: 40,
+    direction: 1,
+  });
+  expect(second.ok).toBe(true);
+  const two = structureKey(sim.snapshot());
+  expect(two).not.toBe(one);
+  expect(sim.command({ type: "dismantle", id: second.id! }).ok).toBe(true);
+  // Back to exactly the one-depot key: removal invalidates too.
+  expect(structureKey(sim.snapshot())).toBe(one);
+  // Cargo-only changes must not rebuild geometry.
+  sim.step(5000);
+  expect(structureKey(sim.snapshot())).toBe(one);
 });
