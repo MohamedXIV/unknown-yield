@@ -289,6 +289,12 @@ export function createWorld(
       const w = this.cameras.main.getWorldPoint(p.x, p.y);
       return { x: Math.floor(w.x / X), y: Math.floor(w.y / Y) };
     }
+    buildUnit() {
+      const key = snapshot.materials.find(
+        (m) => m.id === snapshot.map.buildMaterial,
+      )?.nameKey;
+      return key ? translate(key).toLowerCase() : snapshot.map.buildMaterial;
+    }
     home() {
       const camera = this.cameras.main;
       camera
@@ -727,7 +733,7 @@ export function createWorld(
             this.hover.y +
             "  " +
             result.message +
-            (result.cost ? " · " + result.cost + " plates" : ""),
+            (result.cost ? " · " + result.cost + " " + this.buildUnit() : ""),
         )
         .setColor(result.ok ? "#d3e4ba" : "#f0ba9a");
     }

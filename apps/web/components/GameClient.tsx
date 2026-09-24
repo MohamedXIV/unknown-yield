@@ -60,8 +60,7 @@ const descriptions: Record<Tool, string> = {
     "Place entirely on a deposit. The arrow marks its output belt cell.",
   factory: "Drag a rectangle, 6–20 cells per side. Click for a 6×6 factory.",
   crusher: "Place inside a factory. Cyan is input; gold is output.",
-  furnace:
-    "Place inside a factory. Operation: heat. Outcomes require observation.",
+  furnace: "Place inside a factory.",
   belt: "Drag a ground path. Release to build. Click for one cell; R changes its direction.",
   port: "Place on a factory wall. R changes flow direction. Add a belt on the port.",
   demolish:
@@ -163,6 +162,17 @@ function GameClientInner() {
   const toolName = (tool: Tool) => {
     const key = snapshot.definitions.find((d) => d.id === tool)?.nameKey;
     return key ? t(key) : (genericNames[tool] ?? tool);
+  };
+  // The furnace description names its operation, which is content data.
+  const toolDescription = (tool: Tool) => {
+    if (tool !== "furnace") return descriptions[tool];
+    const key = snapshot.operations.find((o) => o.id === "heat")?.nameKey;
+    return (
+      descriptions.furnace +
+      " Operation: " +
+      (key ? t(key) : "heat") +
+      ". Outcomes require observation."
+    );
   };
   const buffer = (inv: Inventory) => (
     <div className="inventory">
@@ -304,16 +314,18 @@ function GameClientInner() {
                   : ""
               }
             >
-              Place an extractor over ferrite rubble.
+              Place an extractor over {materialName("ferrite").toLowerCase()}.
             </li>
             <li className={snapshot.factories.length ? "done" : ""}>
-              Draw a factory. Put a crusher inside.
+              Draw a factory. Put a {toolName("crusher").toLowerCase()} inside.
             </li>
             <li className={snapshot.belts.length ? "done" : ""}>
-              Route belts through wall ports to the crusher, then the terminal.
+              Route belts through wall ports to the{" "}
+              {toolName("crusher").toLowerCase()}, then the terminal.
             </li>
             <li className={snapshot.milestone ? "done" : ""}>
-              Expand with local plates. Experiment with veined ore.
+              Expand with local {materialName("plates").toLowerCase()}.
+              Experiment with {materialName("raw").toLowerCase()}.
             </li>
           </ol>
           <p>
@@ -624,7 +636,7 @@ function GameClientInner() {
                       className="primary"
                       onClick={() => setTool("extractor")}
                     >
-                      Place extractor
+                      Place {toolName("extractor").toLowerCase()}
                     </button>
                   </>
                 )}
@@ -681,7 +693,8 @@ function GameClientInner() {
                 )}
                 <h3>Site stock & policies</h3>
                 <p className="hint">
-                  Incoming cargo joins site stock. Reserved plates fund
+                  Incoming cargo joins site stock. Reserved{" "}
+                  {materialName(snapshot.map.buildMaterial).toLowerCase()} fund
                   construction. Exported materials repay obligations before
                   allocating fuel.
                 </p>
@@ -805,7 +818,7 @@ function GameClientInner() {
         {mode.tool !== "select" && (
           <div className="build-hint">
             <strong>{toolName(mode.tool)}</strong>
-            <span>{descriptions[mode.tool]}</span>
+            <span>{toolDescription(mode.tool)}</span>
             <button
               aria-label="Rotate build direction"
               onClick={() =>

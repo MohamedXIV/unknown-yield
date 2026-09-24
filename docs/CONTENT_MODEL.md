@@ -389,6 +389,9 @@ Implemented convention (Issue #14):
 - `packages/content/src/locale.ts` holds the English source/fallback catalog (`enCatalog`), the catalog shape (`localeCatalogSchema`) and `validateLocaleCoverage`, which `validateContent` enforces for every snapshot;
 - `apps/web/game/i18n.ts` owns the single shared i18next instance: React resolves text via `I18nextProvider` + `useTranslation`, Phaser/tools use the same instance directly; `sim-core` snapshots expose IDs/keys only;
 - new content entities must add `nameKey`/equivalent key fields plus catalog entries — missing keys fail validation, never silently substitute identity;
+- keys are per-entity stable references and must match their entity exactly (`material.<id>.name`, not another entity's key): borrowing a key would couple two display names forever, so aliasing is rejected by semantic validation;
+- machine runtime state uses semantic status codes (`ready`, `processing`, `disabled`, `deposit-exhausted`, `needs-compatible-input`, `needs-input`, `output-full`, `needs-fuel`): gameplay branches on codes, presentation maps them through an exhaustive label table — never English prose as domain state;
+- build-toolbar machine labels resolve from content definitions through the catalog (a rename updates toolbar and inspector together); placement toasts use generic wording, never raw IDs;
 - generic UI chrome (tool labels, buttons, hints, command-result toasts) stays plain English for now and is explicitly out of the content-key migration; do not mix such strings into content identity or save state;
 - renaming a catalog value changes no ID, reference or save; swapping locale resources changes presentation without changing simulation state (both covered by tests).
 
