@@ -7,7 +7,7 @@ import type { Content } from "./schema";
  * Content identity is always a stable machine-readable ID. Player-facing
  * wording lives in locale catalogs keyed by namespaced dotted keys:
  * `material.<id>.name`, `operation.<id>.name`, `machine.<id>.name`,
- * `reaction.<id>.observation`. Renaming an English value never changes an ID
+ * `storage.<id>.name`, `reaction.<id>.observation`. Renaming an English value never changes an ID
  * and never requires a save migration. This package validates catalog shape
  * and key coverage; resolution (i18next) lives outside `sim-core`.
  */
@@ -25,6 +25,7 @@ export function contentKeys(c: Content): string[] {
     ...c.materials.map((m) => m.nameKey),
     ...c.operations.map((o) => o.nameKey),
     ...c.machines.map((m) => m.nameKey),
+    ...c.storages.map((s) => s.nameKey),
     ...c.reactions.map((r) => r.observationKey),
   ];
 }
@@ -51,6 +52,7 @@ export const enCatalog: LocaleCatalog = {
   "machine.extractor.name": "Extractor",
   "machine.crusher.name": "Crusher",
   "machine.furnace.name": "Furnace",
+  "storage.depot.name": "Depot",
   "reaction.press-ferrite.observation":
     "Ferrite compacts into structural plates for local construction.",
   "reaction.crush-raw.observation":

@@ -44,6 +44,18 @@ export const contentSchema = z.object({
       }),
     )
     .min(1),
+  storages: z
+    .array(
+      z.object({
+        id,
+        nameKey: localeKeySchema,
+        capacity: positive,
+        width: positive,
+        height: positive,
+        cost: positive,
+      }),
+    )
+    .min(1),
   reactions: z
     .array(
       z.object({
@@ -69,6 +81,7 @@ export const contentSchema = z.object({
     beltCost: positive,
     portCost: positive,
     transportEveryTicks: positive,
+    stagingCapacity: positive,
     terminal: z.object({ x: pos, y: pos, width: positive, height: positive }),
     deposits: z
       .array(
@@ -93,12 +106,14 @@ export const contentSchema = z.object({
 });
 export type Content = z.infer<typeof contentSchema>;
 export type MachineDefinition = Content["machines"][number];
+export type StorageDefinition = Content["storages"][number];
 export function validateContent(input: unknown): Content {
   const c = contentSchema.parse(input);
   for (const table of [
     c.materials,
     c.operations,
     c.machines,
+    c.storages,
     c.reactions,
     c.site.deposits,
   ])
@@ -190,6 +205,11 @@ export function validateContent(input: unknown): Content {
     if (m.nameKey !== "machine." + m.id + ".name")
       throw new Error(
         "Localization key must match its entity: " + m.nameKey,
+      );
+  for (const s of c.storages)
+    if (s.nameKey !== "storage." + s.id + ".name")
+      throw new Error(
+        "Localization key must match its entity: " + s.nameKey,
       );
   for (const r of c.reactions)
     if (r.observationKey !== "reaction." + r.id + ".observation")

@@ -3,6 +3,7 @@ export {
   contentSchema,
   type Content,
   type MachineDefinition,
+  type StorageDefinition,
 } from "./schema";
 export {
   enCatalog,
