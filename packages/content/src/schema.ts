@@ -174,5 +174,27 @@ export function validateContent(input: unknown): Content {
   )
     throw new Error("Recovery grant cannot restart production");
   validateLocaleCoverage(c, enCatalog);
+  // Keys are per-entity stable references, never shared aliases: borrowing
+  // another entity's key would couple their display names forever.
+  for (const m of c.materials)
+    if (m.nameKey !== "material." + m.id + ".name")
+      throw new Error(
+        "Localization key must match its entity: " + m.nameKey,
+      );
+  for (const o of c.operations)
+    if (o.nameKey !== "operation." + o.id + ".name")
+      throw new Error(
+        "Localization key must match its entity: " + o.nameKey,
+      );
+  for (const m of c.machines)
+    if (m.nameKey !== "machine." + m.id + ".name")
+      throw new Error(
+        "Localization key must match its entity: " + m.nameKey,
+      );
+  for (const r of c.reactions)
+    if (r.observationKey !== "reaction." + r.id + ".observation")
+      throw new Error(
+        "Localization key must match its entity: " + r.observationKey,
+      );
   return c;
 }

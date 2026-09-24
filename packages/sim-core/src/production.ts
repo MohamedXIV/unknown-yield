@@ -1,5 +1,12 @@
 import type { Content } from "@site/content";
-import { amount, change, total, type Save, type Machine } from "./types";
+import {
+  amount,
+  change,
+  total,
+  type MachineStatus,
+  type Save,
+  type Machine,
+} from "./types";
 import { key, next, socket, contains, footprint } from "./geometry";
 export function recipe(c: Content, m: Machine) {
   return c.reactions.find(
@@ -7,19 +14,19 @@ export function recipe(c: Content, m: Machine) {
       r.operation === m.operation && amount(m.input, r.input) >= r.inputAmount,
   );
 }
-export function status(c: Content, s: Save, m: Machine): string {
-  if (m.job) return "Processing";
-  if (!m.enabled) return "Disabled";
+export function status(c: Content, s: Save, m: Machine): MachineStatus {
+  if (m.job) return "processing";
+  if (!m.enabled) return "disabled";
   const d = c.machines.find((d) => d.id === m.definitionId)!;
   const r = recipe(c, m);
   if (d.role === "extractor" && (!m.depositId || s.deposits[m.depositId] === 0))
-    return "Deposit exhausted";
+    return "deposit-exhausted";
   if (d.role === "processor" && !r)
-    return total(m.input) ? "Needs compatible input" : "Needs input";
+    return total(m.input) ? "needs-compatible-input" : "needs-input";
   if (total(m.output) + (r?.outputAmount ?? 1) > d.capacity)
-    return "Output full";
-  if (s.fuel < d.fuel) return "Needs fuel";
-  return "Ready";
+    return "output-full";
+  if (s.fuel < d.fuel) return "needs-fuel";
+  return "ready";
 }
 export function completeAndStart(
   c: Content,
@@ -50,7 +57,7 @@ export function completeAndStart(
         }
         m.job = null;
       }
-    } else if (status(c, s, m) === "Ready") {
+    } else if (status(c, s, m) === "ready") {
       const r = recipe(c, m);
       s.fuel -= d.fuel;
       if (r) change(m.input, r.input, -r.inputAmount);

@@ -16,6 +16,7 @@ import {
   type Tool,
 } from "./interaction";
 import { t as translate } from "./i18n";
+import { machineStatusLabel } from "./machine-status";
 export type WorldControls = {
   setSnapshot(s: PlayerSnapshot): void;
   setMode(mode: WorldMode): void;
@@ -516,12 +517,14 @@ export function createWorld(
       for (const m of snapshot.machines)
         this.labels
           .get(m.id)
-          ?.setText(m.status === "Processing" ? "" : m.status)
-          .setColor(m.status === "Needs fuel" ? "#e5ad75" : "#c0c6a9");
+          ?.setText(
+            m.status === "processing" ? "" : machineStatusLabel(m.status),
+          )
+          .setColor(m.status === "needs-fuel" ? "#e5ad75" : "#c0c6a9");
       for (const f of snapshot.factories) {
         const children = snapshot.machines.filter((m) => m.factoryId === f.id);
         this.labels.get(f.id)?.setText(
-          children.filter((m) => m.status === "Processing").length +
+          children.filter((m) => m.status === "processing").length +
             " / " +
             children.length +
             " RUNNING\n" +
@@ -608,7 +611,7 @@ export function createWorld(
       for (const m of snapshot.machines) {
         if (m.factoryId && !mode.openFactories.includes(m.factoryId)) continue;
         g.fillStyle(
-          m.status === "Processing"
+          m.status === "processing"
             ? 0xb2d68a
             : m.enabled
               ? 0xd6a66e

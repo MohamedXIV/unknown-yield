@@ -219,7 +219,7 @@ describe("automatic industry", () => {
     const blocked = s.snapshot();
     s.step(10000);
     expect(s.snapshot().fuel).toBe(blocked.fuel);
-    expect(s.snapshot().machines[0].status).toBe("Output full");
+    expect(s.snapshot().machines[0].status).toBe("output-full");
     const amount = Object.values(s.snapshot().machines[0].output).reduce(
       (a, b) => a + b,
       0,

@@ -30,14 +30,14 @@ describe("content boundary", () => {
   });
   it("round-trips a material edit through TinyBase and validation", () => {
     const store = createContentStore(fixture);
-    store.setCell("materials", "raw", "nameKey", "material.ferrite.name");
+    store.setCell("materials", "raw", "exportValue", 7);
     const exported = contentFromStore(store, fixture);
-    expect(exported.materials.find((m) => m.id === "raw")?.nameKey).toBe(
-      "material.ferrite.name",
+    expect(exported.materials.find((m) => m.id === "raw")?.exportValue).toBe(
+      7,
     );
-    expect(fixture.materials.find((m) => m.id === "raw")?.nameKey).not.toBe(
-      "material.ferrite.name",
-    );
+    expect(
+      fixture.materials.find((m) => m.id === "raw")?.exportValue,
+    ).not.toBe(7);
     expect(validateContent(JSON.parse(JSON.stringify(exported)))).toEqual(
       exported,
     );
@@ -60,6 +60,11 @@ describe("content boundary", () => {
     expect(() => validateLocaleCoverage(d, enCatalog)).toThrow(
       /Missing localization key/,
     );
+  });
+  it("rejects localization keys borrowed from another entity", () => {
+    const c = structuredClone(fixture);
+    c.materials.find((m) => m.id === "raw")!.nameKey = "material.ferrite.name";
+    expect(() => validateContent(c)).toThrow(/must match its entity/);
   });
   it("rejects malformed localization catalogs", () => {
     expect(() => localeCatalogSchema.parse({ "bad key!": "x" })).toThrow();

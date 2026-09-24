@@ -1,7 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { readdir, readFile } from "node:fs/promises";
 import { fixture, enCatalog } from "@site/content";
-import { Simulation, type GameCommand } from "../src/index";
+import {
+  Simulation,
+  MACHINE_STATUSES,
+  type GameCommand,
+} from "../src/index";
+import { status } from "../src/production";
 
 /**
  * Issue #14 boundary guards (decision D-022).
@@ -71,5 +76,85 @@ describe("localization boundary", () => {
       const source = await readFile(new URL(file, dir), "utf8");
       expect(source, file).not.toMatch(banned);
     }
+  });
+});
+
+describe("semantic machine status", () => {
+  it("reports kebab-case codes that gameplay branches on, never prose", () => {
+    for (const code of MACHINE_STATUSES)
+      expect(code).toMatch(/^[a-z]+(-[a-z]+)*$/);
+    const s = new Simulation(fixture);
+    const extractor = build(s, {
+      type: "placeMachine",
+      definitionId: "extractor",
+      x: 15,
+      y: 25,
+      direction: 0,
+    });
+    const save = s.serialize();
+    expect(status(fixture, save, save.machines[extractor])).toBe("ready");
+    s.command({ type: "setEnabled", machineId: extractor, enabled: false });
+    expect(
+      status(fixture, s.serialize(), s.serialize().machines[extractor]),
+    ).toBe("disabled");
+    s.command({ type: "setEnabled", machineId: extractor, enabled: true });
+    s.step(500);
+    expect(
+      status(fixture, s.serialize(), s.serialize().machines[extractor]),
+    ).toBe("processing");
+    const fresh = new Simulation(fixture);
+    const other = build(fresh, {
+      type: "placeMachine",
+      definitionId: "extractor",
+      x: 15,
+      y: 25,
+      direction: 0,
+    });
+    const empty = fresh.serialize();
+    empty.deposits["ferrite-field"] = 0;
+    expect(status(fixture, empty, empty.machines[other])).toBe(
+      "deposit-exhausted",
+    );
+  });
+
+  it("distinguishes input states without display text", () => {
+    const s = new Simulation(fixture);
+    const factory = build(s, {
+      type: "placeFactory",
+      x: 24,
+      y: 22,
+      width: 10,
+      height: 10,
+    });
+    expect(factory).toBeTruthy();
+    const crusher = build(s, {
+      type: "placeMachine",
+      definitionId: "crusher",
+      x: 27,
+      y: 26,
+      direction: 0,
+    });
+    const save = s.serialize();
+    expect(status(fixture, save, save.machines[crusher])).toBe("needs-input");
+    const partial = s.serialize();
+    partial.machines[crusher].input = { ferrite: 1 };
+    expect(status(fixture, partial, partial.machines[crusher])).toBe(
+      "needs-compatible-input",
+    );
+  });
+
+  it("reports fuel shortage as a code", () => {
+    const c = structuredClone(fixture);
+    c.economy.startFuel = 0;
+    const s = new Simulation(c);
+    const id = build(s, {
+      type: "placeMachine",
+      definitionId: "extractor",
+      x: 15,
+      y: 25,
+      direction: 0,
+    });
+    const save = s.serialize();
+    expect(status(c, save, save.machines[id])).toBe("needs-fuel");
   });
 });

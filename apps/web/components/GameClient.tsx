@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { I18nextProvider, useTranslation } from "react-i18next";
 import { i18n } from "../game/i18n";
+import { machineStatusLabel } from "../game/machine-status";
 import type { GameCommand, CommandResult, Inventory } from "@site/sim-core";
 import { Session } from "../game/session";
 import { DEFAULT_MODE, type WorldMode, type Tool } from "../game/interaction";
@@ -45,12 +46,9 @@ function Glyph({ type, size = 20 }: { type: string; size?: number }) {
     </svg>
   );
 }
-const names: Record<Tool, string> = {
+const genericNames: Record<string, string> = {
   select: "Inspect",
-  extractor: "Extractor",
   factory: "Factory",
-  crusher: "Crusher",
-  furnace: "Furnace",
   belt: "Belt",
   port: "Wall port",
   demolish: "Dismantle",
@@ -159,6 +157,12 @@ function GameClientInner() {
   const materialName = (id: string) => {
     const key = snapshot.materials.find((m) => m.id === id)?.nameKey;
     return key ? t(key) : "Unidentified material";
+  };
+  // Machine-tool labels resolve from content definitions so a catalog rename
+  // updates the toolbar and inspector together. Generic tools stay English.
+  const toolName = (tool: Tool) => {
+    const key = snapshot.definitions.find((d) => d.id === tool)?.nameKey;
+    return key ? t(key) : (genericNames[tool] ?? tool);
   };
   const buffer = (inv: Inventory) => (
     <div className="inventory">
@@ -366,10 +370,10 @@ function GameClientInner() {
                     <div
                       className={
                         "status-line " +
-                        (machine.status === "Processing" ? "running" : "")
+                        (machine.status === "processing" ? "running" : "")
                       }
                     >
-                      {machine.status}
+                      {machineStatusLabel(machine.status)}
                     </div>
                     <div className="progress-track">
                       <i style={{ width: machine.progress * 100 + "%" }} />
@@ -548,7 +552,7 @@ function GameClientInner() {
                           }}
                         >
                           <span>{t(m.nameKey)}</span>
-                          <small>{m.status}</small>
+                          <small>{machineStatusLabel(m.status)}</small>
                         </button>
                       ))}
                     <button
@@ -800,7 +804,7 @@ function GameClientInner() {
       <div className="build-zone">
         {mode.tool !== "select" && (
           <div className="build-hint">
-            <strong>{names[mode.tool]}</strong>
+            <strong>{toolName(mode.tool)}</strong>
             <span>{descriptions[mode.tool]}</span>
             <button
               aria-label="Rotate build direction"
@@ -834,14 +838,14 @@ function GameClientInner() {
             <button
               key={tool}
               className={mode.tool === tool ? "active" : ""}
-              aria-label={names[tool]}
+              aria-label={toolName(tool)}
               aria-pressed={mode.tool === tool}
               title={descriptions[tool]}
               onClick={() => setTool(tool)}
             >
               <small>{i === 0 ? "↖" : i === 7 ? "X" : i}</small>
               <Glyph type={tool} size={25} />
-              <span>{names[tool]}</span>
+              <span>{toolName(tool)}</span>
               {toolCost(tool) ? (
                 <em>
                   {toolCost(tool)}
