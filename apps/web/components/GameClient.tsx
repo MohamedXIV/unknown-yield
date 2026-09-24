@@ -1,5 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
+import { I18nextProvider, useTranslation } from "react-i18next";
+import { i18n } from "../game/i18n";
+import { machineStatusLabel } from "../game/machine-status";
 import type { GameCommand, CommandResult, Inventory } from "@site/sim-core";
 import { Session } from "../game/session";
 import { DEFAULT_MODE, type WorldMode, type Tool } from "../game/interaction";
@@ -43,12 +46,9 @@ function Glyph({ type, size = 20 }: { type: string; size?: number }) {
     </svg>
   );
 }
-const names: Record<Tool, string> = {
+const genericNames: Record<string, string> = {
   select: "Inspect",
-  extractor: "Extractor",
   factory: "Factory",
-  crusher: "Crusher",
-  furnace: "Furnace",
   belt: "Belt",
   port: "Wall port",
   demolish: "Dismantle",
@@ -60,14 +60,14 @@ const descriptions: Record<Tool, string> = {
     "Place entirely on a deposit. The arrow marks its output belt cell.",
   factory: "Drag a rectangle, 6–20 cells per side. Click for a 6×6 factory.",
   crusher: "Place inside a factory. Cyan is input; gold is output.",
-  furnace:
-    "Place inside a factory. Operation: heat. Outcomes require observation.",
+  furnace: "Place inside a factory.",
   belt: "Drag a ground path. Release to build. Click for one cell; R changes its direction.",
   port: "Place on a factory wall. R changes flow direction. Add a belt on the port.",
   demolish:
     "Click a structure to reclaim it and its contents. Stop active machines first.",
 };
-export default function GameClient() {
+function GameClientInner() {
+  const { t } = useTranslation();
   const [session] = useState(() => new Session()),
     [snapshot, setSnapshot] = useState(() => session.snapshot());
   const [mode, setMode] = useState<WorldMode>(DEFAULT_MODE),
@@ -153,9 +153,27 @@ export default function GameClient() {
       f.ports.some((p) => p.id === mode.selected),
     ),
     deposit = snapshot.deposits.find((d) => d.id === mode.selected);
-  const materialName = (id: string) =>
-    snapshot.materials.find((m) => m.id === id)?.name ??
-    "Unidentified material";
+  const materialName = (id: string) => {
+    const key = snapshot.materials.find((m) => m.id === id)?.nameKey;
+    return key ? t(key) : "Unidentified material";
+  };
+  // Machine-tool labels resolve from content definitions so a catalog rename
+  // updates the toolbar and inspector together. Generic tools stay English.
+  const toolName = (tool: Tool) => {
+    const key = snapshot.definitions.find((d) => d.id === tool)?.nameKey;
+    return key ? t(key) : (genericNames[tool] ?? tool);
+  };
+  // The furnace description names its operation, which is content data.
+  const toolDescription = (tool: Tool) => {
+    if (tool !== "furnace") return descriptions[tool];
+    const key = snapshot.operations.find((o) => o.id === "heat")?.nameKey;
+    return (
+      descriptions.furnace +
+      " Operation: " +
+      (key ? t(key) : "heat") +
+      ". Outcomes require observation."
+    );
+  };
   const buffer = (inv: Inventory) => (
     <div className="inventory">
       {Object.entries(inv).length ? (
@@ -296,16 +314,18 @@ export default function GameClient() {
                   : ""
               }
             >
-              Place an extractor over ferrite rubble.
+              Place an extractor over {materialName("ferrite").toLowerCase()}.
             </li>
             <li className={snapshot.factories.length ? "done" : ""}>
-              Draw a factory. Put a crusher inside.
+              Draw a factory. Put a {toolName("crusher").toLowerCase()} inside.
             </li>
             <li className={snapshot.belts.length ? "done" : ""}>
-              Route belts through wall ports to the crusher, then the terminal.
+              Route belts through wall ports to the{" "}
+              {toolName("crusher").toLowerCase()}, then the terminal.
             </li>
             <li className={snapshot.milestone ? "done" : ""}>
-              Expand with local plates. Experiment with veined ore.
+              Expand with local {materialName("plates").toLowerCase()}.
+              Experiment with {materialName("raw").toLowerCase()}.
             </li>
           </ol>
           <p>
@@ -358,14 +378,14 @@ export default function GameClient() {
                     <small className="eyebrow">
                       {machine.id.toUpperCase()} · AUTOMATED EQUIPMENT
                     </small>
-                    <h2>{machine.name}</h2>
+                    <h2>{t(machine.nameKey)}</h2>
                     <div
                       className={
                         "status-line " +
-                        (machine.status === "Processing" ? "running" : "")
+                        (machine.status === "processing" ? "running" : "")
                       }
                     >
-                      {machine.status}
+                      {machineStatusLabel(machine.status)}
                     </div>
                     <div className="progress-track">
                       <i style={{ width: machine.progress * 100 + "%" }} />
@@ -397,10 +417,10 @@ export default function GameClient() {
                             .find((d) => d.id === machine.definitionId)!
                             .operations.map((id) => (
                               <option value={id} key={id}>
-                                {
+                                {t(
                                   snapshot.operations.find((o) => o.id === id)
-                                    ?.name
-                                }
+                                    ?.nameKey ?? id,
+                                )}
                               </option>
                             ))}
                         </select>
@@ -543,8 +563,8 @@ export default function GameClient() {
                             select(m.id);
                           }}
                         >
-                          <span>{m.name}</span>
-                          <small>{m.status}</small>
+                          <span>{t(m.nameKey)}</span>
+                          <small>{machineStatusLabel(m.status)}</small>
                         </button>
                       ))}
                     <button
@@ -616,7 +636,7 @@ export default function GameClient() {
                       className="primary"
                       onClick={() => setTool("extractor")}
                     >
-                      Place extractor
+                      Place {toolName("extractor").toLowerCase()}
                     </button>
                   </>
                 )}
@@ -630,15 +650,27 @@ export default function GameClient() {
                   There is no complete recipe book.
                 </p>
                 {snapshot.observations.map((o) => (
-                  <article className="observation" key={o.operation + o.input}>
+                  <article
+                    className="observation"
+                    key={o.operationId + o.inputId}
+                  >
                     <small>
                       {o.initial ? "KNOWN METHOD" : "OBSERVED"} ·{" "}
-                      {o.operation.toUpperCase()}
+                      {t(
+                        snapshot.operations.find(
+                          (op) => op.id === o.operationId,
+                        )?.nameKey ?? o.operationId,
+                      ).toUpperCase()}
                     </small>
-                    <h3>{o.output}</h3>
-                    <p>{o.text}</p>
+                    <h3>{materialName(o.outputId)}</h3>
+                    <p>{t(o.textKey)}</p>
                     <span>
-                      {o.input} → {o.operation}
+                      {materialName(o.inputId)} →{" "}
+                      {t(
+                        snapshot.operations.find(
+                          (op) => op.id === o.operationId,
+                        )?.nameKey ?? o.operationId,
+                      )}
                     </span>
                   </article>
                 ))}
@@ -661,7 +693,8 @@ export default function GameClient() {
                 )}
                 <h3>Site stock & policies</h3>
                 <p className="hint">
-                  Incoming cargo joins site stock. Reserved plates fund
+                  Incoming cargo joins site stock. Reserved{" "}
+                  {materialName(snapshot.map.buildMaterial).toLowerCase()} fund
                   construction. Exported materials repay obligations before
                   allocating fuel.
                 </p>
@@ -670,7 +703,7 @@ export default function GameClient() {
                     <div>
                       <i style={{ background: m.color }} />
                       <span>
-                        {m.name}
+                        {t(m.nameKey)}
                         <small>
                           {snapshot.stock[m.id] ?? 0} stored{" "}
                           {m.exportValue
@@ -680,7 +713,7 @@ export default function GameClient() {
                       </span>
                     </div>
                     <select
-                      aria-label={m.name + " policy"}
+                      aria-label={t(m.nameKey) + " policy"}
                       value={snapshot.policies[m.id] ?? "keep"}
                       onChange={(e) =>
                         act({
@@ -784,8 +817,8 @@ export default function GameClient() {
       <div className="build-zone">
         {mode.tool !== "select" && (
           <div className="build-hint">
-            <strong>{names[mode.tool]}</strong>
-            <span>{descriptions[mode.tool]}</span>
+            <strong>{toolName(mode.tool)}</strong>
+            <span>{toolDescription(mode.tool)}</span>
             <button
               aria-label="Rotate build direction"
               onClick={() =>
@@ -818,14 +851,14 @@ export default function GameClient() {
             <button
               key={tool}
               className={mode.tool === tool ? "active" : ""}
-              aria-label={names[tool]}
+              aria-label={toolName(tool)}
               aria-pressed={mode.tool === tool}
               title={descriptions[tool]}
               onClick={() => setTool(tool)}
             >
               <small>{i === 0 ? "↖" : i === 7 ? "X" : i}</small>
               <Glyph type={tool} size={25} />
-              <span>{names[tool]}</span>
+              <span>{toolName(tool)}</span>
               {toolCost(tool) ? (
                 <em>
                   {toolCost(tool)}
@@ -843,5 +876,13 @@ export default function GameClient() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function GameClient() {
+  return (
+    <I18nextProvider i18n={i18n}>
+      <GameClientInner />
+    </I18nextProvider>
   );
 }

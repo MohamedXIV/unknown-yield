@@ -15,6 +15,8 @@ import {
   type WorldMode,
   type Tool,
 } from "./interaction";
+import { t as translate } from "./i18n";
+import { machineStatusLabel } from "./machine-status";
 export type WorldControls = {
   setSnapshot(s: PlayerSnapshot): void;
   setMode(mode: WorldMode): void;
@@ -62,7 +64,7 @@ export function createWorld(
     private keys = new Set<string>();
     private dirty = true;
     private seenDiscoveries = new Set(
-      initial.observations.map((o) => o.operation + ":" + o.input),
+      initial.observations.map((o) => o.operationId + ":" + o.inputId),
     );
     private notices: Phaser.GameObjects.Text[] = [];
     private text(x: number, y: number, t: string, size = 10, c = "#c4c7b0") {
@@ -146,7 +148,7 @@ export function createWorld(
         this.text(
           (d.x + d.width / 2) * X,
           (d.y + d.height) * Y + 17,
-          mat.name.toUpperCase(),
+          translate(mat.nameKey).toUpperCase(),
           9,
           "#b6b397",
         );
@@ -286,6 +288,12 @@ export function createWorld(
     cell(p: Phaser.Input.Pointer): Point {
       const w = this.cameras.main.getWorldPoint(p.x, p.y);
       return { x: Math.floor(w.x / X), y: Math.floor(w.y / Y) };
+    }
+    buildUnit() {
+      const key = snapshot.materials.find(
+        (m) => m.id === snapshot.map.buildMaterial,
+      )?.nameKey;
+      return key ? translate(key).toLowerCase() : snapshot.map.buildMaterial;
     }
     home() {
       const camera = this.cameras.main;
@@ -515,32 +523,40 @@ export function createWorld(
       for (const m of snapshot.machines)
         this.labels
           .get(m.id)
-          ?.setText(m.status === "Processing" ? "" : m.status)
-          .setColor(m.status === "Needs fuel" ? "#e5ad75" : "#c0c6a9");
+          ?.setText(
+            m.status === "processing" ? "" : machineStatusLabel(m.status),
+          )
+          .setColor(m.status === "needs-fuel" ? "#e5ad75" : "#c0c6a9");
       for (const f of snapshot.factories) {
         const children = snapshot.machines.filter((m) => m.factoryId === f.id);
         this.labels.get(f.id)?.setText(
-          children.filter((m) => m.status === "Processing").length +
+          children.filter((m) => m.status === "processing").length +
             " / " +
             children.length +
             " RUNNING\n" +
             [...new Set(children.flatMap((m) => Object.keys(m.output)))]
-              .map((id) => snapshot.materials.find((m) => m.id === id)?.name)
+              .map((id) => {
+                const key = snapshot.materials.find((m) => m.id === id)?.nameKey;
+                return key ? translate(key) : "";
+              })
               .filter(Boolean)
               .join(" · "),
         );
       }
       const discovered = snapshot.observations.filter((o) => !o.initial);
       for (const o of discovered) {
-        const id = o.operation + ":" + o.input;
+        const id = o.operationId + ":" + o.inputId;
         if (this.seenDiscoveries.has(id)) continue;
         this.seenDiscoveries.add(id);
         // Restored knowledge has no new physical event to announce.
         if (!o.observedAt) continue;
+        const outputKey = snapshot.materials.find(
+          (m) => m.id === o.outputId,
+        )?.nameKey;
         const note = this.text(
           o.observedAt.x * X,
           o.observedAt.y * Y - 60,
-          "DISCOVERED: " + o.output,
+          "DISCOVERED: " + (outputKey ? translate(outputKey) : o.outputId),
           13,
           "#d2e5ad",
         ).setDepth(900);
@@ -557,7 +573,7 @@ export function createWorld(
         });
       }
       this.seenDiscoveries = new Set(
-        snapshot.observations.map((o) => o.operation + ":" + o.input),
+        snapshot.observations.map((o) => o.operationId + ":" + o.inputId),
       );
     }
     update(_time: number, delta: number) {
@@ -601,7 +617,7 @@ export function createWorld(
       for (const m of snapshot.machines) {
         if (m.factoryId && !mode.openFactories.includes(m.factoryId)) continue;
         g.fillStyle(
-          m.status === "Processing"
+          m.status === "processing"
             ? 0xb2d68a
             : m.enabled
               ? 0xd6a66e
@@ -717,7 +733,7 @@ export function createWorld(
             this.hover.y +
             "  " +
             result.message +
-            (result.cost ? " · " + result.cost + " plates" : ""),
+            (result.cost ? " · " + result.cost + " " + this.buildUnit() : ""),
         )
         .setColor(result.ok ? "#d3e4ba" : "#f0ba9a");
     }

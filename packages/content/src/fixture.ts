@@ -1,52 +1,52 @@
 import { validateContent } from "./schema";
 export const fixture = validateContent({
-  version: "world-01-v2",
+  version: "world-01-v3",
   tickMs: 100,
   materials: [
     {
       id: "ferrite",
-      name: "Ferrite rubble",
+      nameKey: "material.ferrite.name",
       color: "#a88d78",
       exportValue: 0,
       known: true,
     },
     {
       id: "plates",
-      name: "Structural plates",
+      nameKey: "material.plates.name",
       color: "#b7c6ad",
       exportValue: 0,
       known: true,
     },
     {
       id: "raw",
-      name: "Veined ore",
+      nameKey: "material.raw.name",
       color: "#c8aa73",
       exportValue: 0,
       known: true,
     },
     {
       id: "granules",
-      name: "Conductive granules",
+      nameKey: "material.granules.name",
       color: "#aadea0",
       exportValue: 12,
       known: false,
     },
     {
       id: "residue",
-      name: "Vitrified residue",
+      nameKey: "material.residue.name",
       color: "#b298c4",
       exportValue: 0,
       known: false,
     },
   ],
   operations: [
-    { id: "crush", name: "Crush" },
-    { id: "heat", name: "Heat" },
+    { id: "crush", nameKey: "operation.crush.name" },
+    { id: "heat", nameKey: "operation.heat.name" },
   ],
   machines: [
     {
       id: "extractor",
-      name: "Extractor",
+      nameKey: "machine.extractor.name",
       role: "extractor",
       operations: [],
       capacity: 8,
@@ -58,7 +58,7 @@ export const fixture = validateContent({
     },
     {
       id: "crusher",
-      name: "Crusher",
+      nameKey: "machine.crusher.name",
       role: "processor",
       operations: ["crush"],
       capacity: 12,
@@ -70,7 +70,7 @@ export const fixture = validateContent({
     },
     {
       id: "furnace",
-      name: "Furnace",
+      nameKey: "machine.furnace.name",
       role: "processor",
       operations: ["heat"],
       capacity: 12,
@@ -89,8 +89,7 @@ export const fixture = validateContent({
       inputAmount: 2,
       output: "plates",
       outputAmount: 6,
-      observation:
-        "Ferrite compacts into structural plates for local construction.",
+      observationKey: "reaction.press-ferrite.observation",
       known: true,
     },
     {
@@ -100,8 +99,7 @@ export const fixture = validateContent({
       inputAmount: 2,
       output: "granules",
       outputAmount: 1,
-      observation:
-        "Fracturing the ore releases conductive grains. The company accepts this material for fuel.",
+      observationKey: "reaction.crush-raw.observation",
       known: false,
     },
     {
@@ -111,8 +109,7 @@ export const fixture = validateContent({
       inputAmount: 2,
       output: "residue",
       outputAmount: 1,
-      observation:
-        "The sample vitrifies under heat. It has no export value; mechanical processing remains worth investigating.",
+      observationKey: "reaction.heat-raw.observation",
       known: false,
     },
   ],

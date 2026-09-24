@@ -6,7 +6,7 @@ The current Zod contract lives in `packages/content/src/schema.ts`. It separates
 
 The starter fixture contains a known construction chain plus two hidden outcomes of the same alien input. A crusher accepts different physical inputs; recipes are not baked into the renderer. `known` marks initial knowledge only. Runtime observations unlock public material metadata and notebook entries; authored truth never goes straight to player UI.
 
-Content version `world-01-v2` is independent of save schema 2. The existing TinyBase material-edit/validate/import/export proof remains development-only. The current schema still carries literal English `name` and `observation` strings; Issue #14 records the near-term migration to stable IDs plus localization-ready presentation keys. The wider authoring concepts below are future scope, not current requirements.
+Content version `world-01-v3` is independent of save schema 3. Since Issue #14 the schema carries localization keys (`nameKey`, `observationKey`) instead of literal English `name`/`observation` strings; the English catalog lives in `packages/content/src/locale.ts` and is validated by Zod plus semantic key-coverage checks. The existing TinyBase material-edit/validate/import/export proof remains development-only and now authors key fields. The wider authoring concepts below are future scope, not current requirements.
 
 ## 1. Purpose
 
@@ -382,6 +382,18 @@ The same rule applies to:
 Observations should ultimately be referenced by stable identity/localization key rather than persisting English prose in authoritative save state.
 
 Localization resources belong at the presentation/content boundary. `sim-core` may carry stable IDs or localization keys as data, but it must not import a localization/UI framework or depend on the rendered wording.
+
+Implemented convention (Issue #14):
+
+- key format `/^[a-z0-9]+(\.[a-z0-9-]+)+$/`, namespaced per entity: `material.<id>.name`, `operation.<id>.name`, `machine.<id>.name`, `reaction.<id>.observation`;
+- `packages/content/src/locale.ts` holds the English source/fallback catalog (`enCatalog`), the catalog shape (`localeCatalogSchema`) and `validateLocaleCoverage`, which `validateContent` enforces for every snapshot;
+- `apps/web/game/i18n.ts` owns the single shared i18next instance: React resolves text via `I18nextProvider` + `useTranslation`, Phaser/tools use the same instance directly; `sim-core` snapshots expose IDs/keys only;
+- new content entities must add `nameKey`/equivalent key fields plus catalog entries — missing keys fail validation, never silently substitute identity;
+- keys are per-entity stable references and must match their entity exactly (`material.<id>.name`, not another entity's key): borrowing a key would couple two display names forever, so aliasing is rejected by semantic validation;
+- machine runtime state uses semantic status codes (`ready`, `processing`, `disabled`, `deposit-exhausted`, `needs-compatible-input`, `needs-input`, `output-full`, `needs-fuel`): gameplay branches on codes, presentation maps them through an exhaustive label table — never English prose as domain state;
+- build-toolbar machine labels resolve from content definitions through the catalog (a rename updates toolbar and inspector together); placement toasts use generic wording, never raw IDs;
+- generic UI chrome (tool labels, buttons, hints, command-result toasts) stays plain English for now and is explicitly out of the content-key migration; do not mix such strings into content identity or save state;
+- renaming a catalog value changes no ID, reference or save; swapping locale resources changes presentation without changing simulation state (both covered by tests).
 
 Missing localization keys should fail visibly in development and have a readable fallback policy in player builds; silently substituting a different content identity is never valid.
 

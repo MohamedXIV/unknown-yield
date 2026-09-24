@@ -1,4 +1,9 @@
 import { z } from "zod";
+import {
+  enCatalog,
+  localeKeySchema,
+  validateLocaleCoverage,
+} from "./locale";
 const id = z
   .string()
   .regex(/^[a-z][a-z0-9-]*$/)
@@ -13,19 +18,21 @@ export const contentSchema = z.object({
     .array(
       z.object({
         id,
-        name: z.string().min(1),
+        nameKey: localeKeySchema,
         color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
         exportValue: count,
         known: z.boolean(),
       }),
     )
     .min(1),
-  operations: z.array(z.object({ id, name: z.string().min(1) })).min(1),
+  operations: z
+    .array(z.object({ id, nameKey: localeKeySchema }))
+    .min(1),
   machines: z
     .array(
       z.object({
         id,
-        name: z.string().min(1),
+        nameKey: localeKeySchema,
         role: z.enum(["extractor", "processor"]),
         operations: z.array(id),
         capacity: positive,
@@ -46,7 +53,7 @@ export const contentSchema = z.object({
         inputAmount: positive,
         output: id,
         outputAmount: positive,
-        observation: z.string().min(1),
+        observationKey: localeKeySchema,
         known: z.boolean(),
       }),
     )
@@ -166,5 +173,28 @@ export function validateContent(input: unknown): Content {
     c.economy.assistanceBelow > c.economy.grant
   )
     throw new Error("Recovery grant cannot restart production");
+  validateLocaleCoverage(c, enCatalog);
+  // Keys are per-entity stable references, never shared aliases: borrowing
+  // another entity's key would couple their display names forever.
+  for (const m of c.materials)
+    if (m.nameKey !== "material." + m.id + ".name")
+      throw new Error(
+        "Localization key must match its entity: " + m.nameKey,
+      );
+  for (const o of c.operations)
+    if (o.nameKey !== "operation." + o.id + ".name")
+      throw new Error(
+        "Localization key must match its entity: " + o.nameKey,
+      );
+  for (const m of c.machines)
+    if (m.nameKey !== "machine." + m.id + ".name")
+      throw new Error(
+        "Localization key must match its entity: " + m.nameKey,
+      );
+  for (const r of c.reactions)
+    if (r.observationKey !== "reaction." + r.id + ".observation")
+      throw new Error(
+        "Localization key must match its entity: " + r.observationKey,
+      );
   return c;
 }

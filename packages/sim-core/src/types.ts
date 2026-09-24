@@ -11,6 +11,23 @@ export type FlowTotals = {
 export type Port = Point & { id: string; direction: number };
 export type Factory = Rect & { id: string; ports: Port[] };
 export type Job = { remaining: number; reaction: string | null };
+/**
+ * Semantic machine status codes (Issue #14).
+ *
+ * Gameplay branches on these codes; presentation maps them to text.
+ * They must stay kebab-case tokens — never English display prose.
+ */
+export const MACHINE_STATUSES = [
+  "processing",
+  "disabled",
+  "deposit-exhausted",
+  "needs-compatible-input",
+  "needs-input",
+  "output-full",
+  "needs-fuel",
+  "ready",
+] as const;
+export type MachineStatus = (typeof MACHINE_STATUSES)[number];
 export type Machine = Point & {
   id: string;
   definitionId: string;
@@ -65,7 +82,7 @@ export type GameCommand =
   | { type: "assistance" };
 export type MachineView = Omit<Machine, "job"> & {
   job: { remaining: number } | null;
-  name: string;
+  nameKey: string;
   role: "extractor" | "processor";
   width: number;
   height: number;
@@ -73,14 +90,14 @@ export type MachineView = Omit<Machine, "job"> & {
   durationTicks: number;
   durationMs: number;
   fuelCost: number;
-  status: string;
+  status: MachineStatus;
   progress: number;
 };
 export type Observation = {
-  operation: string;
-  input: string;
-  output: string;
-  text: string;
+  operationId: string;
+  inputId: string;
+  outputId: string;
+  textKey: string;
   initial: boolean;
   observedAt?: Point;
 };

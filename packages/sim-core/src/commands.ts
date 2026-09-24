@@ -105,7 +105,7 @@ export function applyCommand(
       if (placement.error) return fail(placement.error);
       const def = c.machines.find((d) => d.id === cmd.definitionId)!;
       if (!affordable(def.cost)) return fail("Not enough structural plates");
-      if (!apply) return ok("Place " + def.name, def.cost);
+      if (!apply) return ok("Place machine", def.cost);
       const id = issue("m");
       pay(def.cost);
       s.machines[id] = {
@@ -122,7 +122,7 @@ export function applyCommand(
         output: {},
         job: null,
       };
-      return ok(def.name + " placed", def.cost, id);
+      return ok("Machine placed", def.cost, id);
     }
     case "placePort": {
       const f = Object.hasOwn(s.factories, cmd.factoryId)

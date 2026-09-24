@@ -68,7 +68,7 @@ export class Simulation {
         return {
           ...m,
           job: m.job ? { remaining: m.job.remaining } : null,
-          name: d.name,
+          nameKey: d.nameKey,
           role: d.role,
           width: r.width,
           height: r.height,
@@ -81,10 +81,10 @@ export class Simulation {
         };
       }),
       observations: reactions.map((r) => ({
-        operation: c.operations.find((o) => o.id === r.operation)!.name,
-        input: c.materials.find((m) => m.id === r.input)!.name,
-        output: c.materials.find((m) => m.id === r.output)!.name,
-        text: r.observation,
+        operationId: r.operation,
+        inputId: r.input,
+        outputId: r.output,
+        textKey: r.observationKey,
         initial: r.known,
         observedAt: this.discoveryLocations.get(r.id),
       })),
