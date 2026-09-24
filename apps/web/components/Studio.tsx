@@ -31,11 +31,11 @@ export default function Studio() {
       </p>
       <table>
         <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Export fuel / unit</th>
-          </tr>
+            <tr>
+              <th>ID</th>
+              <th>Name key</th>
+              <th>Export fuel / unit</th>
+            </tr>
         </thead>
         <tbody>
           {Object.entries(rows).map(([id, row]) => (
@@ -43,10 +43,10 @@ export default function Studio() {
               <td>{id}</td>
               <td>
                 <input
-                  aria-label={`${id} name`}
-                  value={String(row.name)}
+                  aria-label={`${id} name key`}
+                  value={String(row.nameKey)}
                   onChange={(e) => {
-                    store.setCell("materials", id, "name", e.target.value);
+                    store.setCell("materials", id, "nameKey", e.target.value);
                     setRevision((n) => n + 1);
                   }}
                 />

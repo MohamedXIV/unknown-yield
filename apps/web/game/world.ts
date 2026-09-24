@@ -15,6 +15,7 @@ import {
   type WorldMode,
   type Tool,
 } from "./interaction";
+import { t as translate } from "./i18n";
 export type WorldControls = {
   setSnapshot(s: PlayerSnapshot): void;
   setMode(mode: WorldMode): void;
@@ -62,7 +63,7 @@ export function createWorld(
     private keys = new Set<string>();
     private dirty = true;
     private seenDiscoveries = new Set(
-      initial.observations.map((o) => o.operation + ":" + o.input),
+      initial.observations.map((o) => o.operationId + ":" + o.inputId),
     );
     private notices: Phaser.GameObjects.Text[] = [];
     private text(x: number, y: number, t: string, size = 10, c = "#c4c7b0") {
@@ -146,7 +147,7 @@ export function createWorld(
         this.text(
           (d.x + d.width / 2) * X,
           (d.y + d.height) * Y + 17,
-          mat.name.toUpperCase(),
+          translate(mat.nameKey).toUpperCase(),
           9,
           "#b6b397",
         );
@@ -525,22 +526,28 @@ export function createWorld(
             children.length +
             " RUNNING\n" +
             [...new Set(children.flatMap((m) => Object.keys(m.output)))]
-              .map((id) => snapshot.materials.find((m) => m.id === id)?.name)
+              .map((id) => {
+                const key = snapshot.materials.find((m) => m.id === id)?.nameKey;
+                return key ? translate(key) : "";
+              })
               .filter(Boolean)
               .join(" · "),
         );
       }
       const discovered = snapshot.observations.filter((o) => !o.initial);
       for (const o of discovered) {
-        const id = o.operation + ":" + o.input;
+        const id = o.operationId + ":" + o.inputId;
         if (this.seenDiscoveries.has(id)) continue;
         this.seenDiscoveries.add(id);
         // Restored knowledge has no new physical event to announce.
         if (!o.observedAt) continue;
+        const outputKey = snapshot.materials.find(
+          (m) => m.id === o.outputId,
+        )?.nameKey;
         const note = this.text(
           o.observedAt.x * X,
           o.observedAt.y * Y - 60,
-          "DISCOVERED: " + o.output,
+          "DISCOVERED: " + (outputKey ? translate(outputKey) : o.outputId),
           13,
           "#d2e5ad",
         ).setDepth(900);
@@ -557,7 +564,7 @@ export function createWorld(
         });
       }
       this.seenDiscoveries = new Set(
-        snapshot.observations.map((o) => o.operation + ":" + o.input),
+        snapshot.observations.map((o) => o.operationId + ":" + o.inputId),
       );
     }
     update(_time: number, delta: number) {

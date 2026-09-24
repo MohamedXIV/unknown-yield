@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
+import { I18nextProvider, useTranslation } from "react-i18next";
+import { i18n } from "../game/i18n";
 import type { GameCommand, CommandResult, Inventory } from "@site/sim-core";
 import { Session } from "../game/session";
 import { DEFAULT_MODE, type WorldMode, type Tool } from "../game/interaction";
@@ -67,7 +69,8 @@ const descriptions: Record<Tool, string> = {
   demolish:
     "Click a structure to reclaim it and its contents. Stop active machines first.",
 };
-export default function GameClient() {
+function GameClientInner() {
+  const { t } = useTranslation();
   const [session] = useState(() => new Session()),
     [snapshot, setSnapshot] = useState(() => session.snapshot());
   const [mode, setMode] = useState<WorldMode>(DEFAULT_MODE),
@@ -153,9 +156,10 @@ export default function GameClient() {
       f.ports.some((p) => p.id === mode.selected),
     ),
     deposit = snapshot.deposits.find((d) => d.id === mode.selected);
-  const materialName = (id: string) =>
-    snapshot.materials.find((m) => m.id === id)?.name ??
-    "Unidentified material";
+  const materialName = (id: string) => {
+    const key = snapshot.materials.find((m) => m.id === id)?.nameKey;
+    return key ? t(key) : "Unidentified material";
+  };
   const buffer = (inv: Inventory) => (
     <div className="inventory">
       {Object.entries(inv).length ? (
@@ -358,7 +362,7 @@ export default function GameClient() {
                     <small className="eyebrow">
                       {machine.id.toUpperCase()} · AUTOMATED EQUIPMENT
                     </small>
-                    <h2>{machine.name}</h2>
+                    <h2>{t(machine.nameKey)}</h2>
                     <div
                       className={
                         "status-line " +
@@ -397,10 +401,10 @@ export default function GameClient() {
                             .find((d) => d.id === machine.definitionId)!
                             .operations.map((id) => (
                               <option value={id} key={id}>
-                                {
+                                {t(
                                   snapshot.operations.find((o) => o.id === id)
-                                    ?.name
-                                }
+                                    ?.nameKey ?? id,
+                                )}
                               </option>
                             ))}
                         </select>
@@ -543,7 +547,7 @@ export default function GameClient() {
                             select(m.id);
                           }}
                         >
-                          <span>{m.name}</span>
+                          <span>{t(m.nameKey)}</span>
                           <small>{m.status}</small>
                         </button>
                       ))}
@@ -630,15 +634,27 @@ export default function GameClient() {
                   There is no complete recipe book.
                 </p>
                 {snapshot.observations.map((o) => (
-                  <article className="observation" key={o.operation + o.input}>
+                  <article
+                    className="observation"
+                    key={o.operationId + o.inputId}
+                  >
                     <small>
                       {o.initial ? "KNOWN METHOD" : "OBSERVED"} ·{" "}
-                      {o.operation.toUpperCase()}
+                      {t(
+                        snapshot.operations.find(
+                          (op) => op.id === o.operationId,
+                        )?.nameKey ?? o.operationId,
+                      ).toUpperCase()}
                     </small>
-                    <h3>{o.output}</h3>
-                    <p>{o.text}</p>
+                    <h3>{materialName(o.outputId)}</h3>
+                    <p>{t(o.textKey)}</p>
                     <span>
-                      {o.input} → {o.operation}
+                      {materialName(o.inputId)} →{" "}
+                      {t(
+                        snapshot.operations.find(
+                          (op) => op.id === o.operationId,
+                        )?.nameKey ?? o.operationId,
+                      )}
                     </span>
                   </article>
                 ))}
@@ -670,7 +686,7 @@ export default function GameClient() {
                     <div>
                       <i style={{ background: m.color }} />
                       <span>
-                        {m.name}
+                        {t(m.nameKey)}
                         <small>
                           {snapshot.stock[m.id] ?? 0} stored{" "}
                           {m.exportValue
@@ -680,7 +696,7 @@ export default function GameClient() {
                       </span>
                     </div>
                     <select
-                      aria-label={m.name + " policy"}
+                      aria-label={t(m.nameKey) + " policy"}
                       value={snapshot.policies[m.id] ?? "keep"}
                       onChange={(e) =>
                         act({
@@ -843,5 +859,13 @@ export default function GameClient() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function GameClient() {
+  return (
+    <I18nextProvider i18n={i18n}>
+      <GameClientInner />
+    </I18nextProvider>
   );
 }
