@@ -1,5 +1,11 @@
 import { it, expect } from "vitest";
-import { beltPath, buildCommand, DEFAULT_MODE } from "../game/interaction";
+import {
+  beltPath,
+  buildCommand,
+  hitTest,
+  DEFAULT_MODE,
+  TOOL_HOTKEYS,
+} from "../game/interaction";
 import { Simulation } from "@site/sim-core";
 import { fixture } from "@site/content";
 it("draws orthogonal paths including turns and reversed drags", () => {
@@ -30,4 +36,41 @@ it("uses the current rotation for single belts and handles factory drag in all d
       { x: 33, y: 31 },
     ),
   ).toEqual({ type: "placeFactory", x: 24, y: 22, width: 10, height: 10 });
+});
+it("keeps toolbar hotkeys stable and maps the depot tool to placeStorage", () => {
+  expect(TOOL_HOTKEYS).toMatchObject({
+    extractor: "1",
+    belt: "5",
+    port: "6",
+    depot: "7",
+  });
+  const s = new Simulation(fixture).snapshot();
+  expect(
+    buildCommand(
+      { ...DEFAULT_MODE, tool: "depot", direction: 1 },
+      s,
+      { x: 10, y: 20 },
+      null,
+    ),
+  ).toEqual({
+    type: "placeStorage",
+    definitionId: "depot",
+    x: 10,
+    y: 20,
+    direction: 1,
+  });
+});
+it("hit-tests storage footprints by id", () => {
+  const sim = new Simulation(fixture);
+  const placed = sim.command({
+    type: "placeStorage",
+    definitionId: "depot",
+    x: 10,
+    y: 20,
+    direction: 0,
+  });
+  expect(placed.ok).toBe(true);
+  const s = sim.snapshot();
+  expect(hitTest(s, { x: 11, y: 21 }, [])).toBe(placed.id);
+  expect(hitTest(s, { x: 0, y: 0 }, [])).toBeNull();
 });
