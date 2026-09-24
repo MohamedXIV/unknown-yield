@@ -101,7 +101,7 @@ Useful views may break current amount into in-transit, machine inputs/outputs, i
 
 ## 9. Terminal and export
 
-Export is a physical end of a logistics chain. Once a shipment leaves the map, its tracked world records can be removed and compensation/allocation is credited.
+Export is a physical end of a logistics chain. Belt cargo stages at the terminal in a bounded tracked location and ships per policy; only staged exportables convert to fuel. Once a shipment leaves the map, its tracked world records can be removed and compensation/allocation is credited. Construction plates bypass staging into site stock to keep the construction bootstrap practical.
 
 The terminal imports only things the planet operation cannot currently provide itself: fuel, specialized catalysts/components, research-grade supplies and later advanced allocations.
 
