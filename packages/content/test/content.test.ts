@@ -9,7 +9,12 @@ import { createContentStore, contentFromStore } from "../src/studio";
 
 describe("content boundary", () => {
   it("accepts the complete tiny scenario", () => {
-    expect(validateContent(fixture).machines).toHaveLength(3);
+    const c = validateContent(fixture);
+    expect(c.machines).toHaveLength(3);
+    expect(c.version).toBe("world-01-v4");
+    expect(c.storages).toHaveLength(1);
+    expect(c.storages[0]).toMatchObject({ id: "depot", capacity: 40 });
+    expect(c.site.stagingCapacity).toBe(24);
   });
   it.each([
     "duplicate",
@@ -18,6 +23,8 @@ describe("content boundary", () => {
     "capacity",
     "fuel",
     "export",
+    "storage",
+    "staging",
   ] as const)("rejects invalid %s", (kind) => {
     const c = structuredClone(fixture);
     if (kind === "duplicate") c.materials.push(c.materials[0]);
@@ -26,6 +33,8 @@ describe("content boundary", () => {
     if (kind === "capacity") c.machines[0].capacity = 0;
     if (kind === "fuel") c.economy.grant = -1;
     if (kind === "export") c.materials[1].exportValue = -1;
+    if (kind === "storage") c.storages[0].capacity = 0;
+    if (kind === "staging") c.site.stagingCapacity = 0;
     expect(() => validateContent(c)).toThrow();
   });
   it("round-trips a material edit through TinyBase and validation", () => {
@@ -65,6 +74,9 @@ describe("content boundary", () => {
     const c = structuredClone(fixture);
     c.materials.find((m) => m.id === "raw")!.nameKey = "material.ferrite.name";
     expect(() => validateContent(c)).toThrow(/must match its entity/);
+    const d = structuredClone(fixture);
+    d.storages[0].nameKey = "machine.crusher.name";
+    expect(() => validateContent(d)).toThrow(/must match its entity/);
   });
   it("rejects malformed localization catalogs", () => {
     expect(() => localeCatalogSchema.parse({ "bad key!": "x" })).toThrow();

@@ -6,7 +6,7 @@ The current Zod contract lives in `packages/content/src/schema.ts`. It separates
 
 The starter fixture contains a known construction chain plus two hidden outcomes of the same alien input. A crusher accepts different physical inputs; recipes are not baked into the renderer. `known` marks initial knowledge only. Runtime observations unlock public material metadata and notebook entries; authored truth never goes straight to player UI.
 
-Content version `world-01-v3` is independent of save schema 3. Since Issue #14 the schema carries localization keys (`nameKey`, `observationKey`) instead of literal English `name`/`observation` strings; the English catalog lives in `packages/content/src/locale.ts` and is validated by Zod plus semantic key-coverage checks. The existing TinyBase material-edit/validate/import/export proof remains development-only and now authors key fields. The wider authoring concepts below are future scope, not current requirements.
+Content version `world-01-v4` is independent of save schema 4. Since Issue #14 the schema carries localization keys (`nameKey`, `observationKey`) instead of literal English `name`/`observation` strings; the English catalog lives in `packages/content/src/locale.ts` and is validated by Zod plus semantic key-coverage checks. Issue #4 added a `storages` table (bulk storage definitions: capacity, footprint, cost) and `site.stagingCapacity` for bounded terminal staging. The existing TinyBase material-edit/validate/import/export proof remains development-only and now authors key fields. The wider authoring concepts below are future scope, not current requirements.
 
 ## 1. Purpose
 

@@ -1,6 +1,6 @@
 import { validateContent } from "./schema";
 export const fixture = validateContent({
-  version: "world-01-v3",
+  version: "world-01-v4",
   tickMs: 100,
   materials: [
     {
@@ -81,6 +81,16 @@ export const fixture = validateContent({
       cost: 26,
     },
   ],
+  storages: [
+    {
+      id: "depot",
+      nameKey: "storage.depot.name",
+      capacity: 40,
+      width: 3,
+      height: 2,
+      cost: 30,
+    },
+  ],
   reactions: [
     {
       id: "press-ferrite",
@@ -124,6 +134,7 @@ export const fixture = validateContent({
     beltCost: 1,
     portCost: 2,
     transportEveryTicks: 3,
+    stagingCapacity: 24,
     terminal: { x: 38, y: 26, width: 4, height: 4 },
     deposits: [
       {

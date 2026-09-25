@@ -5,7 +5,12 @@ import { i18n } from "../game/i18n";
 import { machineStatusLabel } from "../game/machine-status";
 import type { GameCommand, CommandResult, Inventory } from "@site/sim-core";
 import { Session } from "../game/session";
-import { DEFAULT_MODE, type WorldMode, type Tool } from "../game/interaction";
+import {
+  DEFAULT_MODE,
+  TOOL_HOTKEYS,
+  type WorldMode,
+  type Tool,
+} from "../game/interaction";
 import GameHost from "./GameHost";
 function Glyph({ type, size = 20 }: { type: string; size?: number }) {
   const paths: Record<string, string> = {
@@ -15,6 +20,7 @@ function Glyph({ type, size = 20 }: { type: string; size?: number }) {
     crusher: "M3 4h18l-5 8v8H8v-8z M9 7l3 3 3-3",
     furnace:
       "M5 21V8h14v13z M8 4h8 M12 10c0 4-3 3-3 6a3 3 0 0 0 6 0c0-2-2-3-3-6z",
+    depot: "M4 9h16v11H4z M4 13h16 M9 9v11 M15 9v11",
     belt: "M3 6h18v12H3z M6 9l4 3-4 3 M13 9l4 3-4 3",
     port: "M3 4v16 M21 4v16 M5 12h14 M13 7l6 5-6 5",
     demolish: "M5 4l15 15 M15 3l6 6-7 7-6-6z M3 21l6-6",
@@ -61,6 +67,8 @@ const descriptions: Record<Tool, string> = {
   factory: "Drag a rectangle, 6–20 cells per side. Click for a 6×6 factory.",
   crusher: "Place inside a factory. Cyan is input; gold is output.",
   furnace: "Place inside a factory.",
+  depot:
+    "Place on clear ground. Belts move any material in and out until full.",
   belt: "Drag a ground path. Release to build. Click for one cell; R changes its direction.",
   port: "Place on a factory wall. R changes flow direction. Add a belt on the port.",
   demolish:
@@ -149,6 +157,7 @@ function GameClientInner() {
   const machine = snapshot.machines.find((m) => m.id === mode.selected),
     factory = snapshot.factories.find((f) => f.id === mode.selected),
     belt = snapshot.belts.find((b) => b.id === mode.selected),
+    storage = snapshot.storages.find((t) => t.id === mode.selected),
     portFactory = snapshot.factories.find((f) =>
       f.ports.some((p) => p.id === mode.selected),
     ),
@@ -160,7 +169,9 @@ function GameClientInner() {
   // Machine-tool labels resolve from content definitions so a catalog rename
   // updates the toolbar and inspector together. Generic tools stay English.
   const toolName = (tool: Tool) => {
-    const key = snapshot.definitions.find((d) => d.id === tool)?.nameKey;
+    const key =
+      snapshot.definitions.find((d) => d.id === tool)?.nameKey ??
+      snapshot.storageDefinitions.find((d) => d.id === tool)?.nameKey;
     return key ? t(key) : (genericNames[tool] ?? tool);
   };
   // The furnace description names its operation, which is content data.
@@ -201,7 +212,8 @@ function GameClientInner() {
         ? snapshot.map.beltCost
         : tool === "port"
           ? snapshot.map.portCost
-          : snapshot.definitions.find((d) => d.id === tool)?.cost;
+          : (snapshot.definitions.find((d) => d.id === tool)?.cost ??
+            snapshot.storageDefinitions.find((d) => d.id === tool)?.cost);
   const close = () => {
     setPanel(null);
     setMode((m) => ({ ...m, selected: null }));
@@ -602,6 +614,45 @@ function GameClientInner() {
                     </button>
                   </>
                 )}
+                {storage && (
+                  <>
+                    <small className="eyebrow">
+                      {storage.id.toUpperCase()} · BULK STORAGE
+                    </small>
+                    <h2>
+                      {t(
+                        snapshot.storageDefinitions.find(
+                          (d) => d.id === storage.definitionId,
+                        )?.nameKey ?? storage.definitionId,
+                      )}
+                    </h2>
+                    <div className="facts">
+                      <span>
+                        Stored
+                        <b>
+                          {Object.values(storage.inventory).reduce(
+                            (a, b) => a + b,
+                            0,
+                          )}{" "}
+                          / {storage.capacity}
+                        </b>
+                      </span>
+                    </div>
+                    {buffer(storage.inventory)}
+                    <p className="hint">
+                      Belts move any material in and out. Empty storage before
+                      dismantling.
+                    </p>
+                    <button
+                      className="danger"
+                      onClick={() =>
+                        act({ type: "dismantle", id: storage.id })
+                      }
+                    >
+                      Dismantle empty storage
+                    </button>
+                  </>
+                )}
                 {portFactory && !belt && !machine && (
                   <>
                     <h2>Wall port</h2>
@@ -691,11 +742,12 @@ function GameClientInner() {
                 {snapshot.milestone && (
                   <div className="milestone">◇ FIRST EXPORT CONFIRMED</div>
                 )}
-                <h3>Site stock & policies</h3>
+                <h3>Terminal staging & policies</h3>
                 <p className="hint">
-                  Incoming cargo joins site stock. Reserved{" "}
+                  Exportable cargo stages at the terminal and ships per policy.
+                  Reserved{" "}
                   {materialName(snapshot.map.buildMaterial).toLowerCase()} fund
-                  construction. Exported materials repay obligations before
+                  construction. Staged exports repay obligations before
                   allocating fuel.
                 </p>
                 {snapshot.materials.map((m) => (
@@ -705,7 +757,12 @@ function GameClientInner() {
                       <span>
                         {t(m.nameKey)}
                         <small>
-                          {snapshot.stock[m.id] ?? 0} stored{" "}
+                          {(m.id === snapshot.map.buildMaterial
+                            ? snapshot.stock[m.id]
+                            : snapshot.staging[m.id]) ?? 0}{" "}
+                          {m.id === snapshot.map.buildMaterial
+                            ? "reserved"
+                            : "staged"}{" "}
                           {m.exportValue
                             ? "· " + m.exportValue + " fuel/unit"
                             : ""}
@@ -845,9 +902,10 @@ function GameClientInner() {
               "furnace",
               "belt",
               "port",
+              "depot",
               "demolish",
             ] as Tool[]
-          ).map((tool, i) => (
+          ).map((tool) => (
             <button
               key={tool}
               className={mode.tool === tool ? "active" : ""}
@@ -856,7 +914,7 @@ function GameClientInner() {
               title={descriptions[tool]}
               onClick={() => setTool(tool)}
             >
-              <small>{i === 0 ? "↖" : i === 7 ? "X" : i}</small>
+              <small>{TOOL_HOTKEYS[tool]}</small>
               <Glyph type={tool} size={25} />
               <span>{toolName(tool)}</span>
               {toolCost(tool) ? (

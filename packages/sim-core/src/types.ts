@@ -1,4 +1,8 @@
-import type { Content, MachineDefinition } from "@site/content";
+import type {
+  Content,
+  MachineDefinition,
+  StorageDefinition,
+} from "@site/content";
 export type Point = { x: number; y: number };
 export type Rect = Point & { width: number; height: number };
 export type Inventory = Record<string, number>;
@@ -45,6 +49,12 @@ export type Belt = Point & {
   direction: number;
   cargo: string | null;
 };
+export type Storage = Point & {
+  id: string;
+  definitionId: string;
+  direction: number;
+  inventory: Inventory;
+};
 export type Save = {
   schemaVersion: number;
   contentVersion: string;
@@ -61,6 +71,8 @@ export type Save = {
   machines: Record<string, Machine>;
   factories: Record<string, Factory>;
   belts: Record<string, Belt>;
+  storages: Record<string, Storage>;
+  staging: Inventory;
   policies: Record<string, "keep" | "export">;
 };
 export type CommandResult = {
@@ -71,6 +83,7 @@ export type CommandResult = {
 };
 export type GameCommand =
   | ({ type: "placeMachine"; definitionId: string; direction: number } & Point)
+  | ({ type: "placeStorage"; definitionId: string; direction: number } & Point)
   | ({ type: "placeFactory" } & Rect)
   | ({ type: "placePort"; factoryId: string; direction: number } & Point)
   | { type: "placeBelts"; points: Point[]; direction: number }
@@ -93,6 +106,12 @@ export type MachineView = Omit<Machine, "job"> & {
   status: MachineStatus;
   progress: number;
 };
+export type StorageView = Storage & {
+  nameKey: string;
+  width: number;
+  height: number;
+  capacity: number;
+};
 export type Observation = {
   operationId: string;
   inputId: string;
@@ -111,11 +130,14 @@ export type PlayerSnapshot = {
   map: Content["site"];
   deposits: (Content["site"]["deposits"][number] & { remaining: number })[];
   definitions: MachineDefinition[];
+  storageDefinitions: StorageDefinition[];
   operations: Content["operations"];
   materials: Content["materials"];
   machines: MachineView[];
   factories: Factory[];
   belts: Belt[];
+  storages: StorageView[];
+  staging: Inventory;
   policies: Record<string, "keep" | "export">;
   observations: Observation[];
 };

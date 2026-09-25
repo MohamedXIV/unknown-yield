@@ -75,6 +75,8 @@ export function transport(c: Content, s: Save) {
     from: string;
     to: string | null;
     machine: string | null;
+    storage: string | null;
+    staging: boolean;
     material: string;
   }[] = [];
   for (const b of belts) {
@@ -82,7 +84,31 @@ export function transport(c: Content, s: Save) {
     const target = next(b, b.direction),
       targetKey = key(target);
     if (contains(c.site.terminal, target)) {
-      moves.push({ from: key(b), to: null, machine: null, material: b.cargo });
+      if (b.cargo === c.site.buildMaterial) {
+        moves.push({
+          from: key(b),
+          to: null,
+          machine: null,
+          storage: null,
+          staging: false,
+          material: b.cargo,
+        });
+        continue;
+      }
+      // Terminal staging is a bounded physical location: when it is full the
+      // arrival waits on its belt and blocks upstream flow deterministically.
+      const staged = received.get("staging") ?? 0;
+      if (total(s.staging) + staged < c.site.stagingCapacity) {
+        received.set("staging", staged + 1);
+        moves.push({
+          from: key(b),
+          to: null,
+          machine: null,
+          storage: null,
+          staging: true,
+          material: b.cargo,
+        });
+      }
       continue;
     }
     const targetBelt = s.belts[targetKey];
@@ -92,6 +118,8 @@ export function transport(c: Content, s: Save) {
         from: key(b),
         to: targetKey,
         machine: null,
+        storage: null,
+        staging: false,
         material: b.cargo,
       });
       continue;
@@ -113,6 +141,31 @@ export function transport(c: Content, s: Save) {
           from: key(b),
           to: null,
           machine: m.id,
+          storage: null,
+          staging: false,
+          material: b.cargo,
+        });
+      }
+      continue;
+    }
+    const depot = Object.values(s.storages).find((t) => {
+      const d = c.storages.find((d) => d.id === t.definitionId)!;
+      return (
+        contains(footprint(t, d), target) &&
+        key(socket(t, d, false)) === key(b)
+      );
+    });
+    if (depot) {
+      const d = c.storages.find((d) => d.id === depot.definitionId)!;
+      const n = received.get(depot.id) ?? 0;
+      if (total(depot.inventory) + n < d.capacity) {
+        received.set(depot.id, n + 1);
+        moves.push({
+          from: key(b),
+          to: null,
+          machine: null,
+          storage: depot.id,
+          staging: false,
           material: b.cargo,
         });
       }
@@ -124,6 +177,9 @@ export function transport(c: Content, s: Save) {
     if (move.to) s.belts[move.to].cargo = move.material;
     else if (move.machine)
       change(s.machines[move.machine].input, move.material, 1);
+    else if (move.storage)
+      change(s.storages[move.storage].inventory, move.material, 1);
+    else if (move.staging) change(s.staging, move.material, 1);
     else change(s.stock, move.material, 1);
   }
   for (const m of Object.values(s.machines)) {
@@ -140,8 +196,22 @@ export function transport(c: Content, s: Save) {
       reserved.add(p);
     }
   }
+  for (const t of Object.values(s.storages)) {
+    const d = c.storages.find((d) => d.id === t.definitionId)!,
+      p = key(socket(t, d, true)),
+      b = s.belts[p];
+    if (!b || b.cargo || occupied.has(p) || reserved.has(p)) continue;
+    const material = Object.keys(t.inventory)
+      .sort()
+      .find((id) => t.inventory[id] > 0);
+    if (material) {
+      b.cargo = material;
+      change(t.inventory, material, -1);
+      reserved.add(p);
+    }
+  }
   for (const material of c.materials) {
-    const n = amount(s.stock, material.id);
+    const n = amount(s.staging, material.id);
     if (
       n > 0 &&
       s.policies[material.id] === "export" &&
@@ -153,7 +223,7 @@ export function transport(c: Content, s: Save) {
       s.fuel += value - repaid;
       s.exported += n;
       change(s.flows.exported, material.id, n);
-      change(s.stock, material.id, -n);
+      change(s.staging, material.id, -n);
     }
   }
 }

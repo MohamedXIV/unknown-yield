@@ -11,9 +11,35 @@ export type Tool =
   | "factory"
   | "crusher"
   | "furnace"
+  | "depot"
   | "belt"
   | "port"
   | "demolish";
+export const TOOL_HOTKEYS: Record<Tool, string> = {
+  select: "↖",
+  extractor: "1",
+  factory: "2",
+  crusher: "3",
+  furnace: "4",
+  belt: "5",
+  port: "6",
+  depot: "7",
+  demolish: "X",
+};
+/**
+ * Stable structural fingerprint for Phaser rebuild invalidation.
+ * Every placed-geometry collection the renderer draws must appear here;
+ * otherwise topology edits leave stale world visuals until an unrelated
+ * change happens to invalidate.
+ */
+export function structureKey(s: PlayerSnapshot): string {
+  return JSON.stringify([
+    s.machines.map((m) => [m.id, m.x, m.y, m.direction]),
+    s.factories,
+    s.belts.map((b) => [b.id, b.direction]),
+    s.storages.map((t) => [t.id, t.definitionId, t.x, t.y, t.direction]),
+  ]);
+}
 export type WorldMode = {
   tool: Tool;
   direction: number;
@@ -49,6 +75,8 @@ export function hitTest(
   if (factory && !open.includes(factory.id)) return factory.id;
   const m = s.machines.find((m) => contains(m, p));
   if (m) return m.id;
+  const t = s.storages.find((t) => contains(t, p));
+  if (t) return t.id;
   const b = s.belts.find((b) => b.x === p.x && b.y === p.y);
   if (b) return b.id;
   const port = factory?.ports.find((a) => a.x === p.x && a.y === p.y);
@@ -75,6 +103,13 @@ export function buildCommand(
   if (["extractor", "crusher", "furnace"].includes(mode.tool))
     return {
       type: "placeMachine",
+      definitionId: mode.tool,
+      ...p,
+      direction: mode.direction,
+    };
+  if (s.storageDefinitions.some((d) => d.id === mode.tool))
+    return {
+      type: "placeStorage",
       definitionId: mode.tool,
       ...p,
       direction: mode.direction,

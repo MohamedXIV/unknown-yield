@@ -12,6 +12,8 @@ import {
   buildCommand,
   hitTest,
   DEFAULT_MODE,
+  TOOL_HOTKEYS,
+  structureKey as computeStructureKey,
   type WorldMode,
   type Tool,
 } from "./interaction";
@@ -251,15 +253,11 @@ export function createWorld(
           e.preventDefault();
           this.home();
         }
-        const hotkeys: Record<string, Tool> = {
-          "1": "extractor",
-          "2": "factory",
-          "3": "crusher",
-          "4": "furnace",
-          "5": "belt",
-          "6": "port",
-          x: "demolish",
-        };
+        const hotkeys: Record<string, Tool> = Object.fromEntries(
+          Object.entries(TOOL_HOTKEYS)
+            .filter(([, label]) => label !== "↖")
+            .map(([tool, label]) => [label.toLowerCase(), tool as Tool]),
+        );
         if (hotkeys[k]) actions.mode(hotkeys[k]);
         if (
           k === "f" &&
@@ -465,6 +463,40 @@ export function createWorld(
         this.labels.set(m.id, label);
         this.structures.add(label);
       }
+      for (const t of snapshot.storages) {
+        const def = snapshot.storageDefinitions.find(
+          (d) => d.id === t.definitionId,
+        )!;
+        this.box(g, t, 0x7d8a6f, 0x44513f, 10);
+        const x = (t.x + t.width / 2) * X,
+          y = (t.y + t.height / 2) * Y,
+          w = t.width * X;
+        g.lineStyle(2, 0x354933).strokeRect(x - w / 2 + 6, y - 10, w - 12, 20);
+        g.lineStyle(1, 0x354933, 0.6);
+        for (let i = 1; i < 3; i++)
+          g.lineBetween(x - w / 2 + 6, y - 10 + i * 7, x + w / 2 - 6, y - 10 + i * 7);
+        const output = socket(t, def, true),
+          input = socket(t, def, false);
+        this.arrow(
+          g,
+          (output.x + 0.5) * X,
+          (output.y + 0.5) * Y,
+          t.direction,
+          0xd4bd7d,
+          5,
+        );
+        this.arrow(
+          g,
+          (input.x + 0.5) * X,
+          (input.y + 0.5) * Y,
+          t.direction,
+          0x9bd0c4,
+          5,
+        );
+        const label = this.text(x, (t.y + t.height) * Y + 12, "", 9);
+        this.labels.set(t.id, label);
+        this.structures.add(label);
+      }
       for (const f of snapshot.factories) {
         const x = f.x * X,
           y = f.y * Y,
@@ -527,6 +559,13 @@ export function createWorld(
             m.status === "processing" ? "" : machineStatusLabel(m.status),
           )
           .setColor(m.status === "needs-fuel" ? "#e5ad75" : "#c0c6a9");
+      for (const t of snapshot.storages) {
+        const n = Object.values(t.inventory).reduce((a, b) => a + b, 0);
+        this.labels
+          .get(t.id)
+          ?.setText(n + " / " + t.capacity)
+          .setColor(n >= t.capacity ? "#e5ad75" : "#c0c6a9");
+      }
       for (const f of snapshot.factories) {
         const children = snapshot.machines.filter((m) => m.factoryId === f.id);
         this.labels.get(f.id)?.setText(
@@ -641,6 +680,7 @@ export function createWorld(
       const selected =
         snapshot.machines.find((m) => m.id === mode.selected) ??
         snapshot.factories.find((f) => f.id === mode.selected) ??
+        snapshot.storages.find((t) => t.id === mode.selected) ??
         (mode.selected === "terminal" ? snapshot.map.terminal : null);
       if (selected)
         g.lineStyle(2, 0xe3c78a, 0.85).strokeRect(
@@ -672,10 +712,16 @@ export function createWorld(
             command.width * X,
             command.height * Y,
           );
-      } else if (command.type === "placeMachine") {
-        const d = snapshot.definitions.find(
-          (d) => d.id === command.definitionId,
-        )!;
+      } else if (
+        command.type === "placeMachine" ||
+        command.type === "placeStorage"
+      ) {
+        const d =
+          command.type === "placeMachine"
+            ? snapshot.definitions.find((d) => d.id === command.definitionId)!
+            : snapshot.storageDefinitions.find(
+                (d) => d.id === command.definitionId,
+              )!;
         const w = command.direction % 2 ? d.height : d.width,
           h = command.direction % 2 ? d.width : d.height;
         ghost
@@ -755,11 +801,7 @@ export function createWorld(
   return {
     setSnapshot: (s) => {
       snapshot = s;
-      const k = JSON.stringify([
-        s.machines.map((m) => [m.id, m.x, m.y, m.direction]),
-        s.factories,
-        s.belts.map((b) => [b.id, b.direction]),
-      ]);
+      const k = computeStructureKey(s);
       if (k !== structureKey) {
         structureKey = k;
         scene?.markDirty();

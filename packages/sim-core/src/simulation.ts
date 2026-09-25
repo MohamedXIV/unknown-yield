@@ -57,10 +57,23 @@ export class Simulation {
         remaining: s.deposits[d.id],
       })),
       definitions: c.machines,
+      storageDefinitions: c.storages,
       operations: c.operations,
       materials: c.materials.filter((m) => known.has(m.id)),
       factories: Object.values(s.factories),
       belts: Object.values(s.belts),
+      storages: Object.values(s.storages).map((t) => {
+        const d = c.storages.find((d) => d.id === t.definitionId)!;
+        const r = footprint(t, d);
+        return {
+          ...t,
+          nameKey: d.nameKey,
+          width: r.width,
+          height: r.height,
+          capacity: d.capacity,
+        };
+      }),
+      staging: s.staging,
       policies: s.policies,
       machines: Object.values(s.machines).map((m) => {
         const d = c.machines.find((d) => d.id === m.definitionId)!;
@@ -113,7 +126,7 @@ export class Simulation {
       return {
         ok: false,
         message:
-          "Save rejected (requires schema 3): " +
+          "Save rejected (requires schema 4): " +
           (error instanceof Error ? error.message : "Invalid data"),
       };
     }
