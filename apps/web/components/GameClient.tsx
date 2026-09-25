@@ -580,6 +580,31 @@ function GameClientInner() {
                     ) : (
                       <p className="muted">No cargo</p>
                     )}
+                    <h3>Diverter</h3>
+                    <p className="hint">
+                      {belt.alternate === null
+                        ? "No alternate exit."
+                        : "Alternate exit: " +
+                          ["east", "south", "west", "north"][belt.alternate] +
+                          (belt.switched ? " (active)." : " (standby).")}
+                    </p>
+                    <button
+                      className="secondary"
+                      onClick={() =>
+                        act({ type: "rotateDivert", beltId: belt.id })
+                      }
+                    >
+                      Cycle alternate exit
+                    </button>
+                    <button
+                      className="secondary"
+                      disabled={belt.alternate === null}
+                      onClick={() =>
+                        act({ type: "switchDivert", beltId: belt.id })
+                      }
+                    >
+                      {belt.switched ? "Restore main exit" : "Switch exit"}
+                    </button>
                     <button
                       className="danger"
                       onClick={() => act({ type: "dismantle", id: belt.id })}

@@ -7,6 +7,7 @@ import {
   portError,
   beltError,
   storageError,
+  wall,
   key,
 } from "./geometry";
 const count = z.number().int().nonnegative().max(1000000000),
@@ -52,6 +53,8 @@ const belt = z.object({
   id: safeId,
   direction,
   cargo: safeId.nullable(),
+  alternate: z.number().int().min(0).max(3).nullable().default(null),
+  switched: z.boolean().default(false),
 });
 const storage = z.object({
   ...point,
@@ -61,7 +64,7 @@ const storage = z.object({
   inventory,
 });
 const schema = z.object({
-  schemaVersion: z.literal(4),
+  schemaVersion: z.union([z.literal(4), z.literal(5)]),
   contentVersion: z.string(),
   tick: count,
   remainder: z.number().finite().nonnegative(),
@@ -82,7 +85,7 @@ const schema = z.object({
 });
 export function initialState(c: Content): Save {
   return {
-    schemaVersion: 4,
+    schemaVersion: 5,
     contentVersion: c.version,
     tick: 0,
     remainder: 0,
@@ -106,6 +109,9 @@ export function initialState(c: Content): Save {
 }
 export function parseSave(input: unknown, c: Content): Save {
   const s = schema.parse(input);
+  // Schema 4 predates belt diverters; every belt was plain, so stamping the
+  // defaults is an exact migration rather than a guess.
+  if (s.schemaVersion === 4) s.schemaVersion = 5;
   if (s.contentVersion !== c.version || s.remainder >= c.tickMs)
     throw new Error("Incompatible content or timing");
   if (
@@ -205,6 +211,15 @@ export function parseSave(input: unknown, c: Content): Save {
     const error = beltError(c, stage, b, b.direction);
     if (error) throw new Error(error);
     if (b.cargo && !known.has(b.cargo)) throw new Error("Unknown cargo");
+    if (b.switched && b.alternate === null)
+      throw new Error("Belt switched with no alternate exit");
+    if (b.alternate !== null && b.alternate === b.direction)
+      throw new Error("Alternate exit must differ");
+    if (
+      b.alternate !== null &&
+      Object.values(stage.factories).some((f) => wall(f, b))
+    )
+      throw new Error("Alternate exit not allowed on factory walls");
     stage.belts[location] = b;
   }
   for (const [id, t] of Object.entries(s.storages)) {

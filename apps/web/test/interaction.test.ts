@@ -105,3 +105,23 @@ it("invalidates world geometry on storage-only topology edits", () => {
   sim.step(5000);
   expect(structureKey(sim.snapshot())).toBe(one);
 });
+it("invalidates world geometry on diverter switch/rotate", () => {
+  const sim = new Simulation(fixture);
+  expect(
+    sim.command({
+      type: "placeBelts",
+      points: [
+        { x: 2, y: 2 },
+        { x: 3, y: 2 },
+      ],
+      direction: 0,
+    }).ok,
+  ).toBe(true);
+  const plain = structureKey(sim.snapshot());
+  const id = sim.snapshot().belts[0].id;
+  expect(sim.command({ type: "rotateDivert", beltId: id }).ok).toBe(true);
+  const diverted = structureKey(sim.snapshot());
+  expect(diverted).not.toBe(plain);
+  expect(sim.command({ type: "switchDivert", beltId: id }).ok).toBe(true);
+  expect(structureKey(sim.snapshot())).not.toBe(diverted);
+});

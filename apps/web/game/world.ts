@@ -367,6 +367,11 @@ export function createWorld(
           g.lineBetween(x + X - 3, y + 1, x + X - 3, y + Y - 1);
         }
         this.arrow(g, x + X / 2, y + Y / 2, b.direction, 0x69765e, 4);
+        if (b.alternate !== null) {
+          // Diverter ring: gold while the alternate exit is active, cyan on standby.
+          g.lineStyle(2, b.switched ? 0xd4bd7d : 0x9bd0c4, 0.9);
+          g.strokeCircle(x + X / 2, y + Y / 2, 5);
+        }
       }
       const t = snapshot.map.terminal;
       this.box(g, t, 0x9a9f86, 0x565f4c, 18);
