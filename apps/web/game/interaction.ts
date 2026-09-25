@@ -36,7 +36,7 @@ export function structureKey(s: PlayerSnapshot): string {
   return JSON.stringify([
     s.machines.map((m) => [m.id, m.x, m.y, m.direction]),
     s.factories,
-    s.belts.map((b) => [b.id, b.direction]),
+    s.belts.map((b) => [b.id, b.direction, b.alternate, b.switched]),
     s.storages.map((t) => [t.id, t.definitionId, t.x, t.y, t.direction]),
   ]);
 }

@@ -4,7 +4,7 @@ import {
   type GameCommand,
   type CommandResult,
 } from "@site/sim-core";
-const SAVE_KEY = "industrial-site-save-v4";
+const SAVE_KEY = "industrial-site-save-v5";
 type StorageReader = { getItem(key: string): string | null };
 type StorageWriter = { setItem(key: string, value: string): void };
 export class Session {
@@ -59,7 +59,10 @@ export class Session {
   }
   restore(storage: StorageReader): CommandResult {
     try {
-      const raw = storage.getItem(SAVE_KEY);
+      // Schema-4 records migrate exactly (plain belts gain empty diverter
+      // state), so the previous key stays readable; older formats cannot.
+      const raw =
+        storage.getItem(SAVE_KEY) ?? storage.getItem("industrial-site-save-v4");
       if (!raw)
         return {
           ok: false,
