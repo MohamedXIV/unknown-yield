@@ -231,7 +231,7 @@ Nothing produced may silently disappear. Material remains in tracked transit, ma
 
 ### Consequence
 
-The first playable's explicit buffer `discard` and global site-stock convenience are prototype exceptions, not systems to expand. Waste/dead stock require storage, processing, recycling, export or defined disposal. Conservation should become an automated simulation invariant.
+The first playable's global site-stock convenience is a prototype exception, not a system to expand. The explicit buffer `discard` escape hatch was removed in Issue #5: buffered machines and loaded belts refuse dismantling instead of deleting or teleporting contents, with legitimate routing/recovery outs deferred to Issue #6. Waste/dead stock require storage, processing, recycling, export or defined disposal. Conservation should become an automated simulation invariant.
 
 ---
 

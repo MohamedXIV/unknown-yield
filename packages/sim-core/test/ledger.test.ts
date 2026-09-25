@@ -130,7 +130,7 @@ describe("material ledger", () => {
     auditOk(s);
   });
 
-  it("accounts the discard shortcut as an explicit sink", () => {
+  it("still reconciles historical discards from pre-removal saves", () => {
     const s = make();
     const id = build(s, {
       type: "placeMachine",
@@ -140,15 +140,20 @@ describe("material ledger", () => {
       direction: 0,
     });
     s.step(10000);
-    const buffered = { ...s.serialize().machines[id].output };
+    const save = s.serialize();
+    const buffered = { ...save.machines[id].output };
     expect(Object.values(buffered).reduce((a, b) => a + b, 0)).toBeGreaterThan(
       0,
     );
-    expect(s.command({ type: "discard", machineId: id, buffer: "output" }).ok)
-      .toBe(true);
-    const save = s.serialize();
-    expect(save.flows.discarded).toEqual(buffered);
-    auditOk(s);
+    // Simulate a save written while discard existed: move buffered output
+    // into the retired sink instead of deleting it.
+    save.machines[id].output = {};
+    for (const [material, n] of Object.entries(buffered))
+      save.flows.discarded[material] = (save.flows.discarded[material] ?? 0) + n;
+    const b = make();
+    expect(b.load(JSON.parse(JSON.stringify(save))).ok).toBe(true);
+    expect(b.serialize().flows.discarded).toEqual(buffered);
+    auditOk(b);
   });
 
   it("keeps construction embodied plates audit-neutral across reclaim", () => {

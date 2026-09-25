@@ -178,7 +178,7 @@ describe("world construction", () => {
     for (const id of ["__proto__", "constructor", "toString", "missing"])
       for (const c of [
         { type: "setEnabled", machineId: id, enabled: true },
-        { type: "discard", machineId: id, buffer: "input" },
+        { type: "setOperation", machineId: id, operation: "crush" },
         { type: "dismantle", id },
       ])
         expect(s.command(c).ok).toBe(false);
@@ -220,15 +220,18 @@ describe("automatic industry", () => {
     s.step(10000);
     expect(s.snapshot().fuel).toBe(blocked.fuel);
     expect(s.snapshot().machines[0].status).toBe("output-full");
-    const amount = Object.values(s.snapshot().machines[0].output).reduce(
-      (a, b) => a + b,
-      0,
-    );
+    expect(
+      Object.values(s.snapshot().machines[0].output).reduce((a, b) => a + b, 0),
+    ).toBeGreaterThan(0);
     s.command({ type: "setEnabled", machineId: id, enabled: false });
-    expect(s.command({ type: "dismantle", id }).ok).toBe(true);
-    expect(s.snapshot().stock.ferrite).toBe(amount);
+    // Buffered output blocks reclaim without moving anything implicitly.
+    const refused = s.serialize();
+    expect(s.command({ type: "dismantle", id }).ok).toBe(false);
+    expect(s.serialize()).toEqual(refused);
+    expect(s.snapshot().stock.ferrite).toBeUndefined();
+    expect(s.snapshot().staging).toEqual({});
   });
-  it("cargo moves at most one belt edge per update and is reclaimed on removal", () => {
+  it("cargo moves at most one belt edge per update; loaded belts are not silently reclaimed", () => {
     const s = make();
     build(s, {
       type: "placeMachine",
@@ -242,8 +245,17 @@ describe("automatic industry", () => {
     const loaded = s.snapshot().belts.filter((b) => b.cargo);
     expect(loaded.length).toBeGreaterThan(0);
     expect(loaded.every((b) => b.x < 20)).toBe(true);
-    build(s, { type: "dismantle", id: loaded[0].id });
-    expect(s.snapshot().stock.ferrite).toBe(1);
+    // Loaded non-construction cargo blocks belt removal; nothing vanishes
+    // and nothing teleports to staging.
+    const before = s.serialize();
+    expect(s.command({ type: "dismantle", id: loaded[0].id }).ok).toBe(false);
+    expect(s.serialize()).toEqual(before);
+    expect(s.snapshot().staging).toEqual({});
+    // An empty belt still reclaims its exact build cost.
+    const empty = s.snapshot().belts.find((b) => !b.cargo)!;
+    const plates = s.snapshot().stock.plates;
+    expect(s.command({ type: "dismantle", id: empty.id }).ok).toBe(true);
+    expect(s.snapshot().stock.plates).toBe(plates + 1);
   });
   it("discovers an unknown process automatically and exports for fuel", () => {
     const s = make(),

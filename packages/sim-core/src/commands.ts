@@ -55,11 +55,6 @@ const schema = z.discriminatedUnion("type", [
     operation: z.string(),
   }),
   z.object({
-    type: z.literal("discard"),
-    machineId: z.string(),
-    buffer: z.enum(["input", "output"]),
-  }),
-  z.object({
     type: z.literal("setPolicy"),
     materialId: z.string(),
     policy: z.enum(["keep", "export"]),
@@ -212,17 +207,6 @@ export function applyCommand(
       if (apply) m.operation = cmd.operation;
       return ok("Operation selected");
     }
-    case "discard":
-      if (apply) {
-        // Prototype shortcut (see Issue #5): account every discarded unit as
-        // an explicit sink instead of silently deleting it.
-        for (const [id, n] of Object.entries(
-          s.machines[cmd.machineId][cmd.buffer],
-        ))
-          change(s.flows.discarded, id, n);
-        s.machines[cmd.machineId][cmd.buffer] = {};
-      }
-      return ok("Buffer discarded");
     case "setPolicy": {
       const mat = c.materials.find((m) => m.id === cmd.materialId);
       const known =
@@ -250,9 +234,13 @@ export function applyCommand(
           def = c.machines.find((d) => d.id === m.definitionId)!;
         if (m.job)
           return fail("Disable this machine and wait for its batch to finish");
+        // Conservative reclaim (Issue #5): buffer contents are real material
+        // in a real place. Dismantling must not teleport them across the map,
+        // so a buffered machine cannot be reclaimed until its contents leave
+        // through belts (output drains; incompatible input needs rerouting).
+        if (total(m.input) + total(m.output) > 0)
+          return fail("Empty the machine buffers through belts first");
         if (apply) {
-          for (const inv of [m.input, m.output])
-            for (const [id, n] of Object.entries(inv)) change(s.stock, id, n);
           change(s.stock, c.site.buildMaterial, def.cost);
           delete s.machines[cmd.id];
         }
@@ -287,7 +275,14 @@ export function applyCommand(
           delete s.storages[cmd.id];
         }
         return ok("Storage reclaimed");
-      }      if (belt) {
+      }
+      if (belt) {
+        // Belt cargo is real material in a real place: construction plates
+        // return to the build reserve, but dismantling must not teleport
+        // other cargo across the map, so a loaded belt stays until its cargo
+        // moves on. Nothing is deleted.
+        if (belt.cargo && belt.cargo !== c.site.buildMaterial)
+          return fail("Route the cargo out first");
         if (apply) {
           if (belt.cargo) change(s.stock, belt.cargo, 1);
           change(s.stock, c.site.buildMaterial, c.site.beltCost);
