@@ -10,7 +10,8 @@ This document is intentionally procedural. Game/design truth lives in the domain
 - Completed foundation: **#14 — stable content IDs and localization-ready presentation** (merged via PR #19).
 - Completed Phase 1.5 child: **#4 — physical storage and terminal staging** (merged via PR #21).
 - Completed Phase 1.5 child: **#5 — remove generic discard and define material handling/reclaim rules** (merged via PR #23).
-- Active issue: **#6 — flexible belt routing for persistent production lines**.
+- Completed Phase 1.5 child: **#6 — flexible belt routing for persistent production lines** (merged via PR #25).
+- Active issue: **#7 — preserve factory state across suspend, reroute and resume**.
 - Phase 1.5 closes only through **#8 — end-to-end exit review**.
 
 ## Phase 1.5 dependency graph
@@ -21,13 +22,13 @@ This document is intentionally procedural. Game/design truth lives in the domain
         v
 #14 stable IDs + localization-ready presentation ✓
  ├─> #4 physical storage + terminal staging ✓ ─> #5 remove generic discard ✓
- ├─> #6 flexible belt routing ← ACTIVE ─────┐
+ ├─> #6 flexible belt routing ✓ ────────────┐
  └──────────────────────────────────────────> #7 persistent factory state
                                               │
 #3 + #14 + #4 + #5 + #6 + #7 ─────────────> #8 exit review
 ```
 
-#14, #4 and #5 are complete. #6 is now active: it must add the smallest useful deterministic routing control while preserving physical storage, conservative reclaim, no-teleport behavior and exact conservation. #5 needs legitimate storage/handling destinations. #7 should integrate with #6 rather than invent a separate rerouting model.
+#14, #4, #5 and #6 are complete. #7 is now active: prove suspend → reroute → resume on preserved factory state using the merged diverter routing, without introducing factory abstraction. #5 needs legitimate storage/handling destinations. #7 should integrate with #6 rather than invent a separate rerouting model.
 
 ## Agent loop
 
