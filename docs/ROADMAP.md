@@ -59,7 +59,7 @@ This is the continuing game foundation, not another disposable dashboard experim
 
 ## Phase 1.5 — Physical inventory and flexible routing
 
-**Live execution:** #3 ✓ → #14 ✓ → #4 ✓ → **#5 ACTIVE** / #6 → #7 → #8. See GitHub Issue #2 and [EXECUTION.md](EXECUTION.md).
+**Live execution:** #3 ✓ → #14 ✓ → #4 ✓ → #5 ✓ → **#6 ACTIVE** → #7 → #8. See GitHub Issue #2 and [EXECUTION.md](EXECUTION.md).
 
 ### Question
 
@@ -263,4 +263,4 @@ The following should not be treated as progress during foundation unless require
 
 The accepted implementation and evidence are summarized in [FIRST_PLAYABLE.md](FIRST_PLAYABLE.md) and [BROWSER_SMOKE.md](BROWSER_SMOKE.md). Continue from this foundation; do not rebuild the retired dashboard prototype.
 
-Issues #3, #14 and #4 are complete. The immediate execution target is Issue #5: remove the generic discard escape hatch and make reclaim/handling conservative now that physical storage and terminal staging exist. Issue #6 remains unblocked as the routing counterpart. Phase 1.5 closes only through Issue #8. After that, deepen experimentation/discovery and later market/company systems without turning the game into a dashboard or stock-trading simulator.
+Issues #3, #14, #4 and #5 are complete. The immediate execution target is Issue #6: add the smallest deterministic flexible belt-routing primitive that preserves in-transit cargo, physical storage semantics and exact conservation. Issue #7 follows by using that routing model for persistent factory suspend/reroute/resume. Phase 1.5 closes only through Issue #8. After that, deepen experimentation/discovery and later market/company systems without turning the game into a dashboard or stock-trading simulator.
