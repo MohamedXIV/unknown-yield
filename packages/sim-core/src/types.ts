@@ -48,6 +48,8 @@ export type Belt = Point & {
   id: string;
   direction: number;
   cargo: string | null;
+  alternate: number | null;
+  switched: boolean;
 };
 export type Storage = Point & {
   id: string;
@@ -87,6 +89,8 @@ export type GameCommand =
   | ({ type: "placeFactory" } & Rect)
   | ({ type: "placePort"; factoryId: string; direction: number } & Point)
   | { type: "placeBelts"; points: Point[]; direction: number }
+  | { type: "rotateDivert"; beltId: string }
+  | { type: "switchDivert"; beltId: string }
   | { type: "dismantle"; id: string }
   | { type: "setEnabled"; machineId: string; enabled: boolean }
   | { type: "setOperation"; machineId: string; operation: string }

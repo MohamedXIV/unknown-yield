@@ -43,6 +43,8 @@ const schema = z.discriminatedUnion("type", [
     points: z.array(z.object(point)).min(1).max(4800),
     direction,
   }),
+  z.object({ type: z.literal("rotateDivert"), beltId: z.string() }),
+  z.object({ type: z.literal("switchDivert"), beltId: z.string() }),
   z.object({ type: z.literal("dismantle"), id: z.string() }),
   z.object({
     type: z.literal("setEnabled"),
@@ -188,8 +190,39 @@ export function applyCommand(
       if (!apply) return ok("Build " + segments.length + " belt cells", cost);
       pay(cost);
       for (const p of segments)
-        s.belts[key(p)] = { ...p, id: issue("b"), cargo: null };
+        s.belts[key(p)] = {
+          ...p,
+          id: issue("b"),
+          cargo: null,
+          alternate: null,
+          switched: false,
+        };
       return ok("Belt path built", cost);
+    }
+    case "rotateDivert": {
+      const belt = Object.values(s.belts).find((b) => b.id === cmd.beltId);
+      if (!belt) return fail("Unknown belt");
+      // Cycle the alternate exit through every non-primary direction,
+      // then clear it. Cargo in the slot is untouched.
+      let next: number | null;
+      if (belt.alternate === null) next = (belt.direction + 1) % 4;
+      else if ((belt.alternate + 1) % 4 === belt.direction) next = null;
+      else next = (belt.alternate + 1) % 4;
+      if (apply) {
+        belt.alternate = next;
+        if (next === null) belt.switched = false;
+      }
+      return ok(
+        next === null ? "Alternate exit cleared" : "Alternate exit set",
+      );
+    }
+    case "switchDivert": {
+      const belt = Object.values(s.belts).find((b) => b.id === cmd.beltId);
+      if (!belt) return fail("Unknown belt");
+      if (belt.alternate === null) return fail("No alternate exit to switch to");
+      const next = !belt.switched;
+      if (apply) belt.switched = next;
+      return ok(next ? "Flow switched" : "Flow restored");
     }
     case "setEnabled":
       if (apply) s.machines[cmd.machineId].enabled = cmd.enabled;

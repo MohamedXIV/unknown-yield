@@ -81,7 +81,10 @@ export function transport(c: Content, s: Save) {
   }[] = [];
   for (const b of belts) {
     if (!b.cargo) continue;
-    const target = next(b, b.direction),
+    // A switched diverter exits through its player-set alternate direction.
+    // In-transit cargo is untouched; only the next edge changes.
+    const exit = b.alternate !== null && b.switched ? b.alternate : b.direction;
+    const target = next(b, exit),
       targetKey = key(target);
     if (contains(c.site.terminal, target)) {
       if (b.cargo === c.site.buildMaterial) {
