@@ -90,7 +90,6 @@ export type GameCommand =
   | { type: "dismantle"; id: string }
   | { type: "setEnabled"; machineId: string; enabled: boolean }
   | { type: "setOperation"; machineId: string; operation: string }
-  | { type: "discard"; machineId: string; buffer: "input" | "output" }
   | { type: "setPolicy"; materialId: string; policy: "keep" | "export" }
   | { type: "assistance" };
 export type MachineView = Omit<Machine, "job"> & {

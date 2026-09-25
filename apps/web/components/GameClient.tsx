@@ -465,20 +465,6 @@ function GameClientInner() {
                           </small>
                         </h3>
                         {buffer(machine.input)}
-                        {Object.keys(machine.input).length > 0 && (
-                          <button
-                            className="subtle"
-                            onClick={() =>
-                              act({
-                                type: "discard",
-                                machineId: machine.id,
-                                buffer: "input",
-                              })
-                            }
-                          >
-                            Discard input
-                          </button>
-                        )}
                       </>
                     )}
                     <h3>
@@ -492,23 +478,11 @@ function GameClientInner() {
                       </small>
                     </h3>
                     {buffer(machine.output)}
-                    {Object.keys(machine.output).length > 0 && (
-                      <button
-                        className="subtle"
-                        onClick={() =>
-                          act({
-                            type: "discard",
-                            machineId: machine.id,
-                            buffer: "output",
-                          })
-                        }
-                      >
-                        Discard output
-                      </button>
-                    )}
                     <p className="hint">
                       Cyan arrow: incoming belt. Gold arrow: outgoing belt.
                       Unfamiliar outcomes are recorded after processing.
+                      Buffers survive disable and save/load; dismantling moves
+                      remaining contents to terminal staging.
                     </p>
                     <button
                       className="danger"

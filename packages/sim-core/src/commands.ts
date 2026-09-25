@@ -55,11 +55,6 @@ const schema = z.discriminatedUnion("type", [
     operation: z.string(),
   }),
   z.object({
-    type: z.literal("discard"),
-    machineId: z.string(),
-    buffer: z.enum(["input", "output"]),
-  }),
-  z.object({
     type: z.literal("setPolicy"),
     materialId: z.string(),
     policy: z.enum(["keep", "export"]),
@@ -212,17 +207,6 @@ export function applyCommand(
       if (apply) m.operation = cmd.operation;
       return ok("Operation selected");
     }
-    case "discard":
-      if (apply) {
-        // Prototype shortcut (see Issue #5): account every discarded unit as
-        // an explicit sink instead of silently deleting it.
-        for (const [id, n] of Object.entries(
-          s.machines[cmd.machineId][cmd.buffer],
-        ))
-          change(s.flows.discarded, id, n);
-        s.machines[cmd.machineId][cmd.buffer] = {};
-      }
-      return ok("Buffer discarded");
     case "setPolicy": {
       const mat = c.materials.find((m) => m.id === cmd.materialId);
       const known =
@@ -250,13 +234,22 @@ export function applyCommand(
           def = c.machines.find((d) => d.id === m.definitionId)!;
         if (m.job)
           return fail("Disable this machine and wait for its batch to finish");
+        // Conservative reclaim (Issue #5): buffer contents are real material
+        // and move explicitly to terminal staging when it has room. Nothing
+        // returns to stock by magic and nothing is deleted.
+        const held = total(m.input) + total(m.output);
+        if (held > 0 && total(s.staging) + held > c.site.stagingCapacity)
+          return fail("Terminal staging is full");
         if (apply) {
           for (const inv of [m.input, m.output])
-            for (const [id, n] of Object.entries(inv)) change(s.stock, id, n);
+            for (const [id, n] of Object.entries(inv))
+              change(s.staging, id, n);
           change(s.stock, c.site.buildMaterial, def.cost);
           delete s.machines[cmd.id];
         }
-        return ok("Machine reclaimed");
+        return ok(
+          held > 0 ? "Machine reclaimed; contents moved to staging" : "Machine reclaimed",
+        );
       }
       if (Object.hasOwn(s.factories, cmd.id)) {
         const f = s.factories[cmd.id];
@@ -287,13 +280,32 @@ export function applyCommand(
           delete s.storages[cmd.id];
         }
         return ok("Storage reclaimed");
-      }      if (belt) {
+      }
+      if (belt) {
+        // Belt cargo is real material: construction plates return to the
+        // build reserve, anything else moves explicitly to terminal staging
+        // when it has room. Nothing is deleted.
+        if (
+          belt.cargo &&
+          belt.cargo !== c.site.buildMaterial &&
+          total(s.staging) + 1 > c.site.stagingCapacity
+        )
+          return fail("Terminal staging is full");
         if (apply) {
-          if (belt.cargo) change(s.stock, belt.cargo, 1);
+          if (belt.cargo)
+            change(
+              belt.cargo === c.site.buildMaterial ? s.stock : s.staging,
+              belt.cargo,
+              1,
+            );
           change(s.stock, c.site.buildMaterial, c.site.beltCost);
           delete s.belts[key(belt)];
         }
-        return ok("Belt and cargo reclaimed");
+        return ok(
+          belt.cargo && belt.cargo !== c.site.buildMaterial
+            ? "Belt reclaimed; cargo moved to staging"
+            : "Belt and cargo reclaimed",
+        );
       }
       for (const f of Object.values(s.factories)) {
         const p = f.ports.find((p) => p.id === cmd.id);

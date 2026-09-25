@@ -178,7 +178,7 @@ describe("world construction", () => {
     for (const id of ["__proto__", "constructor", "toString", "missing"])
       for (const c of [
         { type: "setEnabled", machineId: id, enabled: true },
-        { type: "discard", machineId: id, buffer: "input" },
+        { type: "setOperation", machineId: id, operation: "crush" },
         { type: "dismantle", id },
       ])
         expect(s.command(c).ok).toBe(false);
@@ -224,11 +224,16 @@ describe("automatic industry", () => {
       (a, b) => a + b,
       0,
     );
+    expect(amount).toBeGreaterThan(0);
     s.command({ type: "setEnabled", machineId: id, enabled: false });
+    // Buffered output is real material: dismantling moves it explicitly to
+    // terminal staging, and nothing returns to stock by magic.
     expect(s.command({ type: "dismantle", id }).ok).toBe(true);
-    expect(s.snapshot().stock.ferrite).toBe(amount);
+    expect(s.snapshot().stock.ferrite).toBeUndefined();
+    expect(s.snapshot().staging.ferrite).toBe(amount);
+    expect(s.snapshot().stock.plates).toBe(blocked.stock.plates + 18);
   });
-  it("cargo moves at most one belt edge per update and is reclaimed on removal", () => {
+  it("cargo moves at most one belt edge per update; loaded belts relocate, never vanish", () => {
     const s = make();
     build(s, {
       type: "placeMachine",
@@ -242,8 +247,15 @@ describe("automatic industry", () => {
     const loaded = s.snapshot().belts.filter((b) => b.cargo);
     expect(loaded.length).toBeGreaterThan(0);
     expect(loaded.every((b) => b.x < 20)).toBe(true);
-    build(s, { type: "dismantle", id: loaded[0].id });
-    expect(s.snapshot().stock.ferrite).toBe(1);
+    // Loaded non-construction cargo moves explicitly to terminal staging.
+    expect(s.command({ type: "dismantle", id: loaded[0].id }).ok).toBe(true);
+    expect(s.snapshot().stock.ferrite).toBeUndefined();
+    expect(s.snapshot().staging.ferrite).toBe(1);
+    // An empty belt still reclaims its exact build cost.
+    const empty = s.snapshot().belts.find((b) => !b.cargo)!;
+    const plates = s.snapshot().stock.plates;
+    expect(s.command({ type: "dismantle", id: empty.id }).ok).toBe(true);
+    expect(s.snapshot().stock.plates).toBe(plates + 1);
   });
   it("discovers an unknown process automatically and exports for fuel", () => {
     const s = make(),

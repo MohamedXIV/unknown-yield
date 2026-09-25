@@ -23,6 +23,8 @@ import type { Save } from "./types";
  *   build pay / dismantle refund are audit-neutral with no counters.
  * - Extraction outputs are NOT recorded in `produced` (already sourced via
  *   deposits); only defined reaction outputs are.
+ * - `flows.discarded` is retained only so saves written before Issue #5
+ *   still reconcile; no command can produce new discards.
  *
  * All accounting is aggregate per material: no per-unit objects are created.
  */
