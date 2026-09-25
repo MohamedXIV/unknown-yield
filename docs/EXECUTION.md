@@ -9,7 +9,8 @@ This document is intentionally procedural. Game/design truth lives in the domain
 - Completed foundation: **#3 — material ledger and conservation invariants** (merged via PR #17).
 - Completed foundation: **#14 — stable content IDs and localization-ready presentation** (merged via PR #19).
 - Completed Phase 1.5 child: **#4 — physical storage and terminal staging** (merged via PR #21).
-- Active issue: **#5 — remove generic discard and define material handling/reclaim rules**.
+- Completed Phase 1.5 child: **#5 — remove generic discard and define material handling/reclaim rules** (merged via PR #23).
+- Active issue: **#6 — flexible belt routing for persistent production lines**.
 - Phase 1.5 closes only through **#8 — end-to-end exit review**.
 
 ## Phase 1.5 dependency graph
@@ -19,14 +20,14 @@ This document is intentionally procedural. Game/design truth lives in the domain
         │
         v
 #14 stable IDs + localization-ready presentation ✓
- ├─> #4 physical storage + terminal staging ✓ ─> #5 remove generic discard ← ACTIVE
- ├─> #6 flexible belt routing ───────────────┐
+ ├─> #4 physical storage + terminal staging ✓ ─> #5 remove generic discard ✓
+ ├─> #6 flexible belt routing ← ACTIVE ─────┐
  └──────────────────────────────────────────> #7 persistent factory state
                                               │
 #3 + #14 + #4 + #5 + #6 + #7 ─────────────> #8 exit review
 ```
 
-#14 and #4 are complete. #5 is now active because legitimate physical storage/staging destinations exist. #6 remains independently unblocked as the routing counterpart. #5 needs legitimate storage/handling destinations. #7 should integrate with #6 rather than invent a separate rerouting model.
+#14, #4 and #5 are complete. #6 is now active: it must add the smallest useful deterministic routing control while preserving physical storage, conservative reclaim, no-teleport behavior and exact conservation. #5 needs legitimate storage/handling destinations. #7 should integrate with #6 rather than invent a separate rerouting model.
 
 ## Agent loop
 
