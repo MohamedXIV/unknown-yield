@@ -38,6 +38,7 @@ function crusherLine(s = make()) {
     height: 10,
   });
   build(s, { type: "placePort", factoryId: factory, x: 24, y: 27, direction: 0 });
+  build(s, { type: "placePort", factoryId: factory, x: 33, y: 27, direction: 0 });
   const extractor = build(s, {
     type: "placeMachine",
     definitionId: "extractor",
@@ -102,41 +103,55 @@ describe("conservative handling (no generic discard)", () => {
     auditOk(b);
   });
 
-  it("relocates machine buffers to staging on dismantle, never to stock", () => {
-    const { s, crusher } = crusherLine();
+  it("refuses machine dismantle with buffered material without moving anything", () => {
+    const { s, extractor, crusher } = crusherLine();
+    // Stop the source so the drain-down below is deterministic.
+    s.command({ type: "setEnabled", machineId: extractor, enabled: false });
     const crafted = s.serialize();
-    // Honest post-extraction/post-batch state: 3 ferrite pulled from the
+    // Honest post-extraction/post-batch state: 2 ferrite pulled from the
     // deposit sit in input next to 6 plates of batch output.
-    crafted.deposits["ferrite-field"] -= 3;
-    crafted.machines[crusher].input = { ferrite: 3 };
+    crafted.deposits["ferrite-field"] -= 2;
+    crafted.machines[crusher].input = { ferrite: 2 };
     crafted.machines[crusher].output = { plates: 6 };
     crafted.flows.produced.plates = 6;
     expect(s.load(crafted).ok).toBe(true);
     const plates = s.snapshot().stock.plates;
-    expect(s.command({ type: "dismantle", id: crusher }).ok).toBe(true);
-    const after = s.serialize();
-    expect(after.staging).toEqual({ ferrite: 3, plates: 6 });
-    expect(Object.keys(after.stock)).toEqual(["plates"]);
-    expect(after.stock.plates).toBe(plates + 24);
-    expect(after.machines[crusher]).toBeUndefined();
-    auditOk(s);
-  });
-
-  it("refuses machine dismantle when staging cannot hold the buffers", () => {
-    const { s, crusher } = crusherLine();
-    const crafted = s.serialize();
-    crafted.deposits["ferrite-field"] -= 3;
-    crafted.machines[crusher].input = { ferrite: 3 };
-    crafted.staging = { plates: 24 };
-    crafted.flows.produced.plates = 24;
-    expect(s.load(crafted).ok).toBe(true);
+    // Far from the terminal, nothing may teleport: refusal is atomic.
     const before = s.serialize();
     expect(s.command({ type: "dismantle", id: crusher }).ok).toBe(false);
     expect(s.serialize()).toEqual(before);
+    expect(s.serialize().staging).toEqual({});
+    expect(s.snapshot().stock.plates).toBe(plates);
+    auditOk(s);
+    // The legitimate path: run the batch, drain everything into a depot,
+    // then reclaim succeeds with the exact build refund.
+    const depot = build(s, {
+      type: "placeStorage",
+      definitionId: "depot",
+      x: 35,
+      y: 24,
+      direction: 0,
+    });
+    expect(depot[0]).toBe("s");
+    build(s, path(29, 27, 34, 25, 0));
+    for (let i = 0; i < 40; i++) {
+      s.step(5000);
+      const m = s.serialize().machines[crusher];
+      if (Object.keys(m.input).length === 0 && Object.keys(m.output).length === 0)
+        break;
+    }
+    const drained = s.serialize();
+    expect(drained.machines[crusher].input).toEqual({});
+    expect(drained.machines[crusher].output).toEqual({});
+    expect(
+      Object.values(drained.storages[depot].inventory).reduce((a, b) => a + b, 0),
+    ).toBe(12);
+    expect(s.command({ type: "dismantle", id: crusher }).ok).toBe(true);
+    expect(s.snapshot().stock.plates).toBe(plates - 30 - 8 + 24);
     auditOk(s);
   });
 
-  it("returns plates belt cargo to stock and stages other cargo", () => {
+  it("returns plates belt cargo to stock and blocks loaded belts", () => {
     const s = make();
     build(s, {
       type: "placeMachine",
@@ -163,15 +178,15 @@ describe("conservative handling (no generic discard)", () => {
     );
     expect(s.snapshot().stock.plates).toBe(plates + 2);
     expect(s.snapshot().stock.ferrite).toBe(1);
-    // A ferrite-loaded belt relocates its cargo to staging instead.
+    // A ferrite-loaded belt cannot be dismantled: no teleport, no deletion.
     const loaded = s.snapshot().belts.find((b) => b.cargo === "ferrite")!;
-    expect(s.command({ type: "dismantle", id: loaded.id }).ok).toBe(true);
-    expect(s.snapshot().staging.ferrite).toBe(1);
-    expect(s.snapshot().stock.ferrite).toBe(1);
+    const held = s.serialize();
+    expect(s.command({ type: "dismantle", id: loaded.id }).ok).toBe(false);
+    expect(s.serialize()).toEqual(held);
     auditOk(s);
   });
 
-  it("refuses loaded belt dismantle when staging is full", () => {
+  it("refused belt reclaim preserves the ledger exactly", () => {
     const s = make();
     build(s, {
       type: "placeMachine",
@@ -182,18 +197,18 @@ describe("conservative handling (no generic discard)", () => {
     });
     build(s, path(17, 26, 22, 26));
     s.step(20000);
-    const crafted = s.serialize();
-    crafted.staging = { plates: 24 };
-    crafted.flows.produced.plates = 24;
-    expect(s.load(crafted).ok).toBe(true);
     const loaded = s.snapshot().belts.find((b) => b.cargo)!;
     const before = s.serialize();
     expect(s.command({ type: "dismantle", id: loaded.id }).ok).toBe(false);
     expect(s.serialize()).toEqual(before);
-    auditOk(s);
+    const report = auditLedger(fixture, s.serialize());
+    expect(report.ok).toBe(true);
+    expect(
+      report.rows.find((r) => r.material === loaded.cargo)?.belts,
+    ).toBeGreaterThan(0);
   });
 
-  it("preserves every buffer through suspend, dismantle and reload", () => {
+  it("preserves every buffer through suspend, refused dismantle and reload", () => {
     const { s, extractor, crusher } = crusherLine();
     s.command({ type: "setEnabled", machineId: extractor, enabled: false });
     s.command({ type: "setEnabled", machineId: crusher, enabled: false });
@@ -213,9 +228,11 @@ describe("conservative handling (no generic discard)", () => {
     expect(
       Object.values(held.belts).every((b) => b.cargo === null),
     ).toBe(true);
-    expect(s.command({ type: "dismantle", id: crusher }).ok).toBe(true);
-    expect(s.command({ type: "dismantle", id: extractor }).ok).toBe(true);
-    expect(s.serialize().staging).toEqual({ ferrite: 5 });
+    // Neither buffered machine can be reclaimed, and refusal changes nothing.
+    const blocked = s.serialize();
+    expect(s.command({ type: "dismantle", id: crusher }).ok).toBe(false);
+    expect(s.serialize()).toEqual(blocked);
+    expect(s.serialize().staging).toEqual({});
     expect(Object.keys(s.serialize().stock)).toEqual(["plates"]);
     auditOk(s);
     const b = make();

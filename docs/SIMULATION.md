@@ -22,7 +22,7 @@ One bulk storage building (`depot`: 3×2, capacity 40, cost 30 plates, placeable
 
 ### Prototype exceptions after acceptance
 
-No generic delete/discard mechanic remains: the `discard` command was removed in Issue #5 and dismantling never deletes material. Machine buffers relocate explicitly to terminal staging when it has room (dismantling is otherwise refused until staging drains via export); belt cargo returns construction plates to the build reserve or moves other cargo to staging under the same room rule; non-empty storage still refuses dismantling. Valueless dead stock that reaches staging (e.g. residue) stays there as real material — dead stock is a logistics problem, not a delete button.
+No generic delete/discard mechanic remains: the `discard` command was removed in Issue #5, and dismantling a buffered machine or a loaded non-construction belt is refused instead of deleting or teleporting contents. Empty structures reclaim exact build costs; construction plates on a removed belt return to the build reserve. Valueless dead stock that reaches staging (e.g. residue) stays there as real material — dead stock is a logistics problem, not a delete button. Legitimate routing/recovery outs for stranded buffers arrive with Issue #6.
 
 Do not expand either shortcut. The target economy requires physical storage and material conservation; see [ECONOMY.md](ECONOMY.md). A later migration may intentionally break disposable prototype saves again if needed to establish that stronger invariant.
 

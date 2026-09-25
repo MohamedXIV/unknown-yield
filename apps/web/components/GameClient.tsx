@@ -481,8 +481,8 @@ function GameClientInner() {
                     <p className="hint">
                       Cyan arrow: incoming belt. Gold arrow: outgoing belt.
                       Unfamiliar outcomes are recorded after processing.
-                      Buffers survive disable and save/load; dismantling moves
-                      remaining contents to terminal staging.
+                      Buffers survive disable and save/load. Dismantling needs
+                      empty buffers: drain output through belts first.
                     </p>
                     <button
                       className="danger"

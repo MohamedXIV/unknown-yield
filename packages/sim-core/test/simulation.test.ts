@@ -220,20 +220,18 @@ describe("automatic industry", () => {
     s.step(10000);
     expect(s.snapshot().fuel).toBe(blocked.fuel);
     expect(s.snapshot().machines[0].status).toBe("output-full");
-    const amount = Object.values(s.snapshot().machines[0].output).reduce(
-      (a, b) => a + b,
-      0,
-    );
-    expect(amount).toBeGreaterThan(0);
+    expect(
+      Object.values(s.snapshot().machines[0].output).reduce((a, b) => a + b, 0),
+    ).toBeGreaterThan(0);
     s.command({ type: "setEnabled", machineId: id, enabled: false });
-    // Buffered output is real material: dismantling moves it explicitly to
-    // terminal staging, and nothing returns to stock by magic.
-    expect(s.command({ type: "dismantle", id }).ok).toBe(true);
+    // Buffered output blocks reclaim without moving anything implicitly.
+    const refused = s.serialize();
+    expect(s.command({ type: "dismantle", id }).ok).toBe(false);
+    expect(s.serialize()).toEqual(refused);
     expect(s.snapshot().stock.ferrite).toBeUndefined();
-    expect(s.snapshot().staging.ferrite).toBe(amount);
-    expect(s.snapshot().stock.plates).toBe(blocked.stock.plates + 18);
+    expect(s.snapshot().staging).toEqual({});
   });
-  it("cargo moves at most one belt edge per update; loaded belts relocate, never vanish", () => {
+  it("cargo moves at most one belt edge per update; loaded belts are not silently reclaimed", () => {
     const s = make();
     build(s, {
       type: "placeMachine",
@@ -247,10 +245,12 @@ describe("automatic industry", () => {
     const loaded = s.snapshot().belts.filter((b) => b.cargo);
     expect(loaded.length).toBeGreaterThan(0);
     expect(loaded.every((b) => b.x < 20)).toBe(true);
-    // Loaded non-construction cargo moves explicitly to terminal staging.
-    expect(s.command({ type: "dismantle", id: loaded[0].id }).ok).toBe(true);
-    expect(s.snapshot().stock.ferrite).toBeUndefined();
-    expect(s.snapshot().staging.ferrite).toBe(1);
+    // Loaded non-construction cargo blocks belt removal; nothing vanishes
+    // and nothing teleports to staging.
+    const before = s.serialize();
+    expect(s.command({ type: "dismantle", id: loaded[0].id }).ok).toBe(false);
+    expect(s.serialize()).toEqual(before);
+    expect(s.snapshot().staging).toEqual({});
     // An empty belt still reclaims its exact build cost.
     const empty = s.snapshot().belts.find((b) => !b.cargo)!;
     const plates = s.snapshot().stock.plates;

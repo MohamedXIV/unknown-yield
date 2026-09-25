@@ -235,21 +235,16 @@ export function applyCommand(
         if (m.job)
           return fail("Disable this machine and wait for its batch to finish");
         // Conservative reclaim (Issue #5): buffer contents are real material
-        // and move explicitly to terminal staging when it has room. Nothing
-        // returns to stock by magic and nothing is deleted.
-        const held = total(m.input) + total(m.output);
-        if (held > 0 && total(s.staging) + held > c.site.stagingCapacity)
-          return fail("Terminal staging is full");
+        // in a real place. Dismantling must not teleport them across the map,
+        // so a buffered machine cannot be reclaimed until its contents leave
+        // through belts (output drains; incompatible input needs rerouting).
+        if (total(m.input) + total(m.output) > 0)
+          return fail("Empty the machine buffers through belts first");
         if (apply) {
-          for (const inv of [m.input, m.output])
-            for (const [id, n] of Object.entries(inv))
-              change(s.staging, id, n);
           change(s.stock, c.site.buildMaterial, def.cost);
           delete s.machines[cmd.id];
         }
-        return ok(
-          held > 0 ? "Machine reclaimed; contents moved to staging" : "Machine reclaimed",
-        );
+        return ok("Machine reclaimed");
       }
       if (Object.hasOwn(s.factories, cmd.id)) {
         const f = s.factories[cmd.id];
@@ -282,30 +277,18 @@ export function applyCommand(
         return ok("Storage reclaimed");
       }
       if (belt) {
-        // Belt cargo is real material: construction plates return to the
-        // build reserve, anything else moves explicitly to terminal staging
-        // when it has room. Nothing is deleted.
-        if (
-          belt.cargo &&
-          belt.cargo !== c.site.buildMaterial &&
-          total(s.staging) + 1 > c.site.stagingCapacity
-        )
-          return fail("Terminal staging is full");
+        // Belt cargo is real material in a real place: construction plates
+        // return to the build reserve, but dismantling must not teleport
+        // other cargo across the map, so a loaded belt stays until its cargo
+        // moves on. Nothing is deleted.
+        if (belt.cargo && belt.cargo !== c.site.buildMaterial)
+          return fail("Route the cargo out first");
         if (apply) {
-          if (belt.cargo)
-            change(
-              belt.cargo === c.site.buildMaterial ? s.stock : s.staging,
-              belt.cargo,
-              1,
-            );
+          if (belt.cargo) change(s.stock, belt.cargo, 1);
           change(s.stock, c.site.buildMaterial, c.site.beltCost);
           delete s.belts[key(belt)];
         }
-        return ok(
-          belt.cargo && belt.cargo !== c.site.buildMaterial
-            ? "Belt reclaimed; cargo moved to staging"
-            : "Belt and cargo reclaimed",
-        );
+        return ok("Belt and cargo reclaimed");
       }
       for (const f of Object.values(s.factories)) {
         const p = f.ports.find((p) => p.id === cmd.id);

@@ -76,7 +76,7 @@ Consequences:
 - safe disposal, if needed, is itself an authored industrial process;
 - recycling/reclaim recovers value only through defined rules.
 
-The current first playable's global `site stock` convenience for non-construction materials is a temporary proof shortcut, not an accepted final mechanic. The explicit buffer-`discard` escape hatch was removed in Issue #5: dismantling relocates contents explicitly instead of deleting them.
+The current first playable's global `site stock` convenience for non-construction materials is a temporary proof shortcut, not an accepted final mechanic. The explicit buffer-`discard` escape hatch was removed in Issue #5: buffered machines and loaded belts refuse dismantling instead of deleting or teleporting their contents.
 
 ## 7. Storage is geography
 
