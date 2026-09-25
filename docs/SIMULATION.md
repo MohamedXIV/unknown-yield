@@ -2,7 +2,7 @@
 
 ## Implemented spatial contract (2026-09-22)
 
-Commands cover placeMachine, placeFactory, placePort, placeBelts, dismantle, setEnabled, setOperation, discard, setPolicy and assistance. Preview and commit share validation. Placement checks bounds, rotated footprints, occupancy, deposit/factory membership and complete material cost before changing state.
+Commands cover placeMachine, placeStorage, placeFactory, placePort, placeBelts, dismantle, setEnabled, setOperation, setPolicy and assistance. Preview and commit share validation. Placement checks bounds, rotated footprints, occupancy, deposit/factory membership and complete material cost before changing state.
 
 Every content-defined tick increments time, completes current batches and records observations, runs transport when due, then starts eligible batches. Starting charges fuel and inputs once and reserves output capacity. Stopping prevents new batches while the current batch finishes. Dismantling running equipment is refused; an empty factory can be reclaimed after machines, belts and ports are removed.
 
@@ -22,7 +22,7 @@ One bulk storage building (`depot`: 3×2, capacity 40, cost 30 plates, placeable
 
 ### Prototype exceptions after acceptance
 
-One implemented convenience is **not** a forward design commitment: machines expose an explicit `discard` command, and machine-dismantle refunds still land buffer contents in site stock. They exist to keep the slice playable until Issue #5 defines handling/reclaim rules. Terminal arrivals of non-construction materials and bulk storage contents are already fully physical.
+No generic delete/discard mechanic remains: the `discard` command was removed in Issue #5 and dismantling never deletes material. Machine buffers relocate explicitly to terminal staging when it has room (dismantling is otherwise refused until staging drains via export); belt cargo returns construction plates to the build reserve or moves other cargo to staging under the same room rule; non-empty storage still refuses dismantling. Valueless dead stock that reaches staging (e.g. residue) stays there as real material — dead stock is a logistics problem, not a delete button.
 
 Do not expand either shortcut. The target economy requires physical storage and material conservation; see [ECONOMY.md](ECONOMY.md). A later migration may intentionally break disposable prototype saves again if needed to establish that stronger invariant.
 
