@@ -7,6 +7,7 @@ import {
   portError,
   beltError,
   storageError,
+  wall,
   key,
   contains,
 } from "./geometry";
@@ -202,6 +203,10 @@ export function applyCommand(
     case "rotateDivert": {
       const belt = Object.values(s.belts).find((b) => b.id === cmd.beltId);
       if (!belt) return fail("Unknown belt");
+      // A wall/port belt may only ever exit through its matching port
+      // direction; an alternate could reverse or bypass that one-way rule.
+      if (Object.values(s.factories).some((f) => wall(f, belt)))
+        return fail("Diverters cannot sit on factory walls");
       // Cycle the alternate exit through every non-primary direction,
       // then clear it. Cargo in the slot is untouched.
       let next: number | null;

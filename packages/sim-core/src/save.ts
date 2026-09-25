@@ -7,6 +7,7 @@ import {
   portError,
   beltError,
   storageError,
+  wall,
   key,
 } from "./geometry";
 const count = z.number().int().nonnegative().max(1000000000),
@@ -214,6 +215,11 @@ export function parseSave(input: unknown, c: Content): Save {
       throw new Error("Belt switched with no alternate exit");
     if (b.alternate !== null && b.alternate === b.direction)
       throw new Error("Alternate exit must differ");
+    if (
+      b.alternate !== null &&
+      Object.values(stage.factories).some((f) => wall(f, b))
+    )
+      throw new Error("Alternate exit not allowed on factory walls");
     stage.belts[location] = b;
   }
   for (const [id, t] of Object.entries(s.storages)) {

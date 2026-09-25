@@ -277,4 +277,35 @@ describe("belt diverter", () => {
     expect(s.serialize()).toEqual(before);
     auditOk(s);
   });
+
+  it("refuses diverter alternates on factory wall belts, never bypassing ports", () => {
+    const s = make();
+    const factory = build(s, {
+      type: "placeFactory",
+      x: 24,
+      y: 33,
+      width: 10,
+      height: 10,
+    });
+    build(s, { type: "placePort", factoryId: factory, x: 24, y: 37, direction: 0 });
+    build(s, path(22, 37, 26, 37));
+    // Interior belts keep working; the wall/port cell refuses.
+    const inside = beltAt(s, 26, 37);
+    expect(s.command({ type: "rotateDivert", beltId: inside }).ok).toBe(true);
+    const wallId = beltAt(s, 24, 37);
+    const before = s.serialize();
+    expect(s.command({ type: "rotateDivert", beltId: wallId }).ok).toBe(false);
+    expect(s.preview({ type: "rotateDivert", beltId: wallId }).ok).toBe(false);
+    expect(s.serialize()).toEqual(before);
+    auditOk(s);
+    // A crafted wall alternate is rejected at the load boundary too.
+    const tampered = structuredClone(before);
+    const key = Object.keys(tampered.belts).find(
+      (k) => tampered.belts[k].id === wallId,
+    )!;
+    tampered.belts[key].alternate = 1;
+    const b = make();
+    expect(b.load(JSON.parse(JSON.stringify(tampered))).ok).toBe(false);
+    expect(b.serialize().belts).toEqual({});
+  });
 });
