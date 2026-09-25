@@ -59,7 +59,7 @@ This is the continuing game foundation, not another disposable dashboard experim
 
 ## Phase 1.5 — Physical inventory and flexible routing
 
-**Live execution:** #3 ✓ → #14 ✓ → **#4 ACTIVE** / #6 → #5/#7 → #8. See GitHub Issue #2 and [EXECUTION.md](EXECUTION.md).
+**Live execution:** #3 ✓ → #14 ✓ → #4 ✓ → **#5 ACTIVE** / #6 → #7 → #8. See GitHub Issue #2 and [EXECUTION.md](EXECUTION.md).
 
 ### Question
 
@@ -263,4 +263,4 @@ The following should not be treated as progress during foundation unless require
 
 The accepted implementation and evidence are summarized in [FIRST_PLAYABLE.md](FIRST_PLAYABLE.md) and [BROWSER_SMOKE.md](BROWSER_SMOKE.md). Continue from this foundation; do not rebuild the retired dashboard prototype.
 
-Issues #3 and #14 are complete. The immediate execution target is Issue #4: physical storage plus terminal staging integrated with the conservation ledger. Issue #6 is also unblocked and follows as the routing counterpart. Phase 1.5 closes only through Issue #8. After that, deepen experimentation/discovery and later market/company systems without turning the game into a dashboard or stock-trading simulator.
+Issues #3, #14 and #4 are complete. The immediate execution target is Issue #5: remove the generic discard escape hatch and make reclaim/handling conservative now that physical storage and terminal staging exist. Issue #6 remains unblocked as the routing counterpart. Phase 1.5 closes only through Issue #8. After that, deepen experimentation/discovery and later market/company systems without turning the game into a dashboard or stock-trading simulator.
