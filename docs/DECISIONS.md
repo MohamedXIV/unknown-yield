@@ -221,7 +221,7 @@ Definitions and placed instances are separate. Machines operate automatically fr
 
 **Status:** accepted, updated 2026-09-26
 
-Spatial saves currently use schema 7, separate from content version `world-01-v6`. Schema 4 migrates losslessly through schema 5 by adding empty belt-diverter state; schema 5 then migrates to schema 6 by reconstructing confirmed experiment evidence from discovered reaction IDs and hinted evidence from any undiscovered active processor batch; schema 6 migrates to schema 7 by adding an empty machine-incident slot. Schemas 1–3 remain incompatible and are rejected without replacing a running site. Saves tied to the previous `world-01-v5` content are rejected by the exact content-version check. Content Studio remains development-only and receives no scope expansion from save migration work.
+Spatial saves currently use schema 7, separate from content version `world-01-v5`. Schema 4 migrates losslessly through schema 5 by adding empty belt-diverter state; schema 5 then migrates to schema 6 by reconstructing confirmed experiment evidence from discovered reaction IDs and hinted evidence from any undiscovered active processor batch; schema 6 migrates to schema 7 by adding an empty machine-incident slot. Schemas 1–3 remain incompatible and are rejected without replacing a running site. Saves tied to the older `world-01-v4` content are rejected by the exact content-version check. Content Studio remains development-only and receives no scope expansion from save migration work.
 
 ## D-019 — Material conservation is a design invariant
 
