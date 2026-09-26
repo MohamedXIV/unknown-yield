@@ -217,11 +217,11 @@ The fixed-site dashboard is replaced by a full-screen spatial building game. The
 
 Definitions and placed instances are separate. Machines operate automatically from physical inputs, without knowledge-gating outcomes. Directional single-slot ground belts connect adjacent cells; factory walls require player-built ports. Build/refund operations are atomic. Local structural-plate production funds expansion. Terminal policies retain materials or export discovered valuable outputs for fuel; exports repay assistance debt first.
 
-## D-018 — Explicitly retire disposable saves
+## D-018 — Save schema evolves separately from content
 
-**Status:** accepted, 2026-09-22
+**Status:** accepted, updated 2026-09-26
 
-Spatial saves use schema 2, separate from content version. Schema 1 is incompatible and rejected without replacing a running site. No migration work is allocated to the retired prototype. Content Studio remains development-only and receives no scope expansion.
+Spatial saves currently use schema 5, separate from content version `world-01-v4`. Schema 4 migrates losslessly by adding empty belt-diverter state; schemas 1–3 remain incompatible and are rejected without replacing a running site. Content Studio remains development-only and receives no scope expansion from save migration work.
 
 ## D-019 — Material conservation is a design invariant
 
@@ -231,7 +231,7 @@ Nothing produced may silently disappear. Material remains in tracked transit, ma
 
 ### Consequence
 
-The first playable's global site-stock convenience is a prototype exception, not a system to expand. The explicit buffer `discard` escape hatch was removed in Issue #5: buffered machines and loaded belts refuse dismantling instead of deleting or teleporting contents, with legitimate routing/recovery outs deferred to Issue #6. Waste/dead stock require storage, processing, recycling, export or defined disposal. Conservation should become an automated simulation invariant.
+The first playable's global site-stock convenience is a prototype exception, not a system to expand. The explicit buffer `discard` escape hatch was removed in Issue #5: buffered machines and loaded non-construction belts refuse dismantling instead of deleting or teleporting contents. Issue #6 added deterministic belt diverters so future feed can be rerouted physically while cargo already in transit remains on its existing route. Waste/dead stock require storage, processing, recycling, export or defined disposal. Conservation should become an automated simulation invariant.
 
 ---
 
@@ -257,7 +257,7 @@ Market changes should primarily cause suspension/resumption and logistics rerout
 
 ### Consequence
 
-Stopped factories preserve their internal state. Flexible splitters/switches/valves and physical storage become meaningful progression. A factory may be off for a long period and resume from its preserved state.
+Stopped factories preserve their internal state without rebuilding. Disabling prevents new batches after the current batch finishes, while residual logistics may still fill inputs or drain outputs until already-routed cargo settles. Diverters redirect future feed only; a factory may then remain idle for a long period and resume from preserved buffers and identities.
 
 ---
 
