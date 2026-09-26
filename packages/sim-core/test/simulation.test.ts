@@ -538,6 +538,17 @@ describe("automatic industry", () => {
       safe.s.snapshot().machines.find((m) => m.id === safe.processor)?.status,
     ).not.toBe("incident");
     expect(auditLedger(fixture, safe.s.serialize()).ok).toBe(true);
+
+    const repeated = line(make(), true, true, "oversealed-furnace");
+    for (
+      let ticks = 0;
+      ticks < 500 && !repeated.s.serialize().machines[repeated.processor].incident;
+      ticks++
+    )
+      repeated.s.step(100);
+    expect(repeated.s.serialize().machines[repeated.processor].incident).toBe(
+      "chamber-blowout",
+    );
   });
 
   it("migrates schema-6 machines with no incident into schema 7", () => {
