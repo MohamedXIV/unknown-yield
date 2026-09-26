@@ -312,7 +312,7 @@ describe("automatic industry", () => {
       expect(save.machines[processor].job?.reaction).toBe(reactionId);
       expect(save.knowledge).not.toContain(reactionId);
       expect(save.schemaVersion).toBe(7);
-      expect(save.contentVersion).toBe("world-01-v6");
+      expect(save.contentVersion).toBe("world-01-v5");
 
       const restored = make(),
         repeated = make();
@@ -603,7 +603,7 @@ describe("save boundary", () => {
     const s = make(),
       before = s.serialize();
     expect(
-      s.load({ ...before, contentVersion: "world-01-v5" }).ok,
+      s.load({ ...before, contentVersion: "world-01-v4" }).ok,
     ).toBe(false);
     expect(s.serialize()).toEqual(before);
   });
