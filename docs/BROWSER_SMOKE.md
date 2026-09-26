@@ -52,6 +52,24 @@ The UI confirmed the save with `Field record saved on this device.`. After **Loa
 
 This closes Issue #8's explicit browser requirement to save/reload while material exists simultaneously across belts, storage, factory buffers and terminal staging. No repo edits or test reruns were performed during this focused follow-up because no runtime code changed.
 
+### Issue #32 condition-driven hazard acceptance — observed on 2026-09-26
+
+Behavioral head: `fc52e9704d09b896ebedd707ffeaed9f6cd6076b`. The simulation was left paused after the browser proof.
+
+- Before completion, the notebook showed `UNCONFIRMED · HEAT` / `Outcome unconfirmed` for `Veined ore → Heat · Oversealed furnace` without exposing the authored result or hazard.
+- After completion, the same experiment became `OBSERVED · HEAT — Vitrified residue`; the affected machine exposed localized `Chamber blowout` cause/effect text and entered `Incident lockout`.
+- Factory 3 retained `Vitrified residue 1`. M4 showed the Oversealed furnace disabled with Input `12/12 Veined ore` and Output `1/12 Vitrified residue`, preserving physical material/buffers.
+- Save/Load during the incident had already been exercised on this exact behavior: Load reported `Site restored`, and Factory 3 / M4 returned with the same incident lockout and preserved buffers.
+- `Acknowledge incident & re-enable` recovered the same M4 identity. It was then disabled manually to avoid immediately repeating the incident during the safe-condition comparison.
+- Normal comparison: M18 `Sealed furnace` entered Processing without incident. Its inspector showed Input `4/12 Veined ore`, Output `5/12 Conductive granules`, and the UI reported `DISCOVERED: Conductive granules`.
+- The visible notebook/inspectors used localized wording; no raw stable IDs or localization keys were observed.
+- No visible page error was observed.
+- Browser JavaScript console logs are not exposed by the available CUA surface. Console status is therefore **unverified**, not claimed as zero errors.
+
+The local code gate on this behavior is also green: focused 72/72 across 6 files, full 116/116 across 14 files, typecheck/lint/build/static export PASS, plus an exact-head rerun of `packages/content/test/content.test.ts` at 22/22.
+
+This closes Issue #32's required browser proof of cause → consequence → observation/recovery while preserving the JS-console observability limitation explicitly.
+
 ### Issue #31 knowledge-state acceptance — observed on 2026-09-26
 
 Behavioral head: `bdbf0f201aebdf04cbb13a778e246b0545005a94` on `feat/31-experiment-evidence`. The worktree remained clean on that exact head.

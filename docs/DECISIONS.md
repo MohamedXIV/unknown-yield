@@ -221,7 +221,7 @@ Definitions and placed instances are separate. Machines operate automatically fr
 
 **Status:** accepted, updated 2026-09-26
 
-Spatial saves currently use schema 6, separate from content version `world-01-v5`. Schema 4 migrates losslessly through schema 5 by adding empty belt-diverter state; schema 5 then migrates to schema 6 by reconstructing confirmed experiment evidence from discovered reaction IDs and hinted evidence from any undiscovered active processor batch. Schemas 1–3 remain incompatible and are rejected without replacing a running site. Saves tied to the previous `world-01-v4` content are rejected by the exact content-version check. Content Studio remains development-only and receives no scope expansion from save migration work.
+Spatial saves currently use schema 7, separate from content version `world-01-v5`. Schema 4 migrates losslessly through schema 5 by adding empty belt-diverter state; schema 5 then migrates to schema 6 by reconstructing confirmed experiment evidence from discovered reaction IDs and hinted evidence from any undiscovered active processor batch; schema 6 migrates to schema 7 by adding an empty machine-incident slot. Schemas 1–3 remain incompatible and are rejected without replacing a running site. Saves tied to the older `world-01-v4` content are rejected by the exact content-version check. Content Studio remains development-only and receives no scope expansion from save migration work.
 
 ## D-019 — Material conservation is a design invariant
 
@@ -275,6 +275,18 @@ A placeholder ID such as `fuel-0` may therefore remain stable while the eventual
 Saves, references and simulation rules use stable IDs rather than visible text or array positions. UI resolves display text through localization resources/keys. `sim-core` must not depend on a localization framework or branch on translated strings.
 
 The project should become localization-ready before content breadth grows, without requiring complete translations now.
+
+---
+
+## D-023 — Hazards are authored causal incidents, not a generic damage system
+
+**Status:** accepted, 2026-09-26
+
+A hazardous experiment is caused by an explicit authored process condition and reaction, never by arbitrary outcome RNG. The first proof stores only a machine incident lockout after the hazardous batch completes: material accounting proceeds normally, the machine disables, the player can inspect localized cause/effect text, and an explicit re-enable acknowledges the incident and restores operation.
+
+### Consequence
+
+Issue #32 does not introduce hit points, repair resources, generic fire/pressure/contamination simulation, or a reusable damage framework. Future hazards may justify broader systems later, but they must earn that scope from gameplay evidence. Hazard consequences remain save/load deterministic and subject to the same material-conservation rules as ordinary reactions.
 
 ---
 

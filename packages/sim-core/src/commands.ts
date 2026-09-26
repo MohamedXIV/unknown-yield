@@ -123,6 +123,7 @@ export function applyCommand(
         depositId: placement.depositId,
         operation: def.operations[0] ?? null,
         enabled: true,
+        incident: null,
         input: {},
         output: {},
         job: null,
@@ -229,13 +230,21 @@ export function applyCommand(
       if (apply) belt.switched = next;
       return ok(next ? "Flow switched" : "Flow restored");
     }
-    case "setEnabled":
-      if (apply) s.machines[cmd.machineId].enabled = cmd.enabled;
+    case "setEnabled": {
+      const machine = s.machines[cmd.machineId],
+        recovering = cmd.enabled && machine.incident !== null;
+      if (apply) {
+        machine.enabled = cmd.enabled;
+        if (cmd.enabled) machine.incident = null;
+      }
       return ok(
-        cmd.enabled
-          ? "Automatic operation enabled"
-          : "Stopping after current batch",
+        recovering
+          ? "Incident acknowledged; automatic operation enabled"
+          : cmd.enabled
+            ? "Automatic operation enabled"
+            : "Stopping after current batch",
       );
+    }
     case "setOperation": {
       const m = s.machines[cmd.machineId],
         d = c.machines.find((d) => d.id === m.definitionId)!;

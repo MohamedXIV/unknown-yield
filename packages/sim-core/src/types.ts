@@ -36,6 +36,7 @@ export type Job = { remaining: number; reaction: string | null };
  */
 export const MACHINE_STATUSES = [
   "processing",
+  "incident",
   "disabled",
   "deposit-exhausted",
   "needs-compatible-input",
@@ -53,6 +54,7 @@ export type Machine = Point & {
   depositId: string | null;
   operation: string | null;
   enabled: boolean;
+  incident: string | null;
   input: Inventory;
   output: Inventory;
   job: Job | null;
@@ -110,8 +112,9 @@ export type GameCommand =
   | { type: "setOperation"; machineId: string; operation: string }
   | { type: "setPolicy"; materialId: string; policy: "keep" | "export" }
   | { type: "assistance" };
-export type MachineView = Omit<Machine, "job"> & {
+export type MachineView = Omit<Machine, "job" | "incident"> & {
   job: { remaining: number } | null;
+  incident: { nameKey: string; textKey: string } | null;
   nameKey: string;
   role: "extractor" | "processor";
   width: number;

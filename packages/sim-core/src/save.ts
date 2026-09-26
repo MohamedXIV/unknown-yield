@@ -48,6 +48,7 @@ const machine = z.object({
   depositId: safeId.nullable(),
   operation: safeId.nullable(),
   enabled: z.boolean(),
+  incident: safeId.nullable().default(null),
   input: inventory,
   output: inventory,
   job: z
@@ -76,7 +77,12 @@ const evidence = z.object({
   state: z.enum(["hinted", "confirmed"]),
 });
 const schema = z.object({
-  schemaVersion: z.union([z.literal(4), z.literal(5), z.literal(6)]),
+  schemaVersion: z.union([
+    z.literal(4),
+    z.literal(5),
+    z.literal(6),
+    z.literal(7),
+  ]),
   contentVersion: z.string(),
   tick: count,
   remainder: z.number().finite().nonnegative(),
@@ -98,7 +104,7 @@ const schema = z.object({
 });
 export function initialState(c: Content): Save {
   return {
-    schemaVersion: 6,
+    schemaVersion: 7,
     contentVersion: c.version,
     tick: 0,
     remainder: 0,
@@ -186,6 +192,9 @@ export function parseSave(input: unknown, c: Content): Save {
     }
     s.schemaVersion = 6;
   }
+  // Schema 6 predates persisted machine incidents. The parser defaults every
+  // existing machine to no incident, which is an exact migration.
+  if (s.schemaVersion === 6) s.schemaVersion = 7;
   if (s.contentVersion !== c.version || s.remainder >= c.tickMs)
     throw new Error("Incompatible content or timing");
   if (
@@ -245,6 +254,16 @@ export function parseSave(input: unknown, c: Content): Save {
     )
       throw new Error(placement.error ?? "Invalid machine ownership");
     const d = c.machines.find((d) => d.id === m.definitionId)!;
+    if (m.incident) {
+      const hazard = c.reactions.find(
+        (r) =>
+          r.hazard?.id === m.incident &&
+          r.operation === m.operation &&
+          r.processConditionId === d.processConditionId,
+      );
+      if (!hazard || m.enabled || m.job)
+        throw new Error("Invalid machine incident state");
+    }
     if (
       d.role === "processor"
         ? !m.operation || !d.operations.includes(m.operation)

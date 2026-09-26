@@ -68,6 +68,7 @@ const descriptions: Record<Tool, string> = {
   crusher: "Place inside a factory. Cyan is input; gold is output.",
   furnace: "Place inside a factory.",
   "sealed-furnace": "Place inside a factory.",
+  "oversealed-furnace": "Place inside a factory. This setup is intentionally experimental.",
   depot:
     "Place on clear ground. Belts move any material in and out until full.",
   belt: "Drag a ground path. Release to build. Click for one cell; R changes its direction.",
@@ -177,11 +178,15 @@ function GameClientInner() {
   };
   // Furnace descriptions name their operation, which is content data.
   const toolDescription = (tool: Tool) => {
-    if (tool !== "furnace" && tool !== "sealed-furnace")
+    if (
+      tool !== "furnace" &&
+      tool !== "sealed-furnace" &&
+      tool !== "oversealed-furnace"
+    )
       return descriptions[tool];
     const key = snapshot.operations.find((o) => o.id === "heat")?.nameKey;
     return (
-      descriptions.furnace +
+      descriptions[tool] +
       " Operation: " +
       (key ? t(key) : "heat") +
       ". Outcomes require observation."
@@ -440,6 +445,13 @@ function GameClientInner() {
                         </select>
                       </label>
                     )}
+                    {machine.incident && (
+                      <div className="milestone">
+                        <small>INCIDENT LOCKOUT</small>
+                        <h3>{t(machine.incident.nameKey)}</h3>
+                        <p>{t(machine.incident.textKey)}</p>
+                      </div>
+                    )}
                     <button
                       className="primary"
                       onClick={() =>
@@ -450,9 +462,11 @@ function GameClientInner() {
                         })
                       }
                     >
-                      {machine.enabled
-                        ? "Stop after this batch"
-                        : "Enable automatic operation"}
+                      {machine.incident
+                        ? "Acknowledge incident & re-enable"
+                        : machine.enabled
+                          ? "Stop after this batch"
+                          : "Enable automatic operation"}
                     </button>
                     {machine.role === "processor" && (
                       <>
@@ -841,7 +855,7 @@ function GameClientInner() {
                   <dt>Factory roof</dt>
                   <dd>Select factory + F</dd>
                   <dt>Build tools</dt>
-                  <dd>1–6</dd>
+                  <dd>1–9</dd>
                   <dt>Dismantle</dt>
                   <dd>X</dd>
                 </dl>
@@ -914,6 +928,7 @@ function GameClientInner() {
               "crusher",
               "furnace",
               "sealed-furnace",
+              "oversealed-furnace",
               "belt",
               "port",
               "depot",
@@ -930,7 +945,11 @@ function GameClientInner() {
             >
               <small>{TOOL_HOTKEYS[tool]}</small>
               <Glyph
-                type={tool === "sealed-furnace" ? "furnace" : tool}
+                type={
+                  tool === "sealed-furnace" || tool === "oversealed-furnace"
+                    ? "furnace"
+                    : tool
+                }
                 size={25}
               />
               <span>{toolName(tool)}</span>

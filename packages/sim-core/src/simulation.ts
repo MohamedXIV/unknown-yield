@@ -116,9 +116,19 @@ export class Simulation {
       machines: Object.values(s.machines).map((m) => {
         const d = c.machines.find((d) => d.id === m.definitionId)!;
         const r = footprint(m, d);
+        const incident = m.incident
+          ? c.reactions.find((reaction) => reaction.hazard?.id === m.incident)
+              ?.hazard
+          : undefined;
         return {
           ...m,
           job: m.job ? { remaining: m.job.remaining } : null,
+          incident: incident
+            ? {
+                nameKey: incident.nameKey,
+                textKey: incident.observationKey,
+              }
+            : null,
           nameKey: d.nameKey,
           role: d.role,
           width: r.width,
@@ -164,7 +174,7 @@ export class Simulation {
       return {
         ok: false,
         message:
-          "Save rejected (requires schema 6): " +
+          "Save rejected (requires schema 7): " +
           (error instanceof Error ? error.message : "Invalid data"),
       };
     }

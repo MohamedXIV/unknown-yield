@@ -40,3 +40,27 @@ it("refuses malformed saved JSON without replacing live state", () => {
   expect(s.restore({ getItem: () => "{broken" }).ok).toBe(false);
   expect(s.snapshot()).toEqual(before);
 });
+
+
+it("writes the current save key and reads the previous compatible key", () => {
+  const current = new Session();
+  const records = new Map<string, string>();
+  expect(
+    current.save({
+      setItem(key, value) {
+        records.set(key, value);
+      },
+    }).ok,
+  ).toBe(true);
+  expect(records.has("industrial-site-save-v7")).toBe(true);
+
+  const restored = new Session();
+  const previous = records.get("industrial-site-save-v7")!;
+  expect(
+    restored.restore({
+      getItem(key) {
+        return key === "industrial-site-save-v5" ? previous : null;
+      },
+    }).ok,
+  ).toBe(true);
+});

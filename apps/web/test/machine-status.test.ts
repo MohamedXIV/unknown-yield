@@ -11,4 +11,5 @@ it("labels every semantic status in readable English, never a raw code", () => {
   }
   expect(machineStatusLabel("ready")).toBe("Ready");
   expect(machineStatusLabel("output-full")).toBe("Output full");
+  expect(machineStatusLabel("incident")).toBe("Incident lockout");
 });

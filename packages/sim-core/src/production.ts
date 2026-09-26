@@ -20,6 +20,7 @@ export function recipe(c: Content, m: Machine) {
 }
 export function status(c: Content, s: Save, m: Machine): MachineStatus {
   if (m.job) return "processing";
+  if (m.incident) return "incident";
   if (!m.enabled) return "disabled";
   const d = c.machines.find((d) => d.id === m.definitionId)!;
   const r = recipe(c, m);
@@ -69,6 +70,10 @@ export function completeAndStart(
           onDiscovery?.(r.id, m);
           const mat = c.materials.find((a) => a.id === material)!;
           s.policies[material] = mat.exportValue > 0 ? "export" : "keep";
+        }
+        if (r?.hazard) {
+          m.incident = r.hazard.id;
+          m.enabled = false;
         }
         m.job = null;
       }

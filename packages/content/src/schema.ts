@@ -68,6 +68,13 @@ export const contentSchema = z.object({
         output: id,
         outputAmount: positive,
         observationKey: localeKeySchema,
+        hazard: z
+          .object({
+            id,
+            nameKey: localeKeySchema,
+            observationKey: localeKeySchema,
+          })
+          .optional(),
         known: z.boolean(),
       }),
     )
@@ -127,7 +134,8 @@ export function validateContent(input: unknown): Content {
     throw new Error("Construction material must be initially known");
   if (c.site.factoryMin < 4 || c.site.factoryMax < c.site.factoryMin)
     throw new Error("Invalid factory size");
-  const matches = new Set<string>();
+  const matches = new Set<string>(),
+    hazardIds = new Set<string>();
   for (const r of c.reactions) {
     if (
       !materials.has(r.input) ||
@@ -139,6 +147,18 @@ export function validateContent(input: unknown): Content {
       r.operation + "/" + r.input + "/" + (r.processConditionId ?? "");
     if (matches.has(key)) throw new Error("Ambiguous reaction");
     matches.add(key);
+    if (r.hazard) {
+      if (!r.processConditionId)
+        throw new Error("Hazard requires an explicit process condition");
+      if (hazardIds.has(r.hazard.id)) throw new Error("Duplicate hazard ID");
+      hazardIds.add(r.hazard.id);
+      if (
+        r.hazard.nameKey !== "hazard." + r.hazard.id + ".name" ||
+        r.hazard.observationKey !==
+          "hazard." + r.hazard.id + ".observation"
+      )
+        throw new Error("Localization key must match its hazard");
+    }
     const capable = c.machines.filter(
       (m) =>
         m.role === "processor" &&
