@@ -7,7 +7,7 @@ import type { Content } from "./schema";
  * Content identity is always a stable machine-readable ID. Player-facing
  * wording lives in locale catalogs keyed by namespaced dotted keys:
  * `material.<id>.name`, `operation.<id>.name`, `machine.<id>.name`,
- * `storage.<id>.name`, `reaction.<id>.observation`. Renaming an English value never changes an ID
+ * `storage.<id>.name`, `reaction.<id>.observation`, and `hazard.<id>.*`. Renaming an English value never changes an ID
  * and never requires a save migration. This package validates catalog shape
  * and key coverage; resolution (i18next) lives outside `sim-core`.
  */
@@ -27,6 +27,9 @@ export function contentKeys(c: Content): string[] {
     ...c.machines.map((m) => m.nameKey),
     ...c.storages.map((s) => s.nameKey),
     ...c.reactions.map((r) => r.observationKey),
+    ...c.reactions.flatMap((r) =>
+      r.hazard ? [r.hazard.nameKey, r.hazard.observationKey] : [],
+    ),
   ];
 }
 
@@ -53,6 +56,7 @@ export const enCatalog: LocaleCatalog = {
   "machine.crusher.name": "Crusher",
   "machine.furnace.name": "Furnace",
   "machine.sealed-furnace.name": "Sealed furnace",
+  "machine.oversealed-furnace.name": "Oversealed furnace",
   "storage.depot.name": "Depot",
   "reaction.press-ferrite.observation":
     "Ferrite compacts into structural plates for local construction.",
@@ -62,4 +66,9 @@ export const enCatalog: LocaleCatalog = {
     "The sample vitrifies under heat. It has no export value; mechanical processing remains worth investigating.",
   "reaction.heat-raw-sealed.observation":
     "Heating the ore in a sealed furnace releases conductive grains.",
+  "reaction.heat-raw-oversealed.observation":
+    "The oversealed chamber vitrifies the sample and trips a violent pressure release. The setup itself caused the failure.",
+  "hazard.chamber-blowout.name": "Chamber blowout",
+  "hazard.chamber-blowout.observation":
+    "The oversealed chamber vented violently and forced an automatic lockout. The processed residue remains in the machine; acknowledge the incident before restarting.",
 };
