@@ -226,6 +226,96 @@ describe("persistent factories (suspend / reroute / resume)", () => {
     auditOk(s);
   });
 
+  it("keeps old-route cargo on line B after an immediate suspend and reroute", () => {
+    const { s, cb, ca } = twoLines();
+    s.step(60000);
+
+    const beltAt = (
+      save: ReturnType<Simulation["serialize"]>,
+      x: number,
+      y: number,
+    ) => Object.values(save.belts).find((b) => b.x === x && b.y === y)!;
+    const hasRawPastDiverter = (save: ReturnType<Simulation["serialize"]>) =>
+      Object.values(save.belts).some(
+        (b) => b.y === 37 && b.x > 23 && b.x <= 26 && b.cargo === "raw",
+      );
+    let before = s.serialize();
+    for (
+      let i = 0;
+      i < 120 &&
+      (before.machines[cb].job !== null || !hasRawPastDiverter(before));
+      i++
+    ) {
+      s.step(100);
+      before = s.serialize();
+    }
+    expect(before.machines[cb].job).toBeNull();
+    expect(hasRawPastDiverter(before)).toBe(true);
+    expect(before.machines[ca].input).toEqual({});
+    expect(before.machines[ca].job).toBeNull();
+    const rawAlreadyPastDiverter = Object.values(before.belts).filter(
+      (b) => b.y === 37 && b.x > 23 && b.x <= 26 && b.cargo === "raw",
+    ).length;
+    const lineBInputBefore = before.machines[cb].input.raw ?? 0;
+    const consumedBefore = before.flows.consumed.raw ?? 0;
+    const producedBefore = before.flows.produced.granules ?? 0;
+    const diverter = beltAt(before, 23, 37).id;
+    const cargoOnDiverter = beltAt(before, 23, 37).cargo;
+    auditOk(s);
+
+    expect(
+      s.command({ type: "setEnabled", machineId: cb, enabled: false }).ok,
+    ).toBe(true);
+    for (let i = 0; i < 3; i++)
+      expect(s.command({ type: "rotateDivert", beltId: diverter }).ok).toBe(
+        true,
+      );
+    expect(s.command({ type: "switchDivert", beltId: diverter }).ok).toBe(true);
+    expect(beltAt(s.serialize(), 23, 37).cargo).toBe(cargoOnDiverter);
+    auditOk(s);
+
+    const lineBBelts = (save: ReturnType<Simulation["serialize"]>) =>
+      Object.values(save.belts)
+        .filter(
+          (b) =>
+            (b.y === 37 && b.x > 23 && b.x <= 26) ||
+            (b.y === 37 && b.x >= 29) ||
+            (b.x === 37 && b.y >= 29 && b.y < 37),
+        )
+        .map(({ x, y, cargo }) => ({ x, y, cargo }));
+    let after = s.serialize();
+    const reachedLineA = (save: ReturnType<Simulation["serialize"]>) =>
+      (save.machines[ca].input.raw ?? 0) > 0 ||
+      save.machines[ca].job !== null ||
+      (save.flows.consumed.raw ?? 0) > consumedBefore ||
+      (save.flows.produced.granules ?? 0) > producedBefore;
+    for (
+      let i = 0;
+      i < 600 &&
+      (!reachedLineA(after) || lineBBelts(after).some((b) => b.cargo));
+      i++
+    ) {
+      s.step(100);
+      after = s.serialize();
+      auditOk(s);
+    }
+
+    expect(reachedLineA(after)).toBe(true);
+    expect(lineBBelts(after).every((b) => b.cargo === null)).toBe(true);
+    expect(after.machines[cb].enabled).toBe(false);
+    expect(after.machines[cb].job).toBeNull();
+    expect(after.machines[cb].input.raw).toBe(
+      lineBInputBefore + rawAlreadyPastDiverter,
+    );
+
+    const settledLineB = machineState(s, cb);
+    const settledLineBBelts = lineBBelts(after);
+    s.step(20000);
+    auditOk(s);
+    expect(machineState(s, cb)).toEqual(settledLineB);
+    expect(lineBBelts(s.serialize())).toEqual(settledLineBBelts);
+  });
+
   it("stalls on blocked output and resumes after draining, losing nothing", () => {
     const s = make();
     const factory = build(s, {
