@@ -1,12 +1,16 @@
 # Content Model
 
-## Implemented content contract (2026-09-22)
+## Implemented content contract (2026-09-26)
 
 The current Zod contract lives in `packages/content/src/schema.ts`. It separates machine definitions (footprint, operations, buffers, fuel, duration and build cost) from placed runtime instances. Materials, operations, reactions, authored site/deposits, terminal bounds, factory limits, belt/port costs and fuel assistance are editable data.
 
-The starter fixture contains a known construction chain plus two hidden outcomes of the same alien input. A crusher accepts different physical inputs; recipes are not baked into the renderer. `known` marks initial knowledge only. Runtime observations unlock public material metadata and notebook entries; authored truth never goes straight to player UI.
+The starter fixture contains a known construction chain plus hidden outcomes of the same alien input. A crusher accepts different physical inputs; recipes are not baked into the renderer. `known` marks initial knowledge only. Runtime observations unlock public material metadata and notebook entries; authored truth never goes straight to player UI.
 
-Content version `world-01-v4` is independent of save schema 4. Since Issue #14 the schema carries localization keys (`nameKey`, `observationKey`) instead of literal English `name`/`observation` strings; the English catalog lives in `packages/content/src/locale.ts` and is validated by Zod plus semantic key-coverage checks. Issue #4 added a `storages` table (bulk storage definitions: capacity, footprint, cost) and `site.stagingCapacity` for bounded terminal staging. The existing TinyBase material-edit/validate/import/export proof remains development-only and now authors key fields. The wider authoring concepts below are future scope, not current requirements.
+Content version `world-01-v5` is independent of save schema 5. Since Issue #14 the schema carries localization keys (`nameKey`, `observationKey`) instead of literal English `name`/`observation` strings; the English catalog lives in `packages/content/src/locale.ts` and is validated by Zod plus semantic key-coverage checks. Issue #4 added a `storages` table (bulk storage definitions: capacity, footprint, cost) and `site.stagingCapacity` for bounded terminal staging. The existing TinyBase material-edit/validate/import/export proof remains development-only and now authors key fields. The wider authoring concepts below are future scope, not current requirements.
+
+### Discrete process conditions (Issue #30)
+
+Machine definitions and reactions may each carry an optional stable `processConditionId`. The simulation matches the exact tuple of operation, input material and condition ID; omitted IDs match only other omitted IDs. There is no wildcard or fallback. Validation rejects duplicate tuples and any reaction or machine operation without a processor definition carrying the same condition. The fixture demonstrates `raw + heat` resolving to residue in `ambient` and granules in `sealed`; the authored outcomes remain hidden until observed. Existing unconditioned reactions remain valid. The condition is derived from the placed machine's existing `definitionId`, so the save shape stays at schema 5. The fixture content version moved to `world-01-v5`; saves tied to `world-01-v4` are rejected by the existing exact content-version check.
 
 ## 1. Purpose
 

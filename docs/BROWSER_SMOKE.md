@@ -52,7 +52,11 @@ The UI confirmed the save with `Field record saved on this device.`. After **Loa
 
 This closes Issue #8's explicit browser requirement to save/reload while material exists simultaneously across belts, storage, factory buffers and terminal staging. No repo edits or test reruns were performed during this focused follow-up because no runtime code changed.
 
-Environment note: the sandbox could not start Next dev mode because ACLs denied writing the `.next/dev` lockfile. Rather than changing repository permissions/config, the already-built static export from the verified behavioral head was served locally for this focused UI proof.
+### Issue #30 process-condition selection — observed on 2026-09-26
+
+The rebuilt local static export was opened in the in-app browser. Its accessible build toolbar showed separate **Furnace** and **Sealed furnace** controls, both labeled for the **Heat** operation; the sealed variant displayed hotkey `8` and cost `26`. This confirms the authored condition choice is available through the existing machine-selection flow. The focused browser check verified the visible control; `apps/web/test/interaction.test.ts` verifies its placement command, and `packages/sim-core/test/simulation.test.ts` verifies the two outcomes, hidden knowledge, deterministic save/load and material conservation. `apps/web/test/observations.test.ts` server-renders both same-input Heat observations as separate React articles with the shared stable key and asserts there is no duplicate-key warning. No live browser-console assertion with both discoveries populated is claimed.
+
+Phase 1.5 environment note: the sandbox could not start Next dev mode because ACLs denied writing the `.next/dev` lockfile. Rather than changing repository permissions/config, the already-built static export from the verified behavioral head was served locally for that focused UI proof.
 
 1. Pause and close the guide. Home centers the site. A new expedition has 600 plates, 120 fuel, no placed machines and no alien outcomes in the notebook. (Observed.)
 2. Build a factory, extractor and crusher. Place matching eastward wall ports and route belts through the factory to the terminal. (Observed with real mouse input; the standard 10×10 first line cost left 438 plates.)

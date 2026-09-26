@@ -1,6 +1,6 @@
 import { validateContent } from "./schema";
 export const fixture = validateContent({
-  version: "world-01-v4",
+  version: "world-01-v5",
   tickMs: 100,
   materials: [
     {
@@ -72,6 +72,20 @@ export const fixture = validateContent({
       id: "furnace",
       nameKey: "machine.furnace.name",
       role: "processor",
+      processConditionId: "ambient",
+      operations: ["heat"],
+      capacity: 12,
+      fuel: 2,
+      durationTicks: 30,
+      width: 2,
+      height: 2,
+      cost: 26,
+    },
+    {
+      id: "sealed-furnace",
+      nameKey: "machine.sealed-furnace.name",
+      role: "processor",
+      processConditionId: "sealed",
       operations: ["heat"],
       capacity: 12,
       fuel: 2,
@@ -115,11 +129,23 @@ export const fixture = validateContent({
     {
       id: "heat-raw",
       operation: "heat",
+      processConditionId: "ambient",
       input: "raw",
       inputAmount: 2,
       output: "residue",
       outputAmount: 1,
       observationKey: "reaction.heat-raw.observation",
+      known: false,
+    },
+    {
+      id: "heat-raw-sealed",
+      operation: "heat",
+      processConditionId: "sealed",
+      input: "raw",
+      inputAmount: 2,
+      output: "granules",
+      outputAmount: 1,
+      observationKey: "reaction.heat-raw-sealed.observation",
       known: false,
     },
   ],

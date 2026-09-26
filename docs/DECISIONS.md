@@ -221,7 +221,7 @@ Definitions and placed instances are separate. Machines operate automatically fr
 
 **Status:** accepted, updated 2026-09-26
 
-Spatial saves currently use schema 5, separate from content version `world-01-v4`. Schema 4 migrates losslessly by adding empty belt-diverter state; schemas 1–3 remain incompatible and are rejected without replacing a running site. Content Studio remains development-only and receives no scope expansion from save migration work.
+Spatial saves currently use schema 5, separate from content version `world-01-v5`. Schema 4 migrates losslessly by adding empty belt-diverter state; schemas 1–3 remain incompatible and are rejected without replacing a running site. Saves tied to the previous `world-01-v4` content are rejected by the exact content-version check. Content Studio remains development-only and receives no scope expansion from save migration work.
 
 ## D-019 — Material conservation is a design invariant
 

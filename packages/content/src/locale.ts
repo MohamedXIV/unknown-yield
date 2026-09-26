@@ -52,6 +52,7 @@ export const enCatalog: LocaleCatalog = {
   "machine.extractor.name": "Extractor",
   "machine.crusher.name": "Crusher",
   "machine.furnace.name": "Furnace",
+  "machine.sealed-furnace.name": "Sealed furnace",
   "storage.depot.name": "Depot",
   "reaction.press-ferrite.observation":
     "Ferrite compacts into structural plates for local construction.",
@@ -59,4 +60,6 @@ export const enCatalog: LocaleCatalog = {
     "Fracturing the ore releases conductive grains. The company accepts this material for fuel.",
   "reaction.heat-raw.observation":
     "The sample vitrifies under heat. It has no export value; mechanical processing remains worth investigating.",
+  "reaction.heat-raw-sealed.observation":
+    "Heating the ore in a sealed furnace releases conductive grains.",
 };
