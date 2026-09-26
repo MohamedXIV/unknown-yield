@@ -12,6 +12,19 @@ export type FlowTotals = {
   exported: Inventory;
   discarded: Inventory;
 };
+export type ExperimentEvidence = {
+  operationId: string;
+  inputId: string;
+  processConditionId: string | null;
+  state: "hinted" | "confirmed";
+};
+export function experimentEvidenceKey(
+  operationId: string,
+  inputId: string,
+  processConditionId: string | null,
+) {
+  return [operationId, inputId, processConditionId ?? "default"].join("/");
+}
 export type Port = Point & { id: string; direction: number };
 export type Factory = Rect & { id: string; ports: Port[] };
 export type Job = { remaining: number; reaction: string | null };
@@ -69,6 +82,7 @@ export type Save = {
   flows: FlowTotals;
   stock: Inventory;
   knowledge: string[];
+  evidence: Record<string, ExperimentEvidence>;
   deposits: Inventory;
   machines: Record<string, Machine>;
   factories: Record<string, Factory>;
@@ -123,6 +137,17 @@ export type Observation = {
   initial: boolean;
   observedAt?: Point;
 };
+export type KnowledgeEntry = {
+  id: string;
+  state: "hinted" | "confirmed";
+  operationId: string;
+  inputId: string;
+  setupNameKey?: string;
+  outputId?: string;
+  textKey?: string;
+  initial: boolean;
+  observedAt?: Point;
+};
 export type PlayerSnapshot = {
   tick: number;
   fuel: number;
@@ -142,6 +167,7 @@ export type PlayerSnapshot = {
   storages: StorageView[];
   staging: Inventory;
   policies: Record<string, "keep" | "export">;
+  knowledgeEntries: KnowledgeEntry[];
   observations: Observation[];
 };
 export const total = (inv: Inventory) =>
