@@ -1,6 +1,6 @@
 import { validateContent } from "./schema";
 export const fixture = validateContent({
-  version: "world-01-v6",
+  version: "world-01-v5",
   tickMs: 100,
   materials: [
     {
