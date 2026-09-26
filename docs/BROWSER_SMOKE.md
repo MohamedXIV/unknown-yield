@@ -52,6 +52,19 @@ The UI confirmed the save with `Field record saved on this device.`. After **Loa
 
 This closes Issue #8's explicit browser requirement to save/reload while material exists simultaneously across belts, storage, factory buffers and terminal staging. No repo edits or test reruns were performed during this focused follow-up because no runtime code changed.
 
+### Issue #31 knowledge-state acceptance — pending local/browser verification
+
+Run this path on the exact #31 PR head:
+
+1. Start an unfamiliar `raw + heat` batch in either Furnace or Sealed furnace and open the notebook before the batch finishes.
+2. Verify one **UNCONFIRMED** entry appears describing the known input + operation + localized setup, while the authored output/material and reaction observation remain hidden.
+3. Save through the UI while the experiment is still active, then Load. Verify the same single unconfirmed entry returns and no duplicate appears.
+4. Let the batch complete. Verify that same notebook entry becomes **OBSERVED**, now showing the authored localized result/observation. The ambient Furnace path is the useful-failure proof: residue remains physical and its observation explains that the attempt produced no export-value result.
+5. Repeat the identical experiment. Verify the notebook still contains only one record for that attempted condition/result.
+6. Exercise both ambient and sealed Heat conditions. Verify they remain separate entries and no authored-but-unobserved output leaks into the notebook.
+7. Check the visible notebook/inspector for raw stable IDs or localization keys and check browser console/page errors.
+8. Run the repository baseline: `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`.
+
 ### Issue #30 process-condition selection — observed on 2026-09-26
 
 The rebuilt local static export was opened in the in-app browser. Its accessible build toolbar showed separate **Furnace** and **Sealed furnace** controls, both labeled for the **Heat** operation; the sealed variant displayed hotkey `8` and cost `26`. This confirms the authored condition choice is available through the existing machine-selection flow. The focused browser check verified the visible control; `apps/web/test/interaction.test.ts` verifies its placement command, and `packages/sim-core/test/simulation.test.ts` verifies the two outcomes, hidden knowledge, deterministic save/load and material conservation. `apps/web/test/observations.test.ts` server-renders both same-input Heat observations as separate React articles with the shared stable key and asserts there is no duplicate-key warning. No live browser-console assertion with both discoveries populated is claimed.
