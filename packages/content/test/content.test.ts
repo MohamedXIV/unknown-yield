@@ -10,8 +10,8 @@ import { createContentStore, contentFromStore } from "../src/studio";
 describe("content boundary", () => {
   it("accepts the complete tiny scenario", () => {
     const c = validateContent(fixture);
-    expect(c.machines).toHaveLength(4);
-    expect(c.version).toBe("world-01-v5");
+    expect(c.machines).toHaveLength(5);
+    expect(c.version).toBe("world-01-v6");
     expect(c.storages).toHaveLength(1);
     expect(c.storages[0]).toMatchObject({ id: "depot", capacity: 40 });
     expect(c.site.stagingCapacity).toBe(24);
@@ -43,6 +43,35 @@ describe("content boundary", () => {
     (sealed as typeof sealed & { processConditionId: string }).processConditionId =
       "Sealed chamber";
     expect(contentSchema.safeParse(c).success).toBe(false);
+  });
+  it("accepts one explicit condition-driven hazard with localized identity", () => {
+    const c = validateContent(fixture);
+    const hazardous = c.reactions.find((r) => r.id === "heat-raw-oversealed")!;
+    expect(hazardous).toMatchObject({
+      processConditionId: "oversealed",
+      output: "residue",
+      hazard: {
+        id: "chamber-blowout",
+        nameKey: "hazard.chamber-blowout.name",
+        observationKey: "hazard.chamber-blowout.observation",
+      },
+    });
+  });
+  it("rejects hazards without an explicit process condition", () => {
+    const c = structuredClone(fixture);
+    const hazardous = c.reactions.find((r) => r.id === "heat-raw-oversealed")!;
+    delete hazardous.processConditionId;
+    expect(() => validateContent(c)).toThrow(/Hazard requires/i);
+  });
+  it("rejects duplicate hazard identities", () => {
+    const c = structuredClone(fixture);
+    const sealed = c.reactions.find((r) => r.id === "heat-raw-sealed")!;
+    sealed.hazard = {
+      id: "chamber-blowout",
+      nameKey: "hazard.chamber-blowout.name",
+      observationKey: "hazard.chamber-blowout.observation",
+    };
+    expect(() => validateContent(c)).toThrow(/Duplicate hazard ID/);
   });
   it("rejects overlapping reactions with the same process condition", () => {
     const c = structuredClone(fixture);
