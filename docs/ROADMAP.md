@@ -59,7 +59,7 @@ This is the continuing game foundation, not another disposable dashboard experim
 
 ## Phase 1.5 — Physical inventory and flexible routing
 
-**Live execution:** #3 ✓ → #14 ✓ → #4 ✓ → #5 ✓ → #6 ✓ → **#7 ACTIVE** → #8. See GitHub Issue #2 and [EXECUTION.md](EXECUTION.md).
+**Live execution:** #3 ✓ → #14 ✓ → #4 ✓ → #5 ✓ → #6 ✓ → #7 ✓ → **#8 ACTIVE**. See GitHub Issue #2 and [EXECUTION.md](EXECUTION.md).
 
 ### Question
 
@@ -263,4 +263,4 @@ The following should not be treated as progress during foundation unless require
 
 The accepted implementation and evidence are summarized in [FIRST_PLAYABLE.md](FIRST_PLAYABLE.md) and [BROWSER_SMOKE.md](BROWSER_SMOKE.md). Continue from this foundation; do not rebuild the retired dashboard prototype.
 
-Issues #3, #14, #4, #5 and #6 are complete. The immediate execution target is Issue #7: prove persistent factory suspend/reroute/resume behavior using the merged diverter routing while preserving all buffers, in-transit cargo, save/load state and exact conservation. Factory abstraction remains out of scope. Phase 1.5 closes only through Issue #8. After that, deepen experimentation/discovery and later market/company systems without turning the game into a dashboard or stock-trading simulator.
+Issues #3, #14, #4, #5, #6 and #7 are complete. The immediate execution target is Issue #8: the Phase 1.5 end-to-end exit review. It must prove the merged conservation, physical storage/staging, conservative reclaim, diverter routing and persistent factory semantics together in one playable save/load loop. Phase 2 remains blocked until #8 closes.
