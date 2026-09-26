@@ -5,7 +5,6 @@ import { i18n } from "../game/i18n";
 import { machineStatusLabel } from "../game/machine-status";
 import type { GameCommand, CommandResult, Inventory } from "@site/sim-core";
 import { Session } from "../game/session";
-import { observationKey } from "../game/observations";
 import {
   DEFAULT_MODE,
   TOOL_HOTKEYS,
@@ -207,7 +206,7 @@ function GameClientInner() {
       )}
     </div>
   );
-  const fresh = snapshot.observations.filter((o) => !o.initial).length;
+  const fresh = snapshot.knowledgeEntries.filter((entry) => !entry.initial).length;
   const toolCost = (tool: Tool) =>
     tool === "factory"
       ? snapshot.map.factoryCellCost
@@ -702,31 +701,43 @@ function GameClientInner() {
                   Known construction methods and your observed discoveries.
                   There is no complete recipe book.
                 </p>
-                {snapshot.observations.map((o) => (
-                  <article
-                    className="observation"
-                    key={observationKey(o)}
-                  >
-                    <small>
-                      {o.initial ? "KNOWN METHOD" : "OBSERVED"} ·{" "}
-                      {t(
-                        snapshot.operations.find(
-                          (op) => op.id === o.operationId,
-                        )?.nameKey ?? o.operationId,
-                      ).toUpperCase()}
-                    </small>
-                    <h3>{materialName(o.outputId)}</h3>
-                    <p>{t(o.textKey)}</p>
-                    <span>
-                      {materialName(o.inputId)} →{" "}
-                      {t(
-                        snapshot.operations.find(
-                          (op) => op.id === o.operationId,
-                        )?.nameKey ?? o.operationId,
-                      )}
-                    </span>
-                  </article>
-                ))}
+                {snapshot.knowledgeEntries.map((entry) => {
+                  const operationKey = snapshot.operations.find(
+                    (op) => op.id === entry.operationId,
+                  )?.nameKey;
+                  const operationName = operationKey
+                    ? t(operationKey)
+                    : "Unknown operation";
+                  const setupName = entry.setupNameKey
+                    ? t(entry.setupNameKey)
+                    : null;
+                  return (
+                    <article className="observation" key={entry.id}>
+                      <small>
+                        {entry.state === "hinted"
+                          ? "UNCONFIRMED"
+                          : entry.initial
+                            ? "KNOWN METHOD"
+                            : "OBSERVED"}{" "}
+                        · {operationName.toUpperCase()}
+                      </small>
+                      <h3>
+                        {entry.state === "hinted"
+                          ? "Outcome unconfirmed"
+                          : materialName(entry.outputId!)}
+                      </h3>
+                      <p>
+                        {entry.state === "hinted"
+                          ? "This setup has been tried. Its result is not confirmed yet."
+                          : t(entry.textKey!)}
+                      </p>
+                      <span>
+                        {materialName(entry.inputId)} → {operationName}
+                        {setupName ? " · " + setupName : ""}
+                      </span>
+                    </article>
+                  );
+                })}
               </>
             )}
             {panel === "terminal" && (

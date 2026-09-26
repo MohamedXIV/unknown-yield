@@ -1,6 +1,12 @@
 import { z } from "zod";
 import type { Content } from "@site/content";
-import { emptyFlows, total, type Save } from "./types";
+import {
+  emptyFlows,
+  experimentEvidenceKey,
+  total,
+  type ExperimentEvidence,
+  type Save,
+} from "./types";
 import {
   factoryError,
   machinePlacement,
@@ -63,8 +69,14 @@ const storage = z.object({
   direction,
   inventory,
 });
+const evidence = z.object({
+  operationId: safeId,
+  inputId: safeId,
+  processConditionId: safeId.nullable(),
+  state: z.enum(["hinted", "confirmed"]),
+});
 const schema = z.object({
-  schemaVersion: z.union([z.literal(4), z.literal(5)]),
+  schemaVersion: z.union([z.literal(4), z.literal(5), z.literal(6)]),
   contentVersion: z.string(),
   tick: count,
   remainder: z.number().finite().nonnegative(),
@@ -75,6 +87,7 @@ const schema = z.object({
   flows,
   stock: inventory,
   knowledge: z.array(safeId),
+  evidence: z.record(z.string().min(1), evidence).default({}),
   deposits: inventory,
   machines: z.record(safeId, machine),
   factories: z.record(safeId, factory),
@@ -85,7 +98,7 @@ const schema = z.object({
 });
 export function initialState(c: Content): Save {
   return {
-    schemaVersion: 5,
+    schemaVersion: 6,
     contentVersion: c.version,
     tick: 0,
     remainder: 0,
@@ -96,6 +109,26 @@ export function initialState(c: Content): Save {
     flows: emptyFlows(),
     stock: { [c.site.buildMaterial]: c.site.startStock },
     knowledge: c.reactions.filter((r) => r.known).map((r) => r.id),
+    evidence: Object.fromEntries(
+      c.reactions
+        .filter((r) => r.known)
+        .map((r) => {
+          const value: ExperimentEvidence = {
+            operationId: r.operation,
+            inputId: r.input,
+            processConditionId: r.processConditionId ?? null,
+            state: "confirmed",
+          };
+          return [
+            experimentEvidenceKey(
+              value.operationId,
+              value.inputId,
+              value.processConditionId,
+            ),
+            value,
+          ];
+        }),
+    ),
     deposits: Object.fromEntries(c.site.deposits.map((d) => [d.id, d.units])),
     machines: {},
     factories: {},
@@ -112,6 +145,47 @@ export function parseSave(input: unknown, c: Content): Save {
   // Schema 4 predates belt diverters; every belt was plain, so stamping the
   // defaults is an exact migration rather than a guess.
   if (s.schemaVersion === 4) s.schemaVersion = 5;
+  // Schema 5 predates persisted experiment evidence. Confirmed knowledge can
+  // migrate exactly from reaction IDs; an undiscovered active processor batch
+  // migrates to a hinted attempt without exposing its authored output.
+  if (s.schemaVersion === 5) {
+    for (const reactionId of s.knowledge) {
+      const r = c.reactions.find((r) => r.id === reactionId);
+      if (!r) continue;
+      const value: ExperimentEvidence = {
+        operationId: r.operation,
+        inputId: r.input,
+        processConditionId: r.processConditionId ?? null,
+        state: "confirmed",
+      };
+      s.evidence[
+        experimentEvidenceKey(
+          value.operationId,
+          value.inputId,
+          value.processConditionId,
+        )
+      ] = value;
+    }
+    for (const m of Object.values(s.machines)) {
+      if (!m.job?.reaction) continue;
+      const r = c.reactions.find((r) => r.id === m.job!.reaction);
+      if (!r || s.knowledge.includes(r.id)) continue;
+      const value: ExperimentEvidence = {
+        operationId: r.operation,
+        inputId: r.input,
+        processConditionId: r.processConditionId ?? null,
+        state: "hinted",
+      };
+      s.evidence[
+        experimentEvidenceKey(
+          value.operationId,
+          value.inputId,
+          value.processConditionId,
+        )
+      ] ??= value;
+    }
+    s.schemaVersion = 6;
+  }
   if (s.contentVersion !== c.version || s.remainder >= c.tickMs)
     throw new Error("Incompatible content or timing");
   if (
@@ -209,6 +283,41 @@ export function parseSave(input: unknown, c: Content): Save {
         throw new Error("Invalid active batch");
     }
     stage.machines[id] = m;
+  }
+  for (const [id, entry] of Object.entries(s.evidence)) {
+    const expected = experimentEvidenceKey(
+      entry.operationId,
+      entry.inputId,
+      entry.processConditionId,
+    );
+    if (id !== expected) throw new Error("Invalid experiment evidence ID");
+    const reaction = c.reactions.find(
+      (r) =>
+        r.operation === entry.operationId &&
+        r.input === entry.inputId &&
+        (r.processConditionId ?? null) === entry.processConditionId,
+    );
+    if (!reaction) throw new Error("Unknown experiment evidence");
+    const confirmed = s.knowledge.includes(reaction.id);
+    if ((entry.state === "confirmed") !== confirmed)
+      throw new Error("Experiment evidence disagrees with knowledge");
+    if (
+      entry.state === "hinted" &&
+      !Object.values(s.machines).some(
+        (m) => m.job?.reaction === reaction.id,
+      )
+    )
+      throw new Error("Hinted evidence has no active experiment");
+  }
+  for (const reactionId of s.knowledge) {
+    const reaction = c.reactions.find((r) => r.id === reactionId)!;
+    const id = experimentEvidenceKey(
+      reaction.operation,
+      reaction.input,
+      reaction.processConditionId ?? null,
+    );
+    if (s.evidence[id]?.state !== "confirmed")
+      throw new Error("Confirmed knowledge is missing evidence");
   }
   for (const [location, b] of Object.entries(s.belts)) {
     takeId(b.id, "b");

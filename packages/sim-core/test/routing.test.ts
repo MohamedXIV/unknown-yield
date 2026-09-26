@@ -193,15 +193,16 @@ describe("belt diverter", () => {
     const s = fork();
     s.step(10000);
     const old = JSON.parse(JSON.stringify(s.serialize()));
-    expect(old.schemaVersion).toBe(5);
+    expect(old.schemaVersion).toBe(6);
     old.schemaVersion = 4;
+    delete old.evidence;
     for (const belt of Object.values(old.belts)) {
       delete (belt as Record<string, unknown>).alternate;
       delete (belt as Record<string, unknown>).switched;
     }
     const b = make();
     expect(b.load(old).ok).toBe(true);
-    expect(b.serialize().schemaVersion).toBe(5);
+    expect(b.serialize().schemaVersion).toBe(6);
     for (const belt of Object.values(b.serialize().belts)) {
       expect(belt.alternate).toBeNull();
       expect(belt.switched).toBe(false);

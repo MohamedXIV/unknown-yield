@@ -4,7 +4,12 @@ import { applyCommand } from "./commands";
 import { completeAndStart, transport, status } from "./production";
 import { auditLedger } from "./ledger";
 import { footprint } from "./geometry";
-import { total, type Save, type CommandResult, type PlayerSnapshot } from "./types";
+import {
+  total,
+  type Save,
+  type CommandResult,
+  type PlayerSnapshot,
+} from "./types";
 export class Simulation {
   private readonly content: Content;
   private state: Save;
@@ -38,7 +43,39 @@ export class Simulation {
   snapshot(): PlayerSnapshot {
     const c = this.content,
       s = this.state,
-      reactions = c.reactions.filter((r) => s.knowledge.includes(r.id));
+      reactions = c.reactions.filter((r) => s.knowledge.includes(r.id)),
+      knowledgeEntries = Object.entries(s.evidence)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([id, evidence]) => {
+          const reaction = c.reactions.find(
+            (r) =>
+              r.operation === evidence.operationId &&
+              r.input === evidence.inputId &&
+              (r.processConditionId ?? null) === evidence.processConditionId,
+          )!;
+          const setup = c.machines.find(
+            (d) =>
+              d.role === "processor" &&
+              d.operations.includes(evidence.operationId) &&
+              (d.processConditionId ?? null) === evidence.processConditionId,
+          );
+          const confirmed = evidence.state === "confirmed";
+          return {
+            id,
+            state: evidence.state,
+            operationId: evidence.operationId,
+            inputId: evidence.inputId,
+            setupNameKey: setup?.nameKey,
+            ...(confirmed
+              ? {
+                  outputId: reaction.output,
+                  textKey: reaction.observationKey,
+                  initial: reaction.known,
+                  observedAt: this.discoveryLocations.get(reaction.id),
+                }
+              : { initial: false }),
+          };
+        });
     const known = new Set(c.materials.filter((m) => m.known).map((m) => m.id));
     reactions.forEach((r) => {
       known.add(r.input);
@@ -75,6 +112,7 @@ export class Simulation {
       }),
       staging: s.staging,
       policies: s.policies,
+      knowledgeEntries,
       machines: Object.values(s.machines).map((m) => {
         const d = c.machines.find((d) => d.id === m.definitionId)!;
         const r = footprint(m, d);
@@ -126,7 +164,7 @@ export class Simulation {
       return {
         ok: false,
         message:
-          "Save rejected (requires schema 5): " +
+          "Save rejected (requires schema 6): " +
           (error instanceof Error ? error.message : "Invalid data"),
       };
     }

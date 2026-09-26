@@ -52,6 +52,26 @@ The UI confirmed the save with `Field record saved on this device.`. After **Loa
 
 This closes Issue #8's explicit browser requirement to save/reload while material exists simultaneously across belts, storage, factory buffers and terminal staging. No repo edits or test reruns were performed during this focused follow-up because no runtime code changed.
 
+### Issue #31 knowledge-state acceptance — observed on 2026-09-26
+
+Behavioral head: `bdbf0f201aebdf04cbb13a778e246b0545005a94` on `feat/31-experiment-evidence`. The worktree remained clean on that exact head.
+
+- Focused simulation/routing tests: 2 files / 35 tests PASS.
+- Full `npm test`: 14 files / 108 tests PASS.
+- `npm run typecheck`: PASS.
+- `npm run lint`: PASS.
+- `npm run build`: PASS, including static-export verification.
+- Browser: starting a Sealed furnace Heat batch produced exactly one `UNCONFIRMED · HEAT` notebook entry titled `Outcome unconfirmed`. It showed the localized attempted setup `Veined ore → Heat · Sealed furnace` without exposing the authored output or reaction result. The inspector showed the Sealed furnace Processing with Input/Output both 0/12.
+- UI Save reported `Field record saved on this device.`; UI Load reported `Site restored`. After Load, the same single UNCONFIRMED entry returned and the Sealed furnace remained Processing.
+- After batch completion, that same entry promoted to `OBSERVED · HEAT — Conductive granules` with localized observation copy.
+- After 30 additional observation snapshots and another completion (factory buffer reached Conductive granules 2), the notebook still contained one record for that attempted condition: no duplicate evidence was created.
+- Ambient and sealed Heat were also observed as separate entries in the first browser pass. Ambient showed `Vitrified residue` and explained that it has no export value while mechanical processing remains worth investigating, providing the useful failed-experiment evidence required by #31.
+- Visible notebook/inspectors used localized wording; no raw stable IDs or localization keys were observed.
+- No visible page error occurred. The final dev-server request output included `GET / 200`.
+- Browser JavaScript console logs could not be inspected because the available CUA surface does not expose the JS console. This check is therefore **unverified**, not claimed as zero errors. Automated React coverage still verifies the previously sensitive duplicate-key observation path.
+
+This satisfies Issue #31's notebook/inspection acceptance while preserving the console-observability limitation explicitly.
+
 ### Issue #30 process-condition selection — observed on 2026-09-26
 
 The rebuilt local static export was opened in the in-app browser. Its accessible build toolbar showed separate **Furnace** and **Sealed furnace** controls, both labeled for the **Heat** operation; the sealed variant displayed hotkey `8` and cost `26`. This confirms the authored condition choice is available through the existing machine-selection flow. The focused browser check verified the visible control; `apps/web/test/interaction.test.ts` verifies its placement command, and `packages/sim-core/test/simulation.test.ts` verifies the two outcomes, hidden knowledge, deterministic save/load and material conservation. `apps/web/test/observations.test.ts` server-renders both same-input Heat observations as separate React articles with the shared stable key and asserts there is no duplicate-key warning. No live browser-console assertion with both discoveries populated is claimed.

@@ -311,7 +311,7 @@ describe("automatic industry", () => {
       expect(save.machines[processor].definitionId).toBe(definitionId);
       expect(save.machines[processor].job?.reaction).toBe(reactionId);
       expect(save.knowledge).not.toContain(reactionId);
-      expect(save.schemaVersion).toBe(5);
+      expect(save.schemaVersion).toBe(6);
       expect(save.contentVersion).toBe("world-01-v5");
 
       const restored = make(),
@@ -334,6 +334,114 @@ describe("automatic industry", () => {
       expect(auditLedger(fixture, restored.serialize()).ok).toBe(true);
     }
   });
+  it("persists hinted evidence without leaking output and promotes it once on completion", () => {
+    const { s, processor } = line(make(), true, true, "furnace");
+    for (
+      let ticks = 0;
+      ticks < 200 && !s.serialize().machines[processor].job;
+      ticks++
+    )
+      s.step(100);
+
+    const hinted = s
+      .snapshot()
+      .knowledgeEntries.find(
+        (entry) =>
+          entry.operationId === "heat" &&
+          entry.inputId === "raw" &&
+          entry.state === "hinted",
+      );
+    expect(hinted).toMatchObject({
+      state: "hinted",
+      operationId: "heat",
+      inputId: "raw",
+      setupNameKey: "machine.furnace.name",
+      initial: false,
+    });
+    expect(hinted).not.toHaveProperty("outputId");
+    expect(hinted).not.toHaveProperty("textKey");
+    expect(JSON.stringify(hinted)).not.toContain("residue");
+    expect(JSON.stringify(hinted)).not.toContain("reaction.heat-raw");
+
+    const saved = s.serialize();
+    expect(saved.schemaVersion).toBe(6);
+    expect(saved.evidence[hinted!.id].state).toBe("hinted");
+
+    const restored = make();
+    expect(restored.load(JSON.parse(JSON.stringify(saved))).ok).toBe(true);
+    expect(
+      restored
+        .snapshot()
+        .knowledgeEntries.find((entry) => entry.id === hinted!.id)?.state,
+    ).toBe("hinted");
+
+    restored.step(3500);
+    const confirmed = restored
+      .snapshot()
+      .knowledgeEntries.find((entry) => entry.id === hinted!.id)!;
+    expect(confirmed).toMatchObject({
+      state: "confirmed",
+      outputId: "residue",
+      textKey: "reaction.heat-raw.observation",
+    });
+    expect(restored.serialize().evidence[hinted!.id].state).toBe("confirmed");
+    expect(
+      restored.snapshot().knowledgeEntries.filter((entry) => entry.id === hinted!.id),
+    ).toHaveLength(1);
+
+    const confirmedSave = restored.serialize();
+    const reloaded = make();
+    expect(reloaded.load(JSON.parse(JSON.stringify(confirmedSave))).ok).toBe(
+      true,
+    );
+    expect(
+      reloaded
+        .snapshot()
+        .knowledgeEntries.find((entry) => entry.id === hinted!.id),
+    ).toMatchObject({
+      state: "confirmed",
+      outputId: "residue",
+      textKey: "reaction.heat-raw.observation",
+    });
+
+    restored.step(10000);
+    expect(
+      restored.snapshot().knowledgeEntries.filter((entry) => entry.id === hinted!.id),
+    ).toHaveLength(1);
+    expect(auditLedger(fixture, restored.serialize()).ok).toBe(true);
+  });
+
+  it("migrates schema-5 knowledge and active experiments into evidence", () => {
+    const { s, processor } = line(make(), true, true, "sealed-furnace");
+    for (
+      let ticks = 0;
+      ticks < 200 && !s.serialize().machines[processor].job;
+      ticks++
+    )
+      s.step(100);
+
+    const legacy = JSON.parse(JSON.stringify(s.serialize()));
+    legacy.schemaVersion = 5;
+    delete legacy.evidence;
+
+    const restored = make();
+    expect(restored.load(legacy).ok).toBe(true);
+    expect(restored.serialize().schemaVersion).toBe(6);
+    const hinted = restored
+      .snapshot()
+      .knowledgeEntries.find(
+        (entry) =>
+          entry.operationId === "heat" &&
+          entry.inputId === "raw" &&
+          entry.state === "hinted",
+      );
+    expect(hinted).toMatchObject({
+      setupNameKey: "machine.sealed-furnace.name",
+    });
+    expect(hinted).not.toHaveProperty("outputId");
+    expect(hinted).not.toHaveProperty("textKey");
+  });
+
   it("provides recovery but rejects consecutive grants", () => {
     const c = structuredClone(fixture);
     c.economy.startFuel = 0;
