@@ -9,9 +9,12 @@ import {
 } from "./types";
 import { key, next, socket, contains, footprint } from "./geometry";
 export function recipe(c: Content, m: Machine) {
+  const definition = c.machines.find((d) => d.id === m.definitionId);
   return c.reactions.find(
     (r) =>
-      r.operation === m.operation && amount(m.input, r.input) >= r.inputAmount,
+      r.operation === m.operation &&
+      r.processConditionId === definition?.processConditionId &&
+      amount(m.input, r.input) >= r.inputAmount,
   );
 }
 export function status(c: Content, s: Save, m: Machine): MachineStatus {

@@ -67,6 +67,7 @@ const descriptions: Record<Tool, string> = {
   factory: "Drag a rectangle, 6–20 cells per side. Click for a 6×6 factory.",
   crusher: "Place inside a factory. Cyan is input; gold is output.",
   furnace: "Place inside a factory.",
+  "sealed-furnace": "Place inside a factory.",
   depot:
     "Place on clear ground. Belts move any material in and out until full.",
   belt: "Drag a ground path. Release to build. Click for one cell; R changes its direction.",
@@ -174,9 +175,10 @@ function GameClientInner() {
       snapshot.storageDefinitions.find((d) => d.id === tool)?.nameKey;
     return key ? t(key) : (genericNames[tool] ?? tool);
   };
-  // The furnace description names its operation, which is content data.
+  // Furnace descriptions name their operation, which is content data.
   const toolDescription = (tool: Tool) => {
-    if (tool !== "furnace") return descriptions[tool];
+    if (tool !== "furnace" && tool !== "sealed-furnace")
+      return descriptions[tool];
     const key = snapshot.operations.find((o) => o.id === "heat")?.nameKey;
     return (
       descriptions.furnace +
@@ -899,6 +901,7 @@ function GameClientInner() {
               "factory",
               "crusher",
               "furnace",
+              "sealed-furnace",
               "belt",
               "port",
               "depot",
@@ -910,11 +913,14 @@ function GameClientInner() {
               className={mode.tool === tool ? "active" : ""}
               aria-label={toolName(tool)}
               aria-pressed={mode.tool === tool}
-              title={descriptions[tool]}
+              title={toolDescription(tool)}
               onClick={() => setTool(tool)}
             >
               <small>{TOOL_HOTKEYS[tool]}</small>
-              <Glyph type={tool} size={25} />
+              <Glyph
+                type={tool === "sealed-furnace" ? "furnace" : tool}
+                size={25}
+              />
               <span>{toolName(tool)}</span>
               {toolCost(tool) ? (
                 <em>

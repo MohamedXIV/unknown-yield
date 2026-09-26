@@ -188,7 +188,9 @@ export function parseSave(input: unknown, c: Content): Save {
             material
           : c.reactions.some(
               (r) =>
-                d.operations.includes(r.operation) && r.output === material,
+                d.operations.includes(r.operation) &&
+                r.processConditionId === d.processConditionId &&
+                r.output === material,
             );
       if (!valid) throw new Error("Impossible machine output");
     }
@@ -198,7 +200,10 @@ export function parseSave(input: unknown, c: Content): Save {
         m.job.remaining > d.durationTicks ||
         (d.role === "extractor"
           ? m.job.reaction !== null
-          : !r || r.operation !== m.operation) ||
+          :
+            !r ||
+            r.operation !== m.operation ||
+            r.processConditionId !== d.processConditionId) ||
         total(m.output) + (r?.outputAmount ?? 1) > d.capacity
       )
         throw new Error("Invalid active batch");

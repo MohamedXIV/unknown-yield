@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { fixture, validateContent } from "../src/index";
+import { fixture, validateContent, contentSchema } from "../src/index";
 import {
   enCatalog,
   localeCatalogSchema,
@@ -10,11 +10,45 @@ import { createContentStore, contentFromStore } from "../src/studio";
 describe("content boundary", () => {
   it("accepts the complete tiny scenario", () => {
     const c = validateContent(fixture);
-    expect(c.machines).toHaveLength(3);
-    expect(c.version).toBe("world-01-v4");
+    expect(c.machines).toHaveLength(4);
+    expect(c.version).toBe("world-01-v5");
     expect(c.storages).toHaveLength(1);
     expect(c.storages[0]).toMatchObject({ id: "depot", capacity: 40 });
     expect(c.site.stagingCapacity).toBe(24);
+  });
+  it("matches authored reactions by an exact process condition", () => {
+    const c = validateContent(fixture);
+    expect(
+      c.reactions
+        .filter((r) => r.operation === "heat" && r.input === "raw")
+        .map((r) => [r.processConditionId, r.output]),
+    ).toEqual([
+      ["ambient", "residue"],
+      ["sealed", "granules"],
+    ]);
+    expect(
+      c.reactions.find((r) => r.id === "crush-raw")?.processConditionId,
+    ).toBeUndefined();
+  });
+  it("rejects a reaction condition no capable machine provides", () => {
+    const c = structuredClone(fixture);
+    const sealed = c.reactions.find((r) => r.id === "heat-raw-sealed")!;
+    (sealed as typeof sealed & { processConditionId: string }).processConditionId =
+      "vacuum";
+    expect(() => validateContent(c)).toThrow(/condition/i);
+  });
+  it("rejects malformed stable condition IDs in the content schema", () => {
+    const c = structuredClone(fixture);
+    const sealed = c.reactions.find((r) => r.id === "heat-raw-sealed")!;
+    (sealed as typeof sealed & { processConditionId: string }).processConditionId =
+      "Sealed chamber";
+    expect(contentSchema.safeParse(c).success).toBe(false);
+  });
+  it("rejects overlapping reactions with the same process condition", () => {
+    const c = structuredClone(fixture);
+    const sealed = c.reactions.find((r) => r.id === "heat-raw-sealed")!;
+    sealed.processConditionId = "ambient";
+    expect(() => validateContent(c)).toThrow(/Ambiguous reaction/);
   });
   it.each([
     "duplicate",

@@ -61,6 +61,24 @@ it("keeps toolbar hotkeys stable and maps the depot tool to placeStorage", () =>
     direction: 1,
   });
 });
+it("selects the sealed furnace as a condition-bearing machine tool", () => {
+  expect(TOOL_HOTKEYS["sealed-furnace"]).toBe("8");
+  const s = new Simulation(fixture).snapshot();
+  expect(
+    buildCommand(
+      { ...DEFAULT_MODE, tool: "sealed-furnace" },
+      s,
+      { x: 27, y: 26 },
+      null,
+    ),
+  ).toEqual({
+    type: "placeMachine",
+    definitionId: "sealed-furnace",
+    x: 27,
+    y: 26,
+    direction: 0,
+  });
+});
 it("hit-tests storage footprints by id", () => {
   const sim = new Simulation(fixture);
   const placed = sim.command({

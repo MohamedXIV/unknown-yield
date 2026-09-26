@@ -34,6 +34,7 @@ export const contentSchema = z.object({
         id,
         nameKey: localeKeySchema,
         role: z.enum(["extractor", "processor"]),
+        processConditionId: id.optional(),
         operations: z.array(id),
         capacity: positive,
         fuel: positive,
@@ -61,6 +62,7 @@ export const contentSchema = z.object({
       z.object({
         id,
         operation: id,
+        processConditionId: id.optional(),
         input: id,
         inputAmount: positive,
         output: id,
@@ -133,16 +135,19 @@ export function validateContent(input: unknown): Content {
       !operations.has(r.operation)
     )
       throw new Error("Missing reaction reference");
-    const key = r.operation + "/" + r.input;
+    const key =
+      r.operation + "/" + r.input + "/" + (r.processConditionId ?? "");
     if (matches.has(key)) throw new Error("Ambiguous reaction");
     matches.add(key);
-    const capable = c.machines.filter((m) =>
-      m.operations.includes(r.operation),
+    const capable = c.machines.filter(
+      (m) =>
+        m.role === "processor" &&
+        m.operations.includes(r.operation) &&
+        m.processConditionId === r.processConditionId,
     );
-    if (
-      !capable.length ||
-      capable.some((m) => m.capacity < Math.max(r.inputAmount, r.outputAmount))
-    )
+    if (!capable.length)
+      throw new Error("Missing process condition capability");
+    if (capable.some((m) => m.capacity < Math.max(r.inputAmount, r.outputAmount)))
       throw new Error("Reaction exceeds machine capacity");
     if (
       r.known &&
@@ -157,11 +162,19 @@ export function validateContent(input: unknown): Content {
       (!m.operations.length ||
         m.operations.some(
           (o) =>
-            !operations.has(o) || !c.reactions.some((r) => r.operation === o),
+            !operations.has(o) ||
+            !c.reactions.some(
+              (r) =>
+                r.operation === o &&
+                r.processConditionId === m.processConditionId,
+            ),
         ))
     )
       throw new Error("Missing machine capability");
-    if (m.role === "extractor" && m.operations.length)
+    if (
+      m.role === "extractor" &&
+      (m.operations.length || m.processConditionId !== undefined)
+    )
       throw new Error("Extractor has no processing operation");
   }
   const regions = [c.site.terminal, ...c.site.deposits];

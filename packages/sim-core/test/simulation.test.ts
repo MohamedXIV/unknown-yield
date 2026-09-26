@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { fixture } from "@site/content";
-import { Simulation, type GameCommand } from "../src/index";
+import { Simulation, auditLedger, type GameCommand } from "../src/index";
 const make = () => new Simulation(fixture);
 function build(s: Simulation, c: GameCommand) {
   const r = s.command(c);
@@ -19,7 +19,12 @@ function path(x: number, y: number, endX: number, endY: number, direction = 0) {
   }
   return { type: "placeBelts" as const, points, direction };
 }
-function line(s = make(), alien = false, heat = false) {
+function line(
+  s = make(),
+  alien = false,
+  heat = false,
+  processorDefinitionId?: string,
+) {
   const fy = alien ? 33 : 22,
     my = alien ? 36 : 26,
     by = my + 1;
@@ -41,7 +46,8 @@ function line(s = make(), alien = false, heat = false) {
   });
   const processor = build(s, {
     type: "placeMachine",
-    definitionId: heat ? "furnace" : "crusher",
+    definitionId:
+      processorDefinitionId ?? (heat ? "furnace" : "crusher"),
     x: 27,
     y: my,
     direction: 0,
@@ -285,6 +291,49 @@ describe("automatic industry", () => {
       s.snapshot().machines.find((m) => m.id === processor)?.output.residue,
     ).toBeGreaterThan(0);
   });
+  it("resolves hidden heat outcomes from exact machine conditions across save/load", () => {
+    for (const [definitionId, reactionId, outputId] of [
+      ["furnace", "heat-raw", "residue"],
+      ["sealed-furnace", "heat-raw-sealed", "granules"],
+    ]) {
+      const { s, processor } = line(make(), true, true, definitionId);
+      const before = JSON.stringify(s.snapshot());
+      expect(before).not.toContain(reactionId);
+      expect(before).not.toContain(`"outputId":"${outputId}"`);
+
+      for (
+        let ticks = 0;
+        ticks < 200 && !s.serialize().machines[processor].job;
+        ticks++
+      )
+        s.step(100);
+      const save = s.serialize();
+      expect(save.machines[processor].definitionId).toBe(definitionId);
+      expect(save.machines[processor].job?.reaction).toBe(reactionId);
+      expect(save.knowledge).not.toContain(reactionId);
+      expect(save.schemaVersion).toBe(5);
+      expect(save.contentVersion).toBe("world-01-v5");
+
+      const restored = make(),
+        repeated = make();
+      expect(restored.load(JSON.parse(JSON.stringify(save))).ok).toBe(true);
+      expect(repeated.load(JSON.parse(JSON.stringify(save))).ok).toBe(true);
+      restored.step(3500);
+      repeated.step(3500);
+      expect(repeated.serialize()).toEqual(restored.serialize());
+
+      const machine = restored
+        .snapshot()
+        .machines.find((m) => m.id === processor)!;
+      expect(machine.output[outputId]).toBeGreaterThan(0);
+      expect(
+        restored
+          .snapshot()
+          .observations.some((observation) => observation.outputId === outputId),
+      ).toBe(true);
+      expect(auditLedger(fixture, restored.serialize()).ok).toBe(true);
+    }
+  });
   it("provides recovery but rejects consecutive grants", () => {
     const c = structuredClone(fixture);
     c.economy.startFuel = 0;
@@ -324,6 +373,14 @@ describe("save boundary", () => {
       expect(s.load(save).ok).toBe(false);
       expect(s.serialize()).toEqual(before);
     }
+  });
+  it("rejects saves from the previous content version without replacing state", () => {
+    const s = make(),
+      before = s.serialize();
+    expect(
+      s.load({ ...before, contentVersion: "world-01-v4" }).ok,
+    ).toBe(false);
+    expect(s.serialize()).toEqual(before);
   });
   it("rejects invalid time and prevents snapshot mutation", () => {
     const s = make(),

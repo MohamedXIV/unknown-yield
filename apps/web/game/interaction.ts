@@ -11,6 +11,7 @@ export type Tool =
   | "factory"
   | "crusher"
   | "furnace"
+  | "sealed-furnace"
   | "depot"
   | "belt"
   | "port"
@@ -21,6 +22,7 @@ export const TOOL_HOTKEYS: Record<Tool, string> = {
   factory: "2",
   crusher: "3",
   furnace: "4",
+  "sealed-furnace": "8",
   belt: "5",
   port: "6",
   depot: "7",
@@ -100,7 +102,11 @@ export function buildCommand(
       height: click ? s.map.factoryMin : Math.abs(a.y - p.y) + 1,
     };
   }
-  if (["extractor", "crusher", "furnace"].includes(mode.tool))
+  if (
+    ["extractor", "crusher", "furnace", "sealed-furnace"].includes(
+      mode.tool,
+    )
+  )
     return {
       type: "placeMachine",
       definitionId: mode.tool,
