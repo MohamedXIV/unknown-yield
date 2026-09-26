@@ -54,6 +54,7 @@ export type Machine = Point & {
   depositId: string | null;
   operation: string | null;
   enabled: boolean;
+  incident: string | null;
   input: Inventory;
   output: Inventory;
   job: Job | null;
