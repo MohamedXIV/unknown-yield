@@ -4,7 +4,7 @@ Use `npm run dev` and http://127.0.0.1:3000. All gameplay actions below use the 
 
 ## Phase 1.5 exit gate — Issue #8
 
-**Status:** required on current `main`; not yet recorded as observed.
+**Status:** observed on exact behavioral head `96cb821a3503e1b9e45ef64e75176cff758376cf`, with one remaining browser-proof gap: belt cargo was observed during rerouting, but its presence at the exact save/load boundary was not explicitly recorded.
 
 This is the closure path for the physical-inventory/rerouting foundation:
 
@@ -19,7 +19,26 @@ This is the closure path for the physical-inventory/rerouting foundation:
 9. During the run, confirm conservative reclaim still refuses a loaded non-construction belt / buffered machine rather than deleting or teleporting contents.
 10. Check the browser console/page errors and raw localization keys. Then run the repository baseline: `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`.
 
-Do not mark this gate observed until the full path is run on the exact #8 PR head. The domain companion is `packages/sim-core/test/phase15-exit.test.ts`.
+The domain companion is `packages/sim-core/test/phase15-exit.test.ts`.
+
+## Phase 1.5 observed on 2026-09-26
+
+Behavioral head: `96cb821a3503e1b9e45ef64e75176cff758376cf` on `review/8-phase15-exit`. The worktree was clean on that exact head.
+
+- Local gate: `npm ci` succeeded with 0 vulnerabilities; focused Phase 1.5 exit test 1/1; full suite 97/97 across 13 files; typecheck, lint and production build/static export all exited 0.
+- Browser/UI: two production lines, a shared extractor feed, diverter, wall ports and a physical depot were built through the game UI. No console/page errors were reported and no raw localization-key candidates were visible.
+- Physical storage: line B produced Conductive granules into depot S45, reaching 25/40. Non-construction material remained in physical locations/buffers; the top bar continued to expose only construction plates and fuel.
+- Suspend/reroute: M5 was disabled with `12/12 Veined ore` in its input. A `Veined ore ×1` belt cargo was observed during the reroute. Switching the diverter north redirected future feed to line A while M5 remained suspended.
+- Terminal/export: policy Keep accumulated 5 staged granules. Auto-export shipped them; a 36-fuel emergency obligation was repaid in full and fuel recovered from 0 to 20. Returning to Keep produced the saved terminal state: Exported 7, Obligation 0, 6 Conductive granules staged.
+- Save/load: after UI Save then Load, terminal policy/staging stayed Keep + 6 staged, Exported stayed 7, depot S45 stayed 25/40 Conductive granules, M5 stayed Disabled with 12/12 Veined ore, and the diverter retained north as its active alternate. Restoring the east route and enabling the same M5 returned it to Processing without rebuilding.
+- Conservative reclaim: a loaded Veined-ore belt refused reclaim with `Route the cargo out first`; buffered M5 refused reclaim with `Empty the machine buffers through belts first`; contents remained present.
+- Fuel note: the UI-built route exhausted starting fuel, so the in-game emergency-fuel action was used. Subsequent exports repaid the obligation fully; this exercised, rather than bypassed, the designed recovery loop.
+
+### Remaining browser-proof gap
+
+Issue #8 asks the save/reload point to contain material simultaneously across **belts, physical storage, factory buffers and terminal staging**. The run above explicitly recorded storage + factory buffer + staging at save/load, and separately observed belt cargo during rerouting, but did not explicitly record a loaded belt at the save boundary and verify that same cargo after Load.
+
+The domain exit test does cover belt cargo at its save point, but the browser acceptance still needs one focused confirmation of loaded-belt save/load persistence before #8 is closed.
 
 1. Pause and close the guide. Home centers the site. A new expedition has 600 plates, 120 fuel, no placed machines and no alien outcomes in the notebook. (Observed.)
 2. Build a factory, extractor and crusher. Place matching eastward wall ports and route belts through the factory to the terminal. (Observed with real mouse input; the standard 10×10 first line cost left 438 plates.)
