@@ -79,6 +79,25 @@ it("selects the sealed furnace as a condition-bearing machine tool", () => {
     direction: 0,
   });
 });
+it("selects the oversealed furnace as the hazardous condition tool", () => {
+  expect(TOOL_HOTKEYS["oversealed-furnace"]).toBe("9");
+  const s = new Simulation(fixture).snapshot();
+  expect(
+    buildCommand(
+      { ...DEFAULT_MODE, tool: "oversealed-furnace" },
+      s,
+      { x: 27, y: 26 },
+      null,
+    ),
+  ).toEqual({
+    type: "placeMachine",
+    definitionId: "oversealed-furnace",
+    x: 27,
+    y: 26,
+    direction: 0,
+  });
+});
+
 it("hit-tests storage footprints by id", () => {
   const sim = new Simulation(fixture);
   const placed = sim.command({
