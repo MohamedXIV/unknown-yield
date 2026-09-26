@@ -389,6 +389,21 @@ describe("automatic industry", () => {
       restored.snapshot().knowledgeEntries.filter((entry) => entry.id === hinted!.id),
     ).toHaveLength(1);
 
+    const confirmedSave = restored.serialize();
+    const reloaded = make();
+    expect(reloaded.load(JSON.parse(JSON.stringify(confirmedSave))).ok).toBe(
+      true,
+    );
+    expect(
+      reloaded
+        .snapshot()
+        .knowledgeEntries.find((entry) => entry.id === hinted!.id),
+    ).toMatchObject({
+      state: "confirmed",
+      outputId: "residue",
+      textKey: "reaction.heat-raw.observation",
+    });
+
     restored.step(10000);
     expect(
       restored.snapshot().knowledgeEntries.filter((entry) => entry.id === hinted!.id),
