@@ -70,5 +70,5 @@ export const enCatalog: LocaleCatalog = {
     "The oversealed chamber vitrifies the sample and trips a violent pressure release. The setup itself caused the failure.",
   "hazard.chamber-blowout.name": "Chamber blowout",
   "hazard.chamber-blowout.observation":
-    "The oversealed chamber vented violently and forced an automatic lockout. The processed residue remains in the machine; acknowledge the incident before restarting.",
+    "The oversealed chamber vented violently and forced an automatic lockout. Processed material remains physically accounted for in the line; acknowledge the incident before restarting.",
 };
