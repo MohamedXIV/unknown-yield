@@ -12,6 +12,7 @@ export type Tool =
   | "crusher"
   | "furnace"
   | "sealed-furnace"
+  | "oversealed-furnace"
   | "depot"
   | "belt"
   | "port"
@@ -23,6 +24,7 @@ export const TOOL_HOTKEYS: Record<Tool, string> = {
   crusher: "3",
   furnace: "4",
   "sealed-furnace": "8",
+  "oversealed-furnace": "9",
   belt: "5",
   port: "6",
   depot: "7",
@@ -103,9 +105,13 @@ export function buildCommand(
     };
   }
   if (
-    ["extractor", "crusher", "furnace", "sealed-furnace"].includes(
-      mode.tool,
-    )
+    [
+      "extractor",
+      "crusher",
+      "furnace",
+      "sealed-furnace",
+      "oversealed-furnace",
+    ].includes(mode.tool)
   )
     return {
       type: "placeMachine",
