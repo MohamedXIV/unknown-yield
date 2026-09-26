@@ -14,7 +14,8 @@ This document is intentionally procedural. Game/design truth lives in the domain
 - Completed Phase 1.5 child: **#6 — flexible belt routing for persistent production lines** (merged via PR #25).
 - Completed Phase 1.5 child: **#7 — preserve factory state across suspend, reroute and resume** (merged via PR #27).
 - Completed Phase 1.5 gate: **#8 — end-to-end physical inventory and rerouting exit review** (merged via PR #29).
-- Active issue: **#30 — minimal condition-aware reaction matching**.
+- Completed Phase 2 child: **#30 — minimal condition-aware reaction matching** (merged via PR #36).
+- Active issue: **#31 — experiment observations and knowledge states**.
 - Phase 2 parent epic: **#9**; Phase 2 closes only through **#34 — end-to-end experimentation/discovery exit review**.
 
 ## Phase 1.5 dependency graph
@@ -36,10 +37,10 @@ Phase 1.5 is complete.
 ## Phase 2 dependency graph
 
 ```text
-#30 condition-aware reaction matching ← ACTIVE
+#30 condition-aware reaction matching ✓
   │
   v
-#31 experiment observations + knowledge states
+#31 experiment observations + knowledge states ← ACTIVE
   │
   v
 #32 explainable condition-driven hazard
@@ -51,7 +52,7 @@ Phase 1.5 is complete.
 #34 Phase 2 exit review
 ```
 
-#9 is the Phase 2 parent epic. Start with #30 and keep the model minimal: deterministic authored conditions, hidden designer truth, and no broad chemistry/temperature framework or content-volume expansion. Phase 3 remains blocked until #34 closes.
+#9 is the Phase 2 parent epic. #30 is complete. Continue with #31: add the minimum richer player-knowledge state and useful failed-experiment evidence while preserving hidden authored truth. Avoid inference engines, broad relationship graphs or recipe-wiki disclosure. Phase 3 remains blocked until #34 closes.
 
 ## Agent loop
 
