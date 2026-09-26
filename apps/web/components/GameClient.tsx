@@ -186,7 +186,7 @@ function GameClientInner() {
       return descriptions[tool];
     const key = snapshot.operations.find((o) => o.id === "heat")?.nameKey;
     return (
-      descriptions.furnace +
+      descriptions[tool] +
       " Operation: " +
       (key ? t(key) : "heat") +
       ". Outcomes require observation."
@@ -855,7 +855,7 @@ function GameClientInner() {
                   <dt>Factory roof</dt>
                   <dd>Select factory + F</dd>
                   <dt>Build tools</dt>
-                  <dd>1–6</dd>
+                  <dd>1–9</dd>
                   <dt>Dismantle</dt>
                   <dd>X</dd>
                 </dl>
