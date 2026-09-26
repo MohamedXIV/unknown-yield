@@ -14,7 +14,7 @@ export {
   vectors,
   type FootprintDef,
 } from "./geometry";
-export { MACHINE_STATUSES } from "./types";
+export { MACHINE_STATUSES, experimentEvidenceKey } from "./types";
 export type {
   GameCommand,
   CommandResult,
@@ -25,6 +25,8 @@ export type {
   Storage,
   Inventory,
   FlowTotals,
+  ExperimentEvidence,
+  KnowledgeEntry,
   Save,
   Factory,
   Belt,
