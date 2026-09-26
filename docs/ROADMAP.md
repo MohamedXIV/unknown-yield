@@ -83,7 +83,7 @@ No normal gameplay action can silently delete material. A player can stop one li
 
 **Epic:** GitHub Issue #9. Phase 1.5 is closed; Phase 2 is now active.
 
-**Live execution:** #30 ✓ → **#31 ACTIVE** → #32 → #33 → #34 exit review.
+**Live execution:** #30 ✓ → #31 ✓ → **#32 ACTIVE** → #33 → #34 exit review.
 
 ### Question
 
@@ -265,4 +265,4 @@ The following should not be treated as progress during foundation unless require
 
 The accepted implementation and evidence are summarized in [FIRST_PLAYABLE.md](FIRST_PLAYABLE.md) and [BROWSER_SMOKE.md](BROWSER_SMOKE.md). Continue from this foundation; do not rebuild the retired dashboard prototype.
 
-Phase 1.5 is complete through Issue #8 / PR #29. Phase 2 Issue #30 is complete via PR #36. The immediate execution target is Issue #31: add the minimum richer experiment-observation/knowledge state so failed experiments teach useful evidence without exposing authored truth. Then advance through #32 one explainable hazard, #33 one demonstrated-knowledge capability unlock, and #34 Phase 2 exit review. Do not begin Phase 3, market/company depth, or broad content expansion before #34 closes.
+Phase 1.5 is complete through Issue #8 / PR #29. Phase 2 Issues #30 and #31 are complete via PRs #36 and #38. The immediate execution target is Issue #32: prove one deterministic, explainable condition-driven hazardous failure with a visible persisted consequence and recovery path while preserving material conservation. Then advance through #33 one demonstrated-knowledge capability unlock and #34 Phase 2 exit review. Do not begin Phase 3, market/company depth, or broad content expansion before #34 closes.
