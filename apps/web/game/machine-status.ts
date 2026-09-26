@@ -9,6 +9,7 @@ import type { MachineStatus } from "@site/sim-core";
  */
 const labels: Record<MachineStatus, string> = {
   processing: "Processing",
+  incident: "Incident lockout",
   disabled: "Disabled",
   "deposit-exhausted": "Deposit exhausted",
   "needs-compatible-input": "Needs compatible input",
