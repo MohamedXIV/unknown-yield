@@ -2,6 +2,7 @@ import type { Content } from "@site/content";
 import {
   amount,
   change,
+  experimentEvidenceKey,
   total,
   type MachineStatus,
   type Save,
@@ -50,6 +51,17 @@ export function completeAndStart(
           // created outputs so the ledger can reconcile the identity change.
           change(s.flows.consumed, r.input, r.inputAmount);
           change(s.flows.produced, material, r.outputAmount);
+          const id = experimentEvidenceKey(
+            r.operation,
+            r.input,
+            r.processConditionId ?? null,
+          );
+          s.evidence[id] = {
+            operationId: r.operation,
+            inputId: r.input,
+            processConditionId: r.processConditionId ?? null,
+            state: "confirmed",
+          };
         }
         change(m.output, material, r?.outputAmount ?? 1);
         if (r && !s.knowledge.includes(r.id)) {
@@ -63,8 +75,20 @@ export function completeAndStart(
     } else if (status(c, s, m) === "ready") {
       const r = recipe(c, m);
       s.fuel -= d.fuel;
-      if (r) change(m.input, r.input, -r.inputAmount);
-      else s.deposits[m.depositId!]--;
+      if (r) {
+        change(m.input, r.input, -r.inputAmount);
+        const id = experimentEvidenceKey(
+          r.operation,
+          r.input,
+          r.processConditionId ?? null,
+        );
+        s.evidence[id] ??= {
+          operationId: r.operation,
+          inputId: r.input,
+          processConditionId: r.processConditionId ?? null,
+          state: "hinted",
+        };
+      } else s.deposits[m.depositId!]--;
       m.job = { remaining: d.durationTicks, reaction: r?.id ?? null };
     }
   }
