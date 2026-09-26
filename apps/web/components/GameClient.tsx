@@ -5,7 +5,6 @@ import { i18n } from "../game/i18n";
 import { machineStatusLabel } from "../game/machine-status";
 import type { GameCommand, CommandResult, Inventory } from "@site/sim-core";
 import { Session } from "../game/session";
-import { observationKey } from "../game/observations";
 import {
   DEFAULT_MODE,
   TOOL_HOTKEYS,
