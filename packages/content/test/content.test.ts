@@ -63,6 +63,12 @@ describe("content boundary", () => {
     delete hazardous.processConditionId;
     expect(() => validateContent(c)).toThrow(/Hazard requires/i);
   });
+  it("rejects hazard localization keys that do not match hazard identity", () => {
+    const c = structuredClone(fixture);
+    const hazardous = c.reactions.find((r) => r.id === "heat-raw-oversealed")!;
+    hazardous.hazard!.nameKey = "hazard.other.name";
+    expect(() => validateContent(c)).toThrow(/hazard/i);
+  });
   it("rejects duplicate hazard identities", () => {
     const c = structuredClone(fixture);
     const sealed = c.reactions.find((r) => r.id === "heat-raw-sealed")!;
