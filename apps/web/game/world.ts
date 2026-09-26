@@ -19,6 +19,7 @@ import {
 } from "./interaction";
 import { t as translate } from "./i18n";
 import { machineStatusLabel } from "./machine-status";
+import { observationKey, unseenObservations } from "./observations";
 export type WorldControls = {
   setSnapshot(s: PlayerSnapshot): void;
   setMode(mode: WorldMode): void;
@@ -65,9 +66,7 @@ export function createWorld(
     private anchor: Point | null = null;
     private keys = new Set<string>();
     private dirty = true;
-    private seenDiscoveries = new Set(
-      initial.observations.map((o) => o.operationId + ":" + o.inputId),
-    );
+    private seenDiscoveries = new Set(initial.observations.map(observationKey));
     private notices: Phaser.GameObjects.Text[] = [];
     private text(x: number, y: number, t: string, size = 10, c = "#c4c7b0") {
       return this.add
@@ -588,9 +587,8 @@ export function createWorld(
         );
       }
       const discovered = snapshot.observations.filter((o) => !o.initial);
-      for (const o of discovered) {
-        const id = o.operationId + ":" + o.inputId;
-        if (this.seenDiscoveries.has(id)) continue;
+      for (const o of unseenObservations(discovered, this.seenDiscoveries)) {
+        const id = observationKey(o);
         this.seenDiscoveries.add(id);
         // Restored knowledge has no new physical event to announce.
         if (!o.observedAt) continue;
@@ -616,9 +614,7 @@ export function createWorld(
           },
         });
       }
-      this.seenDiscoveries = new Set(
-        snapshot.observations.map((o) => o.operationId + ":" + o.inputId),
-      );
+      this.seenDiscoveries = new Set(snapshot.observations.map(observationKey));
     }
     update(_time: number, delta: number) {
       if (!this.dynamic) return;
