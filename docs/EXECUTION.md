@@ -5,15 +5,17 @@ This document is intentionally procedural. Game/design truth lives in the domain
 ## Current state
 
 - First playable: accepted and merged.
-- Active phase: **Phase 1.5 — physical inventory and flexible routing**.
+- Completed phase: **Phase 1.5 — physical inventory and flexible routing** (closed by #8 / PR #29).
+- Active phase: **Phase 2 — experimentation and discovery depth**.
 - Completed foundation: **#3 — material ledger and conservation invariants** (merged via PR #17).
 - Completed foundation: **#14 — stable content IDs and localization-ready presentation** (merged via PR #19).
 - Completed Phase 1.5 child: **#4 — physical storage and terminal staging** (merged via PR #21).
 - Completed Phase 1.5 child: **#5 — remove generic discard and define material handling/reclaim rules** (merged via PR #23).
 - Completed Phase 1.5 child: **#6 — flexible belt routing for persistent production lines** (merged via PR #25).
 - Completed Phase 1.5 child: **#7 — preserve factory state across suspend, reroute and resume** (merged via PR #27).
-- Active issue: **#8 — end-to-end physical inventory and rerouting exit review**.
-- Phase 1.5 closes only through **#8 — end-to-end exit review**.
+- Completed Phase 1.5 gate: **#8 — end-to-end physical inventory and rerouting exit review** (merged via PR #29).
+- Active issue: **#30 — minimal condition-aware reaction matching**.
+- Phase 2 parent epic: **#9**; Phase 2 closes only through **#34 — end-to-end experimentation/discovery exit review**.
 
 ## Phase 1.5 dependency graph
 
@@ -26,10 +28,30 @@ This document is intentionally procedural. Game/design truth lives in the domain
  ├─> #6 flexible belt routing ✓ ────────────┐
  └──────────────────────────────────────────> #7 persistent factory state ✓
                                               │
-#3 + #14 + #4 + #5 + #6 + #7 ─────────────> #8 exit review ← ACTIVE
+#3 + #14 + #4 + #5 + #6 + #7 ─────────────> #8 exit review ✓
 ```
 
-#14, #4, #5, #6 and #7 are complete. #8 is now active and is the only Phase 1.5 closure gate: verify the physical-inventory, storage/staging, no-discard, conservative reclaim, routing, persistent-factory, save/load and conservation foundations as one playable end-to-end loop. Do not begin Phase 2 work until this gate closes.
+Phase 1.5 is complete.
+
+## Phase 2 dependency graph
+
+```text
+#30 condition-aware reaction matching ← ACTIVE
+  │
+  v
+#31 experiment observations + knowledge states
+  │
+  v
+#32 explainable condition-driven hazard
+  │
+  v
+#33 demonstrated-knowledge capability gate
+  │
+  v
+#34 Phase 2 exit review
+```
+
+#9 is the Phase 2 parent epic. Start with #30 and keep the model minimal: deterministic authored conditions, hidden designer truth, and no broad chemistry/temperature framework or content-volume expansion. Phase 3 remains blocked until #34 closes.
 
 ## Agent loop
 
@@ -67,12 +89,13 @@ There is currently no remote CI workflow. Do not represent absent checks as gree
 - Stable content IDs are simulation/save identity; localized/player-facing wording is presentation data.
 - React stays out of per-frame world transforms.
 - Do not add Rust/WASM without benchmark/profiler evidence.
-- Do not expand Content Studio, advanced logistics, or market depth as a prerequisite to Phase 1.5.
+- Do not expand Content Studio, advanced logistics, market depth, or broad content volume as a prerequisite to Phase 2.
+- Phase 2 experimentation must preserve hidden authored truth vs player knowledge and remain deterministic from authoritative simulation conditions.
 - Do not create large issue trees for Phases 6–8 until preceding gates reveal concrete requirements.
 
-## Later phase epics
+## Active/later phase epics
 
-- #9 — experimentation and discovery depth
+- #9 — experimentation and discovery depth — ACTIVE via children #30–#34
 - #10 — factory-as-function contracts and abstraction proof
 - #11 — Content Studio v1
 - #12 — Materials Exchange and corporate progression
