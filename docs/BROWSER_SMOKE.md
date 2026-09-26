@@ -52,18 +52,25 @@ The UI confirmed the save with `Field record saved on this device.`. After **Loa
 
 This closes Issue #8's explicit browser requirement to save/reload while material exists simultaneously across belts, storage, factory buffers and terminal staging. No repo edits or test reruns were performed during this focused follow-up because no runtime code changed.
 
-### Issue #31 knowledge-state acceptance — pending local/browser verification
+### Issue #31 knowledge-state acceptance — observed on 2026-09-26
 
-Run this path on the exact #31 PR head:
+Behavioral head: `bdbf0f201aebdf04cbb13a778e246b0545005a94` on `feat/31-experiment-evidence`. The worktree remained clean on that exact head.
 
-1. Start an unfamiliar `raw + heat` batch in either Furnace or Sealed furnace and open the notebook before the batch finishes.
-2. Verify one **UNCONFIRMED** entry appears describing the known input + operation + localized setup, while the authored output/material and reaction observation remain hidden.
-3. Save through the UI while the experiment is still active, then Load. Verify the same single unconfirmed entry returns and no duplicate appears.
-4. Let the batch complete. Verify that same notebook entry becomes **OBSERVED**, now showing the authored localized result/observation. The ambient Furnace path is the useful-failure proof: residue remains physical and its observation explains that the attempt produced no export-value result.
-5. Repeat the identical experiment. Verify the notebook still contains only one record for that attempted condition/result.
-6. Exercise both ambient and sealed Heat conditions. Verify they remain separate entries and no authored-but-unobserved output leaks into the notebook.
-7. Check the visible notebook/inspector for raw stable IDs or localization keys and check browser console/page errors.
-8. Run the repository baseline: `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`.
+- Focused simulation/routing tests: 2 files / 35 tests PASS.
+- Full `npm test`: 14 files / 108 tests PASS.
+- `npm run typecheck`: PASS.
+- `npm run lint`: PASS.
+- `npm run build`: PASS, including static-export verification.
+- Browser: starting a Sealed furnace Heat batch produced exactly one `UNCONFIRMED · HEAT` notebook entry titled `Outcome unconfirmed`. It showed the localized attempted setup `Veined ore → Heat · Sealed furnace` without exposing the authored output or reaction result. The inspector showed the Sealed furnace Processing with Input/Output both 0/12.
+- UI Save reported `Field record saved on this device.`; UI Load reported `Site restored`. After Load, the same single UNCONFIRMED entry returned and the Sealed furnace remained Processing.
+- After batch completion, that same entry promoted to `OBSERVED · HEAT — Conductive granules` with localized observation copy.
+- After 30 additional observation snapshots and another completion (factory buffer reached Conductive granules 2), the notebook still contained one record for that attempted condition: no duplicate evidence was created.
+- Ambient and sealed Heat were also observed as separate entries in the first browser pass. Ambient showed `Vitrified residue` and explained that it has no export value while mechanical processing remains worth investigating, providing the useful failed-experiment evidence required by #31.
+- Visible notebook/inspectors used localized wording; no raw stable IDs or localization keys were observed.
+- No visible page error occurred. The final dev-server request output included `GET / 200`.
+- Browser JavaScript console logs could not be inspected because the available CUA surface does not expose the JS console. This check is therefore **unverified**, not claimed as zero errors. Automated React coverage still verifies the previously sensitive duplicate-key observation path.
+
+This satisfies Issue #31's notebook/inspection acceptance while preserving the console-observability limitation explicitly.
 
 ### Issue #30 process-condition selection — observed on 2026-09-26
 
