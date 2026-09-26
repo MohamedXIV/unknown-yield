@@ -59,7 +59,7 @@ This is the continuing game foundation, not another disposable dashboard experim
 
 ## Phase 1.5 — Physical inventory and flexible routing
 
-**Live execution:** #3 ✓ → #14 ✓ → #4 ✓ → #5 ✓ → #6 ✓ → #7 ✓ → **#8 ACTIVE**. See GitHub Issue #2 and [EXECUTION.md](EXECUTION.md).
+**Live execution:** #3 ✓ → #14 ✓ → #4 ✓ → #5 ✓ → #6 ✓ → #7 ✓ → #8 ✓. **Phase 1.5 COMPLETE.** See GitHub Issue #2 and [EXECUTION.md](EXECUTION.md).
 
 ### Question
 
@@ -81,7 +81,9 @@ No normal gameplay action can silently delete material. A player can stop one li
 
 ## Phase 2 — Experimentation and discovery depth
 
-**Epic:** GitHub Issue #9. Keep it coarse until Phase 1.5 closes.
+**Epic:** GitHub Issue #9. Phase 1.5 is closed; Phase 2 is now active.
+
+**Live execution:** **#30 ACTIVE** → #31 → #32 → #33 → #34 exit review.
 
 ### Question
 
@@ -263,4 +265,4 @@ The following should not be treated as progress during foundation unless require
 
 The accepted implementation and evidence are summarized in [FIRST_PLAYABLE.md](FIRST_PLAYABLE.md) and [BROWSER_SMOKE.md](BROWSER_SMOKE.md). Continue from this foundation; do not rebuild the retired dashboard prototype.
 
-Issues #3, #14, #4, #5, #6 and #7 are complete. The immediate execution target is Issue #8: the Phase 1.5 end-to-end exit review. It must prove the merged conservation, physical storage/staging, conservative reclaim, diverter routing and persistent factory semantics together in one playable save/load loop. Phase 2 remains blocked until #8 closes.
+Phase 1.5 is complete through Issue #8 / PR #29. The immediate execution target is Issue #30: prove the smallest deterministic condition-aware reaction model before widening experimentation content. Then advance through #31 observations/knowledge, #32 one explainable hazard, #33 one demonstrated-knowledge capability unlock, and #34 Phase 2 exit review. Do not begin Phase 3, market/company depth, or broad content expansion before #34 closes.
