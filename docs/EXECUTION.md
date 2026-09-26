@@ -11,7 +11,8 @@ This document is intentionally procedural. Game/design truth lives in the domain
 - Completed Phase 1.5 child: **#4 — physical storage and terminal staging** (merged via PR #21).
 - Completed Phase 1.5 child: **#5 — remove generic discard and define material handling/reclaim rules** (merged via PR #23).
 - Completed Phase 1.5 child: **#6 — flexible belt routing for persistent production lines** (merged via PR #25).
-- Active issue: **#7 — preserve factory state across suspend, reroute and resume**.
+- Completed Phase 1.5 child: **#7 — preserve factory state across suspend, reroute and resume** (merged via PR #27).
+- Active issue: **#8 — end-to-end physical inventory and rerouting exit review**.
 - Phase 1.5 closes only through **#8 — end-to-end exit review**.
 
 ## Phase 1.5 dependency graph
@@ -23,12 +24,12 @@ This document is intentionally procedural. Game/design truth lives in the domain
 #14 stable IDs + localization-ready presentation ✓
  ├─> #4 physical storage + terminal staging ✓ ─> #5 remove generic discard ✓
  ├─> #6 flexible belt routing ✓ ────────────┐
- └──────────────────────────────────────────> #7 persistent factory state
+ └──────────────────────────────────────────> #7 persistent factory state ✓
                                               │
-#3 + #14 + #4 + #5 + #6 + #7 ─────────────> #8 exit review
+#3 + #14 + #4 + #5 + #6 + #7 ─────────────> #8 exit review ← ACTIVE
 ```
 
-#14, #4, #5 and #6 are complete. #7 is now active: prove suspend → reroute → resume on preserved factory state using the merged diverter routing, without introducing factory abstraction. #5 needs legitimate storage/handling destinations. #7 should integrate with #6 rather than invent a separate rerouting model.
+#14, #4, #5, #6 and #7 are complete. #8 is now active and is the only Phase 1.5 closure gate: verify the physical-inventory, storage/staging, no-discard, conservative reclaim, routing, persistent-factory, save/load and conservation foundations as one playable end-to-end loop. Do not begin Phase 2 work until this gate closes.
 
 ## Agent loop
 
