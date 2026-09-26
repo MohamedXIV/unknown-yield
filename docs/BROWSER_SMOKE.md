@@ -4,7 +4,7 @@ Use `npm run dev` and http://127.0.0.1:3000. All gameplay actions below use the 
 
 ## Phase 1.5 exit gate — Issue #8
 
-**Status:** observed on exact behavioral head `96cb821a3503e1b9e45ef64e75176cff758376cf`, with one remaining browser-proof gap: belt cargo was observed during rerouting, but its presence at the exact save/load boundary was not explicitly recorded.
+**Status:** Phase 1.5 browser acceptance complete. Runtime behavior was verified from the static export produced by behavioral head `96cb821a3503e1b9e45ef64e75176cff758376cf`; subsequent PR commits are documentation-only evidence recording.
 
 This is the closure path for the physical-inventory/rerouting foundation:
 
@@ -34,11 +34,25 @@ Behavioral head: `96cb821a3503e1b9e45ef64e75176cff758376cf` on `review/8-phase15
 - Conservative reclaim: a loaded Veined-ore belt refused reclaim with `Route the cargo out first`; buffered M5 refused reclaim with `Empty the machine buffers through belts first`; contents remained present.
 - Fuel note: the UI-built route exhausted starting fuel, so the in-game emergency-fuel action was used. Subsequent exports repaid the obligation fully; this exercised, rather than bypassed, the designed recovery loop.
 
-### Remaining browser-proof gap
+### Focused four-holdings Save/Load proof
 
-Issue #8 asks the save/reload point to contain material simultaneously across **belts, physical storage, factory buffers and terminal staging**. The run above explicitly recorded storage + factory buffer + staging at save/load, and separately observed belt cargo during rerouting, but did not explicitly record a loaded belt at the save boundary and verify that same cargo after Load.
+The remaining browser gap was closed with the simulation paused, using the existing static export built from behavioral head `96cb821a3503e1b9e45ef64e75176cff758376cf`.
 
-The domain exit test does cover belt cargo at its save point, but the browser acceptance still needs one focused confirmation of loaded-belt save/load persistence before #8 is closed.
+At the exact UI **Save world** boundary, all four required holdings existed simultaneously:
+- **belt cargo:** visible cargo remained on the conveyor feeding M5;
+- **physical storage:** depot S45 held 25/40 Conductive granules;
+- **factory buffer:** M5 was Disabled with 12/12 Veined ore input;
+- **terminal staging:** policy Keep with 10 Conductive granules staged, Exported 7 and Obligation 0.
+
+The UI confirmed the save with `Field record saved on this device.`. After **Load saved world**, the UI confirmed `Site restored` and the same four categories remained present:
+- belt cargo was still visible on the conveyor;
+- S45 remained 25/40 Conductive granules;
+- M5 remained Disabled with 12/12 Veined ore;
+- terminal remained Keep with 10 staged, Exported 7 and Obligation 0.
+
+This closes Issue #8's explicit browser requirement to save/reload while material exists simultaneously across belts, storage, factory buffers and terminal staging. No repo edits or test reruns were performed during this focused follow-up because no runtime code changed.
+
+Environment note: the sandbox could not start Next dev mode because ACLs denied writing the `.next/dev` lockfile. Rather than changing repository permissions/config, the already-built static export from the verified behavioral head was served locally for this focused UI proof.
 
 1. Pause and close the guide. Home centers the site. A new expedition has 600 plates, 120 fuel, no placed machines and no alien outcomes in the notebook. (Observed.)
 2. Build a factory, extractor and crusher. Place matching eastward wall ports and route belts through the factory to the terminal. (Observed with real mouse input; the standard 10×10 first line cost left 438 plates.)
