@@ -311,8 +311,8 @@ describe("automatic industry", () => {
       expect(save.machines[processor].definitionId).toBe(definitionId);
       expect(save.machines[processor].job?.reaction).toBe(reactionId);
       expect(save.knowledge).not.toContain(reactionId);
-      expect(save.schemaVersion).toBe(6);
-      expect(save.contentVersion).toBe("world-01-v5");
+      expect(save.schemaVersion).toBe(7);
+      expect(save.contentVersion).toBe("world-01-v6");
 
       const restored = make(),
         repeated = make();
@@ -364,7 +364,7 @@ describe("automatic industry", () => {
     expect(JSON.stringify(hinted)).not.toContain("reaction.heat-raw");
 
     const saved = s.serialize();
-    expect(saved.schemaVersion).toBe(6);
+    expect(saved.schemaVersion).toBe(7);
     expect(saved.evidence[hinted!.id].state).toBe("hinted");
 
     const restored = make();
@@ -423,10 +423,12 @@ describe("automatic industry", () => {
     const legacy = JSON.parse(JSON.stringify(s.serialize()));
     legacy.schemaVersion = 5;
     delete legacy.evidence;
+    for (const machine of Object.values(legacy.machines) as Array<Record<string, unknown>>)
+      delete machine.incident;
 
     const restored = make();
     expect(restored.load(legacy).ok).toBe(true);
-    expect(restored.serialize().schemaVersion).toBe(6);
+    expect(restored.serialize().schemaVersion).toBe(7);
     const hinted = restored
       .snapshot()
       .knowledgeEntries.find(
@@ -440,6 +442,85 @@ describe("automatic industry", () => {
     });
     expect(hinted).not.toHaveProperty("outputId");
     expect(hinted).not.toHaveProperty("textKey");
+  });
+
+  it("triggers an explainable oversealed blowout, preserves material, and recovers explicitly", () => {
+    const { s, processor } = line(make(), true, true, "oversealed-furnace");
+
+    for (
+      let ticks = 0;
+      ticks < 500 && !s.serialize().machines[processor].incident;
+      ticks++
+    )
+      s.step(100);
+
+    const incidentSave = s.serialize();
+    const machine = incidentSave.machines[processor];
+    expect(machine).toMatchObject({
+      definitionId: "oversealed-furnace",
+      enabled: false,
+      incident: "chamber-blowout",
+      job: null,
+    });
+    expect(machine.output.residue).toBeGreaterThan(0);
+    expect(
+      s.snapshot().machines.find((m) => m.id === processor),
+    ).toMatchObject({
+      status: "incident",
+      incident: {
+        nameKey: "hazard.chamber-blowout.name",
+        textKey: "hazard.chamber-blowout.observation",
+      },
+    });
+    expect(
+      s.snapshot().knowledgeEntries.some(
+        (entry) =>
+          entry.state === "confirmed" &&
+          entry.operationId === "heat" &&
+          entry.inputId === "raw" &&
+          entry.setupNameKey === "machine.oversealed-furnace.name" &&
+          entry.outputId === "residue",
+      ),
+    ).toBe(true);
+    expect(auditLedger(fixture, incidentSave).ok).toBe(true);
+
+    const restored = make();
+    expect(restored.load(JSON.parse(JSON.stringify(incidentSave))).ok).toBe(
+      true,
+    );
+    expect(restored.serialize()).toEqual(incidentSave);
+    expect(
+      restored.snapshot().machines.find((m) => m.id === processor)?.status,
+    ).toBe("incident");
+
+    const recovery = restored.command({
+      type: "setEnabled",
+      machineId: processor,
+      enabled: true,
+    });
+    expect(recovery).toMatchObject({
+      ok: true,
+      message: "Incident acknowledged; automatic operation enabled",
+    });
+    expect(restored.serialize().machines[processor]).toMatchObject({
+      enabled: true,
+      incident: null,
+    });
+    expect(auditLedger(fixture, restored.serialize()).ok).toBe(true);
+
+    const safe = line(make(), true, true, "sealed-furnace");
+    for (
+      let ticks = 0;
+      ticks < 500 &&
+      !safe.s.serialize().knowledge.includes("heat-raw-sealed");
+      ticks++
+    )
+      safe.s.step(100);
+    expect(safe.s.serialize().machines[safe.processor].incident).toBeNull();
+    expect(
+      safe.s.snapshot().machines.find((m) => m.id === safe.processor)?.status,
+    ).not.toBe("incident");
+    expect(auditLedger(fixture, safe.s.serialize()).ok).toBe(true);
   });
 
   it("provides recovery but rejects consecutive grants", () => {
@@ -486,7 +567,7 @@ describe("save boundary", () => {
     const s = make(),
       before = s.serialize();
     expect(
-      s.load({ ...before, contentVersion: "world-01-v4" }).ok,
+      s.load({ ...before, contentVersion: "world-01-v5" }).ok,
     ).toBe(false);
     expect(s.serialize()).toEqual(before);
   });
