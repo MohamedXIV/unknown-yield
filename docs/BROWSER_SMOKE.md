@@ -52,6 +52,20 @@ The UI confirmed the save with `Field record saved on this device.`. After **Loa
 
 This closes Issue #8's explicit browser requirement to save/reload while material exists simultaneously across belts, storage, factory buffers and terminal staging. No repo edits or test reruns were performed during this focused follow-up because no runtime code changed.
 
+### Issue #32 condition-driven hazard acceptance — pending local/browser verification
+
+Run this path on the exact #32 PR head:
+
+1. Build an **Oversealed furnace** (hotkey 9) on a normal veined-ore Heat line and open the notebook before completion. Verify the attempt is initially UNCONFIRMED and no hazard/result truth is shown early.
+2. Let the first hazardous batch finish. Verify the machine changes to **Incident lockout**, automatic operation stops, processed **Vitrified residue** remains physically accounted for, and the inspector shows localized **Chamber blowout** cause/effect text.
+3. Open the notebook. Verify the oversealed Heat entry is now OBSERVED and explains that the oversealed setup caused the violent release.
+4. Save during the incident, then Load. Verify the same machine remains incident-locked with the same buffers/output and explanation.
+5. Use **Acknowledge incident & re-enable**. Verify the same machine identity clears the lockout and can operate again; no rebuild/repair resource is required.
+6. Run the same `raw + heat` experiment in a normal Sealed furnace. Verify it does **not** enter incident lockout and still produces conductive granules.
+7. Check material-conservation evidence in the focused tests; no consumed/produced material may vanish because of the incident.
+8. Check visible UI for raw IDs/localization keys and for any visible page error. If the browser JS console is unavailable in the execution surface, record that limitation rather than claiming zero errors.
+9. Run the repository baseline: `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`.
+
 ### Issue #31 knowledge-state acceptance — observed on 2026-09-26
 
 Behavioral head: `bdbf0f201aebdf04cbb13a778e246b0545005a94` on `feat/31-experiment-evidence`. The worktree remained clean on that exact head.
