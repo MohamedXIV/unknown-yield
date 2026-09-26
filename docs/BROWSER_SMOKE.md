@@ -52,19 +52,23 @@ The UI confirmed the save with `Field record saved on this device.`. After **Loa
 
 This closes Issue #8's explicit browser requirement to save/reload while material exists simultaneously across belts, storage, factory buffers and terminal staging. No repo edits or test reruns were performed during this focused follow-up because no runtime code changed.
 
-### Issue #32 condition-driven hazard acceptance — pending local/browser verification
+### Issue #32 condition-driven hazard acceptance — observed on 2026-09-26
 
-Run this path on the exact #32 PR head:
+Behavioral head: `fc52e9704d09b896ebedd707ffeaed9f6cd6076b`. The simulation was left paused after the browser proof.
 
-1. Build an **Oversealed furnace** (hotkey 9) on a normal veined-ore Heat line and open the notebook before completion. Verify the attempt is initially UNCONFIRMED and no hazard/result truth is shown early.
-2. Let the first hazardous batch finish. Verify the machine changes to **Incident lockout**, automatic operation stops, processed **Vitrified residue** remains physically accounted for, and the inspector shows localized **Chamber blowout** cause/effect text.
-3. Open the notebook. Verify the oversealed Heat entry is now OBSERVED and explains that the oversealed setup caused the violent release.
-4. Save during the incident, then Load. Verify the same machine remains incident-locked with the same buffers/output and explanation.
-5. Use **Acknowledge incident & re-enable**. Verify the same machine identity clears the lockout and can operate again; no rebuild/repair resource is required.
-6. Run the same `raw + heat` experiment in a normal Sealed furnace. Verify it does **not** enter incident lockout and still produces conductive granules.
-7. Check material-conservation evidence in the focused tests; no consumed/produced material may vanish because of the incident.
-8. Check visible UI for raw IDs/localization keys and for any visible page error. If the browser JS console is unavailable in the execution surface, record that limitation rather than claiming zero errors.
-9. Run the repository baseline: `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`.
+- Before completion, the notebook showed `UNCONFIRMED · HEAT` / `Outcome unconfirmed` for `Veined ore → Heat · Oversealed furnace` without exposing the authored result or hazard.
+- After completion, the same experiment became `OBSERVED · HEAT — Vitrified residue`; the affected machine exposed localized `Chamber blowout` cause/effect text and entered `Incident lockout`.
+- Factory 3 retained `Vitrified residue 1`. M4 showed the Oversealed furnace disabled with Input `12/12 Veined ore` and Output `1/12 Vitrified residue`, preserving physical material/buffers.
+- Save/Load during the incident had already been exercised on this exact behavior: Load reported `Site restored`, and Factory 3 / M4 returned with the same incident lockout and preserved buffers.
+- `Acknowledge incident & re-enable` recovered the same M4 identity. It was then disabled manually to avoid immediately repeating the incident during the safe-condition comparison.
+- Normal comparison: M18 `Sealed furnace` entered Processing without incident. Its inspector showed Input `4/12 Veined ore`, Output `5/12 Conductive granules`, and the UI reported `DISCOVERED: Conductive granules`.
+- The visible notebook/inspectors used localized wording; no raw stable IDs or localization keys were observed.
+- No visible page error was observed.
+- Browser JavaScript console logs are not exposed by the available CUA surface. Console status is therefore **unverified**, not claimed as zero errors.
+
+The local code gate on this behavior is also green: focused 72/72 across 6 files, full 116/116 across 14 files, typecheck/lint/build/static export PASS, plus an exact-head rerun of `packages/content/test/content.test.ts` at 22/22.
+
+This closes Issue #32's required browser proof of cause → consequence → observation/recovery while preserving the JS-console observability limitation explicitly.
 
 ### Issue #31 knowledge-state acceptance — observed on 2026-09-26
 
