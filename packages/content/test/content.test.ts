@@ -25,6 +25,7 @@ describe("content boundary", () => {
     ).toEqual([
       ["ambient", "residue"],
       ["sealed", "granules"],
+      ["oversealed", "residue"],
     ]);
     expect(
       c.reactions.find((r) => r.id === "crush-raw")?.processConditionId,
