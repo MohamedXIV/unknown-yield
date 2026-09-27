@@ -52,18 +52,51 @@ The UI confirmed the save with `Field record saved on this device.`. After **Loa
 
 This closes Issue #8's explicit browser requirement to save/reload while material exists simultaneously across belts, storage, factory buffers and terminal staging. No repo edits or test reruns were performed during this focused follow-up because no runtime code changed.
 
-### Issue #33 demonstrated-knowledge capability acceptance — pending local/browser verification
+### Issue #34 Phase 2 end-to-end exit acceptance — observed on 2026-09-27
 
-Run this path on the exact #33 PR head:
+Behavioral head: `b78300137403fd94bc7db02276fe5050b23a1485`. The local checkout/worktree remained clean and no source edits were made.
 
-1. Start a fresh expedition. Verify **Oversealed furnace** is visibly **LOCKED** and its localized hint says it requires a confirmed Heat result from a Sealed furnace. Press/click its tool (including hotkey 9) and verify build mode does not activate.
-2. Confirm that ample structural plates/fuel do not unlock or place it; the requirement is knowledge, not currency/resources.
-3. Build/use a normal **Sealed furnace** and complete `raw + heat`. Before confirmation, Oversealed remains locked.
-4. When `Conductive granules` / the sealed-Heat observation is confirmed, verify Oversealed becomes available immediately without a purchase/research action or reload. Its presentation should explain that it was unlocked by the demonstrated Sealed-furnace Heat evidence without exposing any unrelated hidden outcome.
-5. Place an Oversealed furnace through the newly available tool/hotkey and verify normal placement authority/cost rules still apply.
-6. Save, Load, and verify the capability remains unlocked and placeable from the restored confirmed knowledge.
-7. Check visible UI for raw reaction IDs/localization keys and visible page errors. If JS console access is unavailable, record that limitation rather than claiming zero errors.
-8. Run focused progression/content tests, then `npm test`, `npm run typecheck`, `npm run lint`, and `npm run build`.
+Local/domain gate:
+- focused Phase 2 + Phase 1.5 exit regressions: 2 files / 4 tests PASS;
+- full `npm test`: 16 files / 124 tests PASS;
+- `npm run typecheck`, `npm run lint`, and `npm run build`: PASS.
+
+Fresh-expedition browser integration:
+- The fresh notebook exposed only the known Crush method; no authored Heat result leaked before experimentation. **Oversealed furnace** was visibly **LOCKED** with only the localized confirmed-Sealed-Heat prerequisite.
+- The normal emergency-fuel UI was used three times after depletion. This created the designed export-repaid obligation (144 fuel), rather than using a debug or console bypass. The browser gate ended with 27 fuel remaining.
+- A normal Furnace on Veined ore produced `OBSERVED · HEAT — Vitrified residue` with useful failed-experiment wording. Before reclaim, the Furnace input/output buffers were drained to 0.
+- Residue stayed physically routed through belts/two Depots; a 40-unit Depot transfer was visibly verified.
+- Replacing the empty Furnace with a **Sealed furnace** on the same physical line produced an observed **Conductive granules** entry, distinct from the ambient residue result.
+- Confirmed Sealed-Heat knowledge changed **Oversealed furnace** from LOCKED to immediately available with its normal 30-plate cost, with no XP/currency/research purchase step.
+- Sealed furnace M21 was stopped and reclaimed only after Input 0 / Output 0; reclaim returned 26 plates.
+- An **Oversealed furnace** was placed in the same cell as M22. After one controlled extractor batch, M22 entered **Incident lockout** with the localized **Chamber blowout** explanation: the automatic lockout fired while processed material remained physically accounted for.
+- At incident time M22 held Input `1 Veined ore` / Output `0`; the remaining raw unit was still physically present and was not silently deleted.
+- With the simulation paused, **Acknowledge incident & re-enable** recovered the same M22 identity. The incident cleared, M22 became enabled / Needs compatible input, and the same Input `1 Veined ore` / Output `0` remained present.
+- Conductive granules and Vitrified residue remained distinct player-facing material names. No raw content IDs or localization keys were visible, and no page error was visible.
+- Browser console inspection was available for the final check and returned `error=[]` and `warn=[]`.
+
+Closure basis:
+- Same-head `phase2-exit.test.ts` proves partial evidence Save/Load, condition divergence, confirmed-knowledge unlock persistence, hazard persistence/recovery, and conservation.
+- Same-head `phase15-exit.test.ts` plus accepted Issue #8 browser evidence preserves the physical storage/routing/suspend-reroute-resume/conservative-reclaim foundation.
+- Accepted child browser evidence remains the detailed persistence companion: #31 partial/unconfirmed knowledge Save/Load, #32 incident Save/Load/recovery, and #33 confirmed knowledge/unlocked capability Save/Load.
+
+This closes Issue #34's browser integration gate without duplicating already-accepted lower-level browser proofs.
+
+### Issue #33 demonstrated-knowledge capability acceptance — observed on 2026-09-27
+
+Behavioral head: `49c07760ed5ba6f105fb64702b78d7e277a5e796`. The worktree was clean and no local source edits were made.
+
+- Focused progression/content/simulation gate: 3 files / 55 tests PASS.
+- Full `npm test`: 15 files / 121 tests PASS.
+- `npm run typecheck`, `npm run lint`, `npm run build` and static-export verification: PASS.
+- Fresh expedition: Oversealed furnace rendered **LOCKED** with a localized requirement for confirmed Heat evidence from a Sealed furnace. Click and hotkey 9 did not activate build mode.
+- Starting resources were 600 plates / 120 fuel; resources alone did not unlock the capability.
+- Completing Sealed-furnace Heat on Veined ore produced the observed Conductive granules knowledge and unlocked Oversealed immediately without a purchase/research step or reload.
+- The newly available Oversealed furnace placed normally for 30 plates.
+- UI Save then Load reported `Site restored`; the restored factory retained both machines, Sealed furnace Processing, Oversealed furnace Needs input, Conductive granules buffer 8, and the Oversealed capability remained unlocked.
+- Visible toolbar/notebook wording was localized; no raw prerequisite reaction ID or localization key was observed.
+- No visible page error was observed.
+- Browser JavaScript console logs were unavailable in the CUA surface, so console status remains **unverified**, not claimed as zero errors.
 
 ### Issue #32 condition-driven hazard acceptance — observed on 2026-09-26
 
