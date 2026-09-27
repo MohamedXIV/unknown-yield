@@ -93,7 +93,18 @@ export class Simulation {
         ...d,
         remaining: s.deposits[d.id],
       })),
-      definitions: c.machines,
+      definitions: c.machines.map((definition) => {
+        const { unlock, ...view } = definition;
+        return {
+          ...view,
+          unlock: unlock
+            ? {
+                unlocked: machineUnlocked(s, definition),
+                hintKey: unlock.hintKey,
+              }
+            : null,
+        };
+      }),
       storageDefinitions: c.storages,
       operations: c.operations,
       materials: c.materials.filter((m) => known.has(m.id)),
