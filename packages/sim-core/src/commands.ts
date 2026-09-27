@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { Content } from "@site/content";
 import { amount, change, total, type Save, type CommandResult } from "./types";
+import { machineUnlocked } from "./progression";
 import {
   factoryError,
   machinePlacement,
@@ -106,9 +107,12 @@ export function applyCommand(
       return ok("Factory built", cost, id);
     }
     case "placeMachine": {
+      const def = c.machines.find((d) => d.id === cmd.definitionId);
+      if (!def) return fail("Unknown machine type");
+      if (!machineUnlocked(s, def))
+        return fail("Capability locked by unconfirmed knowledge");
       const placement = machinePlacement(c, s, cmd);
       if (placement.error) return fail(placement.error);
-      const def = c.machines.find((d) => d.id === cmd.definitionId)!;
       if (!affordable(def.cost)) return fail("Not enough structural plates");
       if (!apply) return ok("Place machine", def.cost);
       const id = issue("m");
