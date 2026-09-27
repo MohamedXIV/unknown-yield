@@ -52,18 +52,37 @@ The UI confirmed the save with `Field record saved on this device.`. After **Loa
 
 This closes Issue #8's explicit browser requirement to save/reload while material exists simultaneously across belts, storage, factory buffers and terminal staging. No repo edits or test reruns were performed during this focused follow-up because no runtime code changed.
 
-### Issue #33 demonstrated-knowledge capability acceptance — pending local/browser verification
+### Issue #34 Phase 2 end-to-end exit acceptance — pending local/browser verification
 
-Run this path on the exact #33 PR head:
+Run this as one continuous fresh-expedition path on the exact #34 PR head. Do not use console/debug commands to inject knowledge or materials.
 
-1. Start a fresh expedition. Verify **Oversealed furnace** is visibly **LOCKED** and its localized hint says it requires a confirmed Heat result from a Sealed furnace. Press/click its tool (including hotkey 9) and verify build mode does not activate.
-2. Confirm that ample structural plates/fuel do not unlock or place it; the requirement is knowledge, not currency/resources.
-3. Build/use a normal **Sealed furnace** and complete `raw + heat`. Before confirmation, Oversealed remains locked.
-4. When `Conductive granules` / the sealed-Heat observation is confirmed, verify Oversealed becomes available immediately without a purchase/research action or reload. Its presentation should explain that it was unlocked by the demonstrated Sealed-furnace Heat evidence without exposing any unrelated hidden outcome.
-5. Place an Oversealed furnace through the newly available tool/hotkey and verify normal placement authority/cost rules still apply.
-6. Save, Load, and verify the capability remains unlocked and placeable from the restored confirmed knowledge.
-7. Check visible UI for raw reaction IDs/localization keys and visible page errors. If JS console access is unavailable, record that limitation rather than claiming zero errors.
-8. Run focused progression/content tests, then `npm test`, `npm run typecheck`, `npm run lint`, and `npm run build`.
+1. Confirm the fresh notebook/build UI does not expose authored Heat outcomes. Verify **Oversealed furnace** is LOCKED and its prerequisite is presented only as localized evidence wording.
+2. Build a normal **Furnace** on Veined ore. While its first Heat batch is active, open the notebook and verify one UNCONFIRMED attempt exists without output/reaction truth. Save and Load at this partial-knowledge point; verify the same hinted evidence and active physical state return.
+3. Finish that ambient Heat experiment. Verify it becomes an OBSERVED **Vitrified residue** result with useful failed-experiment wording and that the residue remains physically accounted for.
+4. Build/use a **Sealed furnace** on the same unfamiliar material. Verify the changed explicit condition deterministically produces **Conductive granules**, distinct from ambient Heat, and that confirmed knowledge immediately unlocks Oversealed without currency/XP/research purchase.
+5. Place an **Oversealed furnace** and run the same raw + Heat experiment. Verify the authored **Chamber blowout** occurs, the machine enters **Incident lockout**, processed material remains physically accounted for, and the localized causal explanation is inspectable.
+6. Save and Load while the hazardous incident is present. Verify the same machine identity, lockout, buffers, partial/confirmed knowledge, and unlocked capability return. Acknowledge/re-enable the same machine and verify recovery without rebuilding it.
+7. Exercise the existing physical foundation during the same acceptance session: keep material in real machine/storage/terminal/belt locations, suspend/reroute/resume at least one line using the established Phase 1.5 flow, and verify conservative reclaim still refuses loaded/buffered non-construction material. Existing Issue #8 evidence remains the detailed companion if rebuilding the full four-holdings setup would obscure the discovery path.
+8. Check visible UI/notebook/inspectors for authored-but-unobserved outcome leakage, raw stable IDs, raw localization keys, duplication of knowledge entries, or visible page errors. If JS console access is unavailable, record it as unverified rather than green.
+9. Run focused `phase2-exit.test.ts` together with `phase15-exit.test.ts`, then the full baseline: `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`.
+
+The domain companions are `packages/sim-core/test/phase2-exit.test.ts` and the existing `packages/sim-core/test/phase15-exit.test.ts`.
+
+### Issue #33 demonstrated-knowledge capability acceptance — observed on 2026-09-27
+
+Behavioral head: `49c07760ed5ba6f105fb64702b78d7e277a5e796`. The worktree was clean and no local source edits were made.
+
+- Focused progression/content/simulation gate: 3 files / 55 tests PASS.
+- Full `npm test`: 15 files / 121 tests PASS.
+- `npm run typecheck`, `npm run lint`, `npm run build` and static-export verification: PASS.
+- Fresh expedition: Oversealed furnace rendered **LOCKED** with a localized requirement for confirmed Heat evidence from a Sealed furnace. Click and hotkey 9 did not activate build mode.
+- Starting resources were 600 plates / 120 fuel; resources alone did not unlock the capability.
+- Completing Sealed-furnace Heat on Veined ore produced the observed Conductive granules knowledge and unlocked Oversealed immediately without a purchase/research step or reload.
+- The newly available Oversealed furnace placed normally for 30 plates.
+- UI Save then Load reported `Site restored`; the restored factory retained both machines, Sealed furnace Processing, Oversealed furnace Needs input, Conductive granules buffer 8, and the Oversealed capability remained unlocked.
+- Visible toolbar/notebook wording was localized; no raw prerequisite reaction ID or localization key was observed.
+- No visible page error was observed.
+- Browser JavaScript console logs were unavailable in the CUA surface, so console status remains **unverified**, not claimed as zero errors.
 
 ### Issue #32 condition-driven hazard acceptance — observed on 2026-09-26
 
