@@ -187,7 +187,8 @@ function GameClientInner() {
   // Furnace descriptions name their operation, which is content data.
   const toolDescription = (tool: Tool) => {
     const unlock = unlockFor(tool);
-    if (unlock && !unlock.unlocked) return "Locked · " + t(unlock.hintKey);
+    if (unlock && !unlock.unlocked)
+      return "Locked · Requires " + t(unlock.hintKey) + ".";
     if (
       tool !== "furnace" &&
       tool !== "sealed-furnace" &&
@@ -195,12 +196,14 @@ function GameClientInner() {
     )
       return descriptions[tool];
     const key = snapshot.operations.find((o) => o.id === "heat")?.nameKey;
-    return (
+    const base =
       descriptions[tool] +
       " Operation: " +
       (key ? t(key) : "heat") +
-      ". Outcomes require observation."
-    );
+      ". Outcomes require observation.";
+    return unlock
+      ? "Unlocked by " + t(unlock.hintKey) + ". " + base
+      : base;
   };
   const buffer = (inv: Inventory) => (
     <div className="inventory">
