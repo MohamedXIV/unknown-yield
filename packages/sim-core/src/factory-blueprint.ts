@@ -344,7 +344,7 @@ export function serializeFactoryBlueprint(
 
 export function parseFactoryBlueprint(
   content: Content,
-  input: string | unknown,
+  input: unknown,
 ): FactoryBlueprint {
   let value = input;
   if (typeof input === "string") {
