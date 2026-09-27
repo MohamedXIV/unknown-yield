@@ -290,6 +290,20 @@ Issue #32 does not introduce hit points, repair resources, generic fire/pressure
 
 ---
 
+## D-024 — Capability unlocks derive from confirmed knowledge
+
+**Status:** accepted, 2026-09-27
+
+The first progression proof does not add XP, a research currency, a tech-tree purchase state, or a parallel unlock save table. A capability may declare one stable reaction ID as its knowledge requirement. Availability is derived deterministically from the existing confirmed reaction knowledge already persisted in the save.
+
+The first proof gates the **Oversealed furnace** on confirmed `heat-raw-sealed` knowledge. Its localized hint is presentation only and is not used to decide availability.
+
+### Consequence
+
+`sim-core` enforces the gate on placement commands; React only presents the derived state. Player snapshots expose `unlocked + hintKey` and deliberately omit the authored prerequisite reaction ID. Save schema remains 7 because confirmed knowledge already carries the durable progression state. Renaming localized copy cannot change unlock identity.
+
+---
+
 ## How to change a decision
 
 When evidence requires a change:

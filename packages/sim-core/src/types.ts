@@ -126,6 +126,9 @@ export type MachineView = Omit<Machine, "job" | "incident"> & {
   status: MachineStatus;
   progress: number;
 };
+export type MachineDefinitionView = Omit<MachineDefinition, "unlock"> & {
+  unlock: { unlocked: boolean; hintKey: string } | null;
+};
 export type StorageView = Storage & {
   nameKey: string;
   width: number;
@@ -160,7 +163,7 @@ export type PlayerSnapshot = {
   milestone: boolean;
   map: Content["site"];
   deposits: (Content["site"]["deposits"][number] & { remaining: number })[];
-  definitions: MachineDefinition[];
+  definitions: MachineDefinitionView[];
   storageDefinitions: StorageDefinition[];
   operations: Content["operations"];
   materials: Content["materials"];

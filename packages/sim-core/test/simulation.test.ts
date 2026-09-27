@@ -1,7 +1,32 @@
 import { describe, it, expect } from "vitest";
 import { fixture } from "@site/content";
-import { Simulation, auditLedger, type GameCommand } from "../src/index";
+import {
+  Simulation,
+  auditLedger,
+  experimentEvidenceKey,
+  type GameCommand,
+} from "../src/index";
 const make = () => new Simulation(fixture);
+function withConfirmedKnowledge(reactionId: string) {
+  const s = make(),
+    save = s.serialize(),
+    reaction = fixture.reactions.find((r) => r.id === reactionId)!;
+  if (!save.knowledge.includes(reactionId)) save.knowledge.push(reactionId);
+  save.evidence[
+    experimentEvidenceKey(
+      reaction.operation,
+      reaction.input,
+      reaction.processConditionId ?? null,
+    )
+  ] = {
+    operationId: reaction.operation,
+    inputId: reaction.input,
+    processConditionId: reaction.processConditionId ?? null,
+    state: "confirmed",
+  };
+  expect(s.load(save).ok).toBe(true);
+  return s;
+}
 function build(s: Simulation, c: GameCommand) {
   const r = s.command(c);
   expect(r.ok, r.message).toBe(true);
@@ -444,8 +469,90 @@ describe("automatic industry", () => {
     expect(hinted).not.toHaveProperty("textKey");
   });
 
+  it("unlocks the oversealed furnace only after confirmed sealed-Heat knowledge and preserves it across reload", () => {
+    const fresh = make();
+    const initialCapability = fresh
+      .snapshot()
+      .definitions.find((d) => d.id === "oversealed-furnace")!;
+    expect(initialCapability.unlock).toEqual({
+      unlocked: false,
+      hintKey: "machine.oversealed-furnace.unlock-hint",
+    });
+    expect(JSON.stringify(initialCapability)).not.toContain("heat-raw-sealed");
+    expect(
+      fresh.command({
+        type: "placeMachine",
+        definitionId: "oversealed-furnace",
+        x: 27,
+        y: 26,
+        direction: 0,
+      }),
+    ).toMatchObject({
+      ok: false,
+      message: "Capability locked by unconfirmed knowledge",
+    });
+    expect(fresh.serialize().stock.plates).toBeGreaterThan(30);
+    expect(fresh.serialize().fuel).toBeGreaterThan(0);
+
+    const { s, factory } = line(make(), true, true, "sealed-furnace");
+    for (
+      let ticks = 0;
+      ticks < 500 && !s.serialize().knowledge.includes("heat-raw-sealed");
+      ticks++
+    )
+      s.step(100);
+    expect(s.serialize().knowledge).toContain("heat-raw-sealed");
+    expect(
+      s.snapshot().definitions.find((d) => d.id === "oversealed-furnace")?.unlock,
+    ).toEqual({
+      unlocked: true,
+      hintKey: "machine.oversealed-furnace.unlock-hint",
+    });
+
+    const unlocked = s.command({
+      type: "placeMachine",
+      definitionId: "oversealed-furnace",
+      x: 30,
+      y: 36,
+      direction: 0,
+    });
+    expect(unlocked.ok, unlocked.message).toBe(true);
+    expect(
+      s.serialize().machines[unlocked.id!],
+    ).toMatchObject({
+      definitionId: "oversealed-furnace",
+      factoryId: factory,
+    });
+
+    const saved = s.serialize(),
+      restored = make();
+    expect(restored.load(JSON.parse(JSON.stringify(saved))).ok).toBe(true);
+    expect(
+      restored
+        .snapshot()
+        .definitions.find((d) => d.id === "oversealed-furnace")?.unlock,
+    ).toEqual({
+      unlocked: true,
+      hintKey: "machine.oversealed-furnace.unlock-hint",
+    });
+    expect(
+      restored.preview({
+        type: "placeMachine",
+        definitionId: "oversealed-furnace",
+        x: 30,
+        y: 39,
+        direction: 0,
+      }).ok,
+    ).toBe(true);
+  });
+
   it("triggers an explainable oversealed blowout, preserves material, and recovers explicitly", () => {
-    const { s, processor } = line(make(), true, true, "oversealed-furnace");
+    const { s, processor } = line(
+      withConfirmedKnowledge("heat-raw-sealed"),
+      true,
+      true,
+      "oversealed-furnace",
+    );
 
     let sawActiveBatch = false;
     for (
@@ -539,7 +646,12 @@ describe("automatic industry", () => {
     ).not.toBe("incident");
     expect(auditLedger(fixture, safe.s.serialize()).ok).toBe(true);
 
-    const repeated = line(make(), true, true, "oversealed-furnace");
+    const repeated = line(
+      withConfirmedKnowledge("heat-raw-sealed"),
+      true,
+      true,
+      "oversealed-furnace",
+    );
     for (
       let ticks = 0;
       ticks < 500 && !repeated.s.serialize().machines[repeated.processor].incident;

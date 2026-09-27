@@ -52,6 +52,19 @@ The UI confirmed the save with `Field record saved on this device.`. After **Loa
 
 This closes Issue #8's explicit browser requirement to save/reload while material exists simultaneously across belts, storage, factory buffers and terminal staging. No repo edits or test reruns were performed during this focused follow-up because no runtime code changed.
 
+### Issue #33 demonstrated-knowledge capability acceptance — pending local/browser verification
+
+Run this path on the exact #33 PR head:
+
+1. Start a fresh expedition. Verify **Oversealed furnace** is visibly **LOCKED** and its localized hint says it requires a confirmed Heat result from a Sealed furnace. Press/click its tool (including hotkey 9) and verify build mode does not activate.
+2. Confirm that ample structural plates/fuel do not unlock or place it; the requirement is knowledge, not currency/resources.
+3. Build/use a normal **Sealed furnace** and complete `raw + heat`. Before confirmation, Oversealed remains locked.
+4. When `Conductive granules` / the sealed-Heat observation is confirmed, verify Oversealed becomes available immediately without a purchase/research action or reload. Its presentation should explain that it was unlocked by the demonstrated Sealed-furnace Heat evidence without exposing any unrelated hidden outcome.
+5. Place an Oversealed furnace through the newly available tool/hotkey and verify normal placement authority/cost rules still apply.
+6. Save, Load, and verify the capability remains unlocked and placeable from the restored confirmed knowledge.
+7. Check visible UI for raw reaction IDs/localization keys and visible page errors. If JS console access is unavailable, record that limitation rather than claiming zero errors.
+8. Run focused progression/content tests, then `npm test`, `npm run typecheck`, `npm run lint`, and `npm run build`.
+
 ### Issue #32 condition-driven hazard acceptance — observed on 2026-09-26
 
 Behavioral head: `fc52e9704d09b896ebedd707ffeaed9f6cd6076b`. The simulation was left paused after the browser proof.

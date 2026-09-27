@@ -21,6 +21,7 @@ export type {
   PlayerSnapshot,
   MachineView,
   MachineStatus,
+  MachineDefinitionView,
   StorageView,
   Storage,
   Inventory,
