@@ -7,7 +7,7 @@ import type { Content } from "./schema";
  * Content identity is always a stable machine-readable ID. Player-facing
  * wording lives in locale catalogs keyed by namespaced dotted keys:
  * `material.<id>.name`, `operation.<id>.name`, `machine.<id>.name`,
- * `storage.<id>.name`, `reaction.<id>.observation`, and `hazard.<id>.*`. Renaming an English value never changes an ID
+ * `storage.<id>.name`, `reaction.<id>.observation`, `machine.<id>.unlock-hint`, and `hazard.<id>.*`. Renaming an English value never changes an ID
  * and never requires a save migration. This package validates catalog shape
  * and key coverage; resolution (i18next) lives outside `sim-core`.
  */
@@ -25,6 +25,7 @@ export function contentKeys(c: Content): string[] {
     ...c.materials.map((m) => m.nameKey),
     ...c.operations.map((o) => o.nameKey),
     ...c.machines.map((m) => m.nameKey),
+    ...c.machines.flatMap((m) => (m.unlock ? [m.unlock.hintKey] : [])),
     ...c.storages.map((s) => s.nameKey),
     ...c.reactions.map((r) => r.observationKey),
     ...c.reactions.flatMap((r) =>
@@ -57,6 +58,8 @@ export const enCatalog: LocaleCatalog = {
   "machine.furnace.name": "Furnace",
   "machine.sealed-furnace.name": "Sealed furnace",
   "machine.oversealed-furnace.name": "Oversealed furnace",
+  "machine.oversealed-furnace.unlock-hint":
+    "Confirm a Heat result in a Sealed furnace to authorize this experimental setup.",
   "storage.depot.name": "Depot",
   "reaction.press-ferrite.observation":
     "Ferrite compacts into structural plates for local construction.",
