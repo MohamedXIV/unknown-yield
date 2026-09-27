@@ -34,6 +34,8 @@ export type {
   FactoryView,
   FactoryPortView,
   FactoryContractView,
+  FactoryThroughputView,
+  FactoryThroughputRate,
   Belt,
   Point,
   Rect,
