@@ -52,6 +52,19 @@ The UI confirmed the save with `Field record saved on this device.`. After **Loa
 
 This closes Issue #8's explicit browser requirement to save/reload while material exists simultaneously across belts, storage, factory buffers and terminal staging. No repo edits or test reruns were performed during this focused follow-up because no runtime code changed.
 
+### Issue #46 stable factory throughput contract — pending local/browser verification
+
+Run on the exact #46 PR head:
+
+1. Build one working ferrite → Crusher → terminal factory with one real input wall port and one real output wall port. Select the factory. It should begin **Measuring detailed boundary flow**, not show recipe-derived capacity.
+2. Let detailed simulation run until the same operating cycle repeats enough to certify. Verify the inspector changes to **Stable detailed cycle**, shows a cycle length, and lists measured Ferrite input + Structural plates output rates in units/minute.
+3. Close/open the roof while it continues running. Roof presentation alone must not change simulation accuracy or invent a different rate.
+4. Disable the internal Crusher. The contract must immediately return to Measuring / uncertified rather than preserving stale Stable rates. Re-enable and allow it to re-certify.
+5. Save while the line is valid, then Load. The certificate itself is not persisted: immediately after Load it should be Measuring. Continue detailed simulation and verify it re-certifies to the same cycle/rates.
+6. Exercise a fuel-starved or output-blocked state if practical and verify it is never labeled Stable while blocked. Domain tests are the authoritative companion for deterministic invalidation cases.
+7. Verify displayed materials are localized/player-known, there are no recipe/reaction IDs, hidden output claims or raw localization keys, and check visible page/browser-console errors honestly.
+8. Run focused `packages/sim-core/test/factory-throughput.test.ts`, then full `npm test`, `npm run typecheck`, `npm run lint`, and `npm run build`.
+
 ### Issue #45 read-only factory external contract — observed on 2026-09-27
 
 Behavioral head: `8e0e028ae7389cb43a3cd485d4d7a82fed199e99`. The verification checkout was isolated, no source edits were made, and the tested worktree remained clean.
