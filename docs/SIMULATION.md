@@ -12,6 +12,16 @@ Terminal arrivals of the construction material become site stock; all other arri
 
 Save schema 7 records topology, identities, inventories, cargo, jobs, discovered reaction knowledge, hinted/confirmed experiment evidence, machine incident lockouts, policies, deposits, storage buildings, terminal staging, belt diverter state, fuel/debt, tick, fractional remainder and cumulative material flow totals (`consumed`, `produced`, per-material `exported`, `discarded`). Loading validates compatibility, topology, material knowledge, capacities (including storage and staging bounds) and active-job legality before replacing live state. Schema 4 migrates exactly through schema 5 (plain belts gain empty diverter state), schema 5 migrates to schema 6 by rebuilding confirmed evidence from discovered reactions and hinted evidence from undiscovered active processor jobs, and schema 6 migrates to schema 7 with empty incident slots; schemas 1–3 are rejected without migration alongside older content versions: their saves predate tracked staging and storage. Discovery popup locations are transient and are not replayed when loading.
 
+### Stable factory throughput certification (Issue #46)
+
+`FactoryThroughputMonitor` observes the existing detailed transport path rather than authored recipe capacity. A boundary unit is counted only after a successful cargo move whose source belt occupies a factory wall port and moves in that port's direction. The port geometry classifies the crossing as input or output.
+
+The monitor keeps a transient local-state fingerprint containing internal machine semantic status/jobs/buffers and internal/wall belt cargo. Static topology/configuration is fingerprinted separately. A candidate cycle exists only when the same detailed local state returns with non-zero measured input **and** output crossings. The same cycle duration/material counts must repeat twice for the contract to become `stable`; reported units/minute are calculated from those observed counts and the actual simulation tick duration.
+
+Successful gameplay commands invalidate all certificates conservatively. Relevant internal topology/configuration changes therefore restart measurement immediately. Disabled, incident, deposit-exhausted, incompatible-input, output-full and fuel-starved machines clear certification; prolonged loss of boundary flow also expires a previously stable contract.
+
+Throughput certification is deliberately absent from `Save`. Load clears the transient monitor and the restored detailed state must re-earn the same certificate. This keeps schema 7 unchanged and prevents a stale aggregate summary from becoming gameplay truth. Roof/open presentation is still irrelevant to simulation accuracy.
+
 ### Read-only factory external contract (Issue #45)
 
 Phase 3 starts with a derived `FactoryView`; detailed simulation remains the only gameplay truth. Each player snapshot derives wall-port roles from geometry: if the port belt direction crosses from the wall cell into the factory footprint it is an **input** port, otherwise it is an **output** port. The view also counts internal machines by the existing semantic `MachineStatus` codes.
