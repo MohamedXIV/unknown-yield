@@ -52,6 +52,29 @@ The UI confirmed the save with `Field record saved on this device.`. After **Loa
 
 This closes Issue #8's explicit browser requirement to save/reload while material exists simultaneously across belts, storage, factory buffers and terminal staging. No repo edits or test reruns were performed during this focused follow-up because no runtime code changed.
 
+### Issue #45 read-only factory external contract — observed on 2026-09-27
+
+Behavioral head: `8e0e028ae7389cb43a3cd485d4d7a82fed199e99`. The verification checkout was isolated, no source edits were made, and the tested worktree remained clean.
+
+Local gate:
+- focused `packages/sim-core/test/factory-contract.test.ts`: 1 file / 2 tests PASS;
+- full `npm test`: 17 files / 126 tests PASS;
+- `npm run typecheck`: PASS;
+- `npm run lint`: PASS;
+- `npm run build`: PASS, including static-export verification.
+
+Browser inspector proof on an isolated local build served at `127.0.0.1:3017`:
+- built one 6×6 factory with a left-wall input port and right-wall output port, with belts crossing each wall in the corresponding direction;
+- placed one internal Crusher; the selected-factory **External contract** showed Machines 1 / Input ports 1 / Output ports 1 / Needs input 1;
+- disabled the Crusher through the UI; the same contract changed to Disabled 1, proving it follows the detailed semantic machine state rather than a guessed recipe state;
+- closed then reopened the roof; port counts and Disabled 1 remained unchanged, confirming roof/open presentation does not select simulation truth;
+- UI Save then Load reconstructed the same factory contract: Machines 1 / Input 1 / Output 1 / Disabled 1;
+- no raw stable IDs, reaction/output truth or throughput/material-rate claims were visible in the contract;
+- no visible page error occurred; the Next server recorded `GET / 200` without errors;
+- browser JavaScript console logs were unavailable because the available CUA surface does not expose them and agent-browser CLI was not installed, so console status remains **unverified**, not claimed green.
+
+This closes Issue #45's read-only external-contract acceptance while preserving the console observability limitation explicitly.
+
 ### Issue #34 Phase 2 end-to-end exit acceptance — observed on 2026-09-27
 
 Behavioral head: `b78300137403fd94bc7db02276fe5050b23a1485`. The local checkout/worktree remained clean and no source edits were made.

@@ -304,6 +304,20 @@ The first proof gates the **Oversealed furnace** on confirmed `heat-raw-sealed` 
 
 ---
 
+## D-025 — Factory external contracts are derived views before they become optimization inputs
+
+**Status:** accepted, 2026-09-27
+
+Phase 3 begins by projecting a read-only external contract from the existing detailed factory state. The contract is not a second authoritative factory model and is not persisted in saves.
+
+For Issue #45, the contract contains only facts already present in detailed topology/state: stable factory identity/footprint, wall-port direction interpreted as input vs output, and counts of current semantic machine statuses. It deliberately does **not** infer recipes, hidden outcomes, material throughput, or aggregate execution.
+
+### Consequence
+
+Opening or closing a roof cannot change the contract or simulation truth. Save/load reconstructs the same view from the same detailed state. Throughput certification belongs to #46; blueprint serialization belongs to #47; aggregate execution remains prohibited until #49 produces equivalence and performance evidence.
+
+---
+
 ## How to change a decision
 
 When evidence requires a change:

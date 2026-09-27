@@ -15,6 +15,7 @@ export {
   type FootprintDef,
 } from "./geometry";
 export { MACHINE_STATUSES, experimentEvidenceKey } from "./types";
+export { factoryView } from "./factory-contract";
 export type {
   GameCommand,
   CommandResult,
@@ -30,6 +31,9 @@ export type {
   KnowledgeEntry,
   Save,
   Factory,
+  FactoryView,
+  FactoryPortView,
+  FactoryContractView,
   Belt,
   Point,
   Rect,

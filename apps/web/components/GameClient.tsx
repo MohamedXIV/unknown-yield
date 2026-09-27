@@ -3,7 +3,12 @@ import { useEffect, useState } from "react";
 import { I18nextProvider, useTranslation } from "react-i18next";
 import { i18n } from "../game/i18n";
 import { machineStatusLabel } from "../game/machine-status";
-import type { GameCommand, CommandResult, Inventory } from "@site/sim-core";
+import type {
+  GameCommand,
+  CommandResult,
+  Inventory,
+  MachineStatus,
+} from "@site/sim-core";
 import { Session } from "../game/session";
 import {
   DEFAULT_MODE,
@@ -540,21 +545,53 @@ function GameClientInner() {
                     <p className="hint">
                       Closing the roof keeps every machine and belt running.
                     </p>
+                    <h3>External contract</h3>
                     <div className="facts">
                       <span>
-                        Machines
+                        Machines<b>{factory.contract.machineCount}</b>
+                      </span>
+                      <span>
+                        Input ports
                         <b>
                           {
-                            snapshot.machines.filter(
-                              (m) => m.factoryId === factory.id,
-                            ).length
+                            factory.ports.filter((port) => port.role === "input")
+                              .length
                           }
                         </b>
                       </span>
                       <span>
-                        Wall ports<b>{factory.ports.length}</b>
+                        Output ports
+                        <b>
+                          {
+                            factory.ports.filter(
+                              (port) => port.role === "output",
+                            ).length
+                          }
+                        </b>
                       </span>
                     </div>
+                    <div className="inventory">
+                      {(
+                        Object.entries(factory.contract.statusCounts) as [
+                          MachineStatus,
+                          number,
+                        ][]
+                      )
+                        .filter(([, count]) => count > 0)
+                        .map(([status, count]) => (
+                          <div key={status}>
+                            <span>{machineStatusLabel(status)}</span>
+                            <b>{count}</b>
+                          </div>
+                        ))}
+                      {factory.contract.machineCount === 0 && (
+                        <span className="muted">No internal equipment</span>
+                      )}
+                    </div>
+                    <p className="hint">
+                      This contract is derived from the detailed factory. It
+                      does not predict recipes or throughput.
+                    </p>
                     <h3>Observed buffers</h3>
                     {buffer(
                       snapshot.machines
