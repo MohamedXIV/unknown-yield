@@ -6,7 +6,8 @@ This document is intentionally procedural. Game/design truth lives in the domain
 
 - First playable: accepted and merged.
 - Completed phase: **Phase 1.5 — physical inventory and flexible routing** (closed by #8 / PR #29).
-- Active phase: **Phase 2 — experimentation and discovery depth**.
+- Completed phase: **Phase 2 — experimentation and discovery depth** (closed by #34 / PR #44).
+- Active phase: **Phase 3 — factory as function**.
 - Completed foundation: **#3 — material ledger and conservation invariants** (merged via PR #17).
 - Completed foundation: **#14 — stable content IDs and localization-ready presentation** (merged via PR #19).
 - Completed Phase 1.5 child: **#4 — physical storage and terminal staging** (merged via PR #21).
@@ -18,8 +19,9 @@ This document is intentionally procedural. Game/design truth lives in the domain
 - Completed Phase 2 child: **#31 — experiment observations and knowledge states** (merged via PR #38).
 - Completed Phase 2 child: **#32 — one explainable condition-driven hazardous failure** (merged via PR #40).
 - Completed Phase 2 child: **#33 — gate one capability from demonstrated knowledge** (merged via PR #42).
-- Active issue: **#34 — end-to-end experimentation and discovery exit review**.
-- Phase 2 parent epic: **#9**; Phase 2 closes only through **#34 — end-to-end experimentation/discovery exit review**.
+- Completed Phase 2 gate: **#34 — end-to-end experimentation and discovery exit review** (merged via PR #44).
+- Active issue: **#45 — derive one read-only factory external contract**.
+- Phase 3 parent epic: **#10**; Phase 3 closes only through **#50 — end-to-end factory-as-function exit review**.
 
 ## Phase 1.5 dependency graph
 
@@ -52,10 +54,30 @@ Phase 1.5 is complete.
 #33 demonstrated-knowledge capability gate ✓
   │
   v
-#34 Phase 2 exit review ← ACTIVE
+#34 Phase 2 exit review ✓
 ```
 
-#9 is the Phase 2 parent epic. #30, #31, #32 and #33 are complete. Continue with #34: perform the end-to-end Phase 2 closure review across hidden truth, useful failed evidence, deterministic condition changes, the explainable hazard, the knowledge-gated capability, save/load continuity, and Phase 1.5 physical/conservation regressions. Phase 3 remains blocked until #34 closes.
+Phase 2 is complete.
+
+## Phase 3 dependency graph
+
+```text
+#45 read-only external factory contract ← ACTIVE
+  │
+  v
+#46 stable-state + throughput certification ──┐
+  │                                           │
+  ├──────────────> #48 closed-factory UI      │
+  │                                           │
+#47 blueprint serialization ──────────────────┤
+  │                                           v
+  └────────────────────────────────────────> #49 aggregate execution evidence decision
+                                                │
+                                                v
+                                           #50 Phase 3 exit review
+```
+
+#10 is the Phase 3 parent epic. Start with #45 and keep detailed simulation authoritative. Roof/open state is presentation-only. Aggregate execution is prohibited unless #49 proves behavioral equivalence, conservation, deterministic save/load and useful measured performance.
 
 ## Agent loop
 
@@ -99,8 +121,8 @@ There is currently no remote CI workflow. Do not represent absent checks as gree
 
 ## Active/later phase epics
 
-- #9 — experimentation and discovery depth — ACTIVE via children #30–#34
-- #10 — factory-as-function contracts and abstraction proof
+- #9 — experimentation and discovery depth — COMPLETE via children #30–#34
+- #10 — factory-as-function contracts and abstraction proof — ACTIVE via children #45–#50
 - #11 — Content Studio v1
 - #12 — Materials Exchange and corporate progression
 

@@ -81,9 +81,9 @@ No normal gameplay action can silently delete material. A player can stop one li
 
 ## Phase 2 — Experimentation and discovery depth
 
-**Epic:** GitHub Issue #9. Phase 1.5 is closed; Phase 2 is now active.
+**Epic:** GitHub Issue #9. **Phase 2 COMPLETE** through Issue #34 / PR #44.
 
-**Live execution:** #30 ✓ → #31 ✓ → #32 ✓ → #33 ✓ → **#34 EXIT REVIEW ACTIVE**.
+**Live execution:** #30 ✓ → #31 ✓ → #32 ✓ → #33 ✓ → #34 ✓. **Phase 2 COMPLETE.**
 
 ### Question
 
@@ -111,7 +111,9 @@ Does expanding the discovery model create meaningful choices beyond the first sl
 
 ## Phase 3 — Factory as function
 
-**Epic:** GitHub Issue #10. Split into executable children only after Phase 2 is stable.
+**Epic:** GitHub Issue #10. Phase 2 is complete; Phase 3 is active.
+
+**Live execution:** **#45 ACTIVE** → #46 → #47 → #48 → #49 → #50 exit review.
 
 ### Question
 
@@ -270,4 +272,4 @@ The following should not be treated as progress during foundation unless require
 
 The accepted implementation and evidence are summarized in [FIRST_PLAYABLE.md](FIRST_PLAYABLE.md) and [BROWSER_SMOKE.md](BROWSER_SMOKE.md). Continue from this foundation; do not rebuild the retired dashboard prototype.
 
-Phase 1.5 is complete through Issue #8 / PR #29. Phase 2 Issues #30, #31, #32 and #33 are complete via PRs #36, #38, #40 and #42. The immediate execution target is #34: the end-to-end Phase 2 experimentation/discovery exit review. Do not begin Phase 3, market/company depth, or broad content expansion before #34 closes.
+Phase 1.5 is complete through Issue #8 / PR #29 and Phase 2 is complete through Issue #34 / PR #44. The immediate execution target is #45: derive one read-only factory external contract from the existing detailed simulation. Continue through #46–#50 before beginning Phase 4. Market/company depth remains deferred.
