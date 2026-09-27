@@ -27,6 +27,15 @@ export function experimentEvidenceKey(
 }
 export type Port = Point & { id: string; direction: number };
 export type Factory = Rect & { id: string; ports: Port[] };
+export type FactoryPortView = Port & { role: "input" | "output" };
+export type FactoryContractView = {
+  machineCount: number;
+  statusCounts: Record<MachineStatus, number>;
+};
+export type FactoryView = Omit<Factory, "ports"> & {
+  ports: FactoryPortView[];
+  contract: FactoryContractView;
+};
 export type Job = { remaining: number; reaction: string | null };
 /**
  * Semantic machine status codes (Issue #14).
@@ -168,7 +177,7 @@ export type PlayerSnapshot = {
   operations: Content["operations"];
   materials: Content["materials"];
   machines: MachineView[];
-  factories: Factory[];
+  factories: FactoryView[];
   belts: Belt[];
   storages: StorageView[];
   staging: Inventory;
