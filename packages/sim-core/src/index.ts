@@ -16,6 +16,18 @@ export {
 } from "./geometry";
 export { MACHINE_STATUSES, experimentEvidenceKey } from "./types";
 export { factoryView } from "./factory-contract";
+export {
+  factoryBlueprint,
+  serializeFactoryBlueprint,
+  parseFactoryBlueprint,
+  validateFactoryBlueprint,
+} from "./factory-blueprint";
+export type {
+  FactoryBlueprint,
+  FactoryBlueprintPort,
+  FactoryBlueprintMachine,
+  FactoryBlueprintBelt,
+} from "./factory-blueprint";
 export type {
   GameCommand,
   CommandResult,
