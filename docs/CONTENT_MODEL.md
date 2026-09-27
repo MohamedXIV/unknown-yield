@@ -16,6 +16,12 @@ Machine definitions and reactions may each carry an optional stable `processCond
 
 Player knowledge is no longer only a discovered/not-discovered reaction list. Save schema 6 adds a deduplicated experiment-evidence record keyed by the stable attempted tuple of operation + input + process condition. Starting a processor batch creates a `hinted` record that says only what was tried; it contains no output ID, observation key or reaction ID for player presentation. Completing that authored reaction promotes the same record to `confirmed`, after which the existing discovered reaction ID exposes the authored observation/output through the player snapshot. Repeating the same experiment never creates a second evidence record. The notebook resolves operation/material/setup labels through existing localization keys and never renders the stable IDs themselves.
 
+### Knowledge-gated capability (Issue #33)
+
+A machine definition may carry one optional `unlock` object with a stable prerequisite `reactionId` and a localized `hintKey`. This is deliberately not a generic prerequisite graph. Validation requires the reaction ID to exist and the hint key to belong to that machine. The fixture gates `oversealed-furnace` on confirmed `heat-raw-sealed` knowledge while leaving the existing machine/reaction identities and content version `world-01-v5` intact.
+
+Unlock state is not separately authored or persisted at runtime: it is derived from the save's confirmed reaction knowledge. Player snapshots sanitize the content rule into `{ unlocked, hintKey }`, so the prerequisite reaction ID does not leak into React/Phaser presentation before discovery.
+
 ### Authored hazardous failure (Issue #32)
 
 A reaction may carry one optional authored hazard descriptor with a stable hazard ID plus localized name/observation keys. Hazards are only valid on reactions with an explicit process condition. The fixture adds an `oversealed` Heat setup: `raw + heat + oversealed` produces tracked vitrified residue and a deterministic `chamber-blowout` incident. The hazardous batch still consumes/produces material through the normal reaction ledger; the consequence is operational, not material deletion. The affected machine enters a persisted incident lockout, disables automatic operation, and exposes only the occurred localized incident through the player snapshot. Re-enabling the machine explicitly acknowledges/clears the incident; no generic damage/repair framework exists.
