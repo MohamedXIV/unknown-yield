@@ -63,7 +63,7 @@ Local/domain gate:
 
 Fresh-expedition browser integration:
 - The fresh notebook exposed only the known Crush method; no authored Heat result leaked before experimentation. **Oversealed furnace** was visibly **LOCKED** with only the localized confirmed-Sealed-Heat prerequisite.
-- The normal emergency-fuel UI was used twice after depletion. This created the designed export-repaid obligation (108 fuel), rather than using a debug or console bypass.
+- The normal emergency-fuel UI was used three times after depletion. This created the designed export-repaid obligation (144 fuel), rather than using a debug or console bypass. The browser gate ended with 27 fuel remaining.
 - A normal Furnace on Veined ore produced `OBSERVED · HEAT — Vitrified residue` with useful failed-experiment wording. Before reclaim, the Furnace input/output buffers were drained to 0.
 - Residue stayed physically routed through belts/two Depots; a 40-unit Depot transfer was visibly verified.
 - Replacing the empty Furnace with a **Sealed furnace** on the same physical line produced an observed **Conductive granules** entry, distinct from the ambient residue result.
