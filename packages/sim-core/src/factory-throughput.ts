@@ -31,10 +31,13 @@ const blockedStatuses = new Set([
   "incident",
   "disabled",
   "deposit-exhausted",
-  "needs-compatible-input",
   "output-full",
   "needs-fuel",
 ]);
+
+// A processor can report needs-compatible-input while a multi-unit batch is
+// still arriving. Keep observing that ordinary partial-batch state; stable
+// certification still requires repeated detailed states and real boundary flow.
 
 const sortedInventory = (inventory: Inventory) =>
   Object.fromEntries(
@@ -223,13 +226,13 @@ export class FactoryThroughputMonitor {
 
       const signature = stateSignature(content, state, factory);
       const previous = tracker.seen.get(signature);
-      const current = {
+      const current: SeenState = {
         tick: state.tick,
         inputs: copyInventory(tracker.totals.inputs),
         outputs: copyInventory(tracker.totals.outputs),
         candidateKey: null,
         repeats: 0,
-      } satisfies SeenState;
+      };
 
       if (previous && state.tick > previous.tick) {
         const cycleTicks = state.tick - previous.tick;

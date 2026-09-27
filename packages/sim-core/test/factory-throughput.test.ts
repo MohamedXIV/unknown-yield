@@ -103,6 +103,26 @@ function stable(view: FactoryThroughputView) {
 }
 
 describe("stable factory throughput contract", () => {
+  it("certifies through the partial-input wait in a multi-unit cycle", () => {
+    const { sim, factoryId, processorId } = makeLine();
+    let sawPartialInput = false;
+
+    for (let i = 0; i < 100; i++) {
+      sim.step(100);
+      if (
+        sim.snapshot().machines.find((machine) => machine.id === processorId)
+          ?.status === "needs-compatible-input"
+      ) {
+        sawPartialInput = true;
+        break;
+      }
+    }
+
+    expect(sawPartialInput).toBe(true);
+    expect(throughput(sim, factoryId).state).toBe("measuring");
+    stable(certify(sim, factoryId));
+  });
+
   it("certifies the same actual boundary-flow cycle across deterministic runs and save/load remeasurement", () => {
     const first = makeLine(),
       second = makeLine();
