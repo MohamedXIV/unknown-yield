@@ -318,6 +318,22 @@ Opening or closing a roof cannot change the contract or simulation truth. Save/l
 
 ---
 
+## D-026 — Stable throughput is certified from repeated detailed boundary flow
+
+**Status:** accepted, 2026-09-27
+
+A factory throughput contract may become **stable** only from observed detailed simulation behavior. Phase 3 does not calculate throughput from recipe tables, machine capacity, nominal durations, or roof state.
+
+Issue #46 records successful cargo moves that actually leave a wall-port belt in its authored direction. A wall port already identifies whether that crossing is an input or output. The monitor then waits for the same detailed local factory state to repeat with the same non-zero input/output flow cycle twice before certifying rates.
+
+Certification is transient derived evidence, not a second gameplay truth and not save data. Any successful gameplay command or Load clears the certificate. Disabled, incident, fuel-starved, output-blocked, incompatible-input or exhausted detailed states cannot certify stable throughput. A loaded save must earn the same contract again from detailed execution.
+
+### Consequence
+
+Save schema remains 7. A Stable contract can later become an input to the Phase 3 abstraction evaluation, but it does not authorize aggregate execution by itself. #49 still requires behavioral-equivalence and performance evidence before any alternate execution path may exist.
+
+---
+
 ## How to change a decision
 
 When evidence requires a change:

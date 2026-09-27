@@ -5,6 +5,7 @@ import {
   MACHINE_STATUSES,
   type Factory,
   type FactoryView,
+  type FactoryThroughputView,
   type Save,
 } from "./types";
 
@@ -17,6 +18,12 @@ export function factoryView(
   content: Content,
   state: Save,
   factory: Factory,
+  throughput: FactoryThroughputView = {
+    state: "measuring",
+    cycleTicks: null,
+    inputs: [],
+    outputs: [],
+  },
 ): FactoryView {
   const statusCounts = Object.fromEntries(
     MACHINE_STATUSES.map((machineStatus) => [machineStatus, 0]),
@@ -39,6 +46,7 @@ export function factoryView(
     contract: {
       machineCount: machines.length,
       statusCounts,
+      throughput,
     },
   };
 }

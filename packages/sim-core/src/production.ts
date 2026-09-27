@@ -7,6 +7,7 @@ import {
   type MachineStatus,
   type Save,
   type Machine,
+  type Point,
 } from "./types";
 import { key, next, socket, contains, footprint } from "./geometry";
 export function recipe(c: Content, m: Machine) {
@@ -98,13 +99,25 @@ export function completeAndStart(
     }
   }
 }
-export function transport(c: Content, s: Save) {
+export type TransportMoveEvent = {
+  from: Point;
+  direction: number;
+  material: string;
+};
+
+export function transport(
+  c: Content,
+  s: Save,
+  onMove?: (event: TransportMoveEvent) => void,
+) {
   const belts = Object.values(s.belts).sort((a, b) => a.y - b.y || a.x - b.x);
   const occupied = new Set(belts.filter((b) => b.cargo).map(key));
   const reserved = new Set<string>();
   const received = new Map<string, number>();
   const moves: {
     from: string;
+    fromPoint: Point;
+    direction: number;
     to: string | null;
     machine: string | null;
     storage: string | null;
@@ -122,6 +135,8 @@ export function transport(c: Content, s: Save) {
       if (b.cargo === c.site.buildMaterial) {
         moves.push({
           from: key(b),
+          fromPoint: { x: b.x, y: b.y },
+          direction: exit,
           to: null,
           machine: null,
           storage: null,
@@ -137,6 +152,8 @@ export function transport(c: Content, s: Save) {
         received.set("staging", staged + 1);
         moves.push({
           from: key(b),
+          fromPoint: { x: b.x, y: b.y },
+          direction: exit,
           to: null,
           machine: null,
           storage: null,
@@ -151,6 +168,8 @@ export function transport(c: Content, s: Save) {
       reserved.add(targetKey);
       moves.push({
         from: key(b),
+        fromPoint: { x: b.x, y: b.y },
+        direction: exit,
         to: targetKey,
         machine: null,
         storage: null,
@@ -174,6 +193,8 @@ export function transport(c: Content, s: Save) {
         received.set(m.id, n + 1);
         moves.push({
           from: key(b),
+          fromPoint: { x: b.x, y: b.y },
+          direction: exit,
           to: null,
           machine: m.id,
           storage: null,
@@ -197,6 +218,8 @@ export function transport(c: Content, s: Save) {
         received.set(depot.id, n + 1);
         moves.push({
           from: key(b),
+          fromPoint: { x: b.x, y: b.y },
+          direction: exit,
           to: null,
           machine: null,
           storage: depot.id,
@@ -216,6 +239,11 @@ export function transport(c: Content, s: Save) {
       change(s.storages[move.storage].inventory, move.material, 1);
     else if (move.staging) change(s.staging, move.material, 1);
     else change(s.stock, move.material, 1);
+    onMove?.({
+      from: move.fromPoint,
+      direction: move.direction,
+      material: move.material,
+    });
   }
   for (const m of Object.values(s.machines)) {
     const d = c.machines.find((d) => d.id === m.definitionId)!,
