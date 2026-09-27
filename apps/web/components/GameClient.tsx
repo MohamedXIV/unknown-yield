@@ -110,7 +110,15 @@ function GameClientInner() {
     const timer = setTimeout(() => setNotice(null), 6000);
     return () => clearTimeout(timer);
   }, [notice]);
+  const unlockFor = (tool: Tool) =>
+    snapshot.definitions.find((definition) => definition.id === tool)?.unlock;
+  const toolLocked = (tool: Tool) => unlockFor(tool)?.unlocked === false;
   const setTool = (tool: Tool) => {
+    const unlock = unlockFor(tool);
+    if (unlock && !unlock.unlocked) {
+      setNotice({ ok: false, message: t(unlock.hintKey) });
+      return;
+    }
     setMode((m) => ({ ...m, tool, selected: null }));
     setPanel(null);
   };
@@ -178,6 +186,8 @@ function GameClientInner() {
   };
   // Furnace descriptions name their operation, which is content data.
   const toolDescription = (tool: Tool) => {
+    const unlock = unlockFor(tool);
+    if (unlock && !unlock.unlocked) return "Locked · " + t(unlock.hintKey);
     if (
       tool !== "furnace" &&
       tool !== "sealed-furnace" &&
@@ -937,9 +947,13 @@ function GameClientInner() {
           ).map((tool) => (
             <button
               key={tool}
-              className={mode.tool === tool ? "active" : ""}
+              className={
+                (mode.tool === tool ? "active " : "") +
+                (toolLocked(tool) ? "locked" : "")
+              }
               aria-label={toolName(tool)}
               aria-pressed={mode.tool === tool}
+              aria-disabled={toolLocked(tool)}
               title={toolDescription(tool)}
               onClick={() => setTool(tool)}
             >
@@ -953,7 +967,9 @@ function GameClientInner() {
                 size={25}
               />
               <span>{toolName(tool)}</span>
-              {toolCost(tool) ? (
+              {toolLocked(tool) ? (
+                <em>LOCKED</em>
+              ) : toolCost(tool) ? (
                 <em>
                   {toolCost(tool)}
                   {tool === "factory" ? "/cell" : ""}
