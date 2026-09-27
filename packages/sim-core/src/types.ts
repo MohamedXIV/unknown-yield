@@ -28,9 +28,22 @@ export function experimentEvidenceKey(
 export type Port = Point & { id: string; direction: number };
 export type Factory = Rect & { id: string; ports: Port[] };
 export type FactoryPortView = Port & { role: "input" | "output" };
+export type FactoryThroughputRate = {
+  materialId: string;
+  units: number;
+  cycleTicks: number;
+  unitsPerMinute: number;
+};
+export type FactoryThroughputView = {
+  state: "measuring" | "stable";
+  cycleTicks: number | null;
+  inputs: FactoryThroughputRate[];
+  outputs: FactoryThroughputRate[];
+};
 export type FactoryContractView = {
   machineCount: number;
   statusCounts: Record<MachineStatus, number>;
+  throughput: FactoryThroughputView;
 };
 export type FactoryView = Omit<Factory, "ports"> & {
   ports: FactoryPortView[];
