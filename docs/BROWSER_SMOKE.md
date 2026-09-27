@@ -52,21 +52,35 @@ The UI confirmed the save with `Field record saved on this device.`. After **Loa
 
 This closes Issue #8's explicit browser requirement to save/reload while material exists simultaneously across belts, storage, factory buffers and terminal staging. No repo edits or test reruns were performed during this focused follow-up because no runtime code changed.
 
-### Issue #34 Phase 2 end-to-end exit acceptance — pending local/browser verification
+### Issue #34 Phase 2 end-to-end exit acceptance — observed on 2026-09-27
 
-Run this as one continuous fresh-expedition path on the exact #34 PR head. Do not use console/debug commands to inject knowledge or materials.
+Behavioral head: `b78300137403fd94bc7db02276fe5050b23a1485`. The local checkout/worktree remained clean and no source edits were made.
 
-1. Confirm the fresh notebook/build UI does not expose authored Heat outcomes. Verify **Oversealed furnace** is LOCKED and its prerequisite is presented only as localized evidence wording.
-2. Build a normal **Furnace** on Veined ore. While its first Heat batch is active, open the notebook and verify one UNCONFIRMED attempt exists without output/reaction truth. Save and Load at this partial-knowledge point; verify the same hinted evidence and active physical state return.
-3. Finish that ambient Heat experiment. Verify it becomes an OBSERVED **Vitrified residue** result with useful failed-experiment wording and that the residue remains physically accounted for.
-4. Build/use a **Sealed furnace** on the same unfamiliar material. Verify the changed explicit condition deterministically produces **Conductive granules**, distinct from ambient Heat, and that confirmed knowledge immediately unlocks Oversealed without currency/XP/research purchase.
-5. Place an **Oversealed furnace** and run the same raw + Heat experiment. Verify the authored **Chamber blowout** occurs, the machine enters **Incident lockout**, processed material remains physically accounted for, and the localized causal explanation is inspectable.
-6. Save and Load while the hazardous incident is present. Verify the same machine identity, lockout, buffers, partial/confirmed knowledge, and unlocked capability return. Acknowledge/re-enable the same machine and verify recovery without rebuilding it.
-7. Exercise the existing physical foundation during the same acceptance session: keep material in real machine/storage/terminal/belt locations, suspend/reroute/resume at least one line using the established Phase 1.5 flow, and verify conservative reclaim still refuses loaded/buffered non-construction material. Existing Issue #8 evidence remains the detailed companion if rebuilding the full four-holdings setup would obscure the discovery path.
-8. Check visible UI/notebook/inspectors for authored-but-unobserved outcome leakage, raw stable IDs, raw localization keys, duplication of knowledge entries, or visible page errors. If JS console access is unavailable, record it as unverified rather than green.
-9. Run focused `phase2-exit.test.ts` together with `phase15-exit.test.ts`, then the full baseline: `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`.
+Local/domain gate:
+- focused Phase 2 + Phase 1.5 exit regressions: 2 files / 4 tests PASS;
+- full `npm test`: 16 files / 124 tests PASS;
+- `npm run typecheck`, `npm run lint`, and `npm run build`: PASS.
 
-The domain companions are `packages/sim-core/test/phase2-exit.test.ts` and the existing `packages/sim-core/test/phase15-exit.test.ts`.
+Fresh-expedition browser integration:
+- The fresh notebook exposed only the known Crush method; no authored Heat result leaked before experimentation. **Oversealed furnace** was visibly **LOCKED** with only the localized confirmed-Sealed-Heat prerequisite.
+- The normal emergency-fuel UI was used twice after depletion. This created the designed export-repaid obligation (108 fuel), rather than using a debug or console bypass.
+- A normal Furnace on Veined ore produced `OBSERVED · HEAT — Vitrified residue` with useful failed-experiment wording. Before reclaim, the Furnace input/output buffers were drained to 0.
+- Residue stayed physically routed through belts/two Depots; a 40-unit Depot transfer was visibly verified.
+- Replacing the empty Furnace with a **Sealed furnace** on the same physical line produced an observed **Conductive granules** entry, distinct from the ambient residue result.
+- Confirmed Sealed-Heat knowledge changed **Oversealed furnace** from LOCKED to immediately available with its normal 30-plate cost, with no XP/currency/research purchase step.
+- Sealed furnace M21 was stopped and reclaimed only after Input 0 / Output 0; reclaim returned 26 plates.
+- An **Oversealed furnace** was placed in the same cell as M22. After one controlled extractor batch, M22 entered **Incident lockout** with the localized **Chamber blowout** explanation: the automatic lockout fired while processed material remained physically accounted for.
+- At incident time M22 held Input `1 Veined ore` / Output `0`; the remaining raw unit was still physically present and was not silently deleted.
+- With the simulation paused, **Acknowledge incident & re-enable** recovered the same M22 identity. The incident cleared, M22 became enabled / Needs compatible input, and the same Input `1 Veined ore` / Output `0` remained present.
+- Conductive granules and Vitrified residue remained distinct player-facing material names. No raw content IDs or localization keys were visible, and no page error was visible.
+- Browser console inspection was available for the final check and returned `error=[]` and `warn=[]`.
+
+Closure basis:
+- Same-head `phase2-exit.test.ts` proves partial evidence Save/Load, condition divergence, confirmed-knowledge unlock persistence, hazard persistence/recovery, and conservation.
+- Same-head `phase15-exit.test.ts` plus accepted Issue #8 browser evidence preserves the physical storage/routing/suspend-reroute-resume/conservative-reclaim foundation.
+- Accepted child browser evidence remains the detailed persistence companion: #31 partial/unconfirmed knowledge Save/Load, #32 incident Save/Load/recovery, and #33 confirmed knowledge/unlocked capability Save/Load.
+
+This closes Issue #34's browser integration gate without duplicating already-accepted lower-level browser proofs.
 
 ### Issue #33 demonstrated-knowledge capability acceptance — observed on 2026-09-27
 
