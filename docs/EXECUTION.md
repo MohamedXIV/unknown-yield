@@ -17,7 +17,8 @@ This document is intentionally procedural. Game/design truth lives in the domain
 - Completed Phase 2 child: **#30 — minimal condition-aware reaction matching** (merged via PR #36).
 - Completed Phase 2 child: **#31 — experiment observations and knowledge states** (merged via PR #38).
 - Completed Phase 2 child: **#32 — one explainable condition-driven hazardous failure** (merged via PR #40).
-- Active issue: **#33 — gate one capability from demonstrated knowledge**.
+- Completed Phase 2 child: **#33 — gate one capability from demonstrated knowledge** (merged via PR #42).
+- Active issue: **#34 — end-to-end experimentation and discovery exit review**.
 - Phase 2 parent epic: **#9**; Phase 2 closes only through **#34 — end-to-end experimentation/discovery exit review**.
 
 ## Phase 1.5 dependency graph
@@ -48,13 +49,13 @@ Phase 1.5 is complete.
 #32 explainable condition-driven hazard ✓
   │
   v
-#33 demonstrated-knowledge capability gate ← ACTIVE
+#33 demonstrated-knowledge capability gate ✓
   │
   v
-#34 Phase 2 exit review
+#34 Phase 2 exit review ← ACTIVE
 ```
 
-#9 is the Phase 2 parent epic. #30, #31 and #32 are complete. Continue with #33: prove one deterministic content-defined capability unlock from demonstrated/confirmed knowledge, reusing existing knowledge milestones rather than adding generic XP, currency shortcuts or a broad tech tree. Phase 3 remains blocked until #34 closes.
+#9 is the Phase 2 parent epic. #30, #31, #32 and #33 are complete. Continue with #34: perform the end-to-end Phase 2 closure review across hidden truth, useful failed evidence, deterministic condition changes, the explainable hazard, the knowledge-gated capability, save/load continuity, and Phase 1.5 physical/conservation regressions. Phase 3 remains blocked until #34 closes.
 
 ## Agent loop
 
