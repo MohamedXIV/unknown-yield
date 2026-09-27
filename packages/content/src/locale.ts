@@ -59,7 +59,7 @@ export const enCatalog: LocaleCatalog = {
   "machine.sealed-furnace.name": "Sealed furnace",
   "machine.oversealed-furnace.name": "Oversealed furnace",
   "machine.oversealed-furnace.unlock-hint":
-    "Confirm a Heat result in a Sealed furnace to authorize this experimental setup.",
+    "a confirmed Heat result from a Sealed furnace",
   "storage.depot.name": "Depot",
   "reaction.press-ferrite.observation":
     "Ferrite compacts into structural plates for local construction.",
