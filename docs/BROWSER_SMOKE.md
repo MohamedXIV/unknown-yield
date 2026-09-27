@@ -52,6 +52,17 @@ The UI confirmed the save with `Field record saved on this device.`. After **Loa
 
 This closes Issue #8's explicit browser requirement to save/reload while material exists simultaneously across belts, storage, factory buffers and terminal staging. No repo edits or test reruns were performed during this focused follow-up because no runtime code changed.
 
+### Issue #45 read-only factory external contract — pending local/browser verification
+
+Run on the exact #45 PR head:
+
+1. Build one factory with at least one wall port whose belt direction enters the factory and one whose direction leaves it. Select the factory and verify **External contract** reports the correct Input ports / Output ports counts.
+2. Place at least one internal processor. Verify the contract status list follows its detailed semantic state (for example Needs input → Processing or Disabled) rather than a guessed recipe state.
+3. Close the roof, then reopen it. Verify the same external contract remains visible/unchanged apart from genuine machine-state changes caused by continuing detailed simulation; roof state itself must not alter simulation or the contract.
+4. Save and Load. Re-select the same factory and verify port roles and machine-status counts reconstruct from the detailed world.
+5. Verify the contract does not display authored recipe/reaction IDs, unknown output truth, or raw localization keys. Throughput/material-rate claims are intentionally absent in #45.
+6. Check visible page errors and browser console if available, then run focused factory-contract tests plus `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`.
+
 ### Issue #34 Phase 2 end-to-end exit acceptance — observed on 2026-09-27
 
 Behavioral head: `b78300137403fd94bc7db02276fe5050b23a1485`. The local checkout/worktree remained clean and no source edits were made.
