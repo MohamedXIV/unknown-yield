@@ -100,9 +100,14 @@ Does expanding the discovery model create meaningful choices beyond the first sl
 
 ### Exit criteria
 
-The Phase 1 hidden-reaction boundary remains intact as conditions and content expand.
-
-A failed experiment teaches something visible.
+- the Phase 1 hidden-reaction boundary remains intact as conditions and content expand;
+- an in-progress/failed experiment teaches useful evidence without exposing authored output truth early;
+- the same input + operation can resolve to different deterministic authored results under explicit conditions;
+- the single hazardous condition produces an explainable, persisted and recoverable consequence without bypassing material conservation;
+- confirmed knowledge deterministically unlocks one industrial capability without XP/currency/tech-tree purchase state;
+- save/load preserves partial evidence, confirmed knowledge, hazard state and capability availability;
+- Phase 1.5 physical storage, routing, suspend/reroute/resume and conservative reclaim remain green;
+- focused/domain tests, full baseline and the continuous browser acceptance path close Issue #34 before Phase 3 starts.
 
 ## Phase 3 — Factory as function
 
