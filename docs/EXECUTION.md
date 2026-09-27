@@ -20,7 +20,8 @@ This document is intentionally procedural. Game/design truth lives in the domain
 - Completed Phase 2 child: **#32 — one explainable condition-driven hazardous failure** (merged via PR #40).
 - Completed Phase 2 child: **#33 — gate one capability from demonstrated knowledge** (merged via PR #42).
 - Completed Phase 2 gate: **#34 — end-to-end experimentation and discovery exit review** (merged via PR #44).
-- Active issue: **#45 — derive one read-only factory external contract**.
+- Completed Phase 3 child: **#45 — derive one read-only factory external contract** (merged via PR #52).
+- Active issue: **#46 — detect one stable factory state and throughput contract**.
 - Phase 3 parent epic: **#10**; Phase 3 closes only through **#50 — end-to-end factory-as-function exit review**.
 
 ## Phase 1.5 dependency graph
@@ -62,10 +63,10 @@ Phase 2 is complete.
 ## Phase 3 dependency graph
 
 ```text
-#45 read-only external factory contract ← ACTIVE
+#45 read-only external factory contract ✓
   │
   v
-#46 stable-state + throughput certification ──┐
+#46 stable-state + throughput certification ← ACTIVE ──┐
   │                                           │
   ├──────────────> #48 closed-factory UI      │
   │                                           │
