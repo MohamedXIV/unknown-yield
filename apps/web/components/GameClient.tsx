@@ -588,9 +588,42 @@ function GameClientInner() {
                         <span className="muted">No internal equipment</span>
                       )}
                     </div>
+                    <h3>Measured throughput</h3>
+                    {factory.contract.throughput.state === "stable" ? (
+                      <>
+                        <p className="hint">
+                          Stable detailed cycle ·{" "}
+                          {factory.contract.throughput.cycleTicks} ticks.
+                          Rates are measured at wall ports.
+                        </p>
+                        <h4>Inputs</h4>
+                        <div className="inventory">
+                          {factory.contract.throughput.inputs.map((rate) => (
+                            <div key={"in-" + rate.materialId}>
+                              <span>{materialName(rate.materialId)}</span>
+                              <b>{rate.unitsPerMinute}/min</b>
+                            </div>
+                          ))}
+                        </div>
+                        <h4>Outputs</h4>
+                        <div className="inventory">
+                          {factory.contract.throughput.outputs.map((rate) => (
+                            <div key={"out-" + rate.materialId}>
+                              <span>{materialName(rate.materialId)}</span>
+                              <b>{rate.unitsPerMinute}/min</b>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    ) : (
+                      <p className="hint">
+                        Measuring detailed boundary flow. Certification needs a
+                        repeated operating cycle with real input and output.
+                      </p>
+                    )}
                     <p className="hint">
-                      This contract is derived from the detailed factory. It
-                      does not predict recipes or throughput.
+                      The contract is derived from detailed simulation; it does
+                      not infer recipe capacity.
                     </p>
                     <h3>Observed buffers</h3>
                     {buffer(
