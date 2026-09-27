@@ -35,6 +35,12 @@ export const contentSchema = z.object({
         nameKey: localeKeySchema,
         role: z.enum(["extractor", "processor"]),
         processConditionId: id.optional(),
+        unlock: z
+          .object({
+            reactionId: id,
+            hintKey: localeKeySchema,
+          })
+          .optional(),
         operations: z.array(id),
         capacity: positive,
         fuel: positive,
@@ -177,6 +183,12 @@ export function validateContent(input: unknown): Content {
       throw new Error("Known reaction references hidden material");
   }
   for (const m of c.machines) {
+    if (m.unlock) {
+      if (!c.reactions.some((r) => r.id === m.unlock!.reactionId))
+        throw new Error("Missing machine unlock reaction");
+      if (m.unlock.hintKey !== "machine." + m.id + ".unlock-hint")
+        throw new Error("Localization key must match its machine unlock");
+    }
     if (
       m.role === "processor" &&
       (!m.operations.length ||
