@@ -45,6 +45,29 @@ describe("content boundary", () => {
       "Sealed chamber";
     expect(contentSchema.safeParse(c).success).toBe(false);
   });
+  it("binds the oversealed capability unlock to stable confirmed reaction identity", () => {
+    const c = validateContent(fixture);
+    expect(
+      c.machines.find((m) => m.id === "oversealed-furnace")?.unlock,
+    ).toEqual({
+      reactionId: "heat-raw-sealed",
+      hintKey: "machine.oversealed-furnace.unlock-hint",
+    });
+    expect(enCatalog["machine.oversealed-furnace.unlock-hint"]).toContain(
+      "Sealed furnace",
+    );
+  });
+  it("rejects missing or borrowed machine unlock references", () => {
+    const missing = structuredClone(fixture);
+    missing.machines.find((m) => m.id === "oversealed-furnace")!.unlock!.reactionId =
+      "missing-reaction";
+    expect(() => validateContent(missing)).toThrow(/unlock reaction/i);
+
+    const borrowed = structuredClone(fixture);
+    borrowed.machines.find((m) => m.id === "oversealed-furnace")!.unlock!.hintKey =
+      "machine.sealed-furnace.name";
+    expect(() => validateContent(borrowed)).toThrow(/machine unlock/i);
+  });
   it("accepts one explicit condition-driven hazard with localized identity", () => {
     const c = validateContent(fixture);
     const hazardous = c.reactions.find((r) => r.id === "heat-raw-oversealed")!;
