@@ -6,6 +6,7 @@ import { auditLedger } from "./ledger";
 import { machineUnlocked } from "./progression";
 import { footprint } from "./geometry";
 import { factoryView } from "./factory-contract";
+import { FactoryThroughputMonitor } from "./factory-throughput";
 import {
   total,
   type Save,
@@ -16,12 +17,15 @@ export class Simulation {
   private readonly content: Content;
   private state: Save;
   private discoveryLocations = new Map<string, { x: number; y: number }>();
+  private readonly factoryThroughput = new FactoryThroughputMonitor();
   constructor(content: Content) {
     this.content = validateContent(content);
     this.state = initialState(this.content);
   }
   command(input: unknown): CommandResult {
-    return applyCommand(this.content, this.state, input, true);
+    const result = applyCommand(this.content, this.state, input, true);
+    if (result.ok) this.factoryThroughput.reset();
+    return result;
   }
   preview(input: unknown): CommandResult {
     return applyCommand(this.content, this.state, input, false);
@@ -38,8 +42,10 @@ export class Simulation {
       completeAndStart(c, s, true, (id, m) =>
         this.discoveryLocations.set(id, { x: m.x, y: m.y }),
       );
-      if (s.tick % c.site.transportEveryTicks === 0) transport(c, s);
+      if (s.tick % c.site.transportEveryTicks === 0)
+        transport(c, s, (event) => this.factoryThroughput.recordMove(s, event));
       completeAndStart(c, s, false);
+      this.factoryThroughput.observe(c, s);
     }
   }
   snapshot(): PlayerSnapshot {
@@ -111,7 +117,12 @@ export class Simulation {
       operations: c.operations,
       materials: c.materials.filter((m) => known.has(m.id)),
       factories: Object.values(s.factories).map((factory) =>
-        factoryView(c, s, factory),
+        factoryView(
+          c,
+          s,
+          factory,
+          this.factoryThroughput.view(factory.id),
+        ),
       ),
       belts: Object.values(s.belts),
       storages: Object.values(s.storages).map((t) => {
@@ -184,6 +195,7 @@ export class Simulation {
         throw new Error("Export total disagrees with ledger export history");
       this.state = next;
       this.discoveryLocations.clear();
+      this.factoryThroughput.reset();
       return { ok: true, message: "Site restored" };
     } catch (error) {
       return {
