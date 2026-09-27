@@ -5,6 +5,7 @@ import { completeAndStart, transport, status } from "./production";
 import { auditLedger } from "./ledger";
 import { machineUnlocked } from "./progression";
 import { footprint } from "./geometry";
+import { factoryView } from "./factory-contract";
 import {
   total,
   type Save,
@@ -109,7 +110,9 @@ export class Simulation {
       storageDefinitions: c.storages,
       operations: c.operations,
       materials: c.materials.filter((m) => known.has(m.id)),
-      factories: Object.values(s.factories),
+      factories: Object.values(s.factories).map((factory) =>
+        factoryView(c, s, factory),
+      ),
       belts: Object.values(s.belts),
       storages: Object.values(s.storages).map((t) => {
         const d = c.storages.find((d) => d.id === t.definitionId)!;
