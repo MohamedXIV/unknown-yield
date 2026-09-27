@@ -3,6 +3,7 @@ import { initialState, parseSave } from "./save";
 import { applyCommand } from "./commands";
 import { completeAndStart, transport, status } from "./production";
 import { auditLedger } from "./ledger";
+import { machineUnlocked } from "./progression";
 import { footprint } from "./geometry";
 import {
   total,
