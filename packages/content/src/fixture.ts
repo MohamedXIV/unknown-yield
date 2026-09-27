@@ -99,6 +99,10 @@ export const fixture = validateContent({
       nameKey: "machine.oversealed-furnace.name",
       role: "processor",
       processConditionId: "oversealed",
+      unlock: {
+        reactionId: "heat-raw-sealed",
+        hintKey: "machine.oversealed-furnace.unlock-hint",
+      },
       operations: ["heat"],
       capacity: 12,
       fuel: 2,
