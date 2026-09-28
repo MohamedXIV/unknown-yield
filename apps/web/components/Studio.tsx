@@ -25,6 +25,10 @@ import {
   studioRow,
   type StudioKind,
 } from "../game/studio-workbench";
+import {
+  previewStudioReaction,
+  type StudioReactionPreview,
+} from "../game/studio-preview";
 
 const tableFor: Record<StudioKind, string> = {
   material: "materials",
@@ -70,6 +74,7 @@ export default function Studio() {
   const [message, setMessage] = useState(
     "Development authoring surface — canonical spoilers are visible here.",
   );
+  const [preview, setPreview] = useState<StudioReactionPreview | null>(null);
 
   let currentContent = base;
   let validationError = "";
@@ -113,6 +118,7 @@ export default function Studio() {
     const nextIds = studioEntityIds(store, next);
     setSelectedId(nextIds[0] ?? "");
     setSearch("");
+    setPreview(null);
   };
   const localeEditor = (
     key: string,
@@ -583,7 +589,10 @@ export default function Studio() {
               <button
                 key={id}
                 className={selected === id ? "active" : ""}
-                onClick={() => setSelectedId(id)}
+                onClick={() => {
+                  setSelectedId(id);
+                  setPreview(null);
+                }}
               >
                 <strong>{studioEntityLabel(store, kind, id)}</strong>
                 <small>{id}</small>
@@ -604,6 +613,7 @@ export default function Studio() {
                 perform(() => {
                   const id = createStudioEntity(store, kind, newId);
                   setSelectedId(id);
+                  setPreview(null);
                   setNewId("");
                   setRevision((value) => value + 1);
                   setMessage(
@@ -635,6 +645,7 @@ export default function Studio() {
                       deleteStudioEntity(store, kind, selected);
                       const remaining = studioEntityIds(store, kind);
                       setSelectedId(remaining[0] ?? "");
+                      setPreview(null);
                       setRevision((value) => value + 1);
                       setMessage(
                         "Deleted draft record. Validation will report any remaining references.",
@@ -695,6 +706,82 @@ export default function Studio() {
           </section>
 
           <section>
+            <div className="studio-section-title">Simulation preview</div>
+            {kind === "reaction" && selected ? (
+              <>
+                <button
+                  className="secondary studio-preview-button"
+                  disabled={Boolean(validationError)}
+                  onClick={() =>
+                    perform(() => {
+                      const bundle = studioBundleFromStore(store, base);
+                      const result = previewStudioReaction(
+                        bundle.content,
+                        selected,
+                      );
+                      setPreview(result);
+                      setMessage(
+                        "Fresh isolated simulation preview completed for " +
+                          selected +
+                          ".",
+                      );
+                    })
+                  }
+                >
+                  Preview selected reaction
+                </button>
+                {validationError && (
+                  <p className="muted">
+                    Fix bundle validation before starting a preview.
+                  </p>
+                )}
+                {preview && preview.reactionId === selected && (
+                  <dl className="studio-preview-result">
+                    <div>
+                      <dt>Processor</dt>
+                      <dd>{preview.machineDefinitionId}</dd>
+                    </div>
+                    <div>
+                      <dt>Operation</dt>
+                      <dd>{preview.operationId}</dd>
+                    </div>
+                    <div>
+                      <dt>Condition</dt>
+                      <dd>{preview.processConditionId ?? "default"}</dd>
+                    </div>
+                    <div>
+                      <dt>Result</dt>
+                      <dd>
+                        {preview.outputAmount} × {preview.outputId}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Status</dt>
+                      <dd>{preview.machineStatus}</dd>
+                    </div>
+                    <div>
+                      <dt>Incident</dt>
+                      <dd>{preview.incidentId ?? "none"}</dd>
+                    </div>
+                    <div>
+                      <dt>Ticks</dt>
+                      <dd>{preview.ticks}</dd>
+                    </div>
+                    <div>
+                      <dt>Fuel left</dt>
+                      <dd>{preview.fuelRemaining}</dd>
+                    </div>
+                  </dl>
+                )}
+              </>
+            ) : (
+              <p className="muted">
+                Select a reaction to run it in a fresh isolated simulation.
+              </p>
+            )}
+          </section>
+
+          <section>
             <div className="studio-section-title">Bundle</div>
             <div className="studio-bundle-actions">
               <button
@@ -724,6 +811,7 @@ export default function Studio() {
                     setStore(nextStore);
                     setKind("material");
                     setSelectedId(bundle.content.materials[0]?.id ?? "");
+                    setPreview(null);
                     setRevision((value) => value + 1);
                     setMessage("Validated Studio bundle imported.");
                   })
