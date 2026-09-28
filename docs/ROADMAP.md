@@ -111,9 +111,9 @@ Does expanding the discovery model create meaningful choices beyond the first sl
 
 ## Phase 3 — Factory as function
 
-**Epic:** GitHub Issue #10. Phase 2 is complete; Phase 3 is active.
+**Epic:** GitHub Issue #10. Phase 3 is complete through #50.
 
-**Live execution:** #45 ✓ → **#46 ACTIVE** → #47 → #48 → #49 → #50 exit review.
+**Completed execution:** #45 ✓ → #46 ✓ → #47 ✓ → #48 ✓ → #49 ✓ → #50 ✓.
 
 ### Question
 
@@ -128,14 +128,16 @@ Does the black-box factory model reduce clutter while preserving meaningful desi
 - internal routing;
 - factory throughput summary;
 - stable-state detection;
-- first abstraction prototype;
+- evidence-driven aggregate-execution decision;
 - blueprint serialization.
 
 ### Exit criteria
 
 A solved factory can be closed and understood from its external contract.
 
-Editing it again restores enough detail to diagnose problems.
+Editing it again restores full detailed truth for diagnosis.
+
+Phase 3 measured the detailed runtime before introducing a second executor and recorded a NO-GO for aggregate execution at the current scale. The detailed simulation remains authoritative.
 
 ## Phase 4 — Content Studio v1
 
@@ -272,4 +274,4 @@ The following should not be treated as progress during foundation unless require
 
 The accepted implementation and evidence are summarized in [FIRST_PLAYABLE.md](FIRST_PLAYABLE.md) and [BROWSER_SMOKE.md](BROWSER_SMOKE.md). Continue from this foundation; do not rebuild the retired dashboard prototype.
 
-Phase 1.5 is complete through Issue #8 / PR #29 and Phase 2 is complete through Issue #34 / PR #44. The immediate execution target is #45: derive one read-only factory external contract from the existing detailed simulation. Continue through #46–#50 before beginning Phase 4. Market/company depth remains deferred.
+Phase 1.5 is complete through Issue #8 / PR #29, Phase 2 through Issue #34 / PR #44, and Phase 3 through Issue #50. Phase 4 / #11 is the next implementation phase. Market/company depth remains deferred until its own gate.

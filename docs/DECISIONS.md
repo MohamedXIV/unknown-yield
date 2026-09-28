@@ -161,7 +161,7 @@ Player-built factory interiors can become external black boxes with explicit inp
 
 ### Consequence
 
-Architecture and UI should support both detailed editing and aggregate operation.
+Architecture and UI should support detailed editing plus a readable external black-box contract. Aggregate operation is optional optimization work, not a required consequence of the game identity; D-027 currently defers it by measured evidence.
 
 ---
 
@@ -314,7 +314,7 @@ For Issue #45, the contract contains only facts already present in detailed topo
 
 ### Consequence
 
-Opening or closing a roof cannot change the contract or simulation truth. Save/load reconstructs the same view from the same detailed state. Throughput certification belongs to #46; blueprint serialization belongs to #47; aggregate execution remains prohibited until #49 produces equivalence and performance evidence.
+Opening or closing a roof cannot change the contract or simulation truth. Save/load reconstructs the same view from the same detailed state. Throughput certification is implemented by #46 and blueprint serialization by #47. #49 subsequently measured the detailed runtime and recorded a NO-GO for aggregate execution at the current scale.
 
 ---
 
@@ -330,7 +330,7 @@ Certification is transient derived evidence, not a second gameplay truth and not
 
 ### Consequence
 
-Save schema remains 7. A Stable contract can later become an input to the Phase 3 abstraction evaluation, but it does not authorize aggregate execution by itself. #49 still requires behavioral-equivalence and performance evidence before any alternate execution path may exist.
+Save schema remains 7. A Stable contract remains a derived presentation/tooling fact and does not authorize aggregate execution by itself. #49 completed the evaluation and rejected an alternate execution path as unjustified by current measurements.
 
 ---
 
