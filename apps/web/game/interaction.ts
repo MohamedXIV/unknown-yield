@@ -63,6 +63,14 @@ export const DEFAULT_MODE: WorldMode = {
   selected: null,
   openFactories: [],
 };
+export function toggleFactoryOpen(mode: WorldMode, id: string): WorldMode {
+  return {
+    ...mode,
+    openFactories: mode.openFactories.includes(id)
+      ? mode.openFactories.filter((factoryId) => factoryId !== id)
+      : [...mode.openFactories, id],
+  };
+}
 export function beltPath(a: Point, b: Point): Point[] {
   let { x, y } = a;
   const path = [{ x, y }];
