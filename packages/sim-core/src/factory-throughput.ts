@@ -1,5 +1,5 @@
 import type { Content } from "@site/content";
-import { contains, key, next } from "./geometry";
+import { contains, key, next, socket } from "./geometry";
 import { status, type TransportMoveEvent } from "./production";
 import {
   amount,
@@ -104,22 +104,164 @@ function topologySignature(state: Save, factory: Factory) {
   });
 }
 
+function machineRuntime(content: Content, state: Save, id: string) {
+  const machine = state.machines[id];
+  return {
+    id: machine.id,
+    status: status(content, state, machine),
+    input: sortedInventory(machine.input),
+    output: sortedInventory(machine.output),
+    job: machine.job
+      ? {
+          remaining: machine.job.remaining,
+          reaction: machine.job.reaction,
+        }
+      : null,
+  };
+}
+
+function connectedRuntime(
+  content: Content,
+  state: Save,
+  factory: Factory,
+) {
+  const incoming = new Map<string, string[]>(),
+    owners = new Map<
+      string,
+      { kind: "machine" | "storage"; id: string }[]
+    >();
+
+  const exitDirection = (belt: (typeof state.belts)[string]) =>
+    belt.alternate !== null && belt.switched
+      ? belt.alternate
+      : belt.direction;
+  const addOwner = (
+    pointKey: string,
+    owner: { kind: "machine" | "storage"; id: string },
+  ) => {
+    const list = owners.get(pointKey) ?? [];
+    list.push(owner);
+    owners.set(pointKey, list);
+  };
+
+  for (const belt of Object.values(state.belts)) {
+    const targetKey = key(next(belt, exitDirection(belt)));
+    if (!state.belts[targetKey]) continue;
+    const list = incoming.get(targetKey) ?? [];
+    list.push(key(belt));
+    incoming.set(targetKey, list);
+  }
+
+  for (const machine of Object.values(state.machines)) {
+    const definition = content.machines.find(
+      (candidate) => candidate.id === machine.definitionId,
+    )!;
+    addOwner(key(socket(machine, definition, true)), {
+      kind: "machine",
+      id: machine.id,
+    });
+    if (definition.role === "processor")
+      addOwner(key(socket(machine, definition, false)), {
+        kind: "machine",
+        id: machine.id,
+      });
+  }
+
+  for (const storage of Object.values(state.storages)) {
+    const definition = content.storages.find(
+      (candidate) => candidate.id === storage.definitionId,
+    )!;
+    addOwner(key(socket(storage, definition, true)), {
+      kind: "storage",
+      id: storage.id,
+    });
+    addOwner(key(socket(storage, definition, false)), {
+      kind: "storage",
+      id: storage.id,
+    });
+  }
+
+  const queue = factory.ports
+      .map((port) => key(port))
+      .filter((pointKey) => state.belts[pointKey]),
+    seenBelts = new Set<string>(),
+    seenMachines = new Set<string>(),
+    seenStorages = new Set<string>();
+  let touchesTerminal = false;
+
+  while (queue.length) {
+    const pointKey = queue.shift()!;
+    if (seenBelts.has(pointKey)) continue;
+    const belt = state.belts[pointKey];
+    if (!belt) continue;
+    seenBelts.add(pointKey);
+
+    const target = next(belt, exitDirection(belt)),
+      targetKey = key(target);
+    if (state.belts[targetKey]) queue.push(targetKey);
+    if (contains(content.site.terminal, target)) touchesTerminal = true;
+    for (const source of incoming.get(pointKey) ?? []) queue.push(source);
+
+    for (const owner of owners.get(pointKey) ?? []) {
+      if (owner.kind === "machine") {
+        if (seenMachines.has(owner.id)) continue;
+        seenMachines.add(owner.id);
+        const machine = state.machines[owner.id],
+          definition = content.machines.find(
+            (candidate) => candidate.id === machine.definitionId,
+          )!;
+        for (const output of [true, false]) {
+          if (!output && definition.role !== "processor") continue;
+          const socketKey = key(socket(machine, definition, output));
+          if (state.belts[socketKey]) queue.push(socketKey);
+        }
+      } else {
+        if (seenStorages.has(owner.id)) continue;
+        seenStorages.add(owner.id);
+        const storage = state.storages[owner.id],
+          definition = content.storages.find(
+            (candidate) => candidate.id === storage.definitionId,
+          )!;
+        for (const output of [true, false]) {
+          const socketKey = key(socket(storage, definition, output));
+          if (state.belts[socketKey]) queue.push(socketKey);
+        }
+      }
+    }
+  }
+
+  return {
+    belts: [...seenBelts]
+      .sort()
+      .map((pointKey) => {
+        const belt = state.belts[pointKey];
+        return {
+          x: belt.x,
+          y: belt.y,
+          cargo: belt.cargo,
+          direction: belt.direction,
+          alternate: belt.alternate,
+          switched: belt.switched,
+        };
+      }),
+    machines: [...seenMachines]
+      .sort()
+      .map((id) => machineRuntime(content, state, id)),
+    storages: [...seenStorages]
+      .sort()
+      .map((id) => ({
+        id,
+        inventory: sortedInventory(state.storages[id].inventory),
+      })),
+    staging: touchesTerminal ? sortedInventory(state.staging) : null,
+  };
+}
+
 function stateSignature(content: Content, state: Save, factory: Factory) {
   const machines = Object.values(state.machines)
     .filter((machine) => machine.factoryId === factory.id)
     .sort((a, b) => a.id.localeCompare(b.id))
-    .map((machine) => ({
-      id: machine.id,
-      status: status(content, state, machine),
-      input: sortedInventory(machine.input),
-      output: sortedInventory(machine.output),
-      job: machine.job
-        ? {
-            remaining: machine.job.remaining,
-            reaction: machine.job.reaction,
-          }
-        : null,
-    }));
+    .map((machine) => machineRuntime(content, state, machine.id));
   const belts = Object.values(state.belts)
     .filter((belt) => contains(factory, belt))
     .sort((a, b) => key(a).localeCompare(key(b)))
@@ -128,7 +270,11 @@ function stateSignature(content: Content, state: Save, factory: Factory) {
       y: belt.y,
       cargo: belt.cargo,
     }));
-  return JSON.stringify({ machines, belts });
+  return JSON.stringify({
+    machines,
+    belts,
+    connected: connectedRuntime(content, state, factory),
+  });
 }
 
 function rateRows(
