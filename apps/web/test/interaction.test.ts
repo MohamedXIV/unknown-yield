@@ -6,6 +6,7 @@ import {
   structureKey,
   DEFAULT_MODE,
   TOOL_HOTKEYS,
+  toggleFactoryOpen,
 } from "../game/interaction";
 import { Simulation } from "@site/sim-core";
 import { fixture } from "@site/content";
@@ -204,4 +205,29 @@ it("keeps dynamic factory contracts out of the structural fingerprint", () => {
 
   dynamic.factories[0].width += 1;
   expect(structureKey(dynamic)).not.toBe(structureKey(base));
+});
+
+
+it("keeps roof open/closed state outside the authoritative simulation", () => {
+  const sim = new Simulation(fixture);
+  const placed = sim.command({
+    type: "placeFactory",
+    x: 24,
+    y: 22,
+    width: 10,
+    height: 10,
+  });
+  expect(placed.ok).toBe(true);
+  const before = sim.serialize();
+
+  const opened = toggleFactoryOpen(
+    { ...DEFAULT_MODE, selected: placed.id! },
+    placed.id!,
+  );
+  expect(opened.openFactories).toEqual([placed.id]);
+  expect(sim.serialize()).toEqual(before);
+
+  const closed = toggleFactoryOpen(opened, placed.id!);
+  expect(closed.openFactories).toEqual([]);
+  expect(sim.serialize()).toEqual(before);
 });
