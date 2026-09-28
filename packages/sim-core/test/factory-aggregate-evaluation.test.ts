@@ -186,52 +186,61 @@ describe("Phase 3 factory abstraction evaluation", () => {
     );
   });
 
-  it("reports a reproducible detailed baseline at several factory-equivalent loads", () => {
-    const { sim, factoryId } = makeRepresentativeFactory();
-    stableContract(certify(sim, factoryId));
-    const seed = sim.serialize();
+  if (process.env.npm_lifecycle_event === "evaluate:factory") {
+    it(
+      "reports a reproducible detailed baseline at several factory-equivalent loads",
+      () => {
+        const { sim, factoryId } = makeRepresentativeFactory();
+        stableContract(certify(sim, factoryId));
+        const seed = sim.serialize();
 
-    const loads = FACTORY_EQUIVALENT_LOADS.map((copies) => {
-      const samples: number[] = [];
-      for (let sample = 0; sample < BENCHMARK_SAMPLES; sample++) {
-        const simulations = Array.from({ length: copies }, () => load(seed));
-        const start = performance.now();
-        const ticks = Math.floor(BENCHMARK_INTERVAL_MS / fixture.tickMs);
-        for (let tick = 0; tick < ticks; tick++)
-          for (const candidate of simulations) candidate.step(fixture.tickMs);
-        samples.push(performance.now() - start);
+        const loads = FACTORY_EQUIVALENT_LOADS.map((copies) => {
+          const samples: number[] = [];
+          for (let sample = 0; sample < BENCHMARK_SAMPLES; sample++) {
+            const simulations = Array.from({ length: copies }, () => load(seed));
+            const start = performance.now();
+            const ticks = Math.floor(BENCHMARK_INTERVAL_MS / fixture.tickMs);
+            for (let tick = 0; tick < ticks; tick++)
+              for (const candidate of simulations)
+                candidate.step(fixture.tickMs);
+            samples.push(performance.now() - start);
 
-        const reference = simulations[0].serialize();
-        for (const candidate of simulations) {
-          expect(candidate.serialize()).toEqual(reference);
-          auditOk(candidate);
-        }
-      }
+            const reference = simulations[0].serialize();
+            for (const candidate of simulations) {
+              expect(candidate.serialize()).toEqual(reference);
+              auditOk(candidate);
+            }
+          }
 
-      const medianWallMs = median(samples);
-      const aggregateSimulatedMs = BENCHMARK_INTERVAL_MS * copies;
-      return {
-        copies,
-        samplesMs: samples.map((value) => Number(value.toFixed(3))),
-        medianWallMs: Number(medianWallMs.toFixed(3)),
-        aggregateSimulatedMs,
-        aggregateSimulatedToWallRatio: Number(
-          (aggregateSimulatedMs / medianWallMs).toFixed(2),
-        ),
-      };
-    });
+          const medianWallMs = median(samples);
+          const aggregateSimulatedMs = BENCHMARK_INTERVAL_MS * copies;
+          return {
+            copies,
+            samplesMs: samples.map((value) => Number(value.toFixed(3))),
+            medianWallMs: Number(medianWallMs.toFixed(3)),
+            aggregateSimulatedMs,
+            aggregateSimulatedToWallRatio: Number(
+              (aggregateSimulatedMs / medianWallMs).toFixed(2),
+            ),
+          };
+        });
 
-    const report = {
-      schema: 1,
-      node: process.version,
-      platform: process.platform,
-      arch: process.arch,
-      tickMs: fixture.tickMs,
-      simulatedMsPerCopy: BENCHMARK_INTERVAL_MS,
-      samplesPerLoad: BENCHMARK_SAMPLES,
-      loads,
-    };
+        const report = {
+          schema: 1,
+          node: process.version,
+          platform: process.platform,
+          arch: process.arch,
+          tickMs: fixture.tickMs,
+          simulatedMsPerCopy: BENCHMARK_INTERVAL_MS,
+          samplesPerLoad: BENCHMARK_SAMPLES,
+          loads,
+        };
 
-    console.info("FACTORY_ABSTRACTION_EVALUATION " + JSON.stringify(report));
-  });
+        console.info(
+          "FACTORY_ABSTRACTION_EVALUATION " + JSON.stringify(report),
+        );
+      },
+      120_000,
+    );
+  }
 });
