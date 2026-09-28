@@ -120,6 +120,10 @@ function machineRuntime(content: Content, state: Save, id: string) {
   };
 }
 
+// Internal recurrence alone can look stable while a pre-existing feeder/drain
+// backlog is being consumed. Include only the logistics component actually
+// connected to this factory's ports so certification waits for the observed
+// boundary environment to repeat too, without coupling unrelated site lines.
 function connectedRuntime(
   content: Content,
   state: Save,
