@@ -7,7 +7,7 @@ This document is intentionally procedural. Game/design truth lives in the domain
 - First playable: accepted and merged.
 - Completed phase: **Phase 1.5 — physical inventory and flexible routing** (closed by #8 / PR #29).
 - Completed phase: **Phase 2 — experimentation and discovery depth** (closed by #34 / PR #44).
-- Active phase: **Phase 3 — factory as function**.
+- Completed phase: **Phase 3 — factory as function** (closed by #50).
 - Completed foundation: **#3 — material ledger and conservation invariants** (merged via PR #17).
 - Completed foundation: **#14 — stable content IDs and localization-ready presentation** (merged via PR #19).
 - Completed Phase 1.5 child: **#4 — physical storage and terminal staging** (merged via PR #21).
@@ -21,8 +21,12 @@ This document is intentionally procedural. Game/design truth lives in the domain
 - Completed Phase 2 child: **#33 — gate one capability from demonstrated knowledge** (merged via PR #42).
 - Completed Phase 2 gate: **#34 — end-to-end experimentation and discovery exit review** (merged via PR #44).
 - Completed Phase 3 child: **#45 — derive one read-only factory external contract** (merged via PR #52).
-- Active issue: **#46 — detect one stable factory state and throughput contract**.
-- Phase 3 parent epic: **#10**; Phase 3 closes only through **#50 — end-to-end factory-as-function exit review**.
+- Completed Phase 3 child: **#46 — detect one stable factory state and throughput contract** (merged via PR #54; backlog-stability regression fixed via PR #57).
+- Completed Phase 3 child: **#47 — serialize one factory blueprint from detailed topology** (merged via PR #55).
+- Completed Phase 3 child: **#48 — present a closed factory as a readable contract and reopen it for diagnosis** (merged via PR #56).
+- Completed Phase 3 child: **#49 — evaluate aggregate execution with equivalence/performance evidence** (NO-GO; merged via PR #58).
+- Completed Phase 3 gate: **#50 — end-to-end factory-as-function exit review**.
+- Next phase: **Phase 4 — Content Studio v1 (#11)**.
 
 ## Phase 1.5 dependency graph
 
@@ -66,19 +70,19 @@ Phase 2 is complete.
 #45 read-only external factory contract ✓
   │
   v
-#46 stable-state + throughput certification ← ACTIVE ──┐
-  │                                           │
-  ├──────────────> #48 closed-factory UI      │
-  │                                           │
-#47 blueprint serialization ──────────────────┤
-  │                                           v
-  └────────────────────────────────────────> #49 aggregate execution evidence decision
+#46 stable-state + throughput certification ✓ ─┐
+  │                                             │
+  ├──────────────> #48 closed-factory UI ✓     │
+  │                                             │
+#47 blueprint serialization ✓ ─────────────────┤
+  │                                             v
+  └────────────────────────────────────────> #49 aggregate execution evidence decision ✓
                                                 │
                                                 v
-                                           #50 Phase 3 exit review
+                                           #50 Phase 3 exit review ✓
 ```
 
-#10 is the Phase 3 parent epic. Start with #45 and keep detailed simulation authoritative. Roof/open state is presentation-only. Aggregate execution is prohibited unless #49 proves behavioral equivalence, conservation, deterministic save/load and useful measured performance.
+#10 is complete. Detailed simulation remains authoritative, roof/open state is presentation-only, and #49 recorded a measured NO-GO for aggregate execution at the current scale.
 
 ## Agent loop
 
@@ -123,8 +127,8 @@ There is currently no remote CI workflow. Do not represent absent checks as gree
 ## Active/later phase epics
 
 - #9 — experimentation and discovery depth — COMPLETE via children #30–#34
-- #10 — factory-as-function contracts and abstraction proof — ACTIVE via children #45–#50
-- #11 — Content Studio v1
+- #10 — factory-as-function contracts and abstraction proof — COMPLETE via children #45–#50
+- #11 — Content Studio v1 — NEXT
 - #12 — Materials Exchange and corporate progression
 
 These are placeholders for future decomposition, not permission to work around the active gate.
