@@ -257,7 +257,26 @@ Do not default to representing every runtime machine tick, belt item, or vehicle
 
 The runtime should consume a validated, versioned content snapshot or content service interface.
 
-Localization-ready presentation follows the same direction of authority: TinyBase authors stable content records and localization-key references; Zod validates exported/versioned structures; presentation resolves keys to locale text. TinyBase is not bypassed by a separate gameplay-content database, and translated strings do not become simulation identity.
+Phase 4 Content Studio v1 uses a deterministic bundle boundary:
+
+```ts
+{
+  schemaVersion: 1,
+  content: Content,
+  locale: LocaleCatalog
+}
+```
+
+TinyBase owns editable draft tables for core content plus English source/fallback text. Drafts may be temporarily invalid while related records are being authored; export/import requires the complete bundle to pass Zod and semantic validation.
+
+Localization-ready presentation follows the same direction of authority: TinyBase authors stable content records and localization-key references; presentation resources are versioned alongside the Studio bundle; translated strings do not become simulation identity.
+
+Validation has two explicit boundaries:
+
+- `validateContent(input, catalog)` is the authored/distribution boundary and requires locale-resource coverage;
+- `validateSimulationContent(input)` is the sim-core boundary and validates structure, gameplay semantics and stable key relationships without requiring a particular locale resource catalog.
+
+This prevents sim-core from depending on presentation-resource availability while preserving locale completeness at the content boundary.
 
 ## 9. Save data and content are different things
 
