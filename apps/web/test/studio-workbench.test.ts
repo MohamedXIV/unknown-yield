@@ -63,6 +63,12 @@ describe("Studio workbench helpers", () => {
     expect(
       studioLocaleText(store, "machine.polisher.unlock-hint"),
     ).toContain("confirmed knowledge");
+    setMachineUnlock(store, "polisher", "");
+    expect(studioRow(store, "machine", "polisher")).toMatchObject({
+      unlockReactionId: "",
+      unlockHintKey: "",
+    });
+    expect(store.hasRow("locale", "machine.polisher.unlock-hint")).toBe(false);
 
     createStudioEntity(store, "reaction", "polish-raw");
     setReactionHazard(store, "polish-raw", "powder-burst");
@@ -74,6 +80,15 @@ describe("Studio workbench helpers", () => {
     expect(studioLocaleText(store, "hazard.powder-burst.name")).toBe(
       "Powder Burst",
     );
+    setStudioLocaleText(
+      store,
+      "hazard.powder-burst.observation",
+      "A tuned custom hazard observation.",
+    );
+    setReactionHazard(store, "polish-raw", "powder-burst");
+    expect(
+      studioLocaleText(store, "hazard.powder-burst.observation"),
+    ).toBe("A tuned custom hazard observation.");
 
     setReactionHazard(store, "polish-raw", "");
     expect(studioRow(store, "reaction", "polish-raw")).toMatchObject({
