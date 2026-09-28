@@ -14,6 +14,7 @@ import { Session } from "../game/session";
 import {
   DEFAULT_MODE,
   TOOL_HOTKEYS,
+  toggleFactoryOpen,
   type WorldMode,
   type Tool,
 } from "../game/interaction";
@@ -133,12 +134,7 @@ function GameClientInner() {
     setPanel(id === "terminal" ? "terminal" : id ? "selection" : null);
   };
   const toggleFactory = (id: string) =>
-    setMode((m) => ({
-      ...m,
-      openFactories: m.openFactories.includes(id)
-        ? m.openFactories.filter((a) => a !== id)
-        : [...m.openFactories, id],
-    }));
+    setMode((mode) => toggleFactoryOpen(mode, id));
   const act = (cmd: GameCommand) => {
     const result = session.command(cmd);
     setNotice(result);
