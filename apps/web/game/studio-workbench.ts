@@ -16,7 +16,7 @@ export function humanizeStudioId(id: string) {
   return id
     .split("-")
     .filter(Boolean)
-    .map((part) => part[0]?.toUpperCase() + part.slice(1))
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
 }
 
@@ -78,11 +78,10 @@ export function studioEntityLabel(
   id: string,
 ) {
   const row = studioRow(store, kind, id);
-  if (kind === "reaction") {
-    const observation = studioLocaleText(store, String(row.observationKey ?? ""));
-    return observation || humanizeStudioId(id);
-  }
-  return studioLocaleText(store, String(row.nameKey ?? "")) || humanizeStudioId(id);
+  if (kind === "reaction") return humanizeStudioId(id);
+  return (
+    studioLocaleText(store, String(row.nameKey ?? "")) || humanizeStudioId(id)
+  );
 }
 
 export function createStudioEntity(
@@ -169,9 +168,11 @@ export function setMachineUnlock(
   reactionId: string,
 ) {
   const clean = reactionId.trim(),
+    oldKey = String(store.getCell("machines", id, "unlockHintKey") ?? ""),
     key = clean ? "machine." + id + ".unlock-hint" : "";
   store.setCell("machines", id, "unlockReactionId", clean);
   store.setCell("machines", id, "unlockHintKey", key);
+  if (!key && oldKey) store.delRow("locale", oldKey);
   if (key && !store.hasRow("locale", key))
     store.setRow("locale", key, {
       text: "Describe the confirmed knowledge required for this machine.",
@@ -187,31 +188,30 @@ export function setReactionHazard(
     oldName = String(store.getCell("reactions", id, "hazardNameKey") ?? ""),
     oldObservation = String(
       store.getCell("reactions", id, "hazardObservationKey") ?? "",
-    );
+    ),
+    nameKey = clean ? "hazard." + clean + ".name" : "",
+    observationKey = clean ? "hazard." + clean + ".observation" : "";
+
+  if (oldName === nameKey && oldObservation === observationKey) return;
+
+  const oldNameText = oldName ? studioLocaleText(store, oldName) : "",
+    oldObservationText = oldObservation
+      ? studioLocaleText(store, oldObservation)
+      : "";
 
   if (oldName) store.delRow("locale", oldName);
   if (oldObservation) store.delRow("locale", oldObservation);
 
   store.setCell("reactions", id, "hazardId", clean);
-  store.setCell(
-    "reactions",
-    id,
-    "hazardNameKey",
-    clean ? "hazard." + clean + ".name" : "",
-  );
-  store.setCell(
-    "reactions",
-    id,
-    "hazardObservationKey",
-    clean ? "hazard." + clean + ".observation" : "",
-  );
+  store.setCell("reactions", id, "hazardNameKey", nameKey);
+  store.setCell("reactions", id, "hazardObservationKey", observationKey);
 
   if (clean) {
-    store.setRow("locale", "hazard." + clean + ".name", {
-      text: humanizeStudioId(clean),
+    store.setRow("locale", nameKey, {
+      text: oldNameText || humanizeStudioId(clean),
     });
-    store.setRow("locale", "hazard." + clean + ".observation", {
-      text: "Describe the observed hazard.",
+    store.setRow("locale", observationKey, {
+      text: oldObservationText || "Describe the observed hazard.",
     });
   }
 }
