@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { I18nextProvider, useTranslation } from "react-i18next";
 import { i18n } from "../game/i18n";
 import { machineStatusLabel } from "../game/machine-status";
+import { factoryContractPresentation } from "../game/factory-presentation";
 import type {
   GameCommand,
   CommandResult,
@@ -181,6 +182,10 @@ function GameClientInner() {
     const key = snapshot.materials.find((m) => m.id === id)?.nameKey;
     return key ? t(key) : "Unidentified material";
   };
+  const factoryPresentation = factory
+      ? factoryContractPresentation(factory, materialName)
+      : null,
+    factoryOpen = factory ? mode.openFactories.includes(factory.id) : false;
   // Machine-tool labels resolve from content definitions so a catalog rename
   // updates the toolbar and inspector together. Generic tools stay English.
   const toolName = (tool: Tool) => {
@@ -537,15 +542,28 @@ function GameClientInner() {
                       onClick={() => toggleFactory(factory.id)}
                     >
                       <Glyph type="roof" size={16} />
-                      {mode.openFactories.includes(factory.id)
+                      {factoryOpen
                         ? "Close roof"
-                        : "Open interior"}{" "}
+                        : factoryPresentation?.certified
+                          ? "Open interior"
+                          : "Open interior for diagnosis"}{" "}
                       <kbd>F</kbd>
                     </button>
                     <p className="hint">
-                      Closing the roof keeps every machine and belt running.
+                      Roof state is presentation-only. Every machine, belt,
+                      buffer and cargo slot continues in the detailed simulation.
                     </p>
                     <h3>External contract</h3>
+                    {factoryPresentation && (
+                      <div
+                        className={
+                          "status-line " +
+                          (factoryPresentation.certified ? "running" : "")
+                        }
+                      >
+                        {factoryPresentation.status}
+                      </div>
+                    )}
                     <div className="facts">
                       <span>
                         Machines<b>{factory.contract.machineCount}</b>
@@ -589,27 +607,23 @@ function GameClientInner() {
                       )}
                     </div>
                     <h3>Measured throughput</h3>
-                    {factory.contract.throughput.state === "stable" ? (
+                    {factoryPresentation?.certified ? (
                       <>
-                        <p className="hint">
-                          Stable detailed cycle ·{" "}
-                          {factory.contract.throughput.cycleTicks} ticks.
-                          Rates are measured at wall ports.
-                        </p>
+                        <p className="hint">{factoryPresentation.detail}</p>
                         <h4>Inputs</h4>
                         <div className="inventory">
-                          {factory.contract.throughput.inputs.map((rate) => (
+                          {factoryPresentation.inputs.map((rate) => (
                             <div key={"in-" + rate.materialId}>
-                              <span>{materialName(rate.materialId)}</span>
+                              <span>{rate.name}</span>
                               <b>{rate.unitsPerMinute}/min</b>
                             </div>
                           ))}
                         </div>
                         <h4>Outputs</h4>
                         <div className="inventory">
-                          {factory.contract.throughput.outputs.map((rate) => (
+                          {factoryPresentation.outputs.map((rate) => (
                             <div key={"out-" + rate.materialId}>
-                              <span>{materialName(rate.materialId)}</span>
+                              <span>{rate.name}</span>
                               <b>{rate.unitsPerMinute}/min</b>
                             </div>
                           ))}
@@ -617,15 +631,15 @@ function GameClientInner() {
                       </>
                     ) : (
                       <p className="hint">
-                        Measuring detailed boundary flow. Certification needs a
-                        repeated operating cycle with real input and output.
+                        {factoryPresentation?.detail ??
+                          "Contract presentation unavailable."}
                       </p>
                     )}
                     <p className="hint">
-                      The contract is derived from detailed simulation; it does
-                      not infer recipe capacity.
+                      This is a read-only view of detailed simulation. Closing
+                      the roof never replaces it with aggregate execution.
                     </p>
-                    <h3>Observed buffers</h3>
+                    <h3>{factoryOpen ? "Diagnostic buffers" : "Observed buffers"}</h3>
                     {buffer(
                       snapshot.machines
                         .filter((m) => m.factoryId === factory.id)
@@ -635,7 +649,7 @@ function GameClientInner() {
                           return sum;
                         }, {}),
                     )}
-                    <h3>Equipment</h3>
+                    <h3>{factoryOpen ? "Diagnostic equipment" : "Equipment"}</h3>
                     {snapshot.machines
                       .filter((m) => m.factoryId === factory.id)
                       .map((m) => (
