@@ -64,14 +64,81 @@ function makeLine() {
   return { sim, factoryId, processorId };
 }
 
+function makeBackloggedTerminalLine() {
+  const sim = new Simulation(fixture);
+  const factoryId = build(sim, {
+    type: "placeFactory",
+    x: 24,
+    y: 33,
+    width: 10,
+    height: 10,
+  });
+  build(sim, {
+    type: "placePort",
+    factoryId,
+    x: 24,
+    y: 36,
+    direction: 0,
+  });
+  build(sim, {
+    type: "placePort",
+    factoryId,
+    x: 33,
+    y: 36,
+    direction: 0,
+  });
+  build(sim, {
+    type: "placeMachine",
+    definitionId: "extractor",
+    x: 17,
+    y: 35,
+    direction: 0,
+  });
+  const processorId = build(sim, {
+    type: "placeMachine",
+    definitionId: "crusher",
+    x: 27,
+    y: 35,
+    direction: 0,
+  });
+  build(sim, path(19, 36, 26));
+  build(sim, path(29, 36, 34));
+
+  for (let i = 0; i < 3000; i++) {
+    sim.step(100);
+    const processor = sim
+      .snapshot()
+      .machines.find((machine) => machine.id === processorId)!;
+    if (processor.status === "output-full") break;
+    if (i === 2999) throw new Error("Expected the partial route to back up");
+  }
+
+  if (sim.snapshot().fuel < 2)
+    expect(sim.command({ type: "assistance" }).ok).toBe(true);
+
+  const extension = [
+    { x: 35, y: 36 },
+    { x: 36, y: 36 },
+    { x: 37, y: 36 },
+  ];
+  for (let y = 35; y >= 26; y--) extension.push({ x: 37, y });
+  build(sim, {
+    type: "placeBelts",
+    points: extension,
+    direction: 0,
+  });
+
+  return { sim, factoryId, processorId };
+}
+
 function throughput(sim: Simulation, factoryId: string) {
   return sim
     .snapshot()
     .factories.find((factory) => factory.id === factoryId)!.contract.throughput;
 }
 
-function certify(sim: Simulation, factoryId: string) {
-  for (let i = 0; i < 700; i++) {
+function certify(sim: Simulation, factoryId: string, limit = 700) {
+  for (let i = 0; i < limit; i++) {
     sim.step(100);
     const view = throughput(sim, factoryId);
     if (view.state === "stable") return view;
@@ -146,6 +213,36 @@ describe("stable factory throughput contract", () => {
 
     const afterLoad = certify(restored, first.factoryId);
     expect(afterLoad).toEqual(a);
+    expect(auditLedger(fixture, restored.serialize()).ok).toBe(true);
+  });
+
+  it("waits out connected-logistics backlog and re-certifies identically after save/load", () => {
+    const { sim, factoryId } = makeBackloggedTerminalLine();
+    const before = certify(sim, factoryId, 1600);
+    expect(before.state).toBe("stable");
+    if (before.state !== "stable") throw new Error("Expected stable throughput");
+    expect(before.inputs).toEqual([
+      expect.objectContaining({
+        materialId: "raw",
+        units: expect.any(Number),
+        unitsPerMinute: expect.any(Number),
+      }),
+    ]);
+    expect(before.outputs).toEqual([
+      expect.objectContaining({
+        materialId: "granules",
+        units: expect.any(Number),
+        unitsPerMinute: expect.any(Number),
+      }),
+    ]);
+
+    const save = sim.serialize();
+    const restored = new Simulation(fixture);
+    expect(restored.load(JSON.parse(JSON.stringify(save))).ok).toBe(true);
+    expect(throughput(restored, factoryId).state).toBe("measuring");
+
+    const afterLoad = certify(restored, factoryId, 1600);
+    expect(afterLoad).toEqual(before);
     expect(auditLedger(fixture, restored.serialize()).ok).toBe(true);
   });
 
