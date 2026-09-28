@@ -141,7 +141,7 @@ Phase 3 measured the detailed runtime before introducing a second executor and r
 
 ## Phase 4 — Content Studio v1
 
-**Epic:** GitHub Issue #11. Split when gameplay/content-authoring pain justifies concrete tooling work.
+**Epic:** GitHub Issue #11. Phase 4 is decomposed as #60 → #61 → #62 → #63.
 
 ### Question
 
@@ -160,9 +160,11 @@ Can content scale without code edits?
 
 ### Exit criteria
 
-A new material + reaction chain can be authored and validated through the Studio without editing core simulation code.
+A new material + operation + processor + reaction chain, including its source/fallback presentation text, can be authored, validated, reverse-inspected, deterministically exported/imported and previewed through a fresh real simulation without a per-content sim-core code edit.
 
-Do not build every future editor screen yet.
+The Studio remains development-only and absent from the player production export.
+
+Phase 4 intentionally stops before economy/site/storage/asset/general-purpose schema editors.
 
 ## Phase 5 — Progression and company systems
 
