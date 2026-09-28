@@ -98,18 +98,35 @@ If any equivalence gate fails, the prototype is rejected even if it is faster.
 
 ## Current decision
 
-**Pending measured local benchmark.**
+**NO-GO — keep detailed simulation only.**
 
-No aggregate executor is implemented by this branch. That is intentional: #49 says to prototype one only if evidence justifies it.
+Measured locally on exact code head `0ebf2d6acb2d8dfa292cd689a9597fe8afe6a44f`:
 
-After the local measurement is recorded, update this section with:
+- Node `v24.20.0`
+- Windows x64
+- 300,000 ms simulated per copy
+- 3 samples per load
+- 1 copy: median 466.865 ms wall time, 642.58× simulated/wall ratio
+- 8 copies: median 3026.907 ms wall time, 792.89× aggregate simulated/wall ratio
+- 32 copies: median 11996.091 ms wall time, 800.26× aggregate simulated/wall ratio
 
-- the exact commit SHA;
-- hardware/runtime context;
-- benchmark JSON;
-- GO or NO-GO;
-- rationale;
-- whether a runtime code path was added (expected: no for a NO-GO).
+The same exact head also passed:
+- focused factory abstraction evaluation test;
+- full suite: 21 files / 138 tests;
+- typecheck;
+- lint;
+- build/static export;
+- dedicated benchmark run.
+
+The benchmark harness also verified deterministic continuation, identical Save/Load re-certification, and material-ledger conservation.
+
+These numbers do not demonstrate an important near-term performance problem that justifies a second aggregate execution truth. The multi-copy benchmark is a conservative CPU envelope rather than a direct model of one 32-factory world, but even that envelope does not provide evidence that abstraction complexity is currently earned.
+
+Therefore:
+- no aggregate executor is added;
+- detailed simulation remains authoritative whether a roof is open or closed;
+- future abstraction work requires new profiling evidence from a larger real-world scenario;
+- Rust/WASM/ECS remain out of scope.
 
 ## Scope guardrails
 
