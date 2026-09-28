@@ -39,7 +39,14 @@ export const TOOL_HOTKEYS: Record<Tool, string> = {
 export function structureKey(s: PlayerSnapshot): string {
   return JSON.stringify([
     s.machines.map((m) => [m.id, m.x, m.y, m.direction]),
-    s.factories,
+    s.factories.map((f) => [
+      f.id,
+      f.x,
+      f.y,
+      f.width,
+      f.height,
+      f.ports.map((p) => [p.id, p.x, p.y, p.direction, p.role]),
+    ]),
     s.belts.map((b) => [b.id, b.direction, b.alternate, b.switched]),
     s.storages.map((t) => [t.id, t.definitionId, t.x, t.y, t.direction]),
   ]);
