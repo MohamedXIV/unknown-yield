@@ -219,9 +219,22 @@ describe("stable factory throughput contract", () => {
   it("waits out connected-logistics backlog and re-certifies identically after save/load", () => {
     const { sim, factoryId } = makeBackloggedTerminalLine();
     const before = certify(sim, factoryId, 1600);
-    stable(before);
-    expect(before.inputs[0].materialId).toBe("raw");
-    expect(before.outputs[0].materialId).toBe("granules");
+    expect(before.state).toBe("stable");
+    if (before.state !== "stable") throw new Error("Expected stable throughput");
+    expect(before.inputs).toEqual([
+      expect.objectContaining({
+        materialId: "raw",
+        units: expect.any(Number),
+        unitsPerMinute: expect.any(Number),
+      }),
+    ]);
+    expect(before.outputs).toEqual([
+      expect.objectContaining({
+        materialId: "granules",
+        units: expect.any(Number),
+        unitsPerMinute: expect.any(Number),
+      }),
+    ]);
 
     const save = sim.serialize();
     const restored = new Simulation(fixture);
