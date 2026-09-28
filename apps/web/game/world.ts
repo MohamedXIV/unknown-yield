@@ -20,6 +20,7 @@ import {
 import { t as translate } from "./i18n";
 import { machineStatusLabel } from "./machine-status";
 import { observationKey, unseenObservations } from "./observations";
+import { factoryContractPresentation } from "./factory-presentation";
 export type WorldControls = {
   setSnapshot(s: PlayerSnapshot): void;
   setMode(mode: WorldMode): void;
@@ -571,20 +572,14 @@ export function createWorld(
           .setColor(n >= t.capacity ? "#e5ad75" : "#c0c6a9");
       }
       for (const f of snapshot.factories) {
-        const children = snapshot.machines.filter((m) => m.factoryId === f.id);
-        this.labels.get(f.id)?.setText(
-          children.filter((m) => m.status === "processing").length +
-            " / " +
-            children.length +
-            " RUNNING\n" +
-            [...new Set(children.flatMap((m) => Object.keys(m.output)))]
-              .map((id) => {
-                const key = snapshot.materials.find((m) => m.id === id)?.nameKey;
-                return key ? translate(key) : "";
-              })
-              .filter(Boolean)
-              .join(" · "),
-        );
+        const presentation = factoryContractPresentation(f, (id) => {
+          const key = snapshot.materials.find((m) => m.id === id)?.nameKey;
+          return key ? translate(key) : "Unidentified material";
+        });
+        this.labels
+          .get(f.id)
+          ?.setText(presentation.worldText)
+          .setColor(presentation.certified ? "#d2e5ad" : "#e5ad75");
       }
       const discovered = snapshot.observations.filter((o) => !o.initial);
       for (const o of unseenObservations(discovered, this.seenDiscoveries)) {
