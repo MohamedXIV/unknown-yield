@@ -122,9 +122,9 @@ export const contentSchema = z.object({
 export type Content = z.infer<typeof contentSchema>;
 export type MachineDefinition = Content["machines"][number];
 export type StorageDefinition = Content["storages"][number];
-export function validateContent(
+function validateContentInternal(
   input: unknown,
-  catalog: Record<string, string> = enCatalog,
+  catalog: Record<string, string> | null,
 ): Content {
   const c = contentSchema.parse(input);
   for (const table of [
@@ -236,7 +236,7 @@ export function validateContent(
     c.economy.assistanceBelow > c.economy.grant
   )
     throw new Error("Recovery grant cannot restart production");
-  validateLocaleCoverage(c, catalog);
+  if (catalog) validateLocaleCoverage(c, catalog);
   // Keys are per-entity stable references, never shared aliases: borrowing
   // another entity's key would couple their display names forever.
   for (const m of c.materials)
@@ -265,4 +265,20 @@ export function validateContent(
         "Localization key must match its entity: " + r.observationKey,
       );
   return c;
+}
+
+export function validateContent(
+  input: unknown,
+  catalog: Record<string, string> = enCatalog,
+): Content {
+  return validateContentInternal(input, catalog);
+}
+
+/**
+ * Simulation owns gameplay truth, not locale-resource availability.
+ * Callers that author dynamic content must validate their locale bundle at the
+ * content boundary before handing the already-keyed content to sim-core.
+ */
+export function validateSimulationContent(input: unknown): Content {
+  return validateContentInternal(input, null);
 }
