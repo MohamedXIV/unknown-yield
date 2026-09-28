@@ -162,3 +162,46 @@ it("invalidates world geometry on diverter switch/rotate", () => {
   expect(sim.command({ type: "switchDivert", beltId: id }).ok).toBe(true);
   expect(structureKey(sim.snapshot())).not.toBe(diverted);
 });
+
+
+it("keeps dynamic factory contracts out of the structural fingerprint", () => {
+  const sim = new Simulation(fixture);
+  expect(
+    sim.command({
+      type: "placeFactory",
+      x: 24,
+      y: 22,
+      width: 10,
+      height: 10,
+    }).ok,
+  ).toBe(true);
+
+  const base = sim.snapshot(),
+    dynamic = structuredClone(base);
+  dynamic.factories[0].contract.throughput = {
+    state: "stable",
+    cycleTicks: 120,
+    inputs: [
+      {
+        materialId: "ferrite",
+        units: 6,
+        cycleTicks: 120,
+        unitsPerMinute: 30,
+      },
+    ],
+    outputs: [
+      {
+        materialId: "plates",
+        units: 18,
+        cycleTicks: 120,
+        unitsPerMinute: 90,
+      },
+    ],
+  };
+  dynamic.factories[0].contract.statusCounts.processing = 1;
+
+  expect(structureKey(dynamic)).toBe(structureKey(base));
+
+  dynamic.factories[0].width += 1;
+  expect(structureKey(dynamic)).not.toBe(structureKey(base));
+});
