@@ -26,7 +26,11 @@ This document is intentionally procedural. Game/design truth lives in the domain
 - Completed Phase 3 child: **#48 — present a closed factory as a readable contract and reopen it for diagnosis** (merged via PR #56).
 - Completed Phase 3 child: **#49 — evaluate aggregate execution with equivalence/performance evidence** (NO-GO; merged via PR #58).
 - Completed Phase 3 gate: **#50 — end-to-end factory-as-function exit review**.
-- Next phase: **Phase 4 — Content Studio v1 (#11)**.
+- Active phase: **Phase 4 — Content Studio v1 (#11)**.
+- Active Phase 4 child: **#60 — versioned Content Studio authoring core** (Draft PR #64).
+- Implemented stacked child: **#61 — workbench + reference browser** (Draft PR #65).
+- Implemented stacked child: **#62 — selected-content simulation preview** (Draft PR #66).
+- Active Phase 4 exit gate: **#63 — end-to-end Content Studio v1 exit review**.
 
 ## Phase 1.5 dependency graph
 
@@ -84,6 +88,23 @@ Phase 2 is complete.
 
 #10 is complete. Detailed simulation remains authoritative, roof/open state is presentation-only, and #49 recorded a measured NO-GO for aggregate execution at the current scale.
 
+## Phase 4 dependency graph
+
+```text
+#60 versioned multi-table authoring core + locale bundle
+  │
+  v
+#61 Content Studio workbench + reverse references
+  │
+  v
+#62 selected-content isolated simulation preview
+  │
+  v
+#63 Phase 4 exit review
+```
+
+#11 is active. TinyBase owns authoring drafts only; valid bundles cross a deterministic content+locale boundary; sim-core validates gameplay semantics independently from locale-resource availability. The generated Studio route must remain absent from the player production export.
+
 ## Agent loop
 
 1. Read Issue #2 and identify the first unblocked incomplete issue.
@@ -128,7 +149,7 @@ There is currently no remote CI workflow. Do not represent absent checks as gree
 
 - #9 — experimentation and discovery depth — COMPLETE via children #30–#34
 - #10 — factory-as-function contracts and abstraction proof — COMPLETE via children #45–#50
-- #11 — Content Studio v1 — NEXT
+- #11 — Content Studio v1 — ACTIVE via children #60–#63
 - #12 — Materials Exchange and corporate progression
 
 These are placeholders for future decomposition, not permission to work around the active gate.
