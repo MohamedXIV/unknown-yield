@@ -52,6 +52,19 @@ The UI confirmed the save with `Field record saved on this device.`. After **Loa
 
 This closes Issue #8's explicit browser requirement to save/reload while material exists simultaneously across belts, storage, factory buffers and terminal staging. No repo edits or test reruns were performed during this focused follow-up because no runtime code changed.
 
+### Issue #48 closed-factory contract presentation — pending local/browser verification
+
+Run on the exact #48 PR head:
+
+1. Build and certify one working Ferrite → Crusher → terminal factory. Close its roof.
+2. At world scale, verify the closed building reads **CERTIFIED CONTRACT** and shows the measured input/output material names and units/minute from the existing wall-port contract. Internal machines, belts and cargo stay visually hidden while closed.
+3. Select the closed factory. Verify the inspector says **Certified contract** and reports the same measured rates. Close/open the roof repeatedly while running; rates and detailed simulation must not change merely because presentation changed.
+4. Disable or otherwise block the internal Crusher so certification is invalidated, then close the roof. The world summary must switch to **CONTRACT NOT CERTIFIED / MEASURING / BLOCKED / OPEN FOR DIAGNOSIS** rather than preserving stale rates.
+5. Select that uncertified closed factory and use **Open interior for diagnosis**. Verify the exact existing internal machine identity, belts, buffer contents and status reappear; do not rebuild or replace anything. Re-enable/recover and allow the same detailed factory to certify again.
+6. Save once while the roof is closed and once while it is open. Load through the normal UI and verify the authoritative machines, belts, buffers, cargo and factory contract source state are unchanged. Roof open/closed is presentation state and may reset; it must never alter the saved world.
+7. Verify no aggregate-execution mode appears, no dashboard frame surrounds the game, material names remain player-facing/localized, and visible page/browser-console errors are recorded honestly.
+8. Run focused `apps/web/test/factory-presentation.test.ts` + `apps/web/test/interaction.test.ts`, then full `npm test`, `npm run typecheck`, `npm run lint`, and `npm run build`.
+
 ### Issue #46 stable factory throughput contract — pending local/browser verification
 
 Run on the exact #46 PR head:
