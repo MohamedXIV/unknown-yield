@@ -28,7 +28,7 @@ Phase 3 starts with a derived `FactoryView`; detailed simulation remains the onl
 
 The contract does not contain recipe IDs, reaction outcomes, material-rate claims or aggregate state. It is not added to `Save`, so schema 7 and content `world-01-v5` remain unchanged. Save/load simply reconstructs the same projection from persisted detailed factories/machines. Roof/open state remains React/Phaser presentation and never enters this derivation.
 
-Issue #46 may add measured stable throughput to this contract only from observed detailed boundary flow; it must not infer rates from authored recipes.
+Issue #46 added measured stable throughput to this contract only from observed detailed boundary flow; it does not infer rates from authored recipes. Issue #49 subsequently measured the detailed runtime and rejected aggregate execution as unjustified for the current scale.
 
 ### Condition-aware reaction matching (Issue #30)
 
@@ -138,11 +138,11 @@ Do not serialize presentation state unless a feature explicitly needs it.
 
 ## 5. Factory abstraction
 
-Factory-as-function first describes a player-facing contract. Closing a roof or displaying a production summary must not change simulation semantics. Aggregate simulation is a later candidate scaling strategy, not a prerequisite for this design.
+Factory-as-function first describes a player-facing contract. Closing a roof or displaying a production summary must not change simulation semantics.
 
-The first playable uses detailed simulation whether a factory is open or closed. Before introducing aggregate mode, compare it against detailed mode for input starvation, blocked outputs, fuel exhaustion, partial batches, hazards, and save/load. Do not claim equivalent behavior or a performance benefit without measurements and tests.
+**Phase 3 outcome:** detailed TypeScript simulation remains the only runtime execution mode whether a factory is open or closed. Issue #49 measured the detailed path and recorded a NO-GO for aggregate execution because the current benchmark did not demonstrate a near-term performance failure large enough to justify a second authoritative executor.
 
-A factory can have multiple simulation modes.
+The stable/abstracted material below is therefore a **future revisit contract**, not current architecture. Reopen it only when a larger representative profile demonstrates a concrete budget failure and a prototype can prove behavioral equivalence, conservation, deterministic Save/Load and useful measured improvement.
 
 ### Detailed mode
 
@@ -156,9 +156,9 @@ The simulation may track:
 - local bottlenecks;
 - internal hazard state.
 
-### Stable / abstracted mode
+### Stable external contract / deferred aggregate hypothesis
 
-Once a layout has proven stable, the system may derive a factory contract:
+Once a layout has proven stable, the current system derives a read-only external factory contract:
 
 ```text
 consumes:
@@ -175,13 +175,13 @@ constraints:
   hazard: pressure
 ```
 
-A stable factory can update using aggregate math instead of simulating every internal visual event forever.
+The current runtime **does not** use this contract to skip detailed execution. A future aggregate prototype may do so only if new profiling evidence reopens the decision.
 
-Abstraction must preserve gameplay-significant constraints. It is not permission to generate free output.
+Any future abstraction must preserve gameplay-significant constraints. It is not permission to generate free output.
 
-### Wake-up conditions
+### Future aggregate wake-up conditions
 
-An abstracted factory may return to detailed resolution when:
+If aggregate execution is ever reintroduced as a measured prototype, it may return to detailed resolution when:
 
 - an input becomes invalid;
 - an output is blocked;
