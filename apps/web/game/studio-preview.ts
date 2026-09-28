@@ -77,7 +77,12 @@ function previewLayout(
       "Compatible processor does not fit inside the authored factory size limits",
     );
 
-  const factory = { x: 18, y: 10, width: factoryWidth, height: factoryHeight },
+  const factory = {
+      x: 3 + extractor.width + 6,
+      y: Math.max(10, Math.ceil(extractor.height / 2) + 4),
+      width: factoryWidth,
+      height: factoryHeight,
+    },
     processorPoint = { x: factory.x + 2, y: factory.y + 2, direction: 0 },
     processorInput = socket(processorPoint, processor, false),
     rowY = processorInput.y,
