@@ -1,5 +1,10 @@
 import type { Content } from "@site/content";
-import { Simulation, socket, type GameCommand } from "@site/sim-core";
+import {
+  Simulation,
+  socket,
+  type GameCommand,
+  type MachineStatus,
+} from "@site/sim-core";
 
 export type StudioReactionPreview = {
   reactionId: string;
@@ -11,7 +16,7 @@ export type StudioReactionPreview = {
   ticks: number;
   outputAmount: number;
   incidentId: string | null;
-  machineStatus: string;
+  machineStatus: MachineStatus;
   fuelRemaining: number;
 };
 
@@ -114,7 +119,7 @@ function previewLayout(
   );
   preview.machines = preview.machines.map((machine) => {
     if (machine.id !== processor.id && machine.id !== extractor.id) return machine;
-    const withoutUnlock = { ...machine };
+    const withoutUnlock = { ...machine, cost: 1 };
     delete withoutUnlock.unlock;
     return withoutUnlock;
   });
@@ -123,6 +128,9 @@ function previewLayout(
     width: siteWidth,
     height: siteHeight,
     startStock: 1_000_000,
+    factoryCellCost: 1,
+    beltCost: 1,
+    portCost: 1,
     terminal,
     deposits: [
       {
