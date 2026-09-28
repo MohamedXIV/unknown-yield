@@ -12,7 +12,8 @@
     "build": "node scripts/prepare-build.mjs && npm run build --workspace @site/web && node scripts/verify-export.mjs",
     "test": "vitest run",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p apps/web/tsconfig.json",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "evaluate:factory": "vitest run packages/sim-core/test/factory-aggregate-evaluation.test.ts --reporter=verbose"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

@@ -10,11 +10,12 @@ This directory is the project design and engineering source of truth. Documents 
 4. [TECHNICAL_ARCHITECTURE.md](TECHNICAL_ARCHITECTURE.md) — Next/React, Phaser, simulation, TinyBase, persistence, workers and possible Rust/WASM.
 5. [CONTENT_MODEL.md](CONTENT_MODEL.md) — materials, operations, reactions, machines, market definitions, milestones and contracts as data.
 6. [SIMULATION.md](SIMULATION.md) — simulation time, logistics, determinism, conservation, factory abstraction and performance rules.
-7. [ART_PIPELINE.md](ART_PIPELINE.md) — 2D presentation and the 3D-blockout-to-2D AI-assisted asset workflow.
-8. [ROADMAP.md](ROADMAP.md) — proof-driven implementation phases and acceptance gates.
-9. [EXECUTION.md](EXECUTION.md) — live issue order and execution workflow for humans/agents.
-10. [DECISIONS.md](DECISIONS.md) — accepted decisions that should not be casually reopened.
-11. [../AGENTS.md](../AGENTS.md) — implementation rules for humans and coding agents.
+7. [FACTORY_ABSTRACTION_EVALUATION.md](FACTORY_ABSTRACTION_EVALUATION.md) — Phase 3 #49 benchmark/equivalence harness and GO/NO-GO evidence rule.
+8. [ART_PIPELINE.md](ART_PIPELINE.md) — 2D presentation and the 3D-blockout-to-2D AI-assisted asset workflow.
+9. [ROADMAP.md](ROADMAP.md) — proof-driven implementation phases and acceptance gates.
+10. [EXECUTION.md](EXECUTION.md) — live issue order and execution workflow for humans/agents.
+11. [DECISIONS.md](DECISIONS.md) — accepted decisions that should not be casually reopened.
+12. [../AGENTS.md](../AGENTS.md) — implementation rules for humans and coding agents.
 
 ## Documentation principles
 

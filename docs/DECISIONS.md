@@ -334,6 +334,37 @@ Save schema remains 7. A Stable contract can later become an input to the Phase 
 
 ---
 
+
+---
+
+## D-027 — Aggregate factory execution is deferred by measured evidence
+
+**Status:** accepted, 2026-09-29
+
+Phase 3 Issue #49 measured the current detailed TypeScript simulation before introducing any alternate factory executor.
+
+On exact evaluation head `0ebf2d6acb2d8dfa292cd689a9597fe8afe6a44f`, the representative certified Veined ore → Crusher → terminal line passed deterministic Save/Load continuation, identical throughput re-certification, material conservation, the full test/typecheck/lint/build gate, and the dedicated detailed-simulation benchmark.
+
+The benchmark simulated 300 seconds per copy and measured median wall time of approximately 467 ms for 1 copy, 3.027 s for 8 copies, and 11.996 s for 32 factory-equivalent copies. The 32-copy case represented 9.6 million ms of aggregate simulated time and achieved about an 800× simulated-to-wall ratio.
+
+### Decision
+
+Do **not** introduce aggregate factory execution now.
+
+The benchmark does not show a near-term performance failure large enough to justify:
+- a parallel gameplay truth;
+- detailed/aggregate synchronization;
+- additional save compatibility surface;
+- divergence risk in material, fuel or time behavior.
+
+Closed/open roof presentation continues to have no effect on simulation accuracy. Detailed simulation remains authoritative.
+
+### Revisit gate
+
+Reopen aggregate execution only when a larger representative real-world profile demonstrates a concrete performance budget failure after ordinary TypeScript/data-layout/update-frequency optimizations. Any future aggregate prototype must still prove behavioral equivalence, conservation, deterministic Save/Load, and useful measured improvement before entering runtime code.
+
+---
+
 ## How to change a decision
 
 When evidence requires a change:
