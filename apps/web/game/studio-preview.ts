@@ -114,7 +114,8 @@ function previewLayout(
   );
   preview.machines = preview.machines.map((machine) => {
     if (machine.id !== processor.id && machine.id !== extractor.id) return machine;
-    const { unlock: _unlock, ...withoutUnlock } = machine;
+    const withoutUnlock = { ...machine };
+    delete withoutUnlock.unlock;
     return withoutUnlock;
   });
   preview.site = {
