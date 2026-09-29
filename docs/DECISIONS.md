@@ -365,6 +365,38 @@ Reopen aggregate execution only when a larger representative real-world profile 
 
 ---
 
+
+---
+
+## D-028 — Content Studio bundles separate authoring, locale resources and simulation semantics
+
+**Status:** accepted, 2026-09-29
+
+Content Studio v1 authors core industrial definitions in TinyBase and exports a deterministic versioned bundle containing both validated `content` and its English source/fallback `locale` catalog.
+
+Stable content IDs and stable localization-key references remain identity. Visible wording remains presentation data.
+
+### Validation boundaries
+
+`validateContent(input, catalog)` is the content authoring/distribution boundary. It validates structure, gameplay semantics, stable key relationships and required locale-resource coverage.
+
+`validateSimulationContent(input)` is the sim-core boundary. It validates the same gameplay/content semantics and stable key relationships, but does not require a particular presentation catalog to be installed.
+
+### Reason
+
+Before Phase 4, constructing `Simulation` indirectly required every localization resource to exist in the built-in `enCatalog`. That prevented otherwise-valid dynamically authored content from being previewed even after its own locale bundle had validated, coupling gameplay simulation to presentation-resource availability.
+
+### Consequence
+
+- sim-core remains independent from localization resources/frameworks;
+- built-in/player-distributed content still proves locale completeness before runtime;
+- Studio-authored new IDs can be validated and previewed without editing the static fallback catalog first;
+- authoring/preview never changes the active expedition or save;
+- Studio bundles are development authoring artifacts, not runtime mod/hot-reload support.
+
+
+---
+
 ## How to change a decision
 
 When evidence requires a change:

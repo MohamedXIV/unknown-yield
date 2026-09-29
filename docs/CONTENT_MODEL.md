@@ -6,7 +6,7 @@ The current Zod contract lives in `packages/content/src/schema.ts`. It separates
 
 The starter fixture contains a known construction chain plus hidden outcomes of the same alien input. A crusher accepts different physical inputs; recipes are not baked into the renderer. `known` marks initial knowledge only. Runtime observations unlock public material metadata and notebook entries; authored truth never goes straight to player UI.
 
-Content version `world-01-v5` is independent of save schema 7. Since Issue #14 the schema carries localization keys (`nameKey`, `observationKey`) instead of literal English `name`/`observation` strings; the English catalog lives in `packages/content/src/locale.ts` and is validated by Zod plus semantic key-coverage checks. Issue #4 added a `storages` table (bulk storage definitions: capacity, footprint, cost) and `site.stagingCapacity` for bounded terminal staging. The existing TinyBase material-edit/validate/import/export proof remains development-only and now authors key fields. The wider authoring concepts below are future scope, not current requirements.
+Content version `world-01-v5` is independent of save schema 7. Since Issue #14 the schema carries localization keys (`nameKey`, `observationKey`) instead of literal English `name`/`observation` strings; the English catalog lives in `packages/content/src/locale.ts` and is validated by Zod plus semantic key-coverage checks. Issue #4 added a `storages` table (bulk storage definitions: capacity, footprint, cost) and `site.stagingCapacity` for bounded terminal staging. Phase 4 replaces the old materials-only TinyBase proof with Content Studio v1: materials, operations, machines and reactions are editable authoring tables; English source/fallback text is authored alongside their stable localization-key references; the whole bundle validates before export/import; reverse references and isolated simulation preview are development-only tools. Site/economy/storage breadth remains preserved base content in v1 rather than a generic everything-editor.
 
 ### Discrete process conditions (Issue #30)
 
@@ -467,17 +467,21 @@ For example:
 
 Tests should be able to load this fixture without booting the full game.
 
-## 10. First Studio slice
+## 10. Content Studio v1 — accepted Phase 4 slice
 
-Do not build a giant editor before gameplay exists.
+Do not build a giant editor merely because the content model may grow later.
 
-The first Studio only needs to prove:
+Phase 4 v1 proves:
 
-1. create/edit materials;
-2. create/edit operations;
-3. create/edit reactions;
-4. validate references;
-5. preview a selected reaction in a small simulation harness;
-6. export/load a versioned content snapshot.
+1. create/edit materials, operations, machines and reactions through TinyBase authoring state;
+2. author English source/fallback text while stable IDs and localization keys remain canonical identity references;
+3. validate complete structural/semantic content plus locale coverage before export;
+4. inspect reverse references for core stable IDs;
+5. export/import a deterministic versioned `{ schemaVersion, content, locale }` bundle;
+6. preview a selected reaction through a fresh isolated real `Simulation`, including conditioned and hazardous outcomes;
+7. author a completely new material + operation + machine + reaction and preview it without a per-content sim-core code change;
+8. keep the Studio development-only and absent from the player static export.
 
-Everything else can grow from actual design pain.
+TinyBase may contain temporarily invalid draft combinations during editing; invalid bundles cannot export or preview.
+
+Site/economy/storage editors, knowledge-graph breadth, market/company authoring, asset management and runtime mod loading remain later work driven by their gameplay phases.
