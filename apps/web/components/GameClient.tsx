@@ -178,6 +178,8 @@ function GameClientInner() {
     const key = snapshot.materials.find((m) => m.id === id)?.nameKey;
     return key ? t(key) : "Unidentified material";
   };
+  const exchangeFor = (id: string) =>
+    snapshot.exchange.find((listing) => listing.materialId === id);
   const factoryPresentation = factory
       ? factoryContractPresentation(factory, materialName)
       : null,
@@ -883,8 +885,12 @@ function GameClientInner() {
                           {m.id === snapshot.map.buildMaterial
                             ? "reserved"
                             : "staged"}{" "}
-                          {m.exportValue
-                            ? "· " + m.exportValue + " fuel/unit"
+                          {exchangeFor(m.id)
+                            ? "· " +
+                              exchangeFor(m.id)!.compensationPerUnit +
+                              " fuel/unit · " +
+                              Math.round(exchangeFor(m.id)!.saturationBps / 100) +
+                              "% saturated"
                             : ""}
                         </small>
                       </span>
@@ -901,7 +907,7 @@ function GameClientInner() {
                       }
                     >
                       <option value="keep">Keep</option>
-                      {m.exportValue > 0 && (
+                      {exchangeFor(m.id) && (
                         <option value="export">Auto-export</option>
                       )}
                     </select>

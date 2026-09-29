@@ -4,6 +4,7 @@ import {
   Simulation,
   auditLedger,
   experimentEvidenceKey,
+  initializeKnownMarkets,
   type GameCommand,
 } from "../src/index";
 const make = () => new Simulation(fixture);
@@ -24,6 +25,7 @@ function withConfirmedKnowledge(reactionId: string) {
     processConditionId: reaction.processConditionId ?? null,
     state: "confirmed",
   };
+  initializeKnownMarkets(fixture, save);
   expect(s.load(save).ok).toBe(true);
   return s;
 }
@@ -663,7 +665,7 @@ describe("automatic industry", () => {
     );
   });
 
-  it("migrates schema-6 machines with no incident into schema 7", () => {
+  it("migrates schema-6 machines with no incident through schema 8", () => {
     const s = make();
     const machineId = build(s, {
       type: "placeMachine",

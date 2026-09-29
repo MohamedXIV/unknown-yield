@@ -4,6 +4,7 @@ import {
   Simulation,
   auditLedger,
   experimentEvidenceKey,
+  initializeKnownMarkets,
   type GameCommand,
 } from "../src/index";
 
@@ -78,6 +79,7 @@ function confirmedKnowledge(reactionId: string) {
     processConditionId: reaction.processConditionId ?? null,
     state: "confirmed",
   };
+  initializeKnownMarkets(fixture, save);
   expect(s.load(save).ok).toBe(true);
   return s;
 }
