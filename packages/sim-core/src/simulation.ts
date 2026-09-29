@@ -1,4 +1,4 @@
-import { validateContent, type Content } from "@site/content";
+import { validateSimulationContent, type Content } from "@site/content";
 import { initialState, parseSave } from "./save";
 import { applyCommand } from "./commands";
 import { completeAndStart, transport, status } from "./production";
@@ -19,7 +19,7 @@ export class Simulation {
   private discoveryLocations = new Map<string, { x: number; y: number }>();
   private readonly factoryThroughput = new FactoryThroughputMonitor();
   constructor(content: Content) {
-    this.content = validateContent(content);
+    this.content = validateSimulationContent(content);
     this.state = initialState(this.content);
   }
   command(input: unknown): CommandResult {

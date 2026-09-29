@@ -1,5 +1,6 @@
 export {
   validateContent,
+  validateSimulationContent,
   contentSchema,
   type Content,
   type MachineDefinition,
