@@ -122,7 +122,10 @@ export const contentSchema = z.object({
 export type Content = z.infer<typeof contentSchema>;
 export type MachineDefinition = Content["machines"][number];
 export type StorageDefinition = Content["storages"][number];
-export function validateContent(input: unknown): Content {
+export function validateContent(
+  input: unknown,
+  catalog: Record<string, string> = enCatalog,
+): Content {
   const c = contentSchema.parse(input);
   for (const table of [
     c.materials,
@@ -233,7 +236,7 @@ export function validateContent(input: unknown): Content {
     c.economy.assistanceBelow > c.economy.grant
   )
     throw new Error("Recovery grant cannot restart production");
-  validateLocaleCoverage(c, enCatalog);
+  validateLocaleCoverage(c, catalog);
   // Keys are per-entity stable references, never shared aliases: borrowing
   // another entity's key would couple their display names forever.
   for (const m of c.materials)
