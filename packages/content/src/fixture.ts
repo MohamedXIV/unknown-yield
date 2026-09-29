@@ -1,41 +1,36 @@
 import { validateContent } from "./schema";
 export const fixture = validateContent({
-  version: "world-01-v5",
+  version: "world-01-v6",
   tickMs: 100,
   materials: [
     {
       id: "ferrite",
       nameKey: "material.ferrite.name",
       color: "#a88d78",
-      exportValue: 0,
       known: true,
     },
     {
       id: "plates",
       nameKey: "material.plates.name",
       color: "#b7c6ad",
-      exportValue: 0,
       known: true,
     },
     {
       id: "raw",
       nameKey: "material.raw.name",
       color: "#c8aa73",
-      exportValue: 0,
       known: true,
     },
     {
       id: "granules",
       nameKey: "material.granules.name",
       color: "#aadea0",
-      exportValue: 12,
       known: false,
     },
     {
       id: "residue",
       nameKey: "material.residue.name",
       color: "#b298c4",
-      exportValue: 0,
       known: false,
     },
   ],
@@ -239,5 +234,16 @@ export const fixture = validateContent({
     grant: 36,
     assistanceBelow: 2,
     milestoneExports: 1,
+    marketEveryTicks: 50,
+    exchange: [
+      {
+        materialId: "granules",
+        baseCompensation: 12,
+        floorCompensation: 4,
+        baseDemandBps: 10000,
+        saturationPerUnitBps: 1000,
+        recoveryPerMarketTickBps: 250,
+      },
+    ],
   },
 });

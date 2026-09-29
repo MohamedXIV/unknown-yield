@@ -31,7 +31,8 @@ This document is intentionally procedural. Game/design truth lives in the domain
 - Completed Phase 4 child: **#61 — workbench + reference browser** (merged via PR #65).
 - Completed Phase 4 child: **#62 — selected-content simulation preview** (merged via PR #66).
 - Completed Phase 4 gate: **#63 — end-to-end Content Studio v1 exit review** (merged via PR #67).
-- Next phase: **Phase 5 — Materials Exchange and corporate progression (#12)**.
+- Active phase: **Phase 5 — Materials Exchange and corporate progression (#12)**.
+- Active Phase 5 child: **#69 — authoritative Materials Exchange baseline**.
 
 ## Phase 1.5 dependency graph
 
@@ -104,7 +105,27 @@ Phase 2 is complete.
 #63 Phase 4 exit review ✓
 ```
 
-#11 is complete. TinyBase owns authoring drafts only; valid bundles cross a deterministic content+locale boundary; sim-core validates gameplay semantics independently from locale-resource availability. The generated Studio route remains absent from the player production export. Phase 5 / #12 is next.
+#11 is complete. TinyBase owns authoring drafts only; valid bundles cross a deterministic content+locale boundary; sim-core validates gameplay semantics independently from locale-resource availability. The generated Studio route remains absent from the player production export.
+
+## Phase 5 dependency graph
+
+```text
+#69 Materials Exchange baseline
+  │
+  v
+#70 Corporate Orders + Special Directives
+  │
+  v
+#71 milestones + terminal handling + fuel classes
+  │
+  v
+#72 assistance + obligations + recovery standing
+  │
+  v
+#73 Phase 5 exit review
+```
+
+#12 is active. #69 is the only dependency-ready Phase 5 implementation issue.
 
 ## Agent loop
 
@@ -151,6 +172,6 @@ There is currently no remote CI workflow. Do not represent absent checks as gree
 - #9 — experimentation and discovery depth — COMPLETE via children #30–#34
 - #10 — factory-as-function contracts and abstraction proof — COMPLETE via children #45–#50
 - #11 — Content Studio v1 — COMPLETE via children #60–#63
-- #12 — Materials Exchange and corporate progression — NEXT
+- #12 — Materials Exchange and corporate progression — ACTIVE via #69–#73 (#69 first)
 
 These are placeholders for future decomposition, not permission to work around the active gate.

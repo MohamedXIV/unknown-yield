@@ -24,7 +24,6 @@ describe("Studio workbench helpers", () => {
     expect(studioRow(store, "material", "polished-powder")).toEqual({
       nameKey: "material.polished-powder.name",
       color: "#888888",
-      exportValue: 0,
       known: false,
     });
     expect(

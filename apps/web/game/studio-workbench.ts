@@ -101,7 +101,6 @@ export function createStudioEntity(
     store.setRow("materials", cleanId, {
       nameKey,
       color: "#888888",
-      exportValue: 0,
       known: false,
     });
     store.setRow("locale", nameKey, { text: label });

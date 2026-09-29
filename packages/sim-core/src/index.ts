@@ -52,3 +52,16 @@ export type {
   Point,
   Rect,
 } from "./types";
+
+export {
+  MARKET_BPS,
+  applyExportCompensation,
+  companyKnowsMaterial,
+  ensureMarket,
+  exchangeDefinition,
+  initializeKnownMarkets,
+  marketCompensation,
+  marketListings,
+  recordMarketExport,
+  recoverMarkets,
+} from "./market";

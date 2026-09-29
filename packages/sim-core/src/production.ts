@@ -10,6 +10,11 @@ import {
   type Point,
 } from "./types";
 import { key, next, socket, contains, footprint } from "./geometry";
+import {
+  applyExportCompensation,
+  ensureMarket,
+  exchangeDefinition,
+} from "./market";
 export function recipe(c: Content, m: Machine) {
   const definition = c.machines.find((d) => d.id === m.definitionId);
   return c.reactions.find(
@@ -69,8 +74,10 @@ export function completeAndStart(
         if (r && !s.knowledge.includes(r.id)) {
           s.knowledge.push(r.id);
           onDiscovery?.(r.id, m);
-          const mat = c.materials.find((a) => a.id === material)!;
-          s.policies[material] = mat.exportValue > 0 ? "export" : "keep";
+          s.policies[material] = exchangeDefinition(c, material)
+            ? "export"
+            : "keep";
+          ensureMarket(c, s, material);
         }
         if (r?.hazard) {
           m.incident = r.hazard.id;
@@ -278,12 +285,9 @@ export function transport(
     if (
       n > 0 &&
       s.policies[material.id] === "export" &&
-      material.exportValue > 0
+      exchangeDefinition(c, material.id)
     ) {
-      const value = n * material.exportValue,
-        repaid = Math.min(value, s.debt);
-      s.debt -= repaid;
-      s.fuel += value - repaid;
+      applyExportCompensation(c, s, material.id, n);
       s.exported += n;
       change(s.flows.exported, material.id, n);
       change(s.staging, material.id, -n);

@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { Content } from "@site/content";
 import { amount, change, total, type Save, type CommandResult } from "./types";
 import { machineUnlocked } from "./progression";
+import { exchangeDefinition } from "./market";
 import {
   factoryError,
   machinePlacement,
@@ -266,7 +267,7 @@ export function applyCommand(
           (r) => s.knowledge.includes(r.id) && r.output === cmd.materialId,
         );
       if (!mat || !known) return fail("Unknown material");
-      if (cmd.policy === "export" && !mat.exportValue)
+      if (cmd.policy === "export" && !exchangeDefinition(c, mat.id))
         return fail("The company does not accept this material");
       if (apply) s.policies[cmd.materialId] = cmd.policy;
       return ok("Terminal policy updated");

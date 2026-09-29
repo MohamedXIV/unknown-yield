@@ -6,7 +6,7 @@ The current Zod contract lives in `packages/content/src/schema.ts`. It separates
 
 The starter fixture contains a known construction chain plus hidden outcomes of the same alien input. A crusher accepts different physical inputs; recipes are not baked into the renderer. `known` marks initial knowledge only. Runtime observations unlock public material metadata and notebook entries; authored truth never goes straight to player UI.
 
-Content version `world-01-v5` is independent of save schema 7. Since Issue #14 the schema carries localization keys (`nameKey`, `observationKey`) instead of literal English `name`/`observation` strings; the English catalog lives in `packages/content/src/locale.ts` and is validated by Zod plus semantic key-coverage checks. Issue #4 added a `storages` table (bulk storage definitions: capacity, footprint, cost) and `site.stagingCapacity` for bounded terminal staging. Phase 4 replaces the old materials-only TinyBase proof with Content Studio v1: materials, operations, machines and reactions are editable authoring tables; English source/fallback text is authored alongside their stable localization-key references; the whole bundle validates before export/import; reverse references and isolated simulation preview are development-only tools. Site/economy/storage breadth remains preserved base content in v1 rather than a generic everything-editor.
+Content version `world-01-v6` is independent of save schema 8. Phase 5 #69 moves export compensation out of per-material static values into data-driven Materials Exchange definitions plus persisted runtime market memory (demand/saturation). Since Issue #14 the schema carries localization keys (`nameKey`, `observationKey`) instead of literal English `name`/`observation` strings; the English catalog lives in `packages/content/src/locale.ts` and is validated by Zod plus semantic key-coverage checks. Issue #4 added a `storages` table (bulk storage definitions: capacity, footprint, cost) and `site.stagingCapacity` for bounded terminal staging. Phase 4 replaces the old materials-only TinyBase proof with Content Studio v1: materials, operations, machines and reactions are editable authoring tables; English source/fallback text is authored alongside their stable localization-key references; the whole bundle validates before export/import; reverse references and isolated simulation preview are development-only tools. Site/economy/storage breadth remains preserved base content in v1 rather than a generic everything-editor.
 
 ### Discrete process conditions (Issue #30)
 
@@ -51,7 +51,7 @@ Potential fields:
 - icon/sprite references;
 - physical/logistics traits;
 - known/default handling class;
-- value/export metadata;
+- exchange eligibility is defined by Materials Exchange content rather than a static material value;
 - construction eligibility;
 - hidden true properties;
 - discovery presentation metadata.
