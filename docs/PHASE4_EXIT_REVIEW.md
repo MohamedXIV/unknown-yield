@@ -180,7 +180,7 @@ Those should enter the Studio when their gameplay phases establish concrete sche
 
 ## Phase 4 outcome
 
-Phase 4 is complete when the stacked #60 → #61 → #62 → #63 sequence passes its final combined automated/browser gate and merges.
+Phase 4 completed after the stacked #60 → #61 → #62 → #63 sequence passed its final combined automated/browser gate and merged.
 
 The resulting authoring architecture is:
 
@@ -193,4 +193,4 @@ The resulting authoring architecture is:
 - **zero authority over the active player world;**
 - **no Studio route/component in the player production export.**
 
-Phase 5 may begin only after #63 and parent #11 close.
+Phase 5 may now begin: #63 and parent #11 are closed.
