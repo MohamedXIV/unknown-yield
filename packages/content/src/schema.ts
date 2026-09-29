@@ -20,7 +20,6 @@ export const contentSchema = z.object({
         id,
         nameKey: localeKeySchema,
         color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
-        exportValue: count,
         known: z.boolean(),
       }),
     )
@@ -117,6 +116,19 @@ export const contentSchema = z.object({
     grant: positive,
     assistanceBelow: positive,
     milestoneExports: positive,
+    marketEveryTicks: positive,
+    exchange: z
+      .array(
+        z.object({
+          materialId: id,
+          baseCompensation: positive,
+          floorCompensation: positive,
+          baseDemandBps: z.number().int().min(1000).max(20000),
+          saturationPerUnitBps: z.number().int().positive().max(10000),
+          recoveryPerMarketTickBps: z.number().int().positive().max(10000),
+        }),
+      )
+      .min(1),
   }),
 });
 export type Content = z.infer<typeof contentSchema>;
@@ -231,6 +243,16 @@ function validateContentInternal(
   for (const d of c.site.deposits)
     if (!c.materials.find((m) => m.id === d.material)?.known)
       throw new Error("Deposit material must be known");
+  const exchangeMaterials = new Set<string>();
+  for (const listing of c.economy.exchange) {
+    if (!materials.has(listing.materialId))
+      throw new Error("Missing exchange material");
+    if (exchangeMaterials.has(listing.materialId))
+      throw new Error("Duplicate exchange material");
+    exchangeMaterials.add(listing.materialId);
+    if (listing.floorCompensation > listing.baseCompensation)
+      throw new Error("Exchange floor exceeds base compensation");
+  }
   if (
     c.economy.grant < Math.max(...c.machines.map((m) => m.fuel)) * 8 ||
     c.economy.assistanceBelow > c.economy.grant

@@ -169,24 +169,6 @@ export default function Studio() {
               }
             />
           </label>
-          <label className="studio-field">
-            <span>Export fuel / unit</span>
-            <input
-              type="number"
-              min={0}
-              value={Number(row.exportValue)}
-              onChange={(event) =>
-                touch(() =>
-                  store.setCell(
-                    "materials",
-                    selected,
-                    "exportValue",
-                    Number(event.target.value),
-                  ),
-                )
-              }
-            />
-          </label>
         </div>
         <label className="studio-check">
           <input

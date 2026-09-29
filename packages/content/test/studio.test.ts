@@ -41,7 +41,6 @@ describe("Content Studio authoring core", () => {
     store.setRow("materials", "powder", {
       nameKey: "material.powder.name",
       color: "#8899aa",
-      exportValue: 0,
       known: false,
     });
     store.setRow("operations", "polish", {

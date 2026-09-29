@@ -168,7 +168,17 @@ Phase 4 intentionally stops before economy/site/storage/asset/general-purpose sc
 
 ## Phase 5 — Progression and company systems
 
-**Epic:** GitHub Issue #12. Do not start market depth before the physical-inventory and discovery gates are ready.
+**Epic:** GitHub Issue #12. **ACTIVE.**
+
+**Execution:** #69 → #70 → #71 → #72 → #73.
+
+- #69 — authoritative Materials Exchange baseline;
+- #70 — Corporate Orders and Special Directives;
+- #71 — evidence-driven milestones, terminal handling, and fuel classes;
+- #72 — corporate assistance, obligations, and recovery standing;
+- #73 — end-to-end company progression exit review.
+
+Do not skip the dependency order. Market/company state remains authoritative in sim-core and must preserve physical inventory plus hidden-knowledge boundaries.
 
 ### Scope
 
@@ -276,4 +286,4 @@ The following should not be treated as progress during foundation unless require
 
 The accepted implementation and evidence are summarized in [FIRST_PLAYABLE.md](FIRST_PLAYABLE.md) and [BROWSER_SMOKE.md](BROWSER_SMOKE.md). Continue from this foundation; do not rebuild the retired dashboard prototype.
 
-Phase 1.5 is complete through Issue #8 / PR #29, Phase 2 through Issue #34 / PR #44, Phase 3 through Issue #50, and Phase 4 through Issue #63 / PR #67. Phase 5 / #12 is the next implementation phase.
+Phase 1.5 is complete through Issue #8 / PR #29, Phase 2 through Issue #34 / PR #44, Phase 3 through Issue #50, and Phase 4 through Issue #63 / PR #67. Phase 5 / #12 is active; #69 is the first implementation slice.

@@ -190,7 +190,6 @@ function candidateFromStore(store: Store, base: Content): unknown {
       id,
       nameKey: stringCell(row, "nameKey", label),
       color: stringCell(row, "color", label),
-      exportValue: numberCell(row, "exportValue", label),
       known: booleanCell(row, "known", label),
     };
   });

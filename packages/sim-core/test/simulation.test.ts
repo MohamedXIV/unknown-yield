@@ -4,6 +4,7 @@ import {
   Simulation,
   auditLedger,
   experimentEvidenceKey,
+  initializeKnownMarkets,
   type GameCommand,
 } from "../src/index";
 const make = () => new Simulation(fixture);
@@ -24,6 +25,7 @@ function withConfirmedKnowledge(reactionId: string) {
     processConditionId: reaction.processConditionId ?? null,
     state: "confirmed",
   };
+  initializeKnownMarkets(fixture, save);
   expect(s.load(save).ok).toBe(true);
   return s;
 }
@@ -336,8 +338,8 @@ describe("automatic industry", () => {
       expect(save.machines[processor].definitionId).toBe(definitionId);
       expect(save.machines[processor].job?.reaction).toBe(reactionId);
       expect(save.knowledge).not.toContain(reactionId);
-      expect(save.schemaVersion).toBe(7);
-      expect(save.contentVersion).toBe("world-01-v5");
+      expect(save.schemaVersion).toBe(8);
+      expect(save.contentVersion).toBe("world-01-v6");
 
       const restored = make(),
         repeated = make();
@@ -389,7 +391,7 @@ describe("automatic industry", () => {
     expect(JSON.stringify(hinted)).not.toContain("reaction.heat-raw");
 
     const saved = s.serialize();
-    expect(saved.schemaVersion).toBe(7);
+    expect(saved.schemaVersion).toBe(8);
     expect(saved.evidence[hinted!.id].state).toBe("hinted");
 
     const restored = make();
@@ -453,7 +455,7 @@ describe("automatic industry", () => {
 
     const restored = make();
     expect(restored.load(legacy).ok).toBe(true);
-    expect(restored.serialize().schemaVersion).toBe(7);
+    expect(restored.serialize().schemaVersion).toBe(8);
     const hinted = restored
       .snapshot()
       .knowledgeEntries.find(
@@ -663,7 +665,7 @@ describe("automatic industry", () => {
     );
   });
 
-  it("migrates schema-6 machines with no incident into schema 7", () => {
+  it("migrates schema-6 machines with no incident through schema 8", () => {
     const s = make();
     const machineId = build(s, {
       type: "placeMachine",
@@ -678,7 +680,7 @@ describe("automatic industry", () => {
 
     const restored = make();
     expect(restored.load(legacy).ok).toBe(true);
-    expect(restored.serialize().schemaVersion).toBe(7);
+    expect(restored.serialize().schemaVersion).toBe(8);
     expect(restored.serialize().machines[machineId].incident).toBeNull();
   });
 

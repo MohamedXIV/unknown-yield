@@ -122,3 +122,11 @@ Assistance prevents an accidental economic soft-lock. It creates an obligation r
 The economy should push the player toward **diversification and adaptable industry**, not turn the game into a stock-trading UI.
 
 The market tells the player what became valuable. The player's response happens primarily in the world: factories, routing, storage, terminal handling and industrial choices.
+
+## 13. Phase 5 implementation boundary
+
+The #69 baseline makes the Materials Exchange authoritative in `sim-core`. Exchange eligibility is authored independently from material identity; runtime listing state is created only after the company can know a material. Compensation derives from authored baseline/floor demand parameters plus persisted saturation, repeated physical exports raise saturation, and saturation recovers deterministically on a slow market cadence.
+
+The terminal remains the physical export boundary and the material ledger remains unchanged: market state changes compensation, never material accounting. React may present current compensation and saturation for known listings but does not own price truth.
+
+This baseline intentionally does **not** add Corporate Orders, Special Directives, additional fuel classes, terminal-module progression or standing rules; those remain #70–#72 so the first market slice stays testable and does not become a dashboard framework.

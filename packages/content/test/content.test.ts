@@ -11,7 +11,7 @@ describe("content boundary", () => {
   it("accepts the complete tiny scenario", () => {
     const c = validateContent(fixture);
     expect(c.machines).toHaveLength(5);
-    expect(c.version).toBe("world-01-v5");
+    expect(c.version).toBe("world-01-v6");
     expect(c.storages).toHaveLength(1);
     expect(c.storages[0]).toMatchObject({ id: "depot", capacity: 40 });
     expect(c.site.stagingCapacity).toBe(24);
@@ -115,7 +115,7 @@ describe("content boundary", () => {
     "capability",
     "capacity",
     "fuel",
-    "export",
+    "exchange",
     "storage",
     "staging",
   ] as const)("rejects invalid %s", (kind) => {
@@ -125,25 +125,25 @@ describe("content boundary", () => {
     if (kind === "capability") c.operations[0].id = "unavailable";
     if (kind === "capacity") c.machines[0].capacity = 0;
     if (kind === "fuel") c.economy.grant = -1;
-    if (kind === "export") c.materials[1].exportValue = -1;
+    if (kind === "exchange") c.economy.exchange[0].floorCompensation = 13;
     if (kind === "storage") c.storages[0].capacity = 0;
     if (kind === "staging") c.site.stagingCapacity = 0;
     expect(() => validateContent(c)).toThrow();
   });
   it("round-trips a material edit through TinyBase and validation", () => {
     const store = createContentStore(fixture);
-    store.setCell("materials", "raw", "exportValue", 7);
+    store.setCell("materials", "raw", "color", "#112233");
     const exported = contentFromStore(store, fixture);
-    expect(exported.materials.find((m) => m.id === "raw")?.exportValue).toBe(
-      7,
+    expect(exported.materials.find((m) => m.id === "raw")?.color).toBe(
+      "#112233",
     );
-    expect(
-      fixture.materials.find((m) => m.id === "raw")?.exportValue,
-    ).not.toBe(7);
+    expect(fixture.materials.find((m) => m.id === "raw")?.color).not.toBe(
+      "#112233",
+    );
     expect(validateContent(JSON.parse(JSON.stringify(exported)))).toEqual(
       exported,
     );
-    store.setCell("materials", "raw", "exportValue", -5);
+    store.setCell("materials", "raw", "color", "not-a-color");
     expect(() => contentFromStore(store, fixture)).toThrow();
   });
   it("covers every content key with the English catalog", () => {

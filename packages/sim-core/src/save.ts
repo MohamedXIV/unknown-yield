@@ -7,6 +7,7 @@ import {
   type ExperimentEvidence,
   type Save,
 } from "./types";
+import { initializeKnownMarkets, exchangeDefinition } from "./market";
 import {
   factoryError,
   machinePlacement,
@@ -82,6 +83,7 @@ const schema = z.object({
     z.literal(5),
     z.literal(6),
     z.literal(7),
+    z.literal(8),
   ]),
   contentVersion: z.string(),
   tick: count,
@@ -101,10 +103,19 @@ const schema = z.object({
   storages: z.record(safeId, storage),
   staging: inventory,
   policies: z.record(safeId, z.enum(["keep", "export"])),
+  market: z
+    .record(
+      safeId,
+      z.object({
+        demandBps: z.number().int().min(1000).max(20000),
+        saturationBps: z.number().int().min(0).max(10000),
+      }),
+    )
+    .default({}),
 });
 export function initialState(c: Content): Save {
-  return {
-    schemaVersion: 7,
+  const state: Save = {
+    schemaVersion: 8,
     contentVersion: c.version,
     tick: 0,
     remainder: 0,
@@ -144,7 +155,10 @@ export function initialState(c: Content): Save {
     policies: Object.fromEntries(
       c.materials.filter((m) => m.known).map((m) => [m.id, "keep"]),
     ),
+    market: {},
   };
+  initializeKnownMarkets(c, state);
+  return state;
 }
 export function parseSave(input: unknown, c: Content): Save {
   const s = schema.parse(input);
@@ -195,6 +209,12 @@ export function parseSave(input: unknown, c: Content): Save {
   // Schema 6 predates persisted machine incidents. The parser defaults every
   // existing machine to no incident, which is an exact migration.
   if (s.schemaVersion === 6) s.schemaVersion = 7;
+  // Schema 7 predates market memory. No historical demand/saturation state
+  // existed, so known listings begin at their authored baseline on migration.
+  if (s.schemaVersion === 7) {
+    s.schemaVersion = 8;
+    initializeKnownMarkets(c, s);
+  }
   if (s.contentVersion !== c.version || s.remainder >= c.tickMs)
     throw new Error("Incompatible content or timing");
   if (
@@ -210,6 +230,15 @@ export function parseSave(input: unknown, c: Content): Save {
       known.add(r.input);
       known.add(r.output);
     });
+  const expectedMarkets = c.economy.exchange
+    .filter((listing) => known.has(listing.materialId))
+    .map((listing) => listing.materialId)
+    .sort();
+  if (
+    Object.keys(s.market).sort().join() !== expectedMarkets.join() ||
+    Object.keys(s.market).some((materialId) => !exchangeDefinition(c, materialId))
+  )
+    throw new Error("Invalid market state");
   if (
     Object.keys(s.deposits).sort().join() !==
       c.site.deposits
@@ -380,8 +409,7 @@ export function parseSave(input: unknown, c: Content): Save {
   for (const [id, policy] of Object.entries(s.policies))
     if (
       !known.has(id) ||
-      (policy === "export" &&
-        !c.materials.find((m) => m.id === id)?.exportValue)
+      (policy === "export" && !exchangeDefinition(c, id))
     )
       throw new Error("Invalid terminal policy");
   return s;

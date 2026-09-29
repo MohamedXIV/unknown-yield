@@ -94,6 +94,14 @@ export type Storage = Point & {
   direction: number;
   inventory: Inventory;
 };
+export type MarketState = {
+  demandBps: number;
+  saturationBps: number;
+};
+export type MarketListingView = MarketState & {
+  materialId: string;
+  compensationPerUnit: number;
+};
 export type Save = {
   schemaVersion: number;
   contentVersion: string;
@@ -114,6 +122,7 @@ export type Save = {
   storages: Record<string, Storage>;
   staging: Inventory;
   policies: Record<string, "keep" | "export">;
+  market: Record<string, MarketState>;
 };
 export type CommandResult = {
   ok: boolean;
@@ -195,6 +204,7 @@ export type PlayerSnapshot = {
   storages: StorageView[];
   staging: Inventory;
   policies: Record<string, "keep" | "export">;
+  exchange: MarketListingView[];
   knowledgeEntries: KnowledgeEntry[];
   observations: Observation[];
 };

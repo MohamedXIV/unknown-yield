@@ -6,11 +6,11 @@ The current Zod contract lives in `packages/content/src/schema.ts`. It separates
 
 The starter fixture contains a known construction chain plus hidden outcomes of the same alien input. A crusher accepts different physical inputs; recipes are not baked into the renderer. `known` marks initial knowledge only. Runtime observations unlock public material metadata and notebook entries; authored truth never goes straight to player UI.
 
-Content version `world-01-v5` is independent of save schema 7. Since Issue #14 the schema carries localization keys (`nameKey`, `observationKey`) instead of literal English `name`/`observation` strings; the English catalog lives in `packages/content/src/locale.ts` and is validated by Zod plus semantic key-coverage checks. Issue #4 added a `storages` table (bulk storage definitions: capacity, footprint, cost) and `site.stagingCapacity` for bounded terminal staging. Phase 4 replaces the old materials-only TinyBase proof with Content Studio v1: materials, operations, machines and reactions are editable authoring tables; English source/fallback text is authored alongside their stable localization-key references; the whole bundle validates before export/import; reverse references and isolated simulation preview are development-only tools. Site/economy/storage breadth remains preserved base content in v1 rather than a generic everything-editor.
+Content version `world-01-v6` is independent of save schema 8. Phase 5 #69 moves export compensation out of per-material static values into data-driven Materials Exchange definitions plus persisted runtime market memory (demand/saturation). Since Issue #14 the schema carries localization keys (`nameKey`, `observationKey`) instead of literal English `name`/`observation` strings; the English catalog lives in `packages/content/src/locale.ts` and is validated by Zod plus semantic key-coverage checks. Issue #4 added a `storages` table (bulk storage definitions: capacity, footprint, cost) and `site.stagingCapacity` for bounded terminal staging. Phase 4 replaces the old materials-only TinyBase proof with Content Studio v1: materials, operations, machines and reactions are editable authoring tables; English source/fallback text is authored alongside their stable localization-key references; the whole bundle validates before export/import; reverse references and isolated simulation preview are development-only tools. Site/economy/storage breadth remains preserved base content in v1 rather than a generic everything-editor.
 
 ### Discrete process conditions (Issue #30)
 
-Machine definitions and reactions may each carry an optional stable `processConditionId`. The simulation matches the exact tuple of operation, input material and condition ID; omitted IDs match only other omitted IDs. There is no wildcard or fallback. Validation rejects duplicate tuples and any reaction or machine operation without a processor definition carrying the same condition. The fixture demonstrates `raw + heat` resolving to residue in `ambient` and granules in `sealed`; the authored outcomes remain hidden until observed. Existing unconditioned reactions remain valid. The condition is derived from the placed machine's existing `definitionId`. The fixture remains `world-01-v5`; Issue #32 is additive and does not invalidate compatible world-01-v5 saves.
+Machine definitions and reactions may each carry an optional stable `processConditionId`. The simulation matches the exact tuple of operation, input material and condition ID; omitted IDs match only other omitted IDs. There is no wildcard or fallback. Validation rejects duplicate tuples and any reaction or machine operation without a processor definition carrying the same condition. The fixture demonstrates `raw + heat` resolving to residue in `ambient` and granules in `sealed`; the authored outcomes remain hidden until observed. Existing unconditioned reactions remain valid. The condition is derived from the placed machine's existing `definitionId`. At the Issue #30 stage the fixture remained `world-01-v5`; later phases may bump content independently when their persisted/content contracts require it.
 
 ### Experiment evidence and player knowledge (Issue #31)
 
@@ -18,7 +18,7 @@ Player knowledge is no longer only a discovered/not-discovered reaction list. Sa
 
 ### Knowledge-gated capability (Issue #33)
 
-A machine definition may carry one optional `unlock` object with a stable prerequisite `reactionId` and a localized `hintKey`. This is deliberately not a generic prerequisite graph. Validation requires the reaction ID to exist and the hint key to belong to that machine. The fixture gates `oversealed-furnace` on confirmed `heat-raw-sealed` knowledge while leaving the existing machine/reaction identities and content version `world-01-v5` intact.
+A machine definition may carry one optional `unlock` object with a stable prerequisite `reactionId` and a localized `hintKey`. This is deliberately not a generic prerequisite graph. Validation requires the reaction ID to exist and the hint key to belong to that machine. The fixture gates `oversealed-furnace` on confirmed `heat-raw-sealed` knowledge while leaving the existing machine/reaction identities and then-current content version intact.
 
 Unlock state is not separately authored or persisted at runtime: it is derived from the save's confirmed reaction knowledge. Player snapshots sanitize the content rule into `{ unlocked, hintKey }`, so the prerequisite reaction ID does not leak into React/Phaser presentation before discovery.
 
@@ -51,7 +51,7 @@ Potential fields:
 - icon/sprite references;
 - physical/logistics traits;
 - known/default handling class;
-- value/export metadata;
+- exchange eligibility is defined by Materials Exchange content rather than a static material value;
 - construction eligibility;
 - hidden true properties;
 - discovery presentation metadata.

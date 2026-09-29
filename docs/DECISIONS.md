@@ -219,9 +219,9 @@ Definitions and placed instances are separate. Machines operate automatically fr
 
 ## D-018 — Save schema evolves separately from content
 
-**Status:** accepted, updated 2026-09-26
+**Status:** accepted, updated 2026-09-30
 
-Spatial saves currently use schema 7, separate from content version `world-01-v5`. Schema 4 migrates losslessly through schema 5 by adding empty belt-diverter state; schema 5 then migrates to schema 6 by reconstructing confirmed experiment evidence from discovered reaction IDs and hinted evidence from any undiscovered active processor batch; schema 6 migrates to schema 7 by adding an empty machine-incident slot. Schemas 1–3 remain incompatible and are rejected without replacing a running site. Saves tied to the older `world-01-v4` content are rejected by the exact content-version check. Content Studio remains development-only and receives no scope expansion from save migration work.
+Spatial saves currently use schema 8, separate from content version `world-01-v6`. Schema 4 migrates losslessly through schema 5 by adding empty belt-diverter state; schema 5 then migrates to schema 6 by reconstructing confirmed experiment evidence from discovered reaction IDs and hinted evidence from any undiscovered active processor batch; schema 6 migrates to schema 7 by adding an empty machine-incident slot; schema 7 migrates to schema 8 by initializing company-known Materials Exchange listings at authored baseline demand with zero saturation because older saves had no market-memory state to preserve. Schemas 1–3 remain incompatible and are rejected without replacing a running site. Saves tied to older content versions are rejected by the exact content-version check. Content Studio remains development-only and receives no scope expansion from save migration work.
 
 ## D-019 — Material conservation is a design invariant
 
@@ -396,6 +396,22 @@ Before Phase 4, constructing `Simulation` indirectly required every localization
 
 
 ---
+
+---
+
+## D-029 — Materials Exchange truth belongs to sim-core and follows discovery
+
+**Status:** accepted for Phase 5 baseline, 2026-09-30
+
+Static per-material export values are replaced by authored Materials Exchange definitions plus persisted runtime market memory. The exchange definition owns baseline compensation, a utility floor, baseline demand, saturation sensitivity and recovery cadence; the save owns current demand/saturation for listings the company legitimately knows.
+
+A listing may appear only when its material is initially known or confirmed knowledge proves a reaction involving it. Player snapshots expose only sanitized known listings and current compensation. React presents that state but cannot create listings, prices or rewards.
+
+### Consequence
+
+Physical terminal staging remains the only normal export sink. Exported units leave tracked world inventory, update the material ledger, earn compensation from the current authoritative market state, repay corporate debt before net fuel allocation, and increase saturation. Saturation recovers deterministically on a slow simulation cadence. There is no stock ownership, speculative buy/sell loop, chart-driven price authority or hidden-content preview.
+
+This baseline deliberately keeps one fuel resource. Orders, directives, additional fuel classes and broader company progression remain later dependency-ordered Phase 5 children.
 
 ## How to change a decision
 
