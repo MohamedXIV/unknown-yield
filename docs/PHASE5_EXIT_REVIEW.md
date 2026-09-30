@@ -2,7 +2,7 @@
 
 Issue: #73  
 Parent epic: #12  
-Status: **Local acceptance PASS; GitHub closeout pending**
+Status: **ACCEPTED / MERGED** — PR #79 squash-merged as `dcbe1a567cc26ab150f13e159d35bf50030ee570`.
 
 ## Local acceptance — 2026-09-30
 
@@ -26,7 +26,7 @@ The actual browser world used normal UI actions only:
 
 The browser run did not require a continuation allocation. Saturated repeat-intervention continuations and expired-opportunity recovery remain separately attributed to the domain tests. Material-ledger audits and exact complete-save round trips are verified throughout the integrated domain companion; browser observations are not represented as a browser ledger API.
 
-Subsequent evidence-recording commits are documentation-only. Phase/issue closure still requires the normal live GitHub closeout; this local acceptance does not by itself close #73 or #12.
+Subsequent evidence-recording commits are documentation-only. Canonical PR #79 was verified live at `aef3249de6df4a7cab53a16986174439f5a9a470` and squash-merged as `dcbe1a567cc26ab150f13e159d35bf50030ee570`; #73 and parent #12 are closed.
 
 Phase 5 implementation children #69–#72 are merged. This review adds no new gameplay breadth. Its job is to prove that discovery, market/company state, physical logistics, capability progression and recovery now behave as one coherent world-facing loop.
 
@@ -200,12 +200,12 @@ Reuse previously accepted child evidence only where no runtime/UI code changed a
 
 ## Closeout rule
 
-Local/domain/browser acceptance is recorded above. Live GitHub closeout remains pending until the verified changes are published and the canonical PR head is checked.
+Local/domain/browser acceptance is recorded above. Canonical PR #79 was verified at `aef3249de6df4a7cab53a16986174439f5a9a470` and squash-merged as `dcbe1a567cc26ab150f13e159d35bf50030ee570`; #73 is closed and parent #12 is complete.
 
-Only after that evidence passes should closeout:
+Closeout completed on 2026-09-30:
 
-- mark #73 complete;
-- close parent #12;
-- update Issue #2 with exact merge/evidence;
-- mark Phase 5 complete in ROADMAP/EXECUTION;
-- then inspect live roadmap state before creating any Phase 6 work.
+- #73 completed via PR #79 / `dcbe1a567cc26ab150f13e159d35bf50030ee570`;
+- parent #12 closed after the accepted gate;
+- Issue #2 records the exact merge evidence;
+- Phase 5 is complete in ROADMAP/EXECUTION;
+- Phase 6 remains undecomposed and no Phase 6 implementation was started during this closeout.
