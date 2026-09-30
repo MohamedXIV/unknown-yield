@@ -172,8 +172,8 @@ Phase 4 intentionally stops before economy/site/storage/asset/general-purpose sc
 
 **Execution:** #69 → #70 → #71 → #72 → #73.
 
-- #69 — authoritative Materials Exchange baseline;
-- #70 — Corporate Orders and Special Directives;
+- #69 — authoritative Materials Exchange baseline — **COMPLETE** via PR #74;
+- #70 — Corporate Orders and Special Directives — **ACTIVE**;
 - #71 — evidence-driven milestones, terminal handling, and fuel classes;
 - #72 — corporate assistance, obligations, and recovery standing;
 - #73 — end-to-end company progression exit review.
