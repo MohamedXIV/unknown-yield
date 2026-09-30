@@ -556,8 +556,9 @@ function validateContentInternal(
   const minimumLegacyRecoveryFuel =
     Math.max(...c.machines.map((m) => m.fuel)) * 8;
   if (
-    c.economy.grant < minimumLegacyRecoveryFuel ||
-    c.economy.assistanceBelow > c.economy.grant ||
+    (c.economy.assistancePackages.length === 0 &&
+      (c.economy.grant < minimumLegacyRecoveryFuel ||
+        c.economy.assistanceBelow > c.economy.grant)) ||
     c.economy.assistancePackages.some(
       (assistance) => assistance.fuelBelow > assistance.grantFuel,
     )
