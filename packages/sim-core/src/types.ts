@@ -127,6 +127,7 @@ export type CompanyState = {
   interventionStreak: number;
   recoveryNetFuel: number;
   recoveryPackageId: string | null;
+  repaidSinceAssistanceFuel: number;
 };
 export type AssistanceReason = "fuel-not-depleted" | "obligation-open" | null;
 export type AssistanceView = {
@@ -138,7 +139,11 @@ export type AssistanceView = {
   eligible: boolean;
   reason: AssistanceReason;
 };
-export type CompanyView = CompanyState & {
+export type CompanyView = {
+  standing: CompanyStanding;
+  interventionStreak: number;
+  recoveryNetFuel: number;
+  recoveryPackageId: string | null;
   recoveryTargetNetFuel: number;
 };
 
