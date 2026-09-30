@@ -36,6 +36,10 @@ export function contentKeys(c: Content): string[] {
       directive.nameKey,
       directive.briefKey,
     ]),
+    ...c.economy.assistancePackages.flatMap((assistance) => [
+      assistance.nameKey,
+      assistance.briefKey,
+    ]),
     ...c.economy.terminalCapabilities.map((capability) => capability.nameKey),
     ...c.economy.milestones.flatMap((milestone) => [
       milestone.nameKey,
@@ -105,6 +109,21 @@ export const enCatalog: LocaleCatalog = {
     "{{material}} → {{operation}} · {{setup}}",
   "ui.terminal.opportunity.experiment-fallback": "Experiment",
   "ui.terminal.opportunities.empty": "No active corporate opportunity.",
+  "assistance.emergency-fuel.name": "Emergency fuel allocation",
+  "assistance.emergency-fuel.brief":
+    "A bounded company fuel allocation for a depleted but recoverable operation. Future export compensation repays the obligation first.",
+  "ui.terminal.assistance.heading": "Corporate assistance",
+  "ui.terminal.assistance.clear": "Standing clear",
+  "ui.terminal.assistance.recovery": "Recovery standing",
+  "ui.terminal.assistance.progress":
+    "{{progress}}/{{target}} net export fuel recovered",
+  "ui.terminal.assistance.package-meta":
+    "+{{grant}} fuel · {{obligation}} obligation",
+  "ui.terminal.assistance.request": "Request assistance",
+  "ui.terminal.assistance.unavailable-fuel":
+    "Available only when operating fuel is depleted.",
+  "ui.terminal.assistance.unavailable-obligation":
+    "Repay the current obligation through exports before requesting more assistance.",
   "terminal.capability.sealed-sample-outbound.name": "Sealed sample handling",
   "milestone.sealed-study-certified.name": "Outbound handling certified",
   "milestone.sealed-study-certified.hint":
