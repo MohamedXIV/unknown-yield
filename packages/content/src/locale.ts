@@ -109,6 +109,9 @@ export const enCatalog: LocaleCatalog = {
     "{{material}} → {{operation}} · {{setup}}",
   "ui.terminal.opportunity.experiment-fallback": "Experiment",
   "ui.terminal.opportunities.empty": "No active corporate opportunity.",
+  "assistance.legacy-emergency.name": "Emergency fuel allocation",
+  "assistance.legacy-emergency.brief":
+    "A compatibility emergency fuel allocation. Future export compensation repays the obligation first.",
   "assistance.emergency-fuel.name": "Emergency fuel allocation",
   "assistance.emergency-fuel.brief":
     "A bounded company fuel allocation for a depleted but recoverable operation. Future export compensation repays the obligation first.",
