@@ -5,6 +5,7 @@ import {
   applyExportCompensation,
   auditLedger,
   experimentEvidenceKey,
+  initializeKnownMarkets,
   recordDirectiveExperiment,
   recordOrderExport,
   type GameCommand,
@@ -268,6 +269,7 @@ describe("corporate assistance and recovery standing", () => {
       interventionStreak: 0,
       recoveryNetFuel: 0,
       recoveryPackageId: null,
+      repaidSinceAssistanceFuel: 0,
     });
   });
 
@@ -303,6 +305,202 @@ describe("corporate assistance and recovery standing", () => {
         recoveryNetFuel: 0,
       },
     });
+
+    const depletedAgain = simulation.serialize();
+    depletedAgain.fuel = 0;
+    expect(simulation.load(depletedAgain).ok).toBe(true);
+    expect(simulation.snapshot().assistance[0]).toMatchObject({
+      eligible: false,
+      reason: "obligation-open",
+      nextObligationFuel: 12,
+    });
+    expect(simulation.command({ type: "assistance" }).ok).toBe(false);
+
+    const repaid = simulation.serialize();
+    const progress = applyExportCompensation(content, repaid, "granules", 2);
+    expect(progress.repaid).toBeGreaterThanOrEqual(12);
+    expect(repaid.debt).toBeGreaterThan(0);
+    expect(simulation.load(repaid).ok).toBe(true);
+    expect(simulation.snapshot().assistance[0]).toMatchObject({
+      eligible: true,
+      nextObligationFuel: 12,
+    });
+    const debtBeforeContinuation = simulation.snapshot().debt;
+    expect(simulation.command({ type: "assistance" }).ok).toBe(true);
+    expect(simulation.snapshot()).toMatchObject({
+      fuel: 36,
+      debt: debtBeforeContinuation + 12,
+      company: {
+        standing: "recovery",
+        interventionStreak: 2,
+      },
+    });
+    expect(simulation.serialize().company.repaidSinceAssistanceFuel).toBe(0);
+  });
+
+  it("recovers a saturated second intervention through repayment-earned continuations", () => {
+    const content = structuredClone(fixture),
+      simulation = new Simulation(content),
+      save = simulation.serialize(),
+      reaction = content.reactions.find(
+        (entry) => entry.id === "heat-raw-sealed",
+      )!,
+      expiry = content.economy.directives[0].durationTicks;
+
+    save.tick = expiry;
+    save.fuel = 0;
+    save.debt = 0;
+    save.company = {
+      standing: "recovery",
+      interventionStreak: 1,
+      recoveryNetFuel: 0,
+      recoveryPackageId: "emergency-fuel",
+      repaidSinceAssistanceFuel: 0,
+    };
+    save.knowledge.push(reaction.id);
+    save.evidence[
+      experimentEvidenceKey(
+        reaction.operation,
+        reaction.input,
+        reaction.processConditionId ?? null,
+      )
+    ] = {
+      operationId: reaction.operation,
+      inputId: reaction.input,
+      processConditionId: reaction.processConditionId ?? null,
+      state: "confirmed",
+    };
+    initializeKnownMarkets(content, save);
+    save.market.granules.saturationBps = 10000;
+    for (const definition of [
+      content.economy.orders[0],
+      content.economy.directives[0],
+    ])
+      save.opportunities[definition.id] = {
+        status: "expired",
+        offeredAt: 0,
+        expiresAt: definition.durationTicks,
+        progress: 0,
+        completedAt: null,
+      };
+
+    expect(simulation.load(save).ok).toBe(true);
+    expect(
+      simulation.snapshot().exchange.find(
+        (entry) => entry.materialId === "granules",
+      )?.handling?.unlocked,
+    ).toBe(true);
+    expect(simulation.snapshot().assistance[0]).toMatchObject({
+      eligible: true,
+      nextObligationFuel: 48,
+    });
+    expect(simulation.command({ type: "assistance" }).ok).toBe(true);
+    expect(simulation.snapshot()).toMatchObject({
+      fuel: 36,
+      debt: 48,
+      company: {
+        standing: "recovery",
+        interventionStreak: 2,
+      },
+    });
+
+    const factory = build(simulation, {
+      type: "placeFactory",
+      x: 24,
+      y: 33,
+      width: 10,
+      height: 10,
+    });
+    for (const x of [24, 33])
+      build(simulation, {
+        type: "placePort",
+        factoryId: factory,
+        x,
+        y: 37,
+        direction: 0,
+      });
+    build(simulation, {
+      type: "placeMachine",
+      definitionId: "extractor",
+      x: 18,
+      y: 36,
+      direction: 0,
+    });
+    build(simulation, {
+      type: "placeMachine",
+      definitionId: "sealed-furnace",
+      x: 27,
+      y: 36,
+      direction: 0,
+    });
+    build(simulation, path(20, 37, 26, 37));
+    build(simulation, path(29, 37, 37, 37, 3));
+    build(simulation, path(37, 36, 37, 28, 0));
+    expect(
+      simulation.command({
+        type: "setPolicy",
+        materialId: "granules",
+        policy: "export",
+      }).ok,
+    ).toBe(true);
+
+    for (let i = 0; i < 20000; i++) simulation.step(100);
+
+    expect(simulation.snapshot().fuel).toBe(0);
+    expect(simulation.snapshot().debt).toBeGreaterThan(0);
+    expect(simulation.snapshot().exported).toBeGreaterThan(0);
+    expect(simulation.snapshot().company.interventionStreak).toBe(2);
+    expect(simulation.serialize().company.repaidSinceAssistanceFuel).toBeGreaterThanOrEqual(
+      12,
+    );
+    expect(simulation.snapshot().assistance[0]).toMatchObject({
+      eligible: true,
+      nextObligationFuel: 12,
+    });
+
+    const firstContinuationDebt = simulation.snapshot().debt;
+    expect(simulation.command({ type: "assistance" }).ok).toBe(true);
+    expect(simulation.snapshot().debt).toBe(firstContinuationDebt + 12);
+    expect(simulation.snapshot().fuel).toBe(36);
+    expect(simulation.snapshot().company.interventionStreak).toBe(2);
+    expect(simulation.serialize().company.repaidSinceAssistanceFuel).toBe(0);
+
+    let continuations = 1;
+    for (
+      let i = 0;
+      i < 60000 && simulation.snapshot().company.standing !== "clear";
+      i++
+    ) {
+      const snapshot = simulation.snapshot();
+      if (
+        snapshot.fuel < content.economy.assistancePackages[0].fuelBelow &&
+        snapshot.debt > 0 &&
+        snapshot.assistance[0].eligible
+      ) {
+        const streak = snapshot.company.interventionStreak;
+        expect(simulation.command({ type: "assistance" }).ok).toBe(true);
+        expect(simulation.snapshot().company.interventionStreak).toBe(streak);
+        continuations++;
+      }
+      simulation.step(100);
+    }
+
+    expect(continuations).toBeGreaterThanOrEqual(1);
+    expect(simulation.snapshot().debt).toBe(0);
+    expect(simulation.snapshot().company).toEqual({
+      standing: "clear",
+      interventionStreak: 0,
+      recoveryNetFuel: 0,
+      recoveryPackageId: null,
+      recoveryTargetNetFuel: 0,
+    });
+    expect(
+      simulation.serialize().opportunities["sealed-thermal-study"].status,
+    ).toBe("expired");
+    expect(
+      simulation.serialize().opportunities["granules-procurement"].status,
+    ).toBe("expired");
+    expect(auditLedger(content, simulation.serialize()).ok).toBe(true);
   });
 
   it("migrates schema 10 debt into recovery standing without changing the obligation", () => {
