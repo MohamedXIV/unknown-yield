@@ -435,9 +435,9 @@ The terminal may present sanitized active opportunities and their clear reward/p
 
 Company progression uses a small data-driven milestone graph evaluated from authoritative evidence; it does not introduce XP or a spend-to-unlock currency. Milestone identity, evidence references and terminal capability identity use stable IDs, while names/hints remain localization data.
 
-The first proof unlocks one terminal outbound-handling capability from completion of the Sealed thermal study. Conductive granules may exist in terminal staging before the unlock, but they cannot leave the map, earn compensation, advance an order or enter the export ledger until the capability is available. Because staging remains bounded, blocked cargo naturally creates backpressure rather than disappearing.
+The first proof unlocks one terminal outbound-handling capability from durable confirmed `heat-raw-sealed` trial evidence. The Sealed thermal study remains an optional, time-limited bonus opportunity rather than a permanent prerequisite. Conductive granules may exist in terminal staging before the unlock, but they cannot leave the map, earn compensation, advance an order or enter the export ledger until the capability is available. Because staging remains bounded, blocked cargo naturally creates backpressure rather than disappearing.
 
-Content validation rejects circular milestone/capability dependencies and rejects a required handling unlock that depends on exporting or completing an order for the same material it blocks.
+Content validation rejects circular milestone/capability dependencies and rejects a required handling unlock that depends on exporting or completing an order for the same material it blocks. Because the gate uses confirmed reaction evidence, an expired Directive, a Directive that never appeared, or a pre-offer confirmed experiment cannot create a permanent handling soft-lock.
 
 No second fuel/allocation class is added in this slice: there is not yet a second distinct machine/logistics behavior for it to represent. Adding one now would be naming/color breadth rather than capability depth.
 
