@@ -10,6 +10,18 @@ it("resolves catalog entries to readable English", () => {
   expect(t("reaction.crush-raw.observation")).toContain("conductive grains");
 });
 
+it("resolves assistance package and command feedback keys", () => {
+  expect(t("assistance.emergency-fuel.name")).toBe(
+    "Emergency fuel allocation",
+  );
+  expect(t("ui.terminal.assistance.result.approved")).toContain(
+    "Assistance approved",
+  );
+  expect(t("assistance.legacy-emergency.name")).toBe(
+    "Emergency fuel allocation",
+  );
+});
+
 it("falls back without ever rendering a raw key", () => {
   expect(
     t("material.nope.name", { defaultValue: "Unidentified material" }),
