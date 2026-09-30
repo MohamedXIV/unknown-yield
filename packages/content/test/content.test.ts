@@ -140,6 +140,7 @@ describe("content boundary", () => {
         grantFuel: 36,
         baseObligationFuel: 36,
         repeatObligationStepFuel: 12,
+        continuationObligationFuel: 12,
         recoveryNetFuel: 24,
       }),
     ]);
@@ -148,6 +149,13 @@ describe("content boundary", () => {
     underfunded.economy.assistancePackages[0].baseObligationFuel = 35;
     expect(() => validateContent(underfunded)).toThrow(
       /obligation cannot be smaller/i,
+    );
+
+    const impossibleContinuation = structuredClone(fixture);
+    impossibleContinuation.economy.assistancePackages[0].continuationObligationFuel =
+      37;
+    expect(() => validateContent(impossibleContinuation)).toThrow(
+      /continuation obligation is not recoverable/i,
     );
 
     const authoredIndependent = structuredClone(fixture);
