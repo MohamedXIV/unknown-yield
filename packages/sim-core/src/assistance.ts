@@ -16,8 +16,8 @@ type ResolvedAssistance = AssistanceDefinition & {
 function legacyAssistance(c: Content): ResolvedAssistance {
   return {
     id: "legacy-emergency",
-    nameKey: "",
-    briefKey: "",
+    nameKey: "assistance.legacy-emergency.name",
+    briefKey: "assistance.legacy-emergency.brief",
     fuelBelow: c.economy.assistanceBelow,
     grantFuel: c.economy.grant,
     baseObligationFuel: c.economy.grant,
@@ -152,7 +152,13 @@ export function assistanceViews(
   c: Content,
   s: Pick<Save, "fuel" | "debt" | "company">,
 ): AssistanceView[] {
-  return c.economy.assistancePackages.map((definition) => {
+  const definitions: ResolvedAssistance[] = c.economy.assistancePackages.length
+    ? c.economy.assistancePackages.map((definition) => ({
+        ...definition,
+        legacy: false,
+      }))
+    : [legacyAssistance(c)];
+  return definitions.map((definition) => {
     const eligibility = assistanceEligibility(c, s, definition.id);
     return {
       id: definition.id,
