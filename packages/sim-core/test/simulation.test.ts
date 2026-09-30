@@ -726,7 +726,13 @@ describe("automatic industry", () => {
     const s = new Simulation(c);
     expect(s.command({ type: "assistance" }).ok).toBe(true);
     expect(s.command({ type: "assistance" }).ok).toBe(false);
-    expect(s.snapshot().debt).toBe(c.economy.grant);
+    expect(s.snapshot().debt).toBe(
+      c.economy.assistancePackages[0].baseObligationFuel,
+    );
+    expect(s.snapshot().company).toMatchObject({
+      standing: "recovery",
+      interventionStreak: 1,
+    });
   });
 });
 describe("save boundary", () => {
