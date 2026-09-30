@@ -390,7 +390,7 @@ function validateContentInternal(
     if (capabilityIds.has(capability.id))
       throw new Error("Duplicate terminal capability ID");
     capabilityIds.add(capability.id);
-    if (capability.nameKey !== "terminal-capability." + capability.id + ".name")
+    if (capability.nameKey !== "terminal.capability." + capability.id + ".name")
       throw new Error("Localization key must match terminal capability");
   }
 
