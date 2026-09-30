@@ -147,12 +147,14 @@ const schema = z.object({
       interventionStreak: count,
       recoveryNetFuel: count,
       recoveryPackageId: safeId.nullable(),
+      repaidSinceAssistanceFuel: count.default(0),
     })
     .default({
       standing: "clear",
       interventionStreak: 0,
       recoveryNetFuel: 0,
       recoveryPackageId: null,
+      repaidSinceAssistanceFuel: 0,
     }),
 });
 export function initialState(c: Content): Save {
@@ -205,6 +207,7 @@ export function initialState(c: Content): Save {
       interventionStreak: 0,
       recoveryNetFuel: 0,
       recoveryPackageId: null,
+      repaidSinceAssistanceFuel: 0,
     },
   };
   initializeKnownMarkets(c, state);
@@ -285,12 +288,14 @@ export function parseSave(input: unknown, c: Content): Save {
             recoveryNetFuel: 0,
             recoveryPackageId:
               c.economy.defaultAssistancePackageId ?? null,
+            repaidSinceAssistanceFuel: 0,
           }
         : {
             standing: "clear",
             interventionStreak: 0,
             recoveryNetFuel: 0,
             recoveryPackageId: null,
+            repaidSinceAssistanceFuel: 0,
           };
     s.schemaVersion = 11;
   }
@@ -378,7 +383,8 @@ export function parseSave(input: unknown, c: Content): Save {
       s.debt !== 0 ||
       s.company.interventionStreak !== 0 ||
       s.company.recoveryNetFuel !== 0 ||
-      s.company.recoveryPackageId !== null
+      s.company.recoveryPackageId !== null ||
+      s.company.repaidSinceAssistanceFuel !== 0
     )
       throw new Error("Invalid clear company standing");
   } else {
