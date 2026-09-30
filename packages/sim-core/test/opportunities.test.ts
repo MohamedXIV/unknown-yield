@@ -18,6 +18,7 @@ const cadenceMs = fixture.tickMs * fixture.economy.marketEveryTicks;
 function knownGranulesContent() {
   const content = structuredClone(fixture);
   content.materials.find((material) => material.id === "granules")!.known = true;
+  delete content.economy.exchange[0].requiredTerminalCapabilityId;
   return content;
 }
 
@@ -291,7 +292,7 @@ describe("Corporate Orders and Special Directives", () => {
 
     const restored = new Simulation(content);
     expect(restored.load(JSON.parse(JSON.stringify(partial))).ok).toBe(true);
-    expect(restored.serialize().schemaVersion).toBe(9);
+    expect(restored.serialize().schemaVersion).toBe(10);
     expect(restored.serialize().opportunities).toEqual(partial.opportunities);
 
     const legacy = JSON.parse(
@@ -301,7 +302,7 @@ describe("Corporate Orders and Special Directives", () => {
     delete legacy.opportunities;
     const migrated = new Simulation(fixture);
     expect(migrated.load(legacy).ok).toBe(true);
-    expect(migrated.serialize().schemaVersion).toBe(9);
+    expect(migrated.serialize().schemaVersion).toBe(10);
     expect(migrated.serialize().opportunities).toEqual({});
   });
 });

@@ -3,9 +3,42 @@ import { fixture } from "@site/content";
 import {
   Simulation,
   auditLedger,
+  experimentEvidenceKey,
+  initializeKnownMarkets,
   type FactoryThroughputView,
   type GameCommand,
 } from "../src/index";
+
+function withGranuleHandling() {
+  const sim = new Simulation(fixture),
+    save = sim.serialize(),
+    reaction = fixture.reactions.find((entry) => entry.id === "heat-raw-sealed")!;
+  save.knowledge.push(reaction.id);
+  save.evidence[
+    experimentEvidenceKey(
+      reaction.operation,
+      reaction.input,
+      reaction.processConditionId ?? null,
+    )
+  ] = {
+    operationId: reaction.operation,
+    inputId: reaction.input,
+    processConditionId: reaction.processConditionId ?? null,
+    state: "confirmed",
+  };
+  initializeKnownMarkets(fixture, save);
+  const loaded = sim.load(save);
+  expect(loaded.ok, loaded.message).toBe(true);
+  expect(
+    sim.snapshot().milestones.find((entry) => entry.id === "sealed-study-certified")
+      ?.completed,
+  ).toBe(true);
+  expect(
+    sim.snapshot().exchange.find((entry) => entry.materialId === "granules")
+      ?.handling?.unlocked,
+  ).toBe(true);
+  return sim;
+}
 
 function build(sim: Simulation, command: GameCommand) {
   const result = sim.command(command);
@@ -65,7 +98,7 @@ function makeLine() {
 }
 
 function makeBackloggedTerminalLine() {
-  const sim = new Simulation(fixture);
+  const sim = withGranuleHandling();
   const factoryId = build(sim, {
     type: "placeFactory",
     x: 24,

@@ -290,22 +290,58 @@ describe("automatic industry", () => {
     expect(s.command({ type: "dismantle", id: empty.id }).ok).toBe(true);
     expect(s.snapshot().stock.plates).toBe(plates + 1);
   });
-  it("discovers an unknown process automatically and exports for fuel", () => {
+  it("keeps discovered granules staged while terminal handling is locked", () => {
     const s = make(),
       initial = JSON.stringify(s.snapshot());
     expect(initial).not.toContain("Conductive granules");
     expect(initial).not.toContain("crush-raw");
     const { processor } = line(s, true);
+
     s.step(60000);
     expect(
       s.snapshot().observations.some((o) => o.outputId === "granules"),
     ).toBe(true);
-    expect(s.snapshot().exported).toBeGreaterThan(0);
-    expect(s.snapshot().milestone).toBe(true);
+    expect(s.snapshot().exported).toBe(0);
+    expect(s.snapshot().staging.granules ?? 0).toBeGreaterThan(0);
+    expect(
+      s.snapshot().exchange.find((entry) => entry.materialId === "granules")
+        ?.handling?.unlocked,
+    ).toBe(false);
     expect(s.snapshot().machines.find((m) => m.id === processor)?.enabled).toBe(
       true,
     );
   });
+
+  it("confirms the sealed trial through normal commands and then exports", () => {
+    const { s } = line(make(), true, true, "sealed-furnace");
+
+    for (
+      let ticks = 0;
+      ticks < 500 && !s.serialize().knowledge.includes("heat-raw-sealed");
+      ticks++
+    )
+      s.step(100);
+
+    expect(s.serialize().knowledge).toContain("heat-raw-sealed");
+    expect(
+      s.snapshot().milestones.find(
+        (entry) => entry.id === "sealed-study-certified",
+      )?.completed,
+    ).toBe(true);
+    expect(
+      s.snapshot().exchange.find((entry) => entry.materialId === "granules")
+        ?.handling?.unlocked,
+    ).toBe(true);
+    expect(s.snapshot().exported).toBe(0);
+
+    build(s, path(29, 37, 37, 37, 3));
+    build(s, path(37, 36, 37, 28, 0));
+    s.step(30000);
+
+    expect(s.snapshot().exported).toBeGreaterThan(0);
+    expect(s.snapshot().milestone).toBe(true);
+  });
+
   it("retains waste with an informative failed heat observation", () => {
     const { s, processor } = line(make(), true, true);
     s.step(20000);
@@ -338,7 +374,7 @@ describe("automatic industry", () => {
       expect(save.machines[processor].definitionId).toBe(definitionId);
       expect(save.machines[processor].job?.reaction).toBe(reactionId);
       expect(save.knowledge).not.toContain(reactionId);
-      expect(save.schemaVersion).toBe(9);
+      expect(save.schemaVersion).toBe(10);
       expect(save.contentVersion).toBe("world-01-v6");
 
       const restored = make(),
@@ -391,7 +427,7 @@ describe("automatic industry", () => {
     expect(JSON.stringify(hinted)).not.toContain("reaction.heat-raw");
 
     const saved = s.serialize();
-    expect(saved.schemaVersion).toBe(9);
+    expect(saved.schemaVersion).toBe(10);
     expect(saved.evidence[hinted!.id].state).toBe("hinted");
 
     const restored = make();
@@ -455,7 +491,7 @@ describe("automatic industry", () => {
 
     const restored = make();
     expect(restored.load(legacy).ok).toBe(true);
-    expect(restored.serialize().schemaVersion).toBe(9);
+    expect(restored.serialize().schemaVersion).toBe(10);
     const hinted = restored
       .snapshot()
       .knowledgeEntries.find(
@@ -665,7 +701,7 @@ describe("automatic industry", () => {
     );
   });
 
-  it("migrates schema-6 machines with no incident through schema 9", () => {
+  it("migrates schema-6 machines with no incident through schema 10", () => {
     const s = make();
     const machineId = build(s, {
       type: "placeMachine",
@@ -680,7 +716,7 @@ describe("automatic industry", () => {
 
     const restored = make();
     expect(restored.load(legacy).ok).toBe(true);
-    expect(restored.serialize().schemaVersion).toBe(9);
+    expect(restored.serialize().schemaVersion).toBe(10);
     expect(restored.serialize().machines[machineId].incident).toBeNull();
   });
 
@@ -743,7 +779,7 @@ describe("save boundary", () => {
 
 describe("world acceptance regressions", () => {
   it("funds both lines and expands entirely through normal commands", () => {
-    const s = make();
+    const s = withConfirmedKnowledge("heat-raw-sealed");
     line(s);
     line(s, true);
     const afterBuild = s.snapshot().stock.plates;
@@ -818,7 +854,24 @@ describe("world acceptance regressions", () => {
   it("exports repay emergency debt before replenishing fuel", () => {
     const c = structuredClone(fixture);
     c.economy.startFuel = 0;
-    const s = new Simulation(c);
+    const s = new Simulation(c),
+      save = s.serialize(),
+      reaction = c.reactions.find((entry) => entry.id === "heat-raw-sealed")!;
+    save.knowledge.push(reaction.id);
+    save.evidence[
+      experimentEvidenceKey(
+        reaction.operation,
+        reaction.input,
+        reaction.processConditionId ?? null,
+      )
+    ] = {
+      operationId: reaction.operation,
+      inputId: reaction.input,
+      processConditionId: reaction.processConditionId ?? null,
+      state: "confirmed",
+    };
+    initializeKnownMarkets(c, save);
+    expect(s.load(save).ok).toBe(true);
     line(s, true);
     build(s, { type: "assistance" });
     s.step(90000);

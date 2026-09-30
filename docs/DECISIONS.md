@@ -221,7 +221,7 @@ Definitions and placed instances are separate. Machines operate automatically fr
 
 **Status:** accepted, updated 2026-09-30
 
-Spatial saves currently use schema 9, separate from content version `world-01-v6`. Schema 4 migrates losslessly through schema 5 by adding empty belt-diverter state; schema 5 then migrates to schema 6 by reconstructing confirmed experiment evidence from discovered reaction IDs and hinted evidence from any undiscovered active processor batch; schema 6 migrates to schema 7 by adding an empty machine-incident slot; schema 7 migrates to schema 8 by initializing company-known Materials Exchange listings at authored baseline demand with zero saturation because older saves had no market-memory state to preserve; schema 8 migrates to schema 9 with empty company-opportunity history because older saves had no offers, progress, expiries or rewards. Schemas 1–3 remain incompatible and are rejected without replacing a running site. Content version remains `world-01-v6` for #70 because orders/directives are an additive compatible extension and pre-#70 v6 content validates them as empty arrays. Saves tied to other content versions are rejected by the exact content-version check. Content Studio remains development-only and receives no scope expansion from save migration work.
+Spatial saves currently use schema 10, separate from content version `world-01-v6`. Schema 4 migrates losslessly through schema 5 by adding empty belt-diverter state; schema 5 then migrates to schema 6 by reconstructing confirmed experiment evidence from discovered reaction IDs and hinted evidence from any undiscovered active processor batch; schema 6 migrates to schema 7 by adding an empty machine-incident slot; schema 7 migrates to schema 8 by initializing company-known Materials Exchange listings at authored baseline demand with zero saturation; schema 8 migrates to schema 9 with empty company-opportunity history; schema 9 migrates to schema 10 by deriving newly satisfied milestones from the preserved authoritative evidence already in the save. Schemas 1–3 remain incompatible and are rejected without replacing a running site. Content version remains `world-01-v6` because #70 and #71 are additive compatible extensions with default-empty authored arrays/optional handling gates. Saves tied to other content versions are rejected by the exact content-version check. Content Studio remains development-only and receives no scope expansion from save migration work.
 
 ## D-019 — Material conservation is a design invariant
 
@@ -426,6 +426,20 @@ Special Directives reference only an experiment tuple the player can legitimatel
 ### Consequence
 
 The terminal may present sanitized active opportunities and their clear reward/progress, but React does not own eligibility, deadlines, progress or rewards. Expired/completed offers do not rotate back automatically. #70 does not add standing, advanced fuel classes, terminal handling classes or a generic quest framework.
+
+---
+
+## D-031 — Evidence milestones unlock real terminal handling
+
+**Status:** accepted for Phase 5 #71, 2026-09-30
+
+Company progression uses a small data-driven milestone graph evaluated from authoritative evidence; it does not introduce XP or a spend-to-unlock currency. Milestone identity, evidence references and terminal capability identity use stable IDs, while names/hints remain localization data.
+
+The first proof unlocks one terminal outbound-handling capability from durable confirmed `heat-raw-sealed` trial evidence. The Sealed thermal study remains an optional, time-limited bonus opportunity rather than a permanent prerequisite. Conductive granules may exist in terminal staging before the unlock, but they cannot leave the map, earn compensation, advance an order or enter the export ledger until the capability is available. Because staging remains bounded, blocked cargo naturally creates backpressure rather than disappearing.
+
+Content validation rejects circular milestone/capability dependencies and rejects a required handling unlock that depends on exporting or completing an order for the same material it blocks. Because the gate uses confirmed reaction evidence, an expired Directive, a Directive that never appeared, or a pre-offer confirmed experiment cannot create a permanent handling soft-lock.
+
+No second fuel/allocation class is added in this slice: there is not yet a second distinct machine/logistics behavior for it to represent. Adding one now would be naming/color breadth rather than capability depth.
 
 ---
 

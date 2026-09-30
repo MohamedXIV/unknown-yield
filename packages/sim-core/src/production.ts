@@ -19,6 +19,7 @@ import {
   recordDirectiveExperiment,
   recordOrderExport,
 } from "./opportunities";
+import { terminalCanExport } from "./milestones";
 export function recipe(c: Content, m: Machine) {
   const definition = c.machines.find((d) => d.id === m.definitionId);
   return c.reactions.find(
@@ -296,7 +297,8 @@ export function transport(
     if (
       n > 0 &&
       s.policies[material.id] === "export" &&
-      exchangeDefinition(c, material.id)
+      exchangeDefinition(c, material.id) &&
+      terminalCanExport(c, s, material.id)
     ) {
       applyExportCompensation(c, s, material.id, n);
       recordOrderExport(c, s, material.id, n);

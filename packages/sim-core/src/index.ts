@@ -44,6 +44,8 @@ export type {
   OpportunityState,
   OpportunityStatus,
   OpportunityView,
+  MilestoneState,
+  MilestoneView,
   Save,
   Factory,
   FactoryView,
@@ -75,3 +77,12 @@ export {
   recordOrderExport,
   refreshOpportunities,
 } from "./opportunities";
+
+export {
+  milestoneRequirementSatisfied,
+  milestoneSatisfied,
+  milestoneViews,
+  refreshMilestones,
+  terminalCanExport,
+  terminalCapabilityUnlocked,
+} from "./milestones";

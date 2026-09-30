@@ -36,6 +36,11 @@ export function contentKeys(c: Content): string[] {
       directive.nameKey,
       directive.briefKey,
     ]),
+    ...c.economy.terminalCapabilities.map((capability) => capability.nameKey),
+    ...c.economy.milestones.flatMap((milestone) => [
+      milestone.nameKey,
+      milestone.hintKey,
+    ]),
   ];
 }
 
@@ -100,4 +105,13 @@ export const enCatalog: LocaleCatalog = {
     "{{material}} → {{operation}} · {{setup}}",
   "ui.terminal.opportunity.experiment-fallback": "Experiment",
   "ui.terminal.opportunities.empty": "No active corporate opportunity.",
+  "terminal.capability.sealed-sample-outbound.name": "Sealed sample handling",
+  "milestone.sealed-study-certified.name": "Outbound handling certified",
+  "milestone.sealed-study-certified.hint":
+    "Confirm the sealed Heat trial to certify expanded terminal handling.",
+  "ui.terminal.milestones.heading": "Company milestones",
+  "ui.terminal.milestone.completed": "COMPLETED",
+  "ui.terminal.milestone.pending": "PENDING",
+  "ui.terminal.handling.ready": "{{capability}} ready",
+  "ui.terminal.handling.locked": "Waiting for {{capability}}",
 };

@@ -10,6 +10,10 @@ import {
 import { initializeKnownMarkets, exchangeDefinition } from "./market";
 import { machineUnlocked } from "./progression";
 import {
+  milestoneSatisfied,
+  refreshMilestones,
+} from "./milestones";
+import {
   factoryError,
   machinePlacement,
   portError,
@@ -86,6 +90,7 @@ const schema = z.object({
     z.literal(7),
     z.literal(8),
     z.literal(9),
+    z.literal(10),
   ]),
   contentVersion: z.string(),
   tick: count,
@@ -126,10 +131,18 @@ const schema = z.object({
       }),
     )
     .default({}),
+  milestones: z
+    .record(
+      safeId,
+      z.object({
+        completedAt: count,
+      }),
+    )
+    .default({}),
 });
 export function initialState(c: Content): Save {
   const state: Save = {
-    schemaVersion: 9,
+    schemaVersion: 10,
     contentVersion: c.version,
     tick: 0,
     remainder: 0,
@@ -171,6 +184,7 @@ export function initialState(c: Content): Save {
     ),
     market: {},
     opportunities: {},
+    milestones: {},
   };
   initializeKnownMarkets(c, state);
   return state;
@@ -233,6 +247,10 @@ export function parseSave(input: unknown, c: Content): Save {
   // Schema 8 predates company opportunities. There was no historical offer,
   // progress, expiry or reward state, so migration starts with empty history.
   if (s.schemaVersion === 8) s.schemaVersion = 9;
+  // Schema 9 predates evidence milestones and terminal handling capability
+  // state. Existing authoritative evidence remains sufficient to derive any
+  // newly satisfied milestone without inventing progress.
+  if (s.schemaVersion === 9) s.schemaVersion = 10;
   if (s.contentVersion !== c.version || s.remainder >= c.tickMs)
     throw new Error("Incompatible content or timing");
   if (
@@ -312,6 +330,17 @@ export function parseSave(input: unknown, c: Content): Save {
         throw new Error("Invalid active company opportunity progress");
     }
   }
+  for (const [id, state] of Object.entries(s.milestones)) {
+    const definition = c.economy.milestones.find((entry) => entry.id === id);
+    if (
+      !definition ||
+      state.completedAt > s.tick ||
+      !milestoneSatisfied(c, s, definition)
+    )
+      throw new Error("Invalid milestone state");
+  }
+  refreshMilestones(c, s);
+
   if (
     Object.keys(s.deposits).sort().join() !==
       c.site.deposits

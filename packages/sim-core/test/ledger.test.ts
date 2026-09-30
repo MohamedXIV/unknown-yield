@@ -1,8 +1,38 @@
 import { describe, it, expect } from "vitest";
 import { fixture } from "@site/content";
-import { Simulation, auditLedger, type GameCommand } from "../src/index";
+import {
+  Simulation,
+  auditLedger,
+  experimentEvidenceKey,
+  initializeKnownMarkets,
+  type GameCommand,
+} from "../src/index";
 
 const make = () => new Simulation(fixture);
+function withGranuleHandling(s = make()) {
+  const save = s.serialize(),
+    reaction = fixture.reactions.find((entry) => entry.id === "heat-raw-sealed")!;
+  if (!save.knowledge.includes(reaction.id)) save.knowledge.push(reaction.id);
+  save.evidence[
+    experimentEvidenceKey(
+      reaction.operation,
+      reaction.input,
+      reaction.processConditionId ?? null,
+    )
+  ] = {
+    operationId: reaction.operation,
+    inputId: reaction.input,
+    processConditionId: reaction.processConditionId ?? null,
+    state: "confirmed",
+  };
+  initializeKnownMarkets(fixture, save);
+  expect(s.load(save).ok).toBe(true);
+  expect(
+    s.snapshot().milestones.find((entry) => entry.id === "sealed-study-certified")
+      ?.completed,
+  ).toBe(true);
+  return s;
+}
 function build(s: Simulation, c: GameCommand) {
   const r = s.command(c);
   expect(r.ok, r.message).toBe(true);
@@ -110,7 +140,7 @@ describe("material ledger", () => {
   });
 
   it("reconciles extraction, transit, processing and export end to end", () => {
-    const { s } = line(make(), true);
+    const { s } = line(withGranuleHandling(), true);
     s.step(30000);
     expect(s.serialize().flows.produced.granules ?? 0).toBeGreaterThan(0);
     auditOk(s);
@@ -243,7 +273,7 @@ describe("conservation load boundary", () => {
   });
 
   it("rejects saves where the export total disagrees with ledger history", () => {
-    const { s } = line(make(), true);
+    const { s } = line(withGranuleHandling(), true);
     s.step(90000);
     const before = s.serialize();
     expect(before.exported).toBeGreaterThan(0);

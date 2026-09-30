@@ -101,6 +101,25 @@ export type MarketState = {
 export type MarketListingView = MarketState & {
   materialId: string;
   compensationPerUnit: number;
+  handling: {
+    nameKey: string;
+    unlocked: boolean;
+  } | null;
+};
+export type MilestoneState = {
+  completedAt: number;
+};
+export type MilestoneView = {
+  id: string;
+  nameKey: string;
+  hintKey: string;
+  completed: boolean;
+  completedAt: number | null;
+  unlockedTerminalCapabilities: {
+    id: string;
+    nameKey: string;
+    unlocked: boolean;
+  }[];
 };
 export type OpportunityStatus = "offered" | "completed" | "expired";
 export type OpportunityState = {
@@ -155,6 +174,7 @@ export type Save = {
   policies: Record<string, "keep" | "export">;
   market: Record<string, MarketState>;
   opportunities: Record<string, OpportunityState>;
+  milestones: Record<string, MilestoneState>;
 };
 export type CommandResult = {
   ok: boolean;
@@ -238,6 +258,7 @@ export type PlayerSnapshot = {
   policies: Record<string, "keep" | "export">;
   exchange: MarketListingView[];
   opportunities: OpportunityView[];
+  milestones: MilestoneView[];
   knowledgeEntries: KnowledgeEntry[];
   observations: Observation[];
 };

@@ -864,6 +864,20 @@ function GameClientInner() {
                 {snapshot.milestone && (
                   <div className="milestone">◇ FIRST EXPORT CONFIRMED</div>
                 )}
+                <h3>{t("ui.terminal.milestones.heading")}</h3>
+                {snapshot.milestones.map((milestone) => (
+                  <article className="observation" key={milestone.id}>
+                    <small>
+                      {t(
+                        milestone.completed
+                          ? "ui.terminal.milestone.completed"
+                          : "ui.terminal.milestone.pending",
+                      )}
+                    </small>
+                    <h3>{t(milestone.nameKey)}</h3>
+                    <p>{t(milestone.hintKey)}</p>
+                  </article>
+                ))}
                 <h3>{t("ui.terminal.opportunities.heading")}</h3>
                 <p className="hint">
                   {t("ui.terminal.opportunities.hint")}
@@ -951,6 +965,19 @@ function GameClientInner() {
                               " fuel/unit · " +
                               Math.round(exchangeFor(m.id)!.saturationBps / 100) +
                               "% saturated"
+                            : ""}
+                          {exchangeFor(m.id)?.handling
+                            ? " · " +
+                              t(
+                                exchangeFor(m.id)!.handling!.unlocked
+                                  ? "ui.terminal.handling.ready"
+                                  : "ui.terminal.handling.locked",
+                                {
+                                  capability: t(
+                                    exchangeFor(m.id)!.handling!.nameKey,
+                                  ),
+                                },
+                              )
                             : ""}
                         </small>
                       </span>

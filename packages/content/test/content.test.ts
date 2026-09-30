@@ -184,14 +184,49 @@ describe("content boundary", () => {
   });
   it("keeps pre-#70 world-01-v6 content additively compatible", () => {
     const legacy = structuredClone(fixture) as unknown as {
-      economy: Record<string, unknown>;
+      economy: Record<string, unknown> & {
+        exchange: Array<Record<string, unknown>>;
+      };
     };
     delete legacy.economy.orders;
     delete legacy.economy.directives;
+    delete legacy.economy.terminalCapabilities;
+    delete legacy.economy.milestones;
+    delete legacy.economy.exchange[0].requiredTerminalCapabilityId;
     const parsed = validateContent(legacy);
     expect(parsed.version).toBe("world-01-v6");
     expect(parsed.economy.orders).toEqual([]);
     expect(parsed.economy.directives).toEqual([]);
+    expect(parsed.economy.terminalCapabilities).toEqual([]);
+    expect(parsed.economy.milestones).toEqual([]);
+  });
+  it("rejects circular or export-blocked terminal unlock graphs", () => {
+    const blockedByMaterial = structuredClone(fixture);
+    blockedByMaterial.economy.milestones[0].requires = [
+      { type: "material-exported", materialId: "granules", units: 1 },
+    ];
+    expect(() => validateContent(blockedByMaterial)).toThrow(
+      /depends on blocked export/i,
+    );
+
+    const blockedByOrder = structuredClone(fixture);
+    blockedByOrder.economy.milestones[0].requires = [
+      { type: "order-completed", orderId: "granules-procurement" },
+    ];
+    expect(() => validateContent(blockedByOrder)).toThrow(
+      /depends on blocked export/i,
+    );
+
+    const circular = structuredClone(fixture);
+    circular.economy.milestones[0].requires = [
+      {
+        type: "terminal-capability",
+        capabilityId: "sealed-sample-outbound",
+      },
+    ];
+    expect(() => validateContent(circular)).toThrow(
+      /Circular milestone dependency/i,
+    );
   });
   it("round-trips a material edit through TinyBase and validation", () => {
     const store = createContentStore(fixture);
@@ -220,6 +255,12 @@ describe("content boundary", () => {
     );
     expect(enCatalog["directive.sealed-thermal-study.brief"]).toContain(
       "does not predict the output",
+    );
+    expect(enCatalog["milestone.sealed-study-certified.hint"]).toContain(
+      "sealed Heat trial",
+    );
+    expect(enCatalog["terminal.capability.sealed-sample-outbound.name"]).toBe(
+      "Sealed sample handling",
     );
   });
   it("rejects content referencing a missing localization key", () => {
