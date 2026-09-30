@@ -15,6 +15,7 @@ import {
   ensureMarket,
   exchangeDefinition,
 } from "./market";
+import { recordOrderExport } from "./opportunities";
 export function recipe(c: Content, m: Machine) {
   const definition = c.machines.find((d) => d.id === m.definitionId);
   return c.reactions.find(
@@ -288,6 +289,7 @@ export function transport(
       exchangeDefinition(c, material.id)
     ) {
       applyExportCompensation(c, s, material.id, n);
+      recordOrderExport(c, s, material.id, n);
       s.exported += n;
       change(s.flows.exported, material.id, n);
       change(s.staging, material.id, -n);
