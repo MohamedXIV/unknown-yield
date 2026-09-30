@@ -115,7 +115,15 @@ Higher fuel may power deep extraction, high-pressure processing, advanced transp
 
 ## 11. Corporate assistance
 
-Assistance prevents an accidental economic soft-lock. It creates an obligation repaid by future exports. Repeated unresolved interventions can threaten the operation, while successful recovery should restore standing over time. Exact intervention count and reset rules are balance data.
+Assistance prevents an accidental economic soft-lock without becoming free fuel. Assistance packages are authored company allocations with stable IDs, localized presentation, a fuel-depletion eligibility threshold, a bounded fuel grant, an obligation, a repeat-intervention obligation step and a net-export recovery target.
+
+An assistance request is refused while an earlier obligation is still open. Once that obligation is repaid, another intervention remains possible if operating fuel collapses again; however, until standing has recovered, each repeat intervention carries the authored additional obligation. There is deliberately no hard intervention cap or implicit Game Over in this slice: a hard cap could itself create an unrecoverable site.
+
+Export compensation is the only repayment path. Gross legal export compensation first reduces the outstanding obligation; only the remainder becomes usable fuel. Order and Directive bonus allocations remain separate company rewards: they add their authored fuel reward but neither repay the obligation nor count toward standing recovery.
+
+Standing returns from `recovery` to `clear` only after the obligation is zero and subsequent **net export fuel** reaches the authored recovery target. Resetting standing also resets the consecutive intervention streak. This makes successful industrial recovery—not merely receiving a bailout—the reset event.
+
+Fuel allocations are not physical materials and therefore do not create or delete material ledger entries. Assistance may change only company fuel/obligation/standing state; factories, routing, storage, staged cargo and material accounting remain untouched.
 
 ## 12. Design guardrail
 
@@ -131,7 +139,7 @@ The terminal remains the physical export boundary and the material ledger remain
 
 Issue #70 adds one-shot authored Corporate Orders and Special Directives on the same slow company cadence. Orders appear only for company-known exchange products, count only cargo that physically ships from terminal staging, and grant one authored completion allocation. Directives request an operation + known input + setup without revealing the authored reaction/output; completion derives from confirmed experiment evidence. Offer, expiry, progress and completion state are authoritative in `sim-core` and persisted.
 
-This slice still does **not** add additional fuel classes, terminal-module progression or standing rules; those remain #71–#72. Opportunities are bounded industrial prompts, not a rotating quest feed or separate dashboard economy.
+Issue #71 adds the evidence milestone/terminal-handling proof without inventing a cosmetic second fuel class. Issue #72 adds authored assistance packages, obligation repayment and minimal recovery standing. Opportunities remain bounded industrial prompts, not a rotating quest feed or separate dashboard economy.
 
 
 ## 14. Evidence milestones and terminal handling (#71)
@@ -143,3 +151,12 @@ The current authored proof uses confirmed `heat-raw-sealed` trial evidence to ce
 Content validation rejects milestone cycles and rejects a terminal capability whose unlock path depends on exporting the same material that capability blocks. The accepted fixture therefore has no circular prerequisite: the durable confirmed-trial evidence remains obtainable through experimentation even if the optional Directive expired or never appeared.
 
 No additional fuel/allocation class is introduced in this slice. The current game still demonstrates only one operational fuel behavior; a second class would be cosmetic rather than a distinct industrial capability. #71 leaves fuel-class breadth deferred until an actual machine/logistics behavior requires it.
+
+
+## 15. Assistance and recovery standing (#72)
+
+The starter package `emergency-fuel` is eligible only below its authored fuel threshold and only when no corporate obligation is currently open. It grants company fuel, not material, and creates an obligation at least as large as the grant. A repeat intervention before standing is restored is still possible after the previous obligation is paid, but the next obligation increases by an authored step; this prevents free assistance farming without creating a mandatory deadlock.
+
+The recovery path is intentionally independent from time-limited Corporate Opportunities. In particular, an expired Sealed thermal study cannot block recovery: assistance can fund the durable real sealed Heat experiment, that confirmed evidence unlocks the #71 terminal handling capability, and legal granule exports can then repay the obligation and rebuild standing. The Directive may still award its optional bonus when available, but it is not part of assistance eligibility or recovery truth.
+
+Existing `debt` remains the authoritative outstanding obligation for compatibility. Bonus Order/Directive allocations never reduce it. Only Materials Exchange compensation from a legal physical export repays it before net fuel is credited.
