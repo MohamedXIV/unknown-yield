@@ -3,10 +3,32 @@ import { fixture } from "@site/content";
 import {
   Simulation,
   auditLedger,
+  experimentEvidenceKey,
+  initializeKnownMarkets,
   type GameCommand,
 } from "../src/index";
 
 const make = () => new Simulation(fixture);
+function withGranuleHandling(s = make()) {
+  const save = s.serialize(),
+    reaction = fixture.reactions.find((entry) => entry.id === "heat-raw-sealed")!;
+  if (!save.knowledge.includes(reaction.id)) save.knowledge.push(reaction.id);
+  save.evidence[
+    experimentEvidenceKey(
+      reaction.operation,
+      reaction.input,
+      reaction.processConditionId ?? null,
+    )
+  ] = {
+    operationId: reaction.operation,
+    inputId: reaction.input,
+    processConditionId: reaction.processConditionId ?? null,
+    state: "confirmed",
+  };
+  initializeKnownMarkets(fixture, save);
+  expect(s.load(save).ok).toBe(true);
+  return s;
+}
 function build(s: Simulation, c: GameCommand) {
   const r = s.command(c);
   expect(r.ok, r.message).toBe(true);
@@ -225,7 +247,7 @@ describe("terminal staging", () => {
   }
 
   it("stages terminal arrivals before export instead of stockpiling them", () => {
-    const s = alienLine();
+    const s = alienLine(withGranuleHandling());
     s.step(60000);
     const save = s.serialize();
     expect(save.exported).toBeGreaterThan(0);
@@ -237,7 +259,7 @@ describe("terminal staging", () => {
   });
 
   it("stores, withdraws and exports without touching global stock", () => {
-    const s = alienLine(make(), false);
+    const s = alienLine(withGranuleHandling(), false);
     const id = depot(s, 10, 20);
     // Divert crusher output out the east port, around the factory and into
     // the depot input socket at (9,21).
