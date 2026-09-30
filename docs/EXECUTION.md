@@ -31,14 +31,14 @@ This document is intentionally procedural. Game/design truth lives in the domain
 - Completed Phase 4 child: **#61 — workbench + reference browser** (merged via PR #65).
 - Completed Phase 4 child: **#62 — selected-content simulation preview** (merged via PR #66).
 - Completed Phase 4 gate: **#63 — end-to-end Content Studio v1 exit review** (merged via PR #67).
-- Active phase: **Phase 5 — Materials Exchange and corporate progression (#12)**.
+- Completed phase: **Phase 5 — Materials Exchange and corporate progression** (closed by #73 / PR #79, squash merge `dcbe1a567cc26ab150f13e159d35bf50030ee570`).
 - Completed Phase 5 child: **#69 — authoritative Materials Exchange baseline** (merged via PR #74).
 - Completed Phase 5 child: **#70 — Corporate Orders and Special Directives** (merged via PR #76).
 - Completed Phase 5 child: **#71 — evidence-driven milestones, terminal handling, and fuel classes** (merged via PR #77).
 - Completed Phase 5 child: **#72 — corporate assistance, obligations, and recovery standing** (merged via PR #78).
-- Active Phase 5 gate: **#73 — end-to-end company progression exit review**.
-  - Companion: `packages/sim-core/test/phase5-exit.test.ts` + `docs/PHASE5_EXIT_REVIEW.md`.
-  - #73 is integration/evidence-only unless local verification exposes a scoped correctness defect; do not add Phase 6 breadth while closing it.
+- Completed Phase 5 gate: **#73 — end-to-end company progression exit review** (merged via PR #79 / `dcbe1a567cc26ab150f13e159d35bf50030ee570`).
+  - Accepted evidence: `packages/sim-core/test/phase5-exit.test.ts` + `docs/PHASE5_EXIT_REVIEW.md`.
+  - Phase 6 remains undecomposed; no Phase 6 implementation was started during this closeout.
 
 ## Phase 1.5 dependency graph
 
@@ -128,10 +128,10 @@ Phase 2 is complete.
 #72 assistance + obligations + recovery standing ✓
   │
   v
-#73 Phase 5 exit review
+#73 Phase 5 exit review ✓
 ```
 
-#12 is active. #69–#72 are complete; #73 is the only remaining Phase 5 gate. Do not mark Phase 5 complete or begin Phase 6 before its integrated evidence passes.
+#12 is complete. #69–#73 are complete; the integrated exit gate merged via PR #79 as `dcbe1a567cc26ab150f13e159d35bf50030ee570`. Phase 6 remains a roadmap-only future phase and has not been decomposed into implementation work.
 
 ## Agent loop
 
@@ -178,6 +178,6 @@ There is currently no remote CI workflow. Do not represent absent checks as gree
 - #9 — experimentation and discovery depth — COMPLETE via children #30–#34
 - #10 — factory-as-function contracts and abstraction proof — COMPLETE via children #45–#50
 - #11 — Content Studio v1 — COMPLETE via children #60–#63
-- #12 — Materials Exchange and corporate progression — ACTIVE via #69–#73 (#69–#72 complete; #73 exit review active)
+- #12 — Materials Exchange and corporate progression — COMPLETE via #69–#73; exit gate #73 merged through PR #79 / `dcbe1a567cc26ab150f13e159d35bf50030ee570`
 
 These are placeholders for future decomposition, not permission to work around the active gate.
