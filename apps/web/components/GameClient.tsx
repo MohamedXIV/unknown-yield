@@ -864,6 +864,51 @@ function GameClientInner() {
                 {snapshot.milestone && (
                   <div className="milestone">◇ FIRST EXPORT CONFIRMED</div>
                 )}
+                <h3>Corporate opportunities</h3>
+                <p className="hint">
+                  Temporary procurement and research requests appear only when
+                  the company can legitimately know the material or setup.
+                  Rewards are authoritative simulation allocations.
+                </p>
+                {snapshot.opportunities.length ? (
+                  snapshot.opportunities.map((opportunity) => {
+                    const operation =
+                      opportunity.kind === "directive"
+                        ? snapshot.operations.find(
+                            (entry) => entry.id === opportunity.operationId,
+                          )
+                        : null;
+                    return (
+                      <article className="observation" key={opportunity.id}>
+                        <small>
+                          {opportunity.kind === "order"
+                            ? "CORPORATE ORDER"
+                            : "SPECIAL DIRECTIVE"}{" "}
+                          · +{opportunity.rewardFuel} fuel
+                        </small>
+                        <h3>{t(opportunity.nameKey)}</h3>
+                        <p>{t(opportunity.briefKey)}</p>
+                        <span>
+                          {opportunity.kind === "order"
+                            ? materialName(opportunity.materialId) +
+                              " · " +
+                              opportunity.progress +
+                              "/" +
+                              opportunity.quantity +
+                              " shipped"
+                            : materialName(opportunity.inputMaterialId) +
+                              " → " +
+                              (operation ? t(operation.nameKey) : "Experiment") +
+                              (opportunity.setupNameKey
+                                ? " · " + t(opportunity.setupNameKey)
+                                : "")}
+                        </span>
+                      </article>
+                    );
+                  })
+                ) : (
+                  <p className="hint">No active corporate opportunity.</p>
+                )}
                 <h3>Terminal staging & policies</h3>
                 <p className="hint">
                   Exportable cargo stages at the terminal and ships per policy.
