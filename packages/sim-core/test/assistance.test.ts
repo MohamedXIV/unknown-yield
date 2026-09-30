@@ -290,6 +290,7 @@ describe("corporate assistance and recovery standing", () => {
     expect(save.company.interventionStreak).toBe(1);
 
     save.fuel = 0;
+    save.company.recoveryNetFuel = 7;
     expect(simulation.load(save).ok).toBe(true);
     expect(simulation.snapshot().assistance[0]).toMatchObject({
       eligible: true,
@@ -302,7 +303,7 @@ describe("corporate assistance and recovery standing", () => {
       company: {
         standing: "recovery",
         interventionStreak: 2,
-        recoveryNetFuel: 0,
+        recoveryNetFuel: 7,
       },
     });
 
