@@ -287,7 +287,7 @@ export function applyCommand(
         return {
           ...fail(
             eligibility.reason === "obligation-open"
-              ? "Repay the current corporate obligation first"
+              ? "Make export repayment progress before requesting recovery continuation"
               : "Emergency allocation requires depleted fuel",
           ),
           messageKey:
