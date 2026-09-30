@@ -8,6 +8,7 @@ import {
   type Save,
 } from "./types";
 import { initializeKnownMarkets, exchangeDefinition } from "./market";
+import { machineUnlocked } from "./progression";
 import {
   factoryError,
   machinePlacement,
@@ -262,25 +263,50 @@ export function parseSave(input: unknown, c: Content): Save {
       definition = order ?? directive;
     if (!definition) throw new Error("Unknown company opportunity");
     const target = order ? order.quantity : 1;
+    if (order) {
+      if (!known.has(order.materialId) || !Object.hasOwn(s.market, order.materialId))
+        throw new Error("Ineligible corporate order state");
+    } else if (
+      !known.has(directive!.inputMaterialId) ||
+      !c.machines.some(
+        (machine) =>
+          machine.role === "processor" &&
+          machine.operations.includes(directive!.operationId) &&
+          machine.processConditionId === directive!.processConditionId &&
+          machineUnlocked(s, machine),
+      )
+    )
+      throw new Error("Ineligible directive state");
     if (
       state.offeredAt > s.tick ||
       state.expiresAt !== state.offeredAt + definition.durationTicks ||
-      state.progress > target
+      state.progress > target ||
+      (state.status === "expired" && s.tick < state.expiresAt)
     )
       throw new Error("Invalid company opportunity timing or progress");
     if (state.status === "completed") {
       if (
         state.completedAt === null ||
         state.completedAt < state.offeredAt ||
+        state.completedAt > state.expiresAt ||
         state.completedAt > s.tick ||
         state.progress !== target
       )
         throw new Error("Invalid completed company opportunity");
+      if (directive) {
+        const evidenceId = experimentEvidenceKey(
+          directive.operationId,
+          directive.inputMaterialId,
+          directive.processConditionId ?? null,
+        );
+        if (s.evidence[evidenceId]?.state !== "confirmed")
+          throw new Error("Directive completion lacks confirmed evidence");
+      }
     } else {
       if (state.completedAt !== null)
         throw new Error("Incomplete company opportunity has completion time");
       if (
-        (order && state.status === "offered" && state.progress >= target) ||
+        (order && state.progress >= target) ||
         (directive && state.progress !== 0)
       )
         throw new Error("Invalid active company opportunity progress");
