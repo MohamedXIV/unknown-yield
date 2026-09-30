@@ -6,6 +6,7 @@ import {
   ensureMarket,
   experimentEvidenceKey,
   opportunityViews,
+  recordDirectiveExperiment,
   recordOrderExport,
   refreshOpportunities,
 } from "../src/index";
@@ -231,28 +232,15 @@ describe("Corporate Orders and Special Directives", () => {
     refreshOpportunities(fixture, state);
     const offered = state.opportunities[directive.id];
     const beforeFuel = state.fuel;
-    const reaction = fixture.reactions.find(
-      (entry) =>
-        entry.operation === directive.operationId &&
-        entry.input === directive.inputMaterialId &&
-        entry.processConditionId === directive.processConditionId,
-    )!;
-    state.knowledge.push(reaction.id);
-    state.evidence[
-      experimentEvidenceKey(
-        reaction.operation,
-        reaction.input,
-        reaction.processConditionId ?? null,
-      )
-    ] = {
-      operationId: reaction.operation,
-      inputId: reaction.input,
-      processConditionId: reaction.processConditionId ?? null,
-      state: "confirmed",
-    };
-    ensureMarket(fixture, state, reaction.output);
-    state.tick = offered.expiresAt + 1;
+    state.tick = offered.expiresAt;
 
+    recordDirectiveExperiment(
+      fixture,
+      state,
+      directive.operationId,
+      directive.inputMaterialId,
+      directive.processConditionId ?? null,
+    );
     refreshOpportunities(fixture, state);
 
     expect(state.opportunities[directive.id].status).toBe("expired");
