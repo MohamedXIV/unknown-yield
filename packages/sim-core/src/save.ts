@@ -84,6 +84,7 @@ const schema = z.object({
     z.literal(6),
     z.literal(7),
     z.literal(8),
+    z.literal(9),
   ]),
   contentVersion: z.string(),
   tick: count,
@@ -112,10 +113,22 @@ const schema = z.object({
       }),
     )
     .default({}),
+  opportunities: z
+    .record(
+      safeId,
+      z.object({
+        status: z.enum(["offered", "completed", "expired"]),
+        offeredAt: count,
+        expiresAt: positive,
+        progress: count,
+        completedAt: count.nullable(),
+      }),
+    )
+    .default({}),
 });
 export function initialState(c: Content): Save {
   const state: Save = {
-    schemaVersion: 8,
+    schemaVersion: 9,
     contentVersion: c.version,
     tick: 0,
     remainder: 0,
@@ -156,6 +169,7 @@ export function initialState(c: Content): Save {
       c.materials.filter((m) => m.known).map((m) => [m.id, "keep"]),
     ),
     market: {},
+    opportunities: {},
   };
   initializeKnownMarkets(c, state);
   return state;
@@ -215,6 +229,9 @@ export function parseSave(input: unknown, c: Content): Save {
     s.schemaVersion = 8;
     initializeKnownMarkets(c, s);
   }
+  // Schema 8 predates company opportunities. There was no historical offer,
+  // progress, expiry or reward state, so migration starts with empty history.
+  if (s.schemaVersion === 8) s.schemaVersion = 9;
   if (s.contentVersion !== c.version || s.remainder >= c.tickMs)
     throw new Error("Incompatible content or timing");
   if (
@@ -239,6 +256,36 @@ export function parseSave(input: unknown, c: Content): Save {
     Object.keys(s.market).some((materialId) => !exchangeDefinition(c, materialId))
   )
     throw new Error("Invalid market state");
+  for (const [id, state] of Object.entries(s.opportunities)) {
+    const order = c.economy.orders.find((entry) => entry.id === id),
+      directive = c.economy.directives.find((entry) => entry.id === id),
+      definition = order ?? directive;
+    if (!definition) throw new Error("Unknown company opportunity");
+    const target = order ? order.quantity : 1;
+    if (
+      state.offeredAt > s.tick ||
+      state.expiresAt !== state.offeredAt + definition.durationTicks ||
+      state.progress > target
+    )
+      throw new Error("Invalid company opportunity timing or progress");
+    if (state.status === "completed") {
+      if (
+        state.completedAt === null ||
+        state.completedAt < state.offeredAt ||
+        state.completedAt > s.tick ||
+        state.progress !== target
+      )
+        throw new Error("Invalid completed company opportunity");
+    } else {
+      if (state.completedAt !== null)
+        throw new Error("Incomplete company opportunity has completion time");
+      if (
+        (order && state.status === "offered" && state.progress >= target) ||
+        (directive && state.progress !== 0)
+      )
+        throw new Error("Invalid active company opportunity progress");
+    }
+  }
   if (
     Object.keys(s.deposits).sort().join() !==
       c.site.deposits
