@@ -475,13 +475,18 @@ describe("corporate assistance and recovery standing", () => {
       const snapshot = simulation.snapshot();
       if (
         snapshot.fuel < content.economy.assistancePackages[0].fuelBelow &&
-        snapshot.debt > 0 &&
         snapshot.assistance[0].eligible
       ) {
-        const streak = snapshot.company.interventionStreak;
+        const debtBefore = snapshot.debt,
+          streak = snapshot.company.interventionStreak;
         expect(simulation.command({ type: "assistance" }).ok).toBe(true);
-        expect(simulation.snapshot().company.interventionStreak).toBe(streak);
-        continuations++;
+        if (debtBefore > 0) {
+          expect(simulation.snapshot().company.interventionStreak).toBe(streak);
+          continuations++;
+        } else
+          expect(simulation.snapshot().company.interventionStreak).toBe(
+            streak + 1,
+          );
       }
       simulation.step(100);
     }
