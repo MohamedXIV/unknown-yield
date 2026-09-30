@@ -245,6 +245,7 @@ export const fixture = validateContent({
         grantFuel: 36,
         baseObligationFuel: 36,
         repeatObligationStepFuel: 12,
+        continuationObligationFuel: 12,
         recoveryNetFuel: 24,
       },
     ],
