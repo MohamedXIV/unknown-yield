@@ -128,6 +128,7 @@ export const contentSchema = z.object({
           grantFuel: positive,
           baseObligationFuel: positive,
           repeatObligationStepFuel: count,
+          continuationObligationFuel: positive,
           recoveryNetFuel: positive,
         }),
       )
@@ -412,6 +413,11 @@ function validateContentInternal(
       throw new Error("Localization key must match assistance package");
     if (assistance.baseObligationFuel < assistance.grantFuel)
       throw new Error("Assistance obligation cannot be smaller than its grant");
+    if (
+      assistance.continuationObligationFuel > assistance.baseObligationFuel ||
+      assistance.continuationObligationFuel > assistance.grantFuel
+    )
+      throw new Error("Assistance continuation obligation is not recoverable");
   }
   if (c.economy.assistancePackages.length) {
     if (
