@@ -63,12 +63,34 @@ describe("corporate assistance and recovery standing", () => {
     ).toBe(false);
 
     const simulation = depletedSimulation();
+    const physicalBefore = simulation.serialize();
     expect(
       simulation.command({
         type: "assistance",
         packageId: "emergency-fuel",
       }).ok,
     ).toBe(true);
+    const physicalAfter = simulation.serialize();
+    expect({
+      stock: physicalAfter.stock,
+      deposits: physicalAfter.deposits,
+      machines: physicalAfter.machines,
+      factories: physicalAfter.factories,
+      belts: physicalAfter.belts,
+      storages: physicalAfter.storages,
+      staging: physicalAfter.staging,
+      flows: physicalAfter.flows,
+    }).toEqual({
+      stock: physicalBefore.stock,
+      deposits: physicalBefore.deposits,
+      machines: physicalBefore.machines,
+      factories: physicalBefore.factories,
+      belts: physicalBefore.belts,
+      storages: physicalBefore.storages,
+      staging: physicalBefore.staging,
+      flows: physicalBefore.flows,
+    });
+    expect(auditLedger(fixture, physicalAfter).ok).toBe(true);
     expect(simulation.snapshot()).toMatchObject({
       fuel: 36,
       debt: 36,
@@ -92,6 +114,13 @@ describe("corporate assistance and recovery standing", () => {
       eligible: false,
       reason: "obligation-open",
     });
+
+    const restored = new Simulation(fixture);
+    expect(
+      restored.load(JSON.parse(JSON.stringify(simulation.serialize()))).ok,
+    ).toBe(true);
+    expect(restored.snapshot().company).toEqual(simulation.snapshot().company);
+    expect(restored.snapshot().debt).toBe(36);
   });
 
   it("keeps bonus allocations outside obligation and standing recovery accounting", () => {
