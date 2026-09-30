@@ -31,7 +31,10 @@ export function assistanceDefinition(
   c: Content,
   packageId?: string | null,
 ): ResolvedAssistance | null {
-  if (!c.economy.assistancePackages.length) return legacyAssistance(c);
+  if (!c.economy.assistancePackages.length)
+    return packageId && packageId !== "legacy-emergency"
+      ? null
+      : legacyAssistance(c);
   const id = packageId ?? c.economy.defaultAssistancePackageId;
   const definition = c.economy.assistancePackages.find(
     (entry) => entry.id === id,
