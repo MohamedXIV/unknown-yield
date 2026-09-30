@@ -127,6 +127,14 @@ export const enCatalog: LocaleCatalog = {
     "Available only when operating fuel is depleted.",
   "ui.terminal.assistance.unavailable-obligation":
     "Repay the current obligation through exports before requesting more assistance.",
+  "ui.terminal.assistance.result.approved":
+    "Assistance approved. Future export compensation repays the obligation first.",
+  "ui.terminal.assistance.result.obligation-open":
+    "Repay the current obligation through exports before requesting more assistance.",
+  "ui.terminal.assistance.result.fuel-not-depleted":
+    "Assistance is available only when operating fuel is depleted.",
+  "ui.terminal.assistance.result.unknown":
+    "That assistance package is unavailable.",
   "terminal.capability.sealed-sample-outbound.name": "Sealed sample handling",
   "milestone.sealed-study-certified.name": "Outbound handling certified",
   "milestone.sealed-study-certified.hint":
