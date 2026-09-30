@@ -443,6 +443,22 @@ No second fuel/allocation class is added in this slice: there is not yet a secon
 
 ---
 
+## D-032 — Assistance is obligation-backed recovery, not free fuel
+
+**Status:** implementation decision for Phase 5 #72, 2026-09-30
+
+Corporate assistance is authored content with a stable package ID, localized presentation, fuel-depletion eligibility, a bounded fuel grant, base obligation, repeat-intervention obligation step and net-export recovery target. The existing `debt` field remains the canonical outstanding obligation.
+
+An assistance request is refused while debt is open. After repayment, another intervention remains possible if fuel collapses before standing fully recovers; its obligation increases by the authored repeat step. There is no hard intervention cap or Game Over rule in #72 because a cap can turn a recoverable industrial state into an unavoidable soft-lock.
+
+Only legal Materials Exchange compensation repays debt. Gross compensation pays debt first; only net compensation becomes usable fuel and recovery progress. Corporate Order and Special Directive reward fuel remains a separate bonus allocation and does not repay debt or advance standing recovery.
+
+Standing resets to clear only when debt is zero and authored net-export recovery has been demonstrated. The intervention streak then resets. Assistance changes no physical material state, so material conservation is unchanged.
+
+The recovery path must remain independent from time-limited opportunities: an expired Sealed thermal study cannot block assistance recovery. Durable confirmed `heat-raw-sealed` evidence remains the #71 handling prerequisite and can be produced with normal world machinery funded by the assistance allocation.
+
+---
+
 ## How to change a decision
 
 When evidence requires a change:
