@@ -126,11 +126,11 @@ export const enCatalog: LocaleCatalog = {
   "ui.terminal.assistance.unavailable-fuel":
     "Available only when operating fuel is depleted.",
   "ui.terminal.assistance.unavailable-obligation":
-    "Repay the current obligation through exports before requesting more assistance.",
+    "Make export repayment progress before requesting another recovery allocation.",
   "ui.terminal.assistance.result.approved":
     "Assistance approved. Future export compensation repays the obligation first.",
   "ui.terminal.assistance.result.obligation-open":
-    "Repay the current obligation through exports before requesting more assistance.",
+    "Make export repayment progress before requesting another recovery allocation.",
   "ui.terminal.assistance.result.fuel-not-depleted":
     "Assistance is available only when operating fuel is depleted.",
   "ui.terminal.assistance.result.unknown":
