@@ -143,7 +143,8 @@ describe("evidence milestones and terminal handling", () => {
     state.tick = fixture.economy.marketEveryTicks;
     refreshOpportunities(fixture, state);
     const directive = state.opportunities["sealed-thermal-study"];
-    expect(directive?.status).toBe("offered");
+    if (!directive) throw new Error("Expected sealed thermal directive offer");
+    expect(directive.status).toBe("offered");
 
     state.tick = directive.expiresAt;
     refreshOpportunities(fixture, state);
@@ -197,5 +198,5 @@ describe("evidence milestones and terminal handling", () => {
       nameKey: "terminal.capability.sealed-sample-outbound.name",
       unlocked: true,
     });
-  });;
+  });
 });
