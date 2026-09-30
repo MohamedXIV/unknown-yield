@@ -103,6 +103,10 @@ export function refreshOpportunities(
     if (state.status !== "offered") continue;
     const entry = definitionFor(c, id);
     if (!entry) continue;
+    if (s.tick > state.expiresAt) {
+      state.status = "expired";
+      continue;
+    }
     if (
       entry.kind === "directive" &&
       s.evidence[directiveEvidenceId(entry.definition)]?.state === "confirmed"
@@ -110,7 +114,7 @@ export function refreshOpportunities(
       complete(s, state, entry.definition.rewardFuel, 1);
       continue;
     }
-    if (s.tick >= state.expiresAt) state.status = "expired";
+    if (s.tick === state.expiresAt) state.status = "expired";
   }
 
   for (const entry of definitions(c)) {
