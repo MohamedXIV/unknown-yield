@@ -18,6 +18,7 @@ const cadenceMs = fixture.tickMs * fixture.economy.marketEveryTicks;
 function knownGranulesContent() {
   const content = structuredClone(fixture);
   content.materials.find((material) => material.id === "granules")!.known = true;
+  delete content.economy.exchange[0].requiredTerminalCapabilityId;
   return content;
 }
 
