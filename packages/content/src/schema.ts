@@ -117,6 +117,21 @@ export const contentSchema = z.object({
     assistanceBelow: positive,
     milestoneExports: positive,
     marketEveryTicks: positive,
+    defaultAssistancePackageId: id.optional(),
+    assistancePackages: z
+      .array(
+        z.object({
+          id,
+          nameKey: localeKeySchema,
+          briefKey: localeKeySchema,
+          fuelBelow: positive,
+          grantFuel: positive,
+          baseObligationFuel: positive,
+          repeatObligationStepFuel: count,
+          recoveryNetFuel: positive,
+        }),
+      )
+      .default([]),
     exchange: z
       .array(
         z.object({
@@ -385,6 +400,29 @@ function validateContentInternal(
     )
       throw new Error("Localization key must match its directive");
   }
+  const assistanceIds = new Set<string>();
+  for (const assistance of c.economy.assistancePackages) {
+    if (assistanceIds.has(assistance.id))
+      throw new Error("Duplicate assistance package ID");
+    assistanceIds.add(assistance.id);
+    if (
+      assistance.nameKey !== "assistance." + assistance.id + ".name" ||
+      assistance.briefKey !== "assistance." + assistance.id + ".brief"
+    )
+      throw new Error("Localization key must match assistance package");
+    if (assistance.baseObligationFuel < assistance.grantFuel)
+      throw new Error("Assistance obligation cannot be smaller than its grant");
+  }
+  if (c.economy.assistancePackages.length) {
+    if (
+      !c.economy.defaultAssistancePackageId ||
+      !assistanceIds.has(c.economy.defaultAssistancePackageId)
+    )
+      throw new Error("Missing default assistance package");
+  } else if (c.economy.defaultAssistancePackageId) {
+    throw new Error("Default assistance package requires authored packages");
+  }
+
   const capabilityIds = new Set<string>();
   for (const capability of c.economy.terminalCapabilities) {
     if (capabilityIds.has(capability.id))
