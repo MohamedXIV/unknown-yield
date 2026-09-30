@@ -134,13 +134,14 @@ export function applyAssistance(
       grantFuel: 0,
       obligationFuel: 0,
     };
-  const definition = eligibility.definition;
+  const definition = eligibility.definition,
+    wasRecovery = s.company.standing === "recovery";
   s.fuel += definition.grantFuel;
   s.debt += eligibility.nextObligationFuel;
   s.company.standing = "recovery";
   if (eligibility.mode === "intervention") {
     s.company.interventionStreak++;
-    s.company.recoveryNetFuel = 0;
+    if (!wasRecovery) s.company.recoveryNetFuel = 0;
     s.company.recoveryPackageId = definition.legacy ? null : definition.id;
   }
   s.company.repaidSinceAssistanceFuel = 0;
