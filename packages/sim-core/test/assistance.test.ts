@@ -50,6 +50,35 @@ function knownGranulesContent() {
 }
 
 describe("corporate assistance and recovery standing", () => {
+  it("keeps the pre-#72 assistance fallback visible and functional", () => {
+    const legacy = structuredClone(fixture);
+    legacy.economy.assistancePackages = [];
+    delete legacy.economy.defaultAssistancePackageId;
+    legacy.economy.startFuel = 0;
+
+    const simulation = new Simulation(legacy);
+    expect(simulation.snapshot().assistance).toEqual([
+      expect.objectContaining({
+        id: "legacy-emergency",
+        nameKey: "assistance.legacy-emergency.name",
+        briefKey: "assistance.legacy-emergency.brief",
+        grantFuel: legacy.economy.grant,
+        nextObligationFuel: legacy.economy.grant,
+        eligible: true,
+      }),
+    ]);
+    expect(simulation.command({ type: "assistance" }).ok).toBe(true);
+    expect(simulation.snapshot()).toMatchObject({
+      fuel: legacy.economy.grant,
+      debt: legacy.economy.grant,
+      company: {
+        standing: "recovery",
+        interventionStreak: 1,
+        recoveryPackageId: null,
+      },
+    });
+  });
+
   it("enforces authored eligibility and refuses farming while obligation is open", () => {
     const fresh = new Simulation(fixture);
     const packageView = fresh.snapshot().assistance[0];
