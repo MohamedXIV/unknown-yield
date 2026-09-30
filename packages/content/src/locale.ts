@@ -31,6 +31,11 @@ export function contentKeys(c: Content): string[] {
     ...c.reactions.flatMap((r) =>
       r.hazard ? [r.hazard.nameKey, r.hazard.observationKey] : [],
     ),
+    ...c.economy.orders.flatMap((order) => [order.nameKey, order.briefKey]),
+    ...c.economy.directives.flatMap((directive) => [
+      directive.nameKey,
+      directive.briefKey,
+    ]),
   ];
 }
 
@@ -74,4 +79,10 @@ export const enCatalog: LocaleCatalog = {
   "hazard.chamber-blowout.name": "Chamber blowout",
   "hazard.chamber-blowout.observation":
     "The oversealed chamber vented violently and forced an automatic lockout. Processed material remains physically accounted for in the line; acknowledge the incident before restarting.",
+  "order.granules-procurement.name": "Orbital conductor allocation",
+  "order.granules-procurement.brief":
+    "Supply a bounded batch of the newly characterized conductor while the orbital allocation window is open.",
+  "directive.sealed-thermal-study.name": "Sealed thermal study",
+  "directive.sealed-thermal-study.brief":
+    "Run a sealed Heat trial on Veined ore and report the observed result. The company does not predict the output.",
 };
