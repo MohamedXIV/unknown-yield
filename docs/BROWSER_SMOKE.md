@@ -2,6 +2,29 @@
 
 Use `npm run dev` and http://127.0.0.1:3000. All gameplay actions below use the UI; do not inject simulation commands through the console.
 
+## Phase 5 exit gate — Issue #73 — pending exact-head acceptance
+
+**Status:** PENDING. Phase 5 implementation children #69–#72 are merged; #73 is an integration/evidence gate, not a new feature slice.
+
+Run the browser acceptance on the exact #73 Draft PR head with the normal game UI only. Do not inject simulation state through DevTools/console.
+
+1. Start a fresh expedition. Confirm the Materials Exchange has no granules listing, no player-facing granules result is visible, and the available Directive describes only its operation/input/setup without revealing the authored outcome.
+2. Build a real raw → Crusher factory and physical terminal route. Run until Conductive granules are discovered and listed. Before terminal handling is unlocked, confirm granules physically stage/backpressure while Exported, Order progress and compensation reward remain unchanged.
+3. Save/Load that locked state through the UI. Confirm market listing, opportunity state, terminal policy/staging and physical factory/route state restore.
+4. Respond to the Sealed thermal study by preserving/suspending the Crush line and building/running a Sealed-furnace line. Confirm the real Sealed trial completes the Directive, unlocks the milestone/terminal handling, and then allows the already-staged cargo to ship.
+5. Confirm the Corporate Order advances/completes only from physical terminal exports. Continue supply long enough to observe saturation reduce compensation.
+6. React in the world rather than through a detached market action: switch granules to Keep/suspend the granules line and operate a different useful line (the deterministic companion uses ferrite → Structural plates). Confirm the granules factory remains intact and compensation improves as saturation recovers.
+7. Let normal industry deplete operating fuel below the assistance threshold. Request the authored assistance package through the terminal UI. Confirm obligation/recovery standing appears and immediate repeat assistance is unavailable without export repayment progress.
+8. Save/Load with an open obligation. Confirm debt/standing, market/opportunity history, milestone/handling, factories, belts, buffers/staging and policies restore.
+9. Resume the existing granules line and legal Export policy. Confirm gross export compensation repays obligation before net fuel, repayment-earned continuation appears only if legitimately earned, and the site can reach Debt 0 / Standing clear without deleting/rebuilding the persistent industry.
+10. Final Save/Load: confirm completed opportunities stay complete without reward replay; market saturation/compensation, terminal handling and company standing restore; inspect the browser console and record warning/error arrays honestly.
+
+Companion domain gate: `packages/sim-core/test/phase5-exit.test.ts`.
+
+Previously accepted #69–#72 browser/domain evidence may be cited with its original SHA, but it does not replace this exact-head integrated pass. In particular, do not attribute #72's expired-opportunity or saturated-continuation domain cases to a #73 browser run unless they are actually exercised in the browser.
+
+Before closeout also run the focused Phase 5 suite, full `npm test`, `npm run typecheck`, `npm run lint`, and `npm run build`. Record material-ledger reconciliation and exact head alongside the browser evidence.
+
 ## Phase 1.5 exit gate — Issue #8
 
 **Status:** Phase 1.5 browser acceptance complete. Runtime behavior was verified from the static export produced by behavioral head `96cb821a3503e1b9e45ef64e75176cff758376cf`; subsequent PR commits are documentation-only evidence recording.
