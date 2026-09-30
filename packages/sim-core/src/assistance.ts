@@ -22,6 +22,7 @@ function legacyAssistance(c: Content): ResolvedAssistance {
     grantFuel: c.economy.grant,
     baseObligationFuel: c.economy.grant,
     repeatObligationStepFuel: 0,
+    continuationObligationFuel: c.economy.grant,
     recoveryNetFuel: c.economy.grant,
     legacy: true,
   };
@@ -51,6 +52,7 @@ export function assistanceEligibility(
   eligible: boolean;
   reason: AssistanceReason;
   nextObligationFuel: number;
+  mode: "intervention" | "continuation" | null;
 } {
   const definition = assistanceDefinition(c, packageId);
   if (!definition)
@@ -59,29 +61,53 @@ export function assistanceEligibility(
       eligible: false,
       reason: null,
       nextObligationFuel: 0,
+      mode: null,
     };
-  const nextObligationFuel =
+  const interventionObligation =
     definition.baseObligationFuel +
     definition.repeatObligationStepFuel * s.company.interventionStreak;
-  if (s.debt > 0)
-    return {
-      definition,
-      eligible: false,
-      reason: "obligation-open",
-      nextObligationFuel,
-    };
   if (s.fuel >= definition.fuelBelow)
     return {
       definition,
       eligible: false,
       reason: "fuel-not-depleted",
-      nextObligationFuel,
+      nextObligationFuel:
+        s.debt > 0
+          ? definition.continuationObligationFuel
+          : interventionObligation,
+      mode: null,
     };
+  if (s.debt > 0) {
+    const sameRecoveryPackage = definition.legacy
+      ? s.company.recoveryPackageId === null
+      : s.company.recoveryPackageId === definition.id;
+    if (
+      s.company.standing !== "recovery" ||
+      !sameRecoveryPackage ||
+      s.company.repaidSinceAssistanceFuel <
+        definition.continuationObligationFuel
+    )
+      return {
+        definition,
+        eligible: false,
+        reason: "obligation-open",
+        nextObligationFuel: definition.continuationObligationFuel,
+        mode: null,
+      };
+    return {
+      definition,
+      eligible: true,
+      reason: null,
+      nextObligationFuel: definition.continuationObligationFuel,
+      mode: "continuation",
+    };
+  }
   return {
     definition,
     eligible: true,
     reason: null,
-    nextObligationFuel,
+    nextObligationFuel: interventionObligation,
+    mode: "intervention",
   };
 }
 
@@ -107,9 +133,12 @@ export function applyAssistance(
   s.fuel += definition.grantFuel;
   s.debt += eligibility.nextObligationFuel;
   s.company.standing = "recovery";
-  s.company.interventionStreak++;
-  s.company.recoveryNetFuel = 0;
-  s.company.recoveryPackageId = definition.legacy ? null : definition.id;
+  if (eligibility.mode === "intervention") {
+    s.company.interventionStreak++;
+    s.company.recoveryNetFuel = 0;
+    s.company.recoveryPackageId = definition.legacy ? null : definition.id;
+  }
+  s.company.repaidSinceAssistanceFuel = 0;
   return {
     ok: true,
     reason: null,
@@ -126,6 +155,14 @@ function recoveryDefinition(
     assistanceDefinition(c, s.company.recoveryPackageId) ??
     legacyAssistance(c)
   );
+}
+
+export function recordObligationRepayment(
+  s: Pick<Save, "company">,
+  repaidFuel: number,
+): void {
+  if (repaidFuel <= 0 || s.company.standing !== "recovery") return;
+  s.company.repaidSinceAssistanceFuel += repaidFuel;
 }
 
 export function recordNetExportRecovery(
@@ -146,6 +183,7 @@ export function recordNetExportRecovery(
   s.company.interventionStreak = 0;
   s.company.recoveryNetFuel = 0;
   s.company.recoveryPackageId = null;
+  s.company.repaidSinceAssistanceFuel = 0;
 }
 
 export function assistanceViews(
@@ -181,7 +219,10 @@ export function companyView(
       ? recoveryDefinition(c, s).recoveryNetFuel
       : 0;
   return {
-    ...s.company,
+    standing: s.company.standing,
+    interventionStreak: s.company.interventionStreak,
+    recoveryNetFuel: s.company.recoveryNetFuel,
+    recoveryPackageId: s.company.recoveryPackageId,
     recoveryTargetNetFuel: target,
   };
 }
