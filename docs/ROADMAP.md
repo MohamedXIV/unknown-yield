@@ -168,17 +168,17 @@ Phase 4 intentionally stops before economy/site/storage/asset/general-purpose sc
 
 ## Phase 5 — Progression and company systems
 
-**Epic:** GitHub Issue #12. **ACTIVE.**
+**Epic:** GitHub Issue #12. **Phase 5 COMPLETE** through #73 / PR #79.
 
-**Execution:** #69 → #70 → #71 → #72 → #73.
+**Completed execution:** #69 ✓ → #70 ✓ → #71 ✓ → #72 ✓ → #73 ✓.
 
 - #69 — authoritative Materials Exchange baseline — **COMPLETE** via PR #74;
 - #70 — Corporate Orders and Special Directives — **COMPLETE** via PR #76;
 - #71 — evidence-driven milestones, terminal handling, and fuel classes — **COMPLETE** via PR #77;
 - #72 — corporate assistance, obligations, and recovery standing — **COMPLETE** via PR #78;
-- #73 — end-to-end company progression exit review — **ACTIVE / NEXT**.
+- #73 — end-to-end company progression exit review — **COMPLETE** via PR #79 / `dcbe1a567cc26ab150f13e159d35bf50030ee570`.
 
-Do not skip the dependency order. Market/company state remains authoritative in sim-core and must preserve physical inventory plus hidden-knowledge boundaries.
+Phase 5 closed with the integrated gate accepted. Market/company state remains authoritative in sim-core and preserves physical inventory plus hidden-knowledge boundaries. Phase 6 remains undecomposed and was not started during this closeout.
 
 ### Scope
 
@@ -286,4 +286,4 @@ The following should not be treated as progress during foundation unless require
 
 The accepted implementation and evidence are summarized in [FIRST_PLAYABLE.md](FIRST_PLAYABLE.md) and [BROWSER_SMOKE.md](BROWSER_SMOKE.md). Continue from this foundation; do not rebuild the retired dashboard prototype.
 
-Phase 1.5 is complete through Issue #8 / PR #29, Phase 2 through Issue #34 / PR #44, Phase 3 through Issue #50, and Phase 4 through Issue #63 / PR #67. Phase 5 / #12 remains active; #69–#72 are complete, and #73 is the remaining integrated exit-review gate before Phase 6.
+Phase 1.5 is complete through Issue #8 / PR #29, Phase 2 through Issue #34 / PR #44, Phase 3 through Issue #50, Phase 4 through Issue #63 / PR #67, and Phase 5 through Issue #73 / PR #79 (`dcbe1a567cc26ab150f13e159d35bf50030ee570`). Phase 6 remains roadmap-only and undecomposed.
