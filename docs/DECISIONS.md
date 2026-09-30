@@ -447,9 +447,9 @@ No second fuel/allocation class is added in this slice: there is not yet a secon
 
 **Status:** implementation decision for Phase 5 #72, 2026-09-30
 
-Corporate assistance is authored content with a stable package ID, localized presentation, fuel-depletion eligibility, a bounded fuel grant, base obligation, repeat-intervention obligation step and net-export recovery target. The existing `debt` field remains the canonical outstanding obligation.
+Corporate assistance is authored content with a stable package ID, localized presentation, fuel-depletion eligibility, a bounded fuel grant, base obligation, repeat-intervention obligation step, recovery-continuation obligation and net-export recovery target. The existing `debt` field remains the canonical outstanding obligation.
 
-An assistance request is refused while debt is open. After repayment, another intervention remains possible if fuel collapses before standing fully recovers; its obligation increases by the authored repeat step. There is no hard intervention cap or Game Over rule in #72 because a cap can turn a recoverable industrial state into an unavoidable soft-lock.
+A new intervention with no open debt uses the base obligation plus the authored repeat-intervention step. If fuel collapses while that intervention's debt is still open, the same package may provide a recovery continuation only after legal exports have repaid at least `continuationObligationFuel` since the previous allocation. The continuation adds exactly that amount back to debt, resets the repayment-progress counter and does not increase the intervention streak. This makes open-obligation recovery possible under a saturated market while ensuring continuation debt cannot ratchet upward and fuel cannot be repeatedly requested without export progress. There is no hard intervention cap or Game Over rule in #72 because a cap can turn a recoverable industrial state into an unavoidable soft-lock.
 
 Only legal Materials Exchange compensation repays debt. Gross compensation pays debt first; only net compensation becomes usable fuel and recovery progress. Corporate Order and Special Directive reward fuel remains a separate bonus allocation and does not repay debt or advance standing recovery.
 
