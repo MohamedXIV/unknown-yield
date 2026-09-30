@@ -1,6 +1,7 @@
 import type { Content } from "@site/content";
 import type { MarketListingView, MarketState, Save } from "./types";
 import { terminalCapabilityUnlocked } from "./milestones";
+import { recordNetExportRecovery } from "./assistance";
 
 export const MARKET_BPS = 10000;
 
@@ -91,7 +92,7 @@ export function recordMarketExport(
 
 export function applyExportCompensation(
   c: Content,
-  s: Pick<Save, "knowledge" | "market" | "fuel" | "debt">,
+  s: Pick<Save, "knowledge" | "market" | "fuel" | "debt" | "company">,
   materialId: string,
   units: number,
 ) {
@@ -103,6 +104,7 @@ export function applyExportCompensation(
     net = gross - repaid;
   s.debt -= repaid;
   s.fuel += net;
+  recordNetExportRecovery(c, s, net);
   recordMarketExport(c, s, materialId, units);
   return { perUnit, gross, repaid, net };
 }
