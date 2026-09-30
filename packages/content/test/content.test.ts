@@ -130,6 +130,52 @@ describe("content boundary", () => {
     if (kind === "staging") c.site.stagingCapacity = 0;
     expect(() => validateContent(c)).toThrow();
   });
+  it("validates authored assistance packages and repeat-recovery rules", () => {
+    const c = validateContent(fixture);
+    expect(c.economy.defaultAssistancePackageId).toBe("emergency-fuel");
+    expect(c.economy.assistancePackages).toEqual([
+      expect.objectContaining({
+        id: "emergency-fuel",
+        fuelBelow: 2,
+        grantFuel: 36,
+        baseObligationFuel: 36,
+        repeatObligationStepFuel: 12,
+        recoveryNetFuel: 24,
+      }),
+    ]);
+
+    const underfunded = structuredClone(fixture);
+    underfunded.economy.assistancePackages[0].baseObligationFuel = 35;
+    expect(() => validateContent(underfunded)).toThrow(
+      /obligation cannot be smaller/i,
+    );
+
+    const missingDefault = structuredClone(fixture);
+    missingDefault.economy.defaultAssistancePackageId = "missing-package";
+    expect(() => validateContent(missingDefault)).toThrow(
+      /default assistance package/i,
+    );
+
+    const duplicate = structuredClone(fixture);
+    duplicate.economy.assistancePackages.push({
+      ...duplicate.economy.assistancePackages[0],
+    });
+    expect(() => validateContent(duplicate)).toThrow(
+      /Duplicate assistance package/i,
+    );
+  });
+  it("keeps pre-#72 world-01-v6 assistance content additively compatible", () => {
+    const legacy = structuredClone(fixture) as unknown as {
+      economy: Record<string, unknown>;
+    };
+    delete legacy.economy.assistancePackages;
+    delete legacy.economy.defaultAssistancePackageId;
+    const parsed = validateContent(legacy);
+    expect(parsed.version).toBe("world-01-v6");
+    expect(parsed.economy.assistancePackages).toEqual([]);
+    expect(parsed.economy.grant).toBe(36);
+    expect(parsed.economy.assistanceBelow).toBe(2);
+  });
   it("validates authored company opportunities through stable IDs and hidden experiment tuples", () => {
     const c = validateContent(fixture);
     expect(c.economy.orders[0]).toMatchObject({
@@ -261,6 +307,9 @@ describe("content boundary", () => {
     );
     expect(enCatalog["terminal.capability.sealed-sample-outbound.name"]).toBe(
       "Sealed sample handling",
+    );
+    expect(enCatalog["assistance.emergency-fuel.name"]).toBe(
+      "Emergency fuel allocation",
     );
   });
   it("rejects content referencing a missing localization key", () => {
