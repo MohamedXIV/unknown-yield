@@ -4,6 +4,7 @@ import {
   Simulation,
   applyExportCompensation,
   auditLedger,
+  recordDirectiveExperiment,
   recordOrderExport,
   type GameCommand,
 } from "../src/index";
@@ -60,6 +61,9 @@ describe("corporate assistance and recovery standing", () => {
     });
     expect(
       fresh.command({ type: "assistance", packageId: "emergency-fuel" }).ok,
+    ).toBe(false);
+    expect(
+      fresh.command({ type: "assistance", packageId: "missing-package" }).ok,
     ).toBe(false);
 
     const simulation = depletedSimulation();
@@ -123,6 +127,49 @@ describe("corporate assistance and recovery standing", () => {
     expect(restored.snapshot().debt).toBe(36);
   });
 
+  it("preserves existing physical factory, routing and cargo while granting assistance", () => {
+    const simulation = new Simulation(fixture);
+    build(simulation, {
+      type: "placeMachine",
+      definitionId: "extractor",
+      x: 15,
+      y: 25,
+      direction: 0,
+    });
+    build(simulation, path(17, 26, 20, 26));
+    simulation.step(3000);
+
+    const depleted = simulation.serialize();
+    depleted.fuel = 0;
+    expect(simulation.load(depleted).ok).toBe(true);
+    const before = simulation.serialize();
+
+    expect(simulation.command({ type: "assistance" }).ok).toBe(true);
+    const after = simulation.serialize();
+    expect({
+      stock: after.stock,
+      deposits: after.deposits,
+      machines: after.machines,
+      factories: after.factories,
+      belts: after.belts,
+      storages: after.storages,
+      staging: after.staging,
+      policies: after.policies,
+      flows: after.flows,
+    }).toEqual({
+      stock: before.stock,
+      deposits: before.deposits,
+      machines: before.machines,
+      factories: before.factories,
+      belts: before.belts,
+      storages: before.storages,
+      staging: before.staging,
+      policies: before.policies,
+      flows: before.flows,
+    });
+    expect(auditLedger(fixture, after).ok).toBe(true);
+  });
+
   it("keeps bonus allocations outside obligation and standing recovery accounting", () => {
     const content = knownGranulesContent();
     const simulation = depletedSimulation(content);
@@ -139,6 +186,18 @@ describe("corporate assistance and recovery standing", () => {
     const beforeBonusFuel = save.fuel;
     recordOrderExport(content, save, "granules", 4);
     expect(save.fuel).toBe(beforeBonusFuel + 24);
+    expect(save.debt).toBe(36);
+    expect(save.company.recoveryNetFuel).toBe(0);
+
+    save.opportunities["sealed-thermal-study"] = {
+      status: "offered",
+      offeredAt: 0,
+      expiresAt: content.economy.directives[0].durationTicks,
+      progress: 0,
+      completedAt: null,
+    };
+    recordDirectiveExperiment(content, save, "heat", "raw", "sealed");
+    expect(save.fuel).toBe(beforeBonusFuel + 24 + 18);
     expect(save.debt).toBe(36);
     expect(save.company.recoveryNetFuel).toBe(0);
 
