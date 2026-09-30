@@ -102,6 +102,37 @@ export type MarketListingView = MarketState & {
   materialId: string;
   compensationPerUnit: number;
 };
+export type OpportunityStatus = "offered" | "completed" | "expired";
+export type OpportunityState = {
+  status: OpportunityStatus;
+  offeredAt: number;
+  expiresAt: number;
+  progress: number;
+  completedAt: number | null;
+};
+export type OpportunityView =
+  | {
+      id: string;
+      kind: "order";
+      nameKey: string;
+      briefKey: string;
+      rewardFuel: number;
+      expiresAt: number;
+      materialId: string;
+      quantity: number;
+      progress: number;
+    }
+  | {
+      id: string;
+      kind: "directive";
+      nameKey: string;
+      briefKey: string;
+      rewardFuel: number;
+      expiresAt: number;
+      operationId: string;
+      inputMaterialId: string;
+      setupNameKey?: string;
+    };
 export type Save = {
   schemaVersion: number;
   contentVersion: string;
@@ -123,6 +154,7 @@ export type Save = {
   staging: Inventory;
   policies: Record<string, "keep" | "export">;
   market: Record<string, MarketState>;
+  opportunities: Record<string, OpportunityState>;
 };
 export type CommandResult = {
   ok: boolean;
@@ -205,6 +237,7 @@ export type PlayerSnapshot = {
   staging: Inventory;
   policies: Record<string, "keep" | "export">;
   exchange: MarketListingView[];
+  opportunities: OpportunityView[];
   knowledgeEntries: KnowledgeEntry[];
   observations: Observation[];
 };

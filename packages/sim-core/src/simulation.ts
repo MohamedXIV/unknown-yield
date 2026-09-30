@@ -5,6 +5,7 @@ import { completeAndStart, transport, status } from "./production";
 import { auditLedger } from "./ledger";
 import { machineUnlocked } from "./progression";
 import { marketListings, recoverMarkets } from "./market";
+import { opportunityViews, refreshOpportunities } from "./opportunities";
 import { footprint } from "./geometry";
 import { factoryView } from "./factory-contract";
 import { FactoryThroughputMonitor } from "./factory-throughput";
@@ -45,7 +46,10 @@ export class Simulation {
       );
       if (s.tick % c.site.transportEveryTicks === 0)
         transport(c, s, (event) => this.factoryThroughput.recordMove(s, event));
-      if (s.tick % c.economy.marketEveryTicks === 0) recoverMarkets(c, s);
+      if (s.tick % c.economy.marketEveryTicks === 0) {
+        refreshOpportunities(c, s);
+        recoverMarkets(c, s);
+      }
       completeAndStart(c, s, false);
       this.factoryThroughput.observe(c, s);
     }
@@ -141,6 +145,7 @@ export class Simulation {
       staging: s.staging,
       policies: s.policies,
       exchange: marketListings(c, s),
+      opportunities: opportunityViews(c, s),
       knowledgeEntries,
       machines: Object.values(s.machines).map((m) => {
         const d = c.machines.find((d) => d.id === m.definitionId)!;
@@ -204,7 +209,7 @@ export class Simulation {
       return {
         ok: false,
         message:
-          "Save rejected (requires schema 8): " +
+          "Save rejected (requires schema 9): " +
           (error instanceof Error ? error.message : "Invalid data"),
       };
     }

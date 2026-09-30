@@ -221,7 +221,7 @@ Definitions and placed instances are separate. Machines operate automatically fr
 
 **Status:** accepted, updated 2026-09-30
 
-Spatial saves currently use schema 8, separate from content version `world-01-v6`. Schema 4 migrates losslessly through schema 5 by adding empty belt-diverter state; schema 5 then migrates to schema 6 by reconstructing confirmed experiment evidence from discovered reaction IDs and hinted evidence from any undiscovered active processor batch; schema 6 migrates to schema 7 by adding an empty machine-incident slot; schema 7 migrates to schema 8 by initializing company-known Materials Exchange listings at authored baseline demand with zero saturation because older saves had no market-memory state to preserve. Schemas 1–3 remain incompatible and are rejected without replacing a running site. Saves tied to older content versions are rejected by the exact content-version check. Content Studio remains development-only and receives no scope expansion from save migration work.
+Spatial saves currently use schema 9, separate from content version `world-01-v6`. Schema 4 migrates losslessly through schema 5 by adding empty belt-diverter state; schema 5 then migrates to schema 6 by reconstructing confirmed experiment evidence from discovered reaction IDs and hinted evidence from any undiscovered active processor batch; schema 6 migrates to schema 7 by adding an empty machine-incident slot; schema 7 migrates to schema 8 by initializing company-known Materials Exchange listings at authored baseline demand with zero saturation because older saves had no market-memory state to preserve; schema 8 migrates to schema 9 with empty company-opportunity history because older saves had no offers, progress, expiries or rewards. Schemas 1–3 remain incompatible and are rejected without replacing a running site. Content version remains `world-01-v6` for #70 because orders/directives are an additive compatible extension and pre-#70 v6 content validates them as empty arrays. Saves tied to other content versions are rejected by the exact content-version check. Content Studio remains development-only and receives no scope expansion from save migration work.
 
 ## D-019 — Material conservation is a design invariant
 
@@ -412,6 +412,22 @@ A listing may appear only when its material is initially known or confirmed know
 Physical terminal staging remains the only normal export sink. Exported units leave tracked world inventory, update the material ledger, earn compensation from the current authoritative market state, repay corporate debt before net fuel allocation, and increase saturation. Saturation recovers deterministically on a slow simulation cadence. There is no stock ownership, speculative buy/sell loop, chart-driven price authority or hidden-content preview.
 
 This baseline deliberately keeps one fuel resource. Orders, directives, additional fuel classes and broader company progression remain later dependency-ordered Phase 5 children.
+
+## D-030 — Company opportunities are deterministic sim-core state, not a quest feed
+
+**Status:** accepted for Phase 5 #70, 2026-09-30
+
+Corporate Orders and Special Directives are authored opportunities evaluated on the existing slow company/market cadence. Runtime offer, expiry, progress, completion and reward state belongs to `sim-core` and is persisted in save schema 9.
+
+Orders reference a company-known Materials Exchange product and progress only when staged cargo physically leaves the map through the terminal export path. A shipped unit may satisfy at most one active order. Exchange compensation remains unchanged; completing an order grants one additional authored fuel allocation.
+
+Special Directives reference only an experiment tuple the player can legitimately understand: operation, known input material and setup/process condition. They do not expose reaction IDs or output IDs. Eligibility requires an unlocked capable processor; completion derives from the existing confirmed experiment-evidence record.
+
+### Consequence
+
+The terminal may present sanitized active opportunities and their clear reward/progress, but React does not own eligibility, deadlines, progress or rewards. Expired/completed offers do not rotate back automatically. #70 does not add standing, advanced fuel classes, terminal handling classes or a generic quest framework.
+
+---
 
 ## How to change a decision
 

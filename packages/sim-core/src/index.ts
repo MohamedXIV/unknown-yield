@@ -41,6 +41,9 @@ export type {
   FlowTotals,
   ExperimentEvidence,
   KnowledgeEntry,
+  OpportunityState,
+  OpportunityStatus,
+  OpportunityView,
   Save,
   Factory,
   FactoryView,
@@ -65,3 +68,10 @@ export {
   recordMarketExport,
   recoverMarkets,
 } from "./market";
+
+export {
+  opportunityViews,
+  recordDirectiveExperiment,
+  recordOrderExport,
+  refreshOpportunities,
+} from "./opportunities";

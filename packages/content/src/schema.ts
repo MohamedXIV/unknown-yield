@@ -129,6 +129,33 @@ export const contentSchema = z.object({
         }),
       )
       .min(1),
+    orders: z
+      .array(
+        z.object({
+          id,
+          nameKey: localeKeySchema,
+          briefKey: localeKeySchema,
+          materialId: id,
+          quantity: positive,
+          durationTicks: positive,
+          rewardFuel: positive,
+        }),
+      )
+      .default([]),
+    directives: z
+      .array(
+        z.object({
+          id,
+          nameKey: localeKeySchema,
+          briefKey: localeKeySchema,
+          operationId: id,
+          inputMaterialId: id,
+          processConditionId: id.optional(),
+          durationTicks: positive,
+          rewardFuel: positive,
+        }),
+      )
+      .default([]),
   }),
 });
 export type Content = z.infer<typeof contentSchema>;
@@ -252,6 +279,61 @@ function validateContentInternal(
     exchangeMaterials.add(listing.materialId);
     if (listing.floorCompensation > listing.baseCompensation)
       throw new Error("Exchange floor exceeds base compensation");
+  }
+  const opportunityIds = new Set<string>(),
+    directiveExperiments = new Set<string>();
+  for (const order of c.economy.orders) {
+    if (opportunityIds.has(order.id))
+      throw new Error("Duplicate company opportunity ID");
+    opportunityIds.add(order.id);
+    if (!materials.has(order.materialId) || !exchangeMaterials.has(order.materialId))
+      throw new Error("Corporate order requires an exchange material");
+    if (
+      order.nameKey !== "order." + order.id + ".name" ||
+      order.briefKey !== "order." + order.id + ".brief"
+    )
+      throw new Error("Localization key must match its corporate order");
+  }
+  for (const directive of c.economy.directives) {
+    if (opportunityIds.has(directive.id))
+      throw new Error("Duplicate company opportunity ID");
+    opportunityIds.add(directive.id);
+    const experimentKey = [
+      directive.operationId,
+      directive.inputMaterialId,
+      directive.processConditionId ?? "",
+    ].join("/");
+    if (directiveExperiments.has(experimentKey))
+      throw new Error("Duplicate directive experiment");
+    directiveExperiments.add(experimentKey);
+    if (
+      !materials.has(directive.inputMaterialId) ||
+      !operations.has(directive.operationId)
+    )
+      throw new Error("Missing directive experiment reference");
+    const reaction = c.reactions.find(
+      (r) =>
+        r.operation === directive.operationId &&
+        r.input === directive.inputMaterialId &&
+        r.processConditionId === directive.processConditionId,
+    );
+    if (!reaction)
+      throw new Error("Directive experiment has no authored outcome");
+    if (reaction.known)
+      throw new Error("Directive experiment must target an unconfirmed outcome");
+    const capable = c.machines.some(
+      (m) =>
+        m.role === "processor" &&
+        m.operations.includes(directive.operationId) &&
+        m.processConditionId === directive.processConditionId,
+    );
+    if (!capable)
+      throw new Error("Directive experiment has no capable machine");
+    if (
+      directive.nameKey !== "directive." + directive.id + ".name" ||
+      directive.briefKey !== "directive." + directive.id + ".brief"
+    )
+      throw new Error("Localization key must match its directive");
   }
   if (
     c.economy.grant < Math.max(...c.machines.map((m) => m.fuel)) * 8 ||

@@ -32,7 +32,8 @@ This document is intentionally procedural. Game/design truth lives in the domain
 - Completed Phase 4 child: **#62 — selected-content simulation preview** (merged via PR #66).
 - Completed Phase 4 gate: **#63 — end-to-end Content Studio v1 exit review** (merged via PR #67).
 - Active phase: **Phase 5 — Materials Exchange and corporate progression (#12)**.
-- Active Phase 5 child: **#69 — authoritative Materials Exchange baseline**.
+- Completed Phase 5 child: **#69 — authoritative Materials Exchange baseline** (merged via PR #74).
+- Active Phase 5 child: **#70 — Corporate Orders and Special Directives**.
 
 ## Phase 1.5 dependency graph
 
@@ -125,7 +126,7 @@ Phase 2 is complete.
 #73 Phase 5 exit review
 ```
 
-#12 is active. #69 is the only dependency-ready Phase 5 implementation issue.
+#12 is active. #69 is complete; #70 is the only dependency-ready Phase 5 implementation issue.
 
 ## Agent loop
 
@@ -172,6 +173,6 @@ There is currently no remote CI workflow. Do not represent absent checks as gree
 - #9 — experimentation and discovery depth — COMPLETE via children #30–#34
 - #10 — factory-as-function contracts and abstraction proof — COMPLETE via children #45–#50
 - #11 — Content Studio v1 — COMPLETE via children #60–#63
-- #12 — Materials Exchange and corporate progression — ACTIVE via #69–#73 (#69 first)
+- #12 — Materials Exchange and corporate progression — ACTIVE via #69–#73 (#69 complete; #70 active)
 
 These are placeholders for future decomposition, not permission to work around the active gate.

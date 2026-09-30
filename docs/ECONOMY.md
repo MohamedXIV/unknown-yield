@@ -129,4 +129,6 @@ The #69 baseline makes the Materials Exchange authoritative in `sim-core`. Excha
 
 The terminal remains the physical export boundary and the material ledger remains unchanged: market state changes compensation, never material accounting. React may present current compensation and saturation for known listings but does not own price truth.
 
-This baseline intentionally does **not** add Corporate Orders, Special Directives, additional fuel classes, terminal-module progression or standing rules; those remain #70–#72 so the first market slice stays testable and does not become a dashboard framework.
+Issue #70 adds one-shot authored Corporate Orders and Special Directives on the same slow company cadence. Orders appear only for company-known exchange products, count only cargo that physically ships from terminal staging, and grant one authored completion allocation. Directives request an operation + known input + setup without revealing the authored reaction/output; completion derives from confirmed experiment evidence. Offer, expiry, progress and completion state are authoritative in `sim-core` and persisted.
+
+This slice still does **not** add additional fuel classes, terminal-module progression or standing rules; those remain #71–#72. Opportunities are bounded industrial prompts, not a rotating quest feed or separate dashboard economy.
