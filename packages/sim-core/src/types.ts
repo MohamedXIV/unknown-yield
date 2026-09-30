@@ -201,6 +201,7 @@ export type Save = {
 export type CommandResult = {
   ok: boolean;
   message: string;
+  messageKey?: string;
   id?: string;
   cost?: number;
 };
