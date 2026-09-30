@@ -201,6 +201,100 @@ describe("Corporate Orders and Special Directives", () => {
     });
   });
 
+  it("does not create a directive after that experiment has already started", () => {
+    const state = initialState(fixture);
+    const directive = fixture.economy.directives[0];
+    const evidenceId = experimentEvidenceKey(
+      directive.operationId,
+      directive.inputMaterialId,
+      directive.processConditionId ?? null,
+    );
+    state.evidence[evidenceId] = {
+      operationId: directive.operationId,
+      inputId: directive.inputMaterialId,
+      processConditionId: directive.processConditionId ?? null,
+      state: "hinted",
+    };
+    state.tick = fixture.economy.marketEveryTicks;
+
+    refreshOpportunities(fixture, state);
+
+    expect(state.opportunities["sealed-thermal-study"]).toBeUndefined();
+    expect(opportunityViews(fixture, state)).not.toContainEqual(
+      expect.objectContaining({ id: "sealed-thermal-study" }),
+    );
+  });
+
+  it("expires a directive instead of rewarding confirmation after its deadline", () => {
+    const state = initialState(fixture);
+    const directive = fixture.economy.directives[0];
+    state.tick = fixture.economy.marketEveryTicks;
+    refreshOpportunities(fixture, state);
+    const offered = state.opportunities[directive.id];
+    const beforeFuel = state.fuel;
+    const reaction = fixture.reactions.find(
+      (entry) =>
+        entry.operation === directive.operationId &&
+        entry.input === directive.inputMaterialId &&
+        entry.processConditionId === directive.processConditionId,
+    )!;
+    state.knowledge.push(reaction.id);
+    state.evidence[
+      experimentEvidenceKey(
+        reaction.operation,
+        reaction.input,
+        reaction.processConditionId ?? null,
+      )
+    ] = {
+      operationId: reaction.operation,
+      inputId: reaction.input,
+      processConditionId: reaction.processConditionId ?? null,
+      state: "confirmed",
+    };
+    ensureMarket(fixture, state, reaction.output);
+    state.tick = offered.expiresAt + 1;
+
+    refreshOpportunities(fixture, state);
+
+    expect(state.opportunities[directive.id].status).toBe("expired");
+    expect(state.fuel).toBe(beforeFuel);
+  });
+
+  it("rejects persisted opportunities that could leak hidden company knowledge", () => {
+    const simulation = new Simulation(fixture);
+    const before = simulation.serialize();
+    const tampered = structuredClone(before);
+    tampered.tick = fixture.economy.marketEveryTicks;
+    tampered.opportunities["granules-procurement"] = {
+      status: "offered",
+      offeredAt: tampered.tick,
+      expiresAt:
+        tampered.tick + fixture.economy.orders[0].durationTicks,
+      progress: 0,
+      completedAt: null,
+    };
+
+    expect(simulation.load(tampered).ok).toBe(false);
+    expect(simulation.serialize()).toEqual(before);
+  });
+
+  it("rejects a completed directive without its confirmed experiment evidence", () => {
+    const simulation = new Simulation(fixture);
+    const before = simulation.serialize();
+    const tampered = structuredClone(before);
+    tampered.tick = fixture.economy.marketEveryTicks;
+    tampered.opportunities["sealed-thermal-study"] = {
+      status: "completed",
+      offeredAt: 0,
+      expiresAt: fixture.economy.directives[0].durationTicks,
+      progress: 1,
+      completedAt: tampered.tick,
+    };
+
+    expect(simulation.load(tampered).ok).toBe(false);
+    expect(simulation.serialize()).toEqual(before);
+  });
+
   it("persists partial progress and migrates schema 8 with empty opportunity history", () => {
     const content = knownGranulesContent();
     const source = new Simulation(content);
