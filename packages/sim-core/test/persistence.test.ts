@@ -3,10 +3,32 @@ import { fixture } from "@site/content";
 import {
   Simulation,
   auditLedger,
+  experimentEvidenceKey,
+  initializeKnownMarkets,
   type GameCommand,
 } from "../src/index";
 
 const make = () => new Simulation(fixture);
+function withGranuleHandling(s = make()) {
+  const save = s.serialize(),
+    reaction = fixture.reactions.find((entry) => entry.id === "heat-raw-sealed")!;
+  if (!save.knowledge.includes(reaction.id)) save.knowledge.push(reaction.id);
+  save.evidence[
+    experimentEvidenceKey(
+      reaction.operation,
+      reaction.input,
+      reaction.processConditionId ?? null,
+    )
+  ] = {
+    operationId: reaction.operation,
+    inputId: reaction.input,
+    processConditionId: reaction.processConditionId ?? null,
+    state: "confirmed",
+  };
+  initializeKnownMarkets(fixture, save);
+  expect(s.load(save).ok).toBe(true);
+  return s;
+}
 function build(s: Simulation, c: GameCommand) {
   const r = s.command(c);
   expect(r.ok, r.message).toBe(true);
@@ -145,7 +167,7 @@ describe("persistent factories (suspend / reroute / resume)", () => {
   });
 
   it("suspends a line, reroutes shared input, idles, then resumes intact", () => {
-    const { s, fa, fb, cb, ca } = twoLines();
+    const { s, fa, fb, cb, ca } = twoLines(withGranuleHandling());
     // Phase 1: primary feed runs line B; line A stays pristine.
     s.step(60000);
     expect(s.snapshot().exported).toBeGreaterThan(0);
