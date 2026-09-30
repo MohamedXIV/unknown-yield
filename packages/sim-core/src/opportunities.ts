@@ -76,7 +76,7 @@ function eligible(
   return (
     companyKnowsMaterial(c, s, definition.inputMaterialId) &&
     directiveCapability(c, s, definition) &&
-    s.evidence[directiveEvidenceId(definition)]?.state !== "confirmed"
+    !Object.hasOwn(s.evidence, directiveEvidenceId(definition))
   );
 }
 
@@ -141,7 +141,7 @@ export function recordOrderExport(
     if (
       !state ||
       state.status !== "offered" ||
-      s.tick >= state.expiresAt
+      s.tick > state.expiresAt
     )
       continue;
     const needed = definition.quantity - state.progress;
