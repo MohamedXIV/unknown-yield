@@ -46,6 +46,11 @@ export type {
   OpportunityView,
   MilestoneState,
   MilestoneView,
+  CompanyStanding,
+  CompanyState,
+  CompanyView,
+  AssistanceReason,
+  AssistanceView,
   Save,
   Factory,
   FactoryView,
@@ -86,3 +91,12 @@ export {
   terminalCanExport,
   terminalCapabilityUnlocked,
 } from "./milestones";
+
+export {
+  applyAssistance,
+  assistanceDefinition,
+  assistanceEligibility,
+  assistanceViews,
+  companyView,
+  recordNetExportRecovery,
+} from "./assistance";
