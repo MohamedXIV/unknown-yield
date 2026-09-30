@@ -32,7 +32,8 @@ This document is intentionally procedural. Game/design truth lives in the domain
 - Completed Phase 4 child: **#62 — selected-content simulation preview** (merged via PR #66).
 - Completed Phase 4 gate: **#63 — end-to-end Content Studio v1 exit review** (merged via PR #67).
 - Active phase: **Phase 5 — Materials Exchange and corporate progression (#12)**.
-- Completed Phase 5 child: **#69 — authoritative Materials Exchange baseline** (merged via PR #74).\n- Active Phase 5 child: **#70 — Corporate Orders and Special Directives**.
+- Completed Phase 5 child: **#69 — authoritative Materials Exchange baseline** (merged via PR #74).
+- Active Phase 5 child: **#70 — Corporate Orders and Special Directives**.
 
 ## Phase 1.5 dependency graph
 
