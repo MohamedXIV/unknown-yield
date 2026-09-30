@@ -99,4 +99,5 @@ export {
   assistanceViews,
   companyView,
   recordNetExportRecovery,
+  recordObligationRepayment,
 } from "./assistance";
