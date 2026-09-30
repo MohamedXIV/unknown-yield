@@ -130,6 +130,52 @@ describe("content boundary", () => {
     if (kind === "staging") c.site.stagingCapacity = 0;
     expect(() => validateContent(c)).toThrow();
   });
+  it("validates authored company opportunities through stable IDs and hidden experiment tuples", () => {
+    const c = validateContent(fixture);
+    expect(c.economy.orders[0]).toMatchObject({
+      id: "granules-procurement",
+      materialId: "granules",
+      quantity: 4,
+      rewardFuel: 24,
+    });
+    expect(c.economy.directives[0]).toMatchObject({
+      id: "sealed-thermal-study",
+      operationId: "heat",
+      inputMaterialId: "raw",
+      processConditionId: "sealed",
+      rewardFuel: 18,
+    });
+    expect("outputId" in c.economy.directives[0]).toBe(false);
+    expect("reactionId" in c.economy.directives[0]).toBe(false);
+  });
+  it("rejects invalid or duplicate company opportunity definitions", () => {
+    const badOrder = structuredClone(fixture);
+    badOrder.economy.orders[0].materialId = "raw";
+    expect(() => validateContent(badOrder)).toThrow(/exchange material/i);
+
+    const badDirective = structuredClone(fixture);
+    badDirective.economy.directives[0].processConditionId = "ambient";
+    expect(() => validateContent(badDirective)).toThrow(/authored outcome/i);
+
+    const duplicate = structuredClone(fixture);
+    duplicate.economy.directives[0].id = duplicate.economy.orders[0].id;
+    duplicate.economy.directives[0].nameKey =
+      "directive." + duplicate.economy.orders[0].id + ".name";
+    duplicate.economy.directives[0].briefKey =
+      "directive." + duplicate.economy.orders[0].id + ".brief";
+    expect(() => validateContent(duplicate)).toThrow(/Duplicate company opportunity/i);
+  });
+  it("keeps pre-#70 world-01-v6 content additively compatible", () => {
+    const legacy = structuredClone(fixture) as unknown as {
+      economy: Record<string, unknown>;
+    };
+    delete legacy.economy.orders;
+    delete legacy.economy.directives;
+    const parsed = validateContent(legacy);
+    expect(parsed.version).toBe("world-01-v6");
+    expect(parsed.economy.orders).toEqual([]);
+    expect(parsed.economy.directives).toEqual([]);
+  });
   it("round-trips a material edit through TinyBase and validation", () => {
     const store = createContentStore(fixture);
     store.setCell("materials", "raw", "color", "#112233");
@@ -151,6 +197,12 @@ describe("content boundary", () => {
     expect(enCatalog["material.raw.name"]).toBe("Veined ore");
     expect(enCatalog["reaction.crush-raw.observation"]).toContain(
       "conductive grains",
+    );
+    expect(enCatalog["order.granules-procurement.name"]).toBe(
+      "Orbital conductor allocation",
+    );
+    expect(enCatalog["directive.sealed-thermal-study.brief"]).toContain(
+      "does not predict the output",
     );
   });
   it("rejects content referencing a missing localization key", () => {
