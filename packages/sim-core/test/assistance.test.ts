@@ -4,6 +4,7 @@ import {
   Simulation,
   applyExportCompensation,
   auditLedger,
+  experimentEvidenceKey,
   recordDirectiveExperiment,
   recordOrderExport,
   type GameCommand,
@@ -195,6 +196,12 @@ describe("corporate assistance and recovery standing", () => {
       expiresAt: content.economy.directives[0].durationTicks,
       progress: 0,
       completedAt: null,
+    };
+    save.evidence[experimentEvidenceKey("heat", "raw", "sealed")] = {
+      operationId: "heat",
+      inputId: "raw",
+      processConditionId: "sealed",
+      state: "confirmed",
     };
     recordDirectiveExperiment(content, save, "heat", "raw", "sealed");
     expect(save.fuel).toBe(beforeBonusFuel + 24 + 18);
