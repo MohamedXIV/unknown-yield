@@ -9,6 +9,7 @@ import {
   recordOrderExport,
   refreshOpportunities,
 } from "../src/index";
+import { completeAndStart } from "../src/production";
 import { initialState } from "../src/save";
 
 const cadenceMs = fixture.tickMs * fixture.economy.marketEveryTicks;
@@ -109,31 +110,30 @@ describe("Corporate Orders and Special Directives", () => {
     ).toBe("expired");
   });
 
-  it("completes a research directive from confirmed evidence and grants its reward once", () => {
+  it("completes a research directive on confirmed process completion and grants its reward once", () => {
     const state = initialState(fixture);
     state.tick = fixture.economy.marketEveryTicks;
     refreshOpportunities(fixture, state);
     const beforeFuel = state.fuel;
-    const reaction = fixture.reactions.find(
-      (entry) => entry.id === "heat-raw-sealed",
-    )!;
-    state.knowledge.push(reaction.id);
-    state.evidence[
-      experimentEvidenceKey(
-        reaction.operation,
-        reaction.input,
-        reaction.processConditionId ?? null,
-      )
-    ] = {
-      operationId: reaction.operation,
-      inputId: reaction.input,
-      processConditionId: reaction.processConditionId ?? null,
-      state: "confirmed",
+    state.machines.m1 = {
+      id: "m1",
+      x: 0,
+      y: 0,
+      direction: 0,
+      definitionId: "sealed-furnace",
+      factoryId: null,
+      depositId: null,
+      operation: "heat",
+      enabled: true,
+      incident: null,
+      input: {},
+      output: {},
+      job: { remaining: 1, reaction: "heat-raw-sealed" },
     };
-    ensureMarket(fixture, state, "granules");
 
-    state.tick += fixture.economy.marketEveryTicks;
-    refreshOpportunities(fixture, state);
+    state.tick += 1;
+    completeAndStart(fixture, state, true);
+    expect(state.evidence["heat/raw/sealed"]?.state).toBe("confirmed");
     expect(state.opportunities["sealed-thermal-study"]).toMatchObject({
       status: "completed",
       progress: 1,
@@ -144,8 +144,7 @@ describe("Corporate Orders and Special Directives", () => {
       expect.objectContaining({ id: "sealed-thermal-study" }),
     );
 
-    state.tick += fixture.economy.marketEveryTicks;
-    refreshOpportunities(fixture, state);
+    completeAndStart(fixture, state, true);
     expect(state.fuel).toBe(beforeFuel + 18);
   });
 
