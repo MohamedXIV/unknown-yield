@@ -175,8 +175,8 @@ Phase 4 intentionally stops before economy/site/storage/asset/general-purpose sc
 - #69 — authoritative Materials Exchange baseline — **COMPLETE** via PR #74;
 - #70 — Corporate Orders and Special Directives — **COMPLETE** via PR #76;
 - #71 — evidence-driven milestones, terminal handling, and fuel classes — **COMPLETE** via PR #77;
-- #72 — corporate assistance, obligations, and recovery standing — **ACTIVE**;
-- #73 — end-to-end company progression exit review.
+- #72 — corporate assistance, obligations, and recovery standing — **COMPLETE** via PR #78;
+- #73 — end-to-end company progression exit review — **ACTIVE / NEXT**.
 
 Do not skip the dependency order. Market/company state remains authoritative in sim-core and must preserve physical inventory plus hidden-knowledge boundaries.
 
@@ -286,4 +286,4 @@ The following should not be treated as progress during foundation unless require
 
 The accepted implementation and evidence are summarized in [FIRST_PLAYABLE.md](FIRST_PLAYABLE.md) and [BROWSER_SMOKE.md](BROWSER_SMOKE.md). Continue from this foundation; do not rebuild the retired dashboard prototype.
 
-Phase 1.5 is complete through Issue #8 / PR #29, Phase 2 through Issue #34 / PR #44, Phase 3 through Issue #50, and Phase 4 through Issue #63 / PR #67. Phase 5 / #12 is active; #69–#71 are complete and #72 is the active implementation slice.
+Phase 1.5 is complete through Issue #8 / PR #29, Phase 2 through Issue #34 / PR #44, Phase 3 through Issue #50, and Phase 4 through Issue #63 / PR #67. Phase 5 / #12 remains active; #69–#72 are complete, and #73 is the remaining integrated exit-review gate before Phase 6.
