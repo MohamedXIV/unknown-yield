@@ -71,6 +71,7 @@ export {
 
 export {
   opportunityViews,
+  recordDirectiveExperiment,
   recordOrderExport,
   refreshOpportunities,
 } from "./opportunities";
