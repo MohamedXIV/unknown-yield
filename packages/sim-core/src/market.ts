@@ -1,5 +1,6 @@
 import type { Content } from "@site/content";
 import type { MarketListingView, MarketState, Save } from "./types";
+import { terminalCapabilityUnlocked } from "./milestones";
 
 export const MARKET_BPS = 10000;
 
@@ -122,7 +123,7 @@ export function recoverMarkets(
 
 export function marketListings(
   c: Content,
-  s: Pick<Save, "knowledge" | "market">,
+  s: Pick<Save, "knowledge" | "market" | "milestones">,
 ): MarketListingView[] {
   return c.economy.exchange
     .filter((listing) => companyKnowsMaterial(c, s, listing.materialId))
@@ -136,6 +137,19 @@ export function marketListings(
         demandBps: state.demandBps,
         saturationBps: state.saturationBps,
         compensationPerUnit: marketCompensation(c, s, listing.materialId),
+        handling: listing.requiredTerminalCapabilityId
+          ? {
+              nameKey: c.economy.terminalCapabilities.find(
+                (capability) =>
+                  capability.id === listing.requiredTerminalCapabilityId,
+              )!.nameKey,
+              unlocked: terminalCapabilityUnlocked(
+                c,
+                s,
+                listing.requiredTerminalCapabilityId,
+              ),
+            }
+          : null,
       };
     });
 }
