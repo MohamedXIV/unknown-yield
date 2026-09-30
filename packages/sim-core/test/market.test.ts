@@ -13,6 +13,7 @@ import {
 function knownGranulesContent() {
   const content = structuredClone(fixture);
   content.materials.find((material) => material.id === "granules")!.known = true;
+  delete content.economy.exchange[0].requiredTerminalCapabilityId;
   return content;
 }
 
@@ -49,6 +50,10 @@ describe("authoritative Materials Exchange", () => {
         demandBps: 10000,
         saturationBps: 0,
         compensationPerUnit: 12,
+        handling: {
+          nameKey: "terminal-capability.sealed-sample-outbound.name",
+          unlocked: false,
+        },
       },
     ]);
   });
@@ -88,6 +93,7 @@ describe("authoritative Materials Exchange", () => {
         demandBps: 10000,
         saturationBps: 4000,
         compensationPerUnit: 9,
+        handling: null,
       },
     ]);
   });
