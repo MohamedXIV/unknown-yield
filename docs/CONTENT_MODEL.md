@@ -25,7 +25,7 @@ The #71 fields remain additive to `world-01-v6`: older v6 content without termin
 
 ### Corporate assistance packages (Issue #72)
 
-`economy.assistancePackages` is an additive authored list keyed by stable package ID. A package owns localized name/brief keys plus `fuelBelow`, `grantFuel`, `baseObligationFuel`, `repeatObligationStepFuel` and `recoveryNetFuel`. `defaultAssistancePackageId` chooses the package used by the compatibility command path when no ID is supplied. Validation requires stable localization-key ownership, a valid default, an obligation no smaller than the grant and enough authored grant capacity to restart the accepted recovery proof.
+`economy.assistancePackages` is an additive authored list keyed by stable package ID. A package owns localized name/brief keys plus `fuelBelow`, `grantFuel`, `baseObligationFuel`, `repeatObligationStepFuel` and `recoveryNetFuel`. `defaultAssistancePackageId` chooses the package used by the compatibility command path when no ID is supplied. Validation requires stable localization-key ownership, a valid default, an obligation no smaller than the grant, and a grant that exits its own fuel-depletion eligibility range. The fixture's actual recovery capacity is proven by the #72 world regression rather than by coupling package balance to the highest-fuel machine in all future content.
 
 The pre-#72 `grant` and `assistanceBelow` scalars remain as an additive compatibility fallback for older `world-01-v6` content that has no assistance-package array. New fixture/runtime behavior uses the authored package instead. No display text participates in eligibility, debt or standing identity.
 
