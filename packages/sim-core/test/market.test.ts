@@ -51,7 +51,7 @@ describe("authoritative Materials Exchange", () => {
         saturationBps: 0,
         compensationPerUnit: 12,
         handling: {
-          nameKey: "terminal-capability.sealed-sample-outbound.name",
+          nameKey: "terminal.capability.sealed-sample-outbound.name",
           unlocked: false,
         },
       },
