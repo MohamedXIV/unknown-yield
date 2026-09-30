@@ -154,8 +154,14 @@ describe("content boundary", () => {
     expect(() => validateContent(badOrder)).toThrow(/exchange material/i);
 
     const badDirective = structuredClone(fixture);
-    badDirective.economy.directives[0].processConditionId = "ambient";
+    badDirective.economy.directives[0].processConditionId = "vacuum";
     expect(() => validateContent(badDirective)).toThrow(/authored outcome/i);
+
+    const knownDirective = structuredClone(fixture);
+    knownDirective.economy.directives[0].operationId = "crush";
+    knownDirective.economy.directives[0].inputMaterialId = "ferrite";
+    delete knownDirective.economy.directives[0].processConditionId;
+    expect(() => validateContent(knownDirective)).toThrow(/unconfirmed outcome/i);
 
     const duplicate = structuredClone(fixture);
     duplicate.economy.directives[0].id = duplicate.economy.orders[0].id;
