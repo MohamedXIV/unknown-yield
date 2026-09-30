@@ -453,7 +453,7 @@ A new intervention with no open debt uses the base obligation plus the authored 
 
 Only legal Materials Exchange compensation repays debt. Gross compensation pays debt first; only net compensation becomes usable fuel and recovery progress. Corporate Order and Special Directive reward fuel remains a separate bonus allocation and does not repay debt or advance standing recovery.
 
-Standing resets to clear only when debt is zero and authored net-export recovery has been demonstrated. The intervention streak then resets. Assistance changes no physical material state, so material conservation is unchanged.
+Standing resets to clear only when debt is zero and authored net-export recovery has been demonstrated. Net-export recovery already demonstrated during the same recovery episode is not erased by a later repeat intervention or continuation; debt simply pauses further accumulation until it is repaid again. The intervention streak resets only when standing becomes clear. Assistance changes no physical material state, so material conservation is unchanged.
 
 The recovery path must remain independent from time-limited opportunities: an expired Sealed thermal study cannot block assistance recovery. Durable confirmed `heat-raw-sealed` evidence remains the #71 handling prerequisite and can be produced with normal world machinery funded by the assistance allocation.
 
