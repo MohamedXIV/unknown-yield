@@ -59,8 +59,8 @@ export class Session {
   }
   restore(storage: StorageReader): CommandResult {
     try {
-      // Schemas 4-6 migrate exactly to the current format, so previous
-      // browser-storage keys stay readable; schema 3 and earlier cannot.
+      // Schemas 4-10 migrate to the current format, so previous browser
+      // storage keys stay readable; schema 3 and earlier cannot.
       const raw =
         storage.getItem(SAVE_KEY) ??
         storage.getItem("industrial-site-save-v6") ??
