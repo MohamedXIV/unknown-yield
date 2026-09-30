@@ -394,8 +394,7 @@ export function parseSave(input: unknown, c: Content): Save {
       s.company.interventionStreak < 1 ||
       (c.economy.assistancePackages.length > 0 &&
         s.company.recoveryPackageId === null) ||
-      s.company.recoveryNetFuel >= definition.recoveryNetFuel ||
-      (s.debt > 0 && s.company.recoveryNetFuel !== 0)
+      s.company.recoveryNetFuel >= definition.recoveryNetFuel
     )
       throw new Error("Invalid recovery company standing");
   }
