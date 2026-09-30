@@ -1,7 +1,10 @@
 import type { Content } from "@site/content";
 import type { MarketListingView, MarketState, Save } from "./types";
 import { terminalCapabilityUnlocked } from "./milestones";
-import { recordNetExportRecovery } from "./assistance";
+import {
+  recordNetExportRecovery,
+  recordObligationRepayment,
+} from "./assistance";
 
 export const MARKET_BPS = 10000;
 
@@ -103,6 +106,7 @@ export function applyExportCompensation(
     repaid = Math.min(gross, s.debt),
     net = gross - repaid;
   s.debt -= repaid;
+  recordObligationRepayment(s, repaid);
   s.fuel += net;
   recordNetExportRecovery(c, s, net);
   recordMarketExport(c, s, materialId, units);
