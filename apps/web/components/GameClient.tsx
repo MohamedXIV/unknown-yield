@@ -864,50 +864,65 @@ function GameClientInner() {
                 {snapshot.milestone && (
                   <div className="milestone">◇ FIRST EXPORT CONFIRMED</div>
                 )}
-                <h3>Corporate opportunities</h3>
+                <h3>{t("ui.terminal.opportunities.heading")}</h3>
                 <p className="hint">
-                  Temporary procurement and research requests appear only when
-                  the company can legitimately know the material or setup.
-                  Rewards are authoritative simulation allocations.
+                  {t("ui.terminal.opportunities.hint")}
                 </p>
                 {snapshot.opportunities.length ? (
                   snapshot.opportunities.map((opportunity) => {
                     const operation =
-                      opportunity.kind === "directive"
-                        ? snapshot.operations.find(
-                            (entry) => entry.id === opportunity.operationId,
-                          )
-                        : null;
+                        opportunity.kind === "directive"
+                          ? snapshot.operations.find(
+                              (entry) => entry.id === opportunity.operationId,
+                            )
+                          : null,
+                      operationName = operation
+                        ? t(operation.nameKey)
+                        : t("ui.terminal.opportunity.experiment-fallback");
                     return (
                       <article className="observation" key={opportunity.id}>
                         <small>
-                          {opportunity.kind === "order"
-                            ? "CORPORATE ORDER"
-                            : "SPECIAL DIRECTIVE"}{" "}
-                          · +{opportunity.rewardFuel} fuel
+                          {t(
+                            opportunity.kind === "order"
+                              ? "ui.terminal.opportunity.order-meta"
+                              : "ui.terminal.opportunity.directive-meta",
+                            { reward: opportunity.rewardFuel },
+                          )}
                         </small>
                         <h3>{t(opportunity.nameKey)}</h3>
                         <p>{t(opportunity.briefKey)}</p>
                         <span>
                           {opportunity.kind === "order"
-                            ? materialName(opportunity.materialId) +
-                              " · " +
-                              opportunity.progress +
-                              "/" +
-                              opportunity.quantity +
-                              " shipped"
-                            : materialName(opportunity.inputMaterialId) +
-                              " → " +
-                              (operation ? t(operation.nameKey) : "Experiment") +
-                              (opportunity.setupNameKey
-                                ? " · " + t(opportunity.setupNameKey)
-                                : "")}
+                            ? t("ui.terminal.opportunity.order-progress", {
+                                material: materialName(opportunity.materialId),
+                                progress: opportunity.progress,
+                                quantity: opportunity.quantity,
+                              })
+                            : opportunity.setupNameKey
+                              ? t(
+                                  "ui.terminal.opportunity.directive-progress-setup",
+                                  {
+                                    material: materialName(
+                                      opportunity.inputMaterialId,
+                                    ),
+                                    operation: operationName,
+                                    setup: t(opportunity.setupNameKey),
+                                  },
+                                )
+                              : t("ui.terminal.opportunity.directive-progress", {
+                                  material: materialName(
+                                    opportunity.inputMaterialId,
+                                  ),
+                                  operation: operationName,
+                                })}
                         </span>
                       </article>
                     );
                   })
                 ) : (
-                  <p className="hint">No active corporate opportunity.</p>
+                  <p className="hint">
+                    {t("ui.terminal.opportunities.empty")}
+                  </p>
                 )}
                 <h3>Terminal staging & policies</h3>
                 <p className="hint">
