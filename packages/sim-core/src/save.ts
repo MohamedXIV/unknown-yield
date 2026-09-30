@@ -288,7 +288,7 @@ export function parseSave(input: unknown, c: Content): Save {
       if (
         state.completedAt === null ||
         state.completedAt < state.offeredAt ||
-        state.completedAt > state.expiresAt ||
+        state.completedAt >= state.expiresAt ||
         state.completedAt > s.tick ||
         state.progress !== target
       )
