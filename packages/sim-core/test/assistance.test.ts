@@ -93,8 +93,11 @@ describe("corporate assistance and recovery standing", () => {
       fresh.command({ type: "assistance", packageId: "emergency-fuel" }).ok,
     ).toBe(false);
     expect(
-      fresh.command({ type: "assistance", packageId: "missing-package" }).ok,
-    ).toBe(false);
+      fresh.command({ type: "assistance", packageId: "missing-package" }),
+    ).toMatchObject({
+      ok: false,
+      messageKey: "ui.terminal.assistance.result.unknown",
+    });
 
     const simulation = depletedSimulation();
     const physicalBefore = simulation.serialize();
@@ -102,8 +105,11 @@ describe("corporate assistance and recovery standing", () => {
       simulation.command({
         type: "assistance",
         packageId: "emergency-fuel",
-      }).ok,
-    ).toBe(true);
+      }),
+    ).toMatchObject({
+      ok: true,
+      messageKey: "ui.terminal.assistance.result.approved",
+    });
     const physicalAfter = simulation.serialize();
     expect({
       stock: physicalAfter.stock,
@@ -141,8 +147,11 @@ describe("corporate assistance and recovery standing", () => {
       simulation.command({
         type: "assistance",
         packageId: "emergency-fuel",
-      }).ok,
-    ).toBe(false);
+      }),
+    ).toMatchObject({
+      ok: false,
+      messageKey: "ui.terminal.assistance.result.obligation-open",
+    });
     expect(simulation.serialize()).toEqual(before);
     expect(simulation.snapshot().assistance[0]).toMatchObject({
       eligible: false,
