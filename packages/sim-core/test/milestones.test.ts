@@ -5,7 +5,6 @@ import {
   auditLedger,
   ensureMarket,
   experimentEvidenceKey,
-  recordDirectiveExperiment,
   refreshMilestones,
   refreshOpportunities,
   terminalCanExport,
@@ -21,14 +20,14 @@ function knownGranulesContent() {
   return content;
 }
 
-function confirmSealedStudy(
+function confirmSealedTrial(
   content: typeof fixture,
   state: ReturnType<typeof initialState>,
 ) {
   const reaction = content.reactions.find(
     (entry) => entry.id === "heat-raw-sealed",
   )!;
-  state.knowledge.push(reaction.id);
+  if (!state.knowledge.includes(reaction.id)) state.knowledge.push(reaction.id);
   state.evidence[
     experimentEvidenceKey(
       reaction.operation,
@@ -42,13 +41,6 @@ function confirmSealedStudy(
     state: "confirmed",
   };
   ensureMarket(content, state, reaction.output);
-  recordDirectiveExperiment(
-    content,
-    state,
-    reaction.operation,
-    reaction.input,
-    reaction.processConditionId ?? null,
-  );
 }
 
 describe("evidence milestones and terminal handling", () => {
@@ -115,12 +107,12 @@ describe("evidence milestones and terminal handling", () => {
     expect(auditLedger(content, state).ok).toBe(true);
   });
 
-  it("unlocks handling from directive evidence and then allows the physical export path", () => {
+  it("unlocks handling from confirmed sealed-trial evidence and then allows the physical export path", () => {
     const content = knownGranulesContent();
     const state = initialState(content);
     state.tick = content.economy.marketEveryTicks;
     refreshOpportunities(content, state);
-    confirmSealedStudy(content, state);
+    confirmSealedTrial(content, state);
     refreshMilestones(content, state);
 
     expect(state.milestones["sealed-study-certified"]).toEqual({
@@ -146,12 +138,46 @@ describe("evidence milestones and terminal handling", () => {
     expect(auditLedger(content, state).ok).toBe(true);
   });
 
-  it("migrates schema 9 by deriving milestone state from preserved evidence", () => {
-    const simulation = new Simulation(fixture);
-    const legacy = simulation.serialize();
+  it("unlocks after the directive expires if the sealed trial is later confirmed", () => {
+    const state = initialState(fixture);
+    state.tick = fixture.economy.marketEveryTicks;
+    refreshOpportunities(fixture, state);
+    const directive = state.opportunities["sealed-thermal-study"];
+    expect(directive?.status).toBe("offered");
+
+    state.tick = directive.expiresAt;
+    refreshOpportunities(fixture, state);
+    expect(state.opportunities["sealed-thermal-study"].status).toBe("expired");
+
+    confirmSealedTrial(fixture, state);
+    refreshMilestones(fixture, state);
+
+    expect(state.milestones["sealed-study-certified"]).toEqual({
+      completedAt: state.tick,
+    });
+    expect(terminalCanExport(fixture, state, "granules")).toBe(true);
+  });
+
+  it("unlocks from a confirmed sealed trial that happened before any directive offer", () => {
+    const state = initialState(fixture);
+    expect(state.opportunities["sealed-thermal-study"]).toBeUndefined();
+
+    confirmSealedTrial(fixture, state);
+    refreshMilestones(fixture, state);
+
+    expect(state.opportunities["sealed-thermal-study"]).toBeUndefined();
+    expect(state.milestones["sealed-study-certified"]).toEqual({
+      completedAt: 0,
+    });
+    expect(terminalCanExport(fixture, state, "granules")).toBe(true);
+  });
+
+  it("migrates schema 9 from prior confirmed trial evidence without directive completion", () => {
+    const legacy = initialState(fixture);
     legacy.tick = fixture.economy.marketEveryTicks;
-    refreshOpportunities(fixture, legacy);
-    confirmSealedStudy(fixture, legacy);
+    confirmSealedTrial(fixture, legacy);
+    expect(legacy.opportunities["sealed-thermal-study"]).toBeUndefined();
+
     const input = JSON.parse(JSON.stringify(legacy));
     input.schemaVersion = 9;
     delete input.milestones;
@@ -159,6 +185,7 @@ describe("evidence milestones and terminal handling", () => {
     const restored = new Simulation(fixture);
     expect(restored.load(input).ok).toBe(true);
     expect(restored.serialize().schemaVersion).toBe(10);
+    expect(restored.serialize().opportunities["sealed-thermal-study"]).toBeUndefined();
     expect(restored.serialize().milestones["sealed-study-certified"]).toEqual({
       completedAt: legacy.tick,
     });
@@ -167,8 +194,8 @@ describe("evidence milestones and terminal handling", () => {
         (listing) => listing.materialId === "granules",
       )?.handling,
     ).toEqual({
-      nameKey: "terminal-capability.sealed-sample-outbound.name",
+      nameKey: "terminal.capability.sealed-sample-outbound.name",
       unlocked: true,
     });
-  });
+  });;
 });
