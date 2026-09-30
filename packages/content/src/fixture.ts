@@ -243,6 +243,7 @@ export const fixture = validateContent({
         baseDemandBps: 10000,
         saturationPerUnitBps: 1000,
         recoveryPerMarketTickBps: 250,
+        requiredTerminalCapabilityId: "sealed-sample-outbound",
       },
     ],
     orders: [
@@ -266,6 +267,26 @@ export const fixture = validateContent({
         processConditionId: "sealed",
         durationTicks: 6000,
         rewardFuel: 18,
+      },
+    ],
+    terminalCapabilities: [
+      {
+        id: "sealed-sample-outbound",
+        nameKey: "terminal-capability.sealed-sample-outbound.name",
+      },
+    ],
+    milestones: [
+      {
+        id: "sealed-study-certified",
+        nameKey: "milestone.sealed-study-certified.name",
+        hintKey: "milestone.sealed-study-certified.hint",
+        requires: [
+          {
+            type: "directive-completed",
+            directiveId: "sealed-thermal-study",
+          },
+        ],
+        unlockTerminalCapabilityIds: ["sealed-sample-outbound"],
       },
     ],
   },
