@@ -170,6 +170,17 @@ describe("content boundary", () => {
     duplicate.economy.directives[0].briefKey =
       "directive." + duplicate.economy.orders[0].id + ".brief";
     expect(() => validateContent(duplicate)).toThrow(/Duplicate company opportunity/i);
+
+    const duplicateExperiment = structuredClone(fixture);
+    duplicateExperiment.economy.directives.push({
+      ...duplicateExperiment.economy.directives[0],
+      id: "sealed-thermal-study-two",
+      nameKey: "directive.sealed-thermal-study-two.name",
+      briefKey: "directive.sealed-thermal-study-two.brief",
+    });
+    expect(() => validateContent(duplicateExperiment)).toThrow(
+      /Duplicate directive experiment/i,
+    );
   });
   it("keeps pre-#70 world-01-v6 content additively compatible", () => {
     const legacy = structuredClone(fixture) as unknown as {
