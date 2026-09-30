@@ -257,9 +257,9 @@ describe("content boundary", () => {
       "does not predict the output",
     );
     expect(enCatalog["milestone.sealed-study-certified.hint"]).toContain(
-      "Sealed thermal study",
+      "sealed Heat trial",
     );
-    expect(enCatalog["terminal-capability.sealed-sample-outbound.name"]).toBe(
+    expect(enCatalog["terminal.capability.sealed-sample-outbound.name"]).toBe(
       "Sealed sample handling",
     );
   });
