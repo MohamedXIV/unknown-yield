@@ -235,6 +235,19 @@ export const fixture = validateContent({
     assistanceBelow: 2,
     milestoneExports: 1,
     marketEveryTicks: 50,
+    defaultAssistancePackageId: "emergency-fuel",
+    assistancePackages: [
+      {
+        id: "emergency-fuel",
+        nameKey: "assistance.emergency-fuel.name",
+        briefKey: "assistance.emergency-fuel.brief",
+        fuelBelow: 2,
+        grantFuel: 36,
+        baseObligationFuel: 36,
+        repeatObligationStepFuel: 12,
+        recoveryNetFuel: 24,
+      },
+    ],
     exchange: [
       {
         materialId: "granules",
