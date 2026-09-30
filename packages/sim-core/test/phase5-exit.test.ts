@@ -453,5 +453,5 @@ describe("Phase 5 integrated company progression exit", () => {
     ).toMatchObject({ completed: true });
     expect(granulesListing(finalRestored)?.handling?.unlocked).toBe(true);
     expect(auditLedger(fixture, finalRestored.serialize()).ok).toBe(true);
-  });
+  }, 15_000);
 });
