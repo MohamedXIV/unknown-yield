@@ -15,7 +15,10 @@ import {
   ensureMarket,
   exchangeDefinition,
 } from "./market";
-import { recordOrderExport } from "./opportunities";
+import {
+  recordDirectiveExperiment,
+  recordOrderExport,
+} from "./opportunities";
 export function recipe(c: Content, m: Machine) {
   const definition = c.machines.find((d) => d.id === m.definitionId);
   return c.reactions.find(
@@ -70,6 +73,13 @@ export function completeAndStart(
             processConditionId: r.processConditionId ?? null,
             state: "confirmed",
           };
+          recordDirectiveExperiment(
+            c,
+            s,
+            r.operation,
+            r.input,
+            r.processConditionId ?? null,
+          );
         }
         change(m.output, material, r?.outputAmount ?? 1);
         if (r && !s.knowledge.includes(r.id)) {
