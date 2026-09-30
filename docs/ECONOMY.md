@@ -121,7 +121,7 @@ A **new intervention** begins only with no open obligation. If operating fuel co
 
 Export compensation is the only repayment path. Gross legal export compensation first reduces the outstanding obligation; only the remainder becomes usable fuel. Order and Directive bonus allocations remain separate company rewards: they add their authored fuel reward but neither repay the obligation nor count toward standing recovery.
 
-Standing returns from `recovery` to `clear` only after the obligation is zero and subsequent **net export fuel** reaches the authored recovery target. Resetting standing also resets the consecutive intervention streak. This makes successful industrial recovery—not merely receiving a bailout—the reset event.
+Standing returns from `recovery` to `clear` only after the obligation is zero and cumulative **net export fuel** reaches the authored recovery target. Recovery progress already earned is preserved if debt later reopens through a repeat intervention or continuation; it simply cannot advance again until debt is zero. Resetting standing clears that progress and resets the consecutive intervention streak. This makes successful industrial recovery—not merely receiving a bailout—the reset event.
 
 Fuel allocations are not physical materials and therefore do not create or delete material ledger entries. Assistance may change only company fuel/obligation/standing state; factories, routing, storage, staged cargo and material accounting remain untouched.
 
