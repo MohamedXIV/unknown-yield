@@ -137,7 +137,11 @@ function GameClientInner() {
     setMode((mode) => toggleFactoryOpen(mode, id));
   const act = (cmd: GameCommand) => {
     const result = session.command(cmd);
-    setNotice(result);
+    setNotice(
+      result.messageKey
+        ? { ...result, message: t(result.messageKey) }
+        : result,
+    );
     if (result.ok && cmd.type === "placeFactory" && result.id)
       setMode((m) => ({
         ...m,
