@@ -27,16 +27,6 @@ function definitions(c: Content): OpportunityDefinition[] {
   ];
 }
 
-function definitionFor(
-  c: Content,
-  id: string,
-): OpportunityDefinition | undefined {
-  const order = c.economy.orders.find((entry) => entry.id === id);
-  if (order) return { kind: "order", definition: order };
-  const directive = c.economy.directives.find((entry) => entry.id === id);
-  return directive ? { kind: "directive", definition: directive } : undefined;
-}
-
 function directiveEvidenceId(definition: DirectiveDefinition) {
   return experimentEvidenceKey(
     definition.operationId,
@@ -99,23 +89,9 @@ export function refreshOpportunities(
     "tick" | "fuel" | "knowledge" | "market" | "evidence" | "opportunities"
   >,
 ): void {
-  for (const [id, state] of Object.entries(s.opportunities)) {
-    if (state.status !== "offered") continue;
-    const entry = definitionFor(c, id);
-    if (!entry) continue;
-    if (s.tick > state.expiresAt) {
+  for (const state of Object.values(s.opportunities))
+    if (state.status === "offered" && s.tick >= state.expiresAt)
       state.status = "expired";
-      continue;
-    }
-    if (
-      entry.kind === "directive" &&
-      s.evidence[directiveEvidenceId(entry.definition)]?.state === "confirmed"
-    ) {
-      complete(s, state, entry.definition.rewardFuel, 1);
-      continue;
-    }
-    if (s.tick === state.expiresAt) state.status = "expired";
-  }
 
   for (const entry of definitions(c)) {
     const definition = entry.definition;
@@ -129,6 +105,30 @@ export function refreshOpportunities(
       completedAt: null,
     };
   }
+}
+
+export function recordDirectiveExperiment(
+  c: Content,
+  s: Pick<Save, "tick" | "fuel" | "opportunities">,
+  operationId: string,
+  inputMaterialId: string,
+  processConditionId: string | null,
+): void {
+  const definition = c.economy.directives.find(
+    (entry) =>
+      entry.operationId === operationId &&
+      entry.inputMaterialId === inputMaterialId &&
+      (entry.processConditionId ?? null) === processConditionId,
+  );
+  if (!definition) return;
+  const state = s.opportunities[definition.id];
+  if (
+    !state ||
+    state.status !== "offered" ||
+    s.tick >= state.expiresAt
+  )
+    return;
+  complete(s, state, definition.rewardFuel, 1);
 }
 
 export function recordOrderExport(
@@ -145,7 +145,7 @@ export function recordOrderExport(
     if (
       !state ||
       state.status !== "offered" ||
-      s.tick > state.expiresAt
+      s.tick >= state.expiresAt
     )
       continue;
     const needed = definition.quantity - state.progress;
