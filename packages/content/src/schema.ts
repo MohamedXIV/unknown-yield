@@ -280,7 +280,8 @@ function validateContentInternal(
     if (listing.floorCompensation > listing.baseCompensation)
       throw new Error("Exchange floor exceeds base compensation");
   }
-  const opportunityIds = new Set<string>();
+  const opportunityIds = new Set<string>(),
+    directiveExperiments = new Set<string>();
   for (const order of c.economy.orders) {
     if (opportunityIds.has(order.id))
       throw new Error("Duplicate company opportunity ID");
@@ -297,6 +298,14 @@ function validateContentInternal(
     if (opportunityIds.has(directive.id))
       throw new Error("Duplicate company opportunity ID");
     opportunityIds.add(directive.id);
+    const experimentKey = [
+      directive.operationId,
+      directive.inputMaterialId,
+      directive.processConditionId ?? "",
+    ].join("/");
+    if (directiveExperiments.has(experimentKey))
+      throw new Error("Duplicate directive experiment");
+    directiveExperiments.add(experimentKey);
     if (
       !materials.has(directive.inputMaterialId) ||
       !operations.has(directive.operationId)
