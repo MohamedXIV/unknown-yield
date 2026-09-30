@@ -13,11 +13,12 @@ This directory is the project design and engineering source of truth. Documents 
 7. [FACTORY_ABSTRACTION_EVALUATION.md](FACTORY_ABSTRACTION_EVALUATION.md) — Phase 3 #49 benchmark/equivalence harness and GO/NO-GO evidence rule.
 8. [PHASE3_EXIT_REVIEW.md](PHASE3_EXIT_REVIEW.md) — accepted Phase 3 factory-as-function contract and evidence.
 9. [PHASE4_EXIT_REVIEW.md](PHASE4_EXIT_REVIEW.md) — accepted Content Studio v1 authoring/preview contract and Phase 4 evidence.
-10. [ART_PIPELINE.md](ART_PIPELINE.md) — 2D presentation and the 3D-blockout-to-2D AI-assisted asset workflow.
-11. [ROADMAP.md](ROADMAP.md) — proof-driven implementation phases and acceptance gates.
-12. [EXECUTION.md](EXECUTION.md) — live issue order and execution workflow for humans/agents.
-13. [DECISIONS.md](DECISIONS.md) — accepted decisions that should not be casually reopened.
-14. [../AGENTS.md](../AGENTS.md) — implementation rules for humans and coding agents.
+10. [PHASE5_EXIT_REVIEW.md](PHASE5_EXIT_REVIEW.md) — pending integrated Materials Exchange/company-progression exit gate and evidence attribution.
+11. [ART_PIPELINE.md](ART_PIPELINE.md) — 2D presentation and the 3D-blockout-to-2D AI-assisted asset workflow.
+12. [ROADMAP.md](ROADMAP.md) — proof-driven implementation phases and acceptance gates.
+13. [EXECUTION.md](EXECUTION.md) — live issue order and execution workflow for humans/agents.
+14. [DECISIONS.md](DECISIONS.md) — accepted decisions that should not be casually reopened.
+15. [../AGENTS.md](../AGENTS.md) — implementation rules for humans and coding agents.
 
 ## Documentation principles
 
