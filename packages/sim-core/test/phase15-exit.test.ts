@@ -1,6 +1,43 @@
 import { describe, expect, it } from "vitest";
 import { fixture } from "@site/content";
-import { Simulation, auditLedger, type GameCommand } from "../src/index";
+import {
+  Simulation,
+  auditLedger,
+  experimentEvidenceKey,
+  initializeKnownMarkets,
+  type GameCommand,
+} from "../src/index";
+
+function withGranuleHandling() {
+  const s = new Simulation(fixture),
+    save = s.serialize(),
+    reaction = fixture.reactions.find((entry) => entry.id === "heat-raw-sealed")!;
+  save.knowledge.push(reaction.id);
+  save.evidence[
+    experimentEvidenceKey(
+      reaction.operation,
+      reaction.input,
+      reaction.processConditionId ?? null,
+    )
+  ] = {
+    operationId: reaction.operation,
+    inputId: reaction.input,
+    processConditionId: reaction.processConditionId ?? null,
+    state: "confirmed",
+  };
+  initializeKnownMarkets(fixture, save);
+  const loaded = s.load(save);
+  expect(loaded.ok, loaded.message).toBe(true);
+  expect(
+    s.snapshot().milestones.find((entry) => entry.id === "sealed-study-certified")
+      ?.completed,
+  ).toBe(true);
+  expect(
+    s.snapshot().exchange.find((entry) => entry.materialId === "granules")
+      ?.handling?.unlocked,
+  ).toBe(true);
+  return s;
+}
 
 function build(s: Simulation, command: GameCommand) {
   const result = s.command(command);
@@ -37,7 +74,7 @@ function auditOk(s: Simulation) {
 }
 
 function buildExitWorld() {
-  const s = new Simulation(fixture);
+  const s = withGranuleHandling();
 
   const factoryA = build(s, {
     type: "placeFactory",
