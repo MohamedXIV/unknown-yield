@@ -66,17 +66,6 @@ export function assistanceEligibility(
   const interventionObligation =
     definition.baseObligationFuel +
     definition.repeatObligationStepFuel * s.company.interventionStreak;
-  if (s.fuel >= definition.fuelBelow)
-    return {
-      definition,
-      eligible: false,
-      reason: "fuel-not-depleted",
-      nextObligationFuel:
-        s.debt > 0
-          ? definition.continuationObligationFuel
-          : interventionObligation,
-      mode: null,
-    };
   if (s.debt > 0) {
     const sameRecoveryPackage = definition.legacy
       ? s.company.recoveryPackageId === null
@@ -94,6 +83,14 @@ export function assistanceEligibility(
         nextObligationFuel: definition.continuationObligationFuel,
         mode: null,
       };
+    if (s.fuel >= definition.fuelBelow)
+      return {
+        definition,
+        eligible: false,
+        reason: "fuel-not-depleted",
+        nextObligationFuel: definition.continuationObligationFuel,
+        mode: null,
+      };
     return {
       definition,
       eligible: true,
@@ -102,6 +99,14 @@ export function assistanceEligibility(
       mode: "continuation",
     };
   }
+  if (s.fuel >= definition.fuelBelow)
+    return {
+      definition,
+      eligible: false,
+      reason: "fuel-not-depleted",
+      nextObligationFuel: interventionObligation,
+      mode: null,
+    };
   return {
     definition,
     eligible: true,
