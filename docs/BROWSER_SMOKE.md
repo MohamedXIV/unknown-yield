@@ -2,9 +2,9 @@
 
 Use `npm run dev` and http://127.0.0.1:3000. All gameplay actions below use the UI; do not inject simulation commands through the console.
 
-## Phase 5 exit gate — Issue #73 — pending exact-head acceptance
+## Phase 5 exit gate — Issue #73 — local acceptance passed
 
-**Status:** PENDING. Phase 5 implementation children #69–#72 are merged; #73 is an integration/evidence gate, not a new feature slice.
+**Status:** Local acceptance PASS; GitHub closeout pending. The fresh integrated run on the unchanged runtime of `21c0c7a` / timeout-only successor `8547fe7` followed the checklist below. Full evidence and exact command attribution are in `PHASE5_EXIT_REVIEW.md`. Final UI Save/Load preserved fuel 46, plates 514, exports 18, obligation 0, clear standing, handling unlocked, compensation 8 and saturation 58%; console `warn=[]` / `error=[]`. Phase 5 implementation children #69–#72 are merged; #73 is an integration/evidence gate, not a new feature slice.
 
 Run the browser acceptance on the exact #73 Draft PR head with the normal game UI only. Do not inject simulation state through DevTools/console.
 

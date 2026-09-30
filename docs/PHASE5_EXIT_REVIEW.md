@@ -2,7 +2,31 @@
 
 Issue: #73  
 Parent epic: #12  
-Status: **PENDING exact-head local acceptance**
+Status: **Local acceptance PASS; GitHub closeout pending**
+
+## Local acceptance — 2026-09-30
+
+Behavioral/test head: `8547fe75214b220aafa9f96dcc793201bf761ded`, continuing canonical PR #79 from `21c0c7a6c7314b1f7c3c64cc058e535ebffb05e6`. The only test correction is a per-test 15-second timeout for this bounded, long-running integrated scenario. The initial full run exceeded Vitest's default 5-second timeout under concurrent suite/build load; no gameplay rule, assertion, simulation step limit or global timeout changed. The successful full rerun used the identical test tree subsequently committed as `8547fe7`.
+
+- Focused Phase 5 gate: 8 files / 58 tests PASS on `21c0c7a`.
+- Corrected integration test: 1 file / 1 test PASS.
+- Corrected full suite: 31 files / 198 tests PASS, exit 0.
+- Typecheck and lint: PASS on both `21c0c7a` and `8547fe7`. Production build/static-export verification: PASS on `21c0c7a`; the subsequent test-only timeout adjustment does not alter runtime, content or export code.
+- Fresh integrated browser run: PASS on the same unchanged runtime, spanning `21c0c7a` and its timeout-only successor `8547fe7`. Console warnings/errors: `[]`.
+
+The actual browser world used normal UI actions only:
+
+1. Fresh terminal had no granules listing. The Directive exposed operation/input/setup, with no predicted result.
+2. A real Crush line discovered granules. Locked checkpoint: fuel 85, plates 430, granules 6 staged, exports 0, Order 0/4, compensation 12, saturation 0%. UI Save/Load preserved that checkpoint.
+3. The Crush equipment was disabled and retained. A separate Sealed-furnace line was built in the same factory. Its actual trial unlocked handling and completed the Directive; physical shipments completed the Order. Exports reached 11, compensation reached the floor 4, saturation reached 100%.
+4. Granules switched to Keep and their equipment was suspended. A separate ferrite-to-plates factory produced construction stock. An initial placement-direction mistake was corrected using ordinary routing and conservative reclaim of an empty, unfed alternative Crusher; the original granules industry remained intact. Plates rose from 196 to 514 while compensation recovered from 4 to 12 and saturation fell to 0%.
+5. The alternative industry depleted fuel naturally to 0. Assistance granted 36 fuel and created obligation 36, recovery standing and 0/24 recovery progress. Immediate repeat request was unavailable. Save/Load preserved the open obligation, retained staging and completed progression/opportunity state.
+6. The alternative line was suspended; the existing Sealed line resumed without rebuilding it. Two staged exports increased total exports 11 to 13 and reduced obligation 36 to 12 while operating fuel was 28; no new opportunity bonus was available. Subsequent legal exports restored clear standing.
+7. Final paused Save/Load preserved fuel 46, plates 514, exports 18, obligation 0, clear standing, unlocked handling, compensation 8 and saturation 58%. Completed opportunities did not reappear and fuel did not increase on restoration. Console `warn=[]`, `error=[]`.
+
+The browser run did not require a continuation allocation. Saturated repeat-intervention continuations and expired-opportunity recovery remain separately attributed to the domain tests. Material-ledger audits and exact complete-save round trips are verified throughout the integrated domain companion; browser observations are not represented as a browser ledger API.
+
+Subsequent evidence-recording commits are documentation-only. Phase/issue closure still requires the normal live GitHub closeout; this local acceptance does not by itself close #73 or #12.
 
 Phase 5 implementation children #69–#72 are merged. This review adds no new gameplay breadth. Its job is to prove that discovery, market/company state, physical logistics, capability progression and recovery now behave as one coherent world-facing loop.
 
@@ -154,9 +178,9 @@ Accepted exact-head `e67cd1ed7a1a1ea19fb50709fb3670cdb3dda095` evidence includes
 
 Those are child-issue results. They are not represented as #73 exact-head verification.
 
-## Exact-head local gate still required
+## Verification commands
 
-Before #73 may close, run on the eventual Draft PR exact head:
+The acceptance above used these commands:
 
 ```bash
 npm test -- packages/sim-core/test/phase5-exit.test.ts packages/sim-core/test/market.test.ts packages/sim-core/test/opportunities.test.ts packages/sim-core/test/milestones.test.ts packages/sim-core/test/assistance.test.ts packages/sim-core/test/ledger.test.ts packages/sim-core/test/persistence.test.ts packages/sim-core/test/storage.test.ts
@@ -176,7 +200,7 @@ Reuse previously accepted child evidence only where no runtime/UI code changed a
 
 ## Closeout rule
 
-This document remains **PENDING** until local/domain/browser evidence is recorded on the exact Draft PR head.
+Local/domain/browser acceptance is recorded above. Live GitHub closeout remains pending until the verified changes are published and the canonical PR head is checked.
 
 Only after that evidence passes should closeout:
 
