@@ -167,8 +167,7 @@ export function opportunityViews(
 ): OpportunityView[] {
   const views: OpportunityView[] = [];
   for (const entry of definitions(c)) {
-    const definition = entry.definition;
-    const state = s.opportunities[definition.id];
+    const state = s.opportunities[entry.definition.id];
     if (
       !state ||
       state.status !== "offered" ||
@@ -176,6 +175,7 @@ export function opportunityViews(
     )
       continue;
     if (entry.kind === "order") {
+      const definition = entry.definition;
       views.push({
         id: definition.id,
         kind: "order",
@@ -189,6 +189,7 @@ export function opportunityViews(
       });
       continue;
     }
+    const definition = entry.definition;
     const setup = c.machines.find(
       (machine) =>
         machine.role === "processor" &&
