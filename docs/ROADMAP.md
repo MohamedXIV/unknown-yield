@@ -286,4 +286,4 @@ The following should not be treated as progress during foundation unless require
 
 The accepted implementation and evidence are summarized in [FIRST_PLAYABLE.md](FIRST_PLAYABLE.md) and [BROWSER_SMOKE.md](BROWSER_SMOKE.md). Continue from this foundation; do not rebuild the retired dashboard prototype.
 
-Phase 1.5 is complete through Issue #8 / PR #29, Phase 2 through Issue #34 / PR #44, Phase 3 through Issue #50, and Phase 4 through Issue #63 / PR #67. Phase 5 / #12 is active; #69 is the first implementation slice.
+Phase 1.5 is complete through Issue #8 / PR #29, Phase 2 through Issue #34 / PR #44, Phase 3 through Issue #50, and Phase 4 through Issue #63 / PR #67. Phase 5 / #12 is active; #69 is complete and #70 is the active implementation slice.
