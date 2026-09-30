@@ -37,6 +37,8 @@ This document is intentionally procedural. Game/design truth lives in the domain
 - Completed Phase 5 child: **#71 — evidence-driven milestones, terminal handling, and fuel classes** (merged via PR #77).
 - Completed Phase 5 child: **#72 — corporate assistance, obligations, and recovery standing** (merged via PR #78).
 - Active Phase 5 gate: **#73 — end-to-end company progression exit review**.
+  - Companion: `packages/sim-core/test/phase5-exit.test.ts` + `docs/PHASE5_EXIT_REVIEW.md`.
+  - #73 is integration/evidence-only unless local verification exposes a scoped correctness defect; do not add Phase 6 breadth while closing it.
 
 ## Phase 1.5 dependency graph
 
