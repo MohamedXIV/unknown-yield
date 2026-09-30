@@ -132,3 +132,14 @@ The terminal remains the physical export boundary and the material ledger remain
 Issue #70 adds one-shot authored Corporate Orders and Special Directives on the same slow company cadence. Orders appear only for company-known exchange products, count only cargo that physically ships from terminal staging, and grant one authored completion allocation. Directives request an operation + known input + setup without revealing the authored reaction/output; completion derives from confirmed experiment evidence. Offer, expiry, progress and completion state are authoritative in `sim-core` and persisted.
 
 This slice still does **not** add additional fuel classes, terminal-module progression or standing rules; those remain #71–#72. Opportunities are bounded industrial prompts, not a rotating quest feed or separate dashboard economy.
+
+
+## 14. Evidence milestones and terminal handling (#71)
+
+Company progression now has a small data-driven milestone graph. Milestones consume stable authoritative evidence such as confirmed reactions, exported quantities, completed orders/directives, earlier milestones or terminal capabilities; there is no XP counter or spend-to-unlock path.
+
+The current authored proof uses completion of the Sealed thermal study to certify one outbound terminal handling capability. Conductive granules may be known, listed and staged before that certification, but an export policy cannot remove them from staging until the handling capability is unlocked. Locked cargo therefore remains physical inventory, consumes bounded staging capacity and can backpressure the terminal approach. Compensation, order progress and the export ledger update only after a legal physical shipment.
+
+Content validation rejects milestone cycles and rejects a terminal capability whose unlock path depends on exporting the same material that capability blocks. The accepted fixture therefore has no circular prerequisite: the required evidence is obtainable through experimentation alone.
+
+No additional fuel/allocation class is introduced in this slice. The current game still demonstrates only one operational fuel behavior; a second class would be cosmetic rather than a distinct industrial capability. #71 leaves fuel-class breadth deferred until an actual machine/logistics behavior requires it.
