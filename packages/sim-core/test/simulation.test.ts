@@ -290,16 +290,92 @@ describe("automatic industry", () => {
     expect(s.command({ type: "dismantle", id: empty.id }).ok).toBe(true);
     expect(s.snapshot().stock.plates).toBe(plates + 1);
   });
-  it("discovers an unknown process automatically and exports for fuel", () => {
+  it("keeps discovered granules staged until a real sealed trial unlocks export handling", () => {
     const s = make(),
       initial = JSON.stringify(s.snapshot());
     expect(initial).not.toContain("Conductive granules");
     expect(initial).not.toContain("crush-raw");
     const { processor } = line(s, true);
-    s.step(60000);
+
+    s.step(30000);
     expect(
       s.snapshot().observations.some((o) => o.outputId === "granules"),
     ).toBe(true);
+    expect(s.snapshot().exported).toBe(0);
+    expect(s.snapshot().staging.granules ?? 0).toBeGreaterThan(0);
+    expect(
+      s.snapshot().exchange.find((entry) => entry.materialId === "granules")
+        ?.handling?.unlocked,
+    ).toBe(false);
+
+    const trialFactory = build(s, {
+      type: "placeFactory",
+      x: 48,
+      y: 34,
+      width: 9,
+      height: 12,
+    });
+    build(s, {
+      type: "placePort",
+      factoryId: trialFactory,
+      x: 56,
+      y: 41,
+      direction: 2,
+    });
+    build(s, {
+      type: "placeMachine",
+      definitionId: "extractor",
+      x: 58,
+      y: 40,
+      direction: 2,
+    });
+    build(s, {
+      type: "placeMachine",
+      definitionId: "sealed-furnace",
+      x: 53,
+      y: 40,
+      direction: 2,
+    });
+    build(s, {
+      type: "placeBelts",
+      points: [
+        { x: 57, y: 41 },
+        { x: 56, y: 41 },
+        { x: 55, y: 41 },
+      ],
+      direction: 2,
+    });
+
+    for (
+      let ticks = 0;
+      ticks < 600 &&
+      !s
+        .snapshot()
+        .milestones.find((entry) => entry.id === "sealed-study-certified")
+        ?.completed;
+      ticks++
+    )
+      s.step(100);
+
+    expect(
+      s.snapshot().observations.some(
+        (observation) =>
+          observation.operationId === "heat" &&
+          observation.inputId === "raw" &&
+          observation.outputId === "granules",
+      ),
+    ).toBe(true);
+    expect(
+      s.snapshot().milestones.find(
+        (entry) => entry.id === "sealed-study-certified",
+      )?.completed,
+    ).toBe(true);
+    expect(
+      s.snapshot().exchange.find((entry) => entry.materialId === "granules")
+        ?.handling?.unlocked,
+    ).toBe(true);
+
+    s.step(5000);
     expect(s.snapshot().exported).toBeGreaterThan(0);
     expect(s.snapshot().milestone).toBe(true);
     expect(s.snapshot().machines.find((m) => m.id === processor)?.enabled).toBe(
@@ -743,7 +819,7 @@ describe("save boundary", () => {
 
 describe("world acceptance regressions", () => {
   it("funds both lines and expands entirely through normal commands", () => {
-    const s = make();
+    const s = withConfirmedKnowledge("heat-raw-sealed");
     line(s);
     line(s, true);
     const afterBuild = s.snapshot().stock.plates;
@@ -818,7 +894,24 @@ describe("world acceptance regressions", () => {
   it("exports repay emergency debt before replenishing fuel", () => {
     const c = structuredClone(fixture);
     c.economy.startFuel = 0;
-    const s = new Simulation(c);
+    const s = new Simulation(c),
+      save = s.serialize(),
+      reaction = c.reactions.find((entry) => entry.id === "heat-raw-sealed")!;
+    save.knowledge.push(reaction.id);
+    save.evidence[
+      experimentEvidenceKey(
+        reaction.operation,
+        reaction.input,
+        reaction.processConditionId ?? null,
+      )
+    ] = {
+      operationId: reaction.operation,
+      inputId: reaction.input,
+      processConditionId: reaction.processConditionId ?? null,
+      state: "confirmed",
+    };
+    initializeKnownMarkets(c, save);
+    expect(s.load(save).ok).toBe(true);
     line(s, true);
     build(s, { type: "assistance" });
     s.step(90000);
