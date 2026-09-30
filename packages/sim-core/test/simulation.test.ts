@@ -374,7 +374,7 @@ describe("automatic industry", () => {
       expect(save.machines[processor].definitionId).toBe(definitionId);
       expect(save.machines[processor].job?.reaction).toBe(reactionId);
       expect(save.knowledge).not.toContain(reactionId);
-      expect(save.schemaVersion).toBe(10);
+      expect(save.schemaVersion).toBe(11);
       expect(save.contentVersion).toBe("world-01-v6");
 
       const restored = make(),
@@ -427,7 +427,7 @@ describe("automatic industry", () => {
     expect(JSON.stringify(hinted)).not.toContain("reaction.heat-raw");
 
     const saved = s.serialize();
-    expect(saved.schemaVersion).toBe(10);
+    expect(saved.schemaVersion).toBe(11);
     expect(saved.evidence[hinted!.id].state).toBe("hinted");
 
     const restored = make();
@@ -491,7 +491,7 @@ describe("automatic industry", () => {
 
     const restored = make();
     expect(restored.load(legacy).ok).toBe(true);
-    expect(restored.serialize().schemaVersion).toBe(10);
+    expect(restored.serialize().schemaVersion).toBe(11);
     const hinted = restored
       .snapshot()
       .knowledgeEntries.find(
@@ -701,7 +701,7 @@ describe("automatic industry", () => {
     );
   });
 
-  it("migrates schema-6 machines with no incident through schema 10", () => {
+  it("migrates schema-6 machines with no incident through schema 11", () => {
     const s = make();
     const machineId = build(s, {
       type: "placeMachine",
@@ -716,7 +716,7 @@ describe("automatic industry", () => {
 
     const restored = make();
     expect(restored.load(legacy).ok).toBe(true);
-    expect(restored.serialize().schemaVersion).toBe(10);
+    expect(restored.serialize().schemaVersion).toBe(11);
     expect(restored.serialize().machines[machineId].incident).toBeNull();
   });
 
@@ -726,7 +726,13 @@ describe("automatic industry", () => {
     const s = new Simulation(c);
     expect(s.command({ type: "assistance" }).ok).toBe(true);
     expect(s.command({ type: "assistance" }).ok).toBe(false);
-    expect(s.snapshot().debt).toBe(c.economy.grant);
+    expect(s.snapshot().debt).toBe(
+      c.economy.assistancePackages[0].baseObligationFuel,
+    );
+    expect(s.snapshot().company).toMatchObject({
+      standing: "recovery",
+      interventionStreak: 1,
+    });
   });
 });
 describe("save boundary", () => {

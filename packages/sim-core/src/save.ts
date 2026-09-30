@@ -13,6 +13,7 @@ import {
   milestoneSatisfied,
   refreshMilestones,
 } from "./milestones";
+import { assistanceDefinition } from "./assistance";
 import {
   factoryError,
   machinePlacement,
@@ -91,6 +92,7 @@ const schema = z.object({
     z.literal(8),
     z.literal(9),
     z.literal(10),
+    z.literal(11),
   ]),
   contentVersion: z.string(),
   tick: count,
@@ -139,10 +141,25 @@ const schema = z.object({
       }),
     )
     .default({}),
+  company: z
+    .object({
+      standing: z.enum(["clear", "recovery"]),
+      interventionStreak: count,
+      recoveryNetFuel: count,
+      recoveryPackageId: safeId.nullable(),
+      repaidSinceAssistanceFuel: count.default(0),
+    })
+    .default({
+      standing: "clear",
+      interventionStreak: 0,
+      recoveryNetFuel: 0,
+      recoveryPackageId: null,
+      repaidSinceAssistanceFuel: 0,
+    }),
 });
 export function initialState(c: Content): Save {
   const state: Save = {
-    schemaVersion: 10,
+    schemaVersion: 11,
     contentVersion: c.version,
     tick: 0,
     remainder: 0,
@@ -185,6 +202,13 @@ export function initialState(c: Content): Save {
     market: {},
     opportunities: {},
     milestones: {},
+    company: {
+      standing: "clear",
+      interventionStreak: 0,
+      recoveryNetFuel: 0,
+      recoveryPackageId: null,
+      repaidSinceAssistanceFuel: 0,
+    },
   };
   initializeKnownMarkets(c, state);
   return state;
@@ -251,6 +275,30 @@ export function parseSave(input: unknown, c: Content): Save {
   // state. Existing authoritative evidence remains sufficient to derive any
   // newly satisfied milestone without inventing progress.
   if (s.schemaVersion === 9) s.schemaVersion = 10;
+  // Schema 10 predates persisted company standing/intervention state. Existing
+  // debt is already authoritative obligation history, so preserve it exactly:
+  // an open legacy obligation resumes in recovery standing; a debt-free save
+  // starts clear. No fuel, debt or recovery progress is invented.
+  if (s.schemaVersion === 10) {
+    s.company =
+      s.debt > 0
+        ? {
+            standing: "recovery",
+            interventionStreak: 1,
+            recoveryNetFuel: 0,
+            recoveryPackageId:
+              c.economy.defaultAssistancePackageId ?? null,
+            repaidSinceAssistanceFuel: 0,
+          }
+        : {
+            standing: "clear",
+            interventionStreak: 0,
+            recoveryNetFuel: 0,
+            recoveryPackageId: null,
+            repaidSinceAssistanceFuel: 0,
+          };
+    s.schemaVersion = 11;
+  }
   if (s.contentVersion !== c.version || s.remainder >= c.tickMs)
     throw new Error("Incompatible content or timing");
   if (
@@ -330,6 +378,27 @@ export function parseSave(input: unknown, c: Content): Save {
         throw new Error("Invalid active company opportunity progress");
     }
   }
+  if (s.company.standing === "clear") {
+    if (
+      s.debt !== 0 ||
+      s.company.interventionStreak !== 0 ||
+      s.company.recoveryNetFuel !== 0 ||
+      s.company.recoveryPackageId !== null ||
+      s.company.repaidSinceAssistanceFuel !== 0
+    )
+      throw new Error("Invalid clear company standing");
+  } else {
+    const definition = assistanceDefinition(c, s.company.recoveryPackageId);
+    if (
+      !definition ||
+      s.company.interventionStreak < 1 ||
+      (c.economy.assistancePackages.length > 0 &&
+        s.company.recoveryPackageId === null) ||
+      s.company.recoveryNetFuel >= definition.recoveryNetFuel
+    )
+      throw new Error("Invalid recovery company standing");
+  }
+
   for (const [id, state] of Object.entries(s.milestones)) {
     const definition = c.economy.milestones.find((entry) => entry.id === id);
     if (

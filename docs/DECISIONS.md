@@ -221,7 +221,7 @@ Definitions and placed instances are separate. Machines operate automatically fr
 
 **Status:** accepted, updated 2026-09-30
 
-Spatial saves currently use schema 10, separate from content version `world-01-v6`. Schema 4 migrates losslessly through schema 5 by adding empty belt-diverter state; schema 5 then migrates to schema 6 by reconstructing confirmed experiment evidence from discovered reaction IDs and hinted evidence from any undiscovered active processor batch; schema 6 migrates to schema 7 by adding an empty machine-incident slot; schema 7 migrates to schema 8 by initializing company-known Materials Exchange listings at authored baseline demand with zero saturation; schema 8 migrates to schema 9 with empty company-opportunity history; schema 9 migrates to schema 10 by deriving newly satisfied milestones from the preserved authoritative evidence already in the save. Schemas 1–3 remain incompatible and are rejected without replacing a running site. Content version remains `world-01-v6` because #70 and #71 are additive compatible extensions with default-empty authored arrays/optional handling gates. Saves tied to other content versions are rejected by the exact content-version check. Content Studio remains development-only and receives no scope expansion from save migration work.
+Spatial saves currently use schema 11, separate from content version `world-01-v6`. Schema 4 migrates losslessly through schema 5 by adding empty belt-diverter state; schema 5 then migrates to schema 6 by reconstructing confirmed experiment evidence from discovered reaction IDs and hinted evidence from any undiscovered active processor batch; schema 6 migrates to schema 7 by adding an empty machine-incident slot; schema 7 migrates to schema 8 by initializing company-known Materials Exchange listings at authored baseline demand with zero saturation; schema 8 migrates to schema 9 with empty company-opportunity history; schema 9 migrates to schema 10 by deriving newly satisfied milestones from preserved authoritative evidence; schema 10 migrates to schema 11 by preserving existing fuel/debt exactly and deriving minimal company recovery standing when an obligation is already open. Schemas 1–3 remain incompatible and are rejected without replacing a running site. Content version remains `world-01-v6` because #70–#72 are additive compatible extensions: opportunity/milestone/assistance arrays default empty and handling/package fields are optional/fallback-compatible. Saves tied to other content versions are rejected by the exact content-version check. Content Studio remains development-only and receives no scope expansion from save migration work.
 
 ## D-019 — Material conservation is a design invariant
 
@@ -440,6 +440,22 @@ The first proof unlocks one terminal outbound-handling capability from durable c
 Content validation rejects circular milestone/capability dependencies and rejects a required handling unlock that depends on exporting or completing an order for the same material it blocks. Because the gate uses confirmed reaction evidence, an expired Directive, a Directive that never appeared, or a pre-offer confirmed experiment cannot create a permanent handling soft-lock.
 
 No second fuel/allocation class is added in this slice: there is not yet a second distinct machine/logistics behavior for it to represent. Adding one now would be naming/color breadth rather than capability depth.
+
+---
+
+## D-032 — Assistance is obligation-backed recovery, not free fuel
+
+**Status:** implementation decision for Phase 5 #72, 2026-09-30
+
+Corporate assistance is authored content with a stable package ID, localized presentation, fuel-depletion eligibility, a bounded fuel grant, base obligation, repeat-intervention obligation step, recovery-continuation obligation and net-export recovery target. The existing `debt` field remains the canonical outstanding obligation.
+
+A new intervention with no open debt uses the base obligation plus the authored repeat-intervention step. If fuel collapses while that intervention's debt is still open, the same package may provide a recovery continuation only after legal exports have repaid at least `continuationObligationFuel` since the previous allocation. The continuation adds exactly that amount back to debt, resets the repayment-progress counter and does not increase the intervention streak. This makes open-obligation recovery possible under a saturated market while ensuring continuation debt cannot ratchet upward and fuel cannot be repeatedly requested without export progress. There is no hard intervention cap or Game Over rule in #72 because a cap can turn a recoverable industrial state into an unavoidable soft-lock.
+
+Only legal Materials Exchange compensation repays debt. Gross compensation pays debt first; only net compensation becomes usable fuel and recovery progress. Corporate Order and Special Directive reward fuel remains a separate bonus allocation and does not repay debt or advance standing recovery.
+
+Standing resets to clear only when debt is zero and authored net-export recovery has been demonstrated. Net-export recovery already demonstrated during the same recovery episode is not erased by a later repeat intervention or continuation; debt simply pauses further accumulation until it is repaid again. The intervention streak resets only when standing becomes clear. Assistance changes no physical material state, so material conservation is unchanged.
+
+The recovery path must remain independent from time-limited opportunities: an expired Sealed thermal study cannot block assistance recovery. Durable confirmed `heat-raw-sealed` evidence remains the #71 handling prerequisite and can be produced with normal world machinery funded by the assistance allocation.
 
 ---
 

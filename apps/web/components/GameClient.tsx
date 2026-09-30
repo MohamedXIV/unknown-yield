@@ -137,7 +137,11 @@ function GameClientInner() {
     setMode((mode) => toggleFactoryOpen(mode, id));
   const act = (cmd: GameCommand) => {
     const result = session.command(cmd);
-    setNotice(result);
+    setNotice(
+      result.messageKey
+        ? { ...result, message: t(result.messageKey) }
+        : result,
+    );
     if (result.ok && cmd.type === "placeFactory" && result.id)
       setMode((m) => ({
         ...m,
@@ -1000,16 +1004,54 @@ function GameClientInner() {
                     </select>
                   </div>
                 ))}
-                <button
-                  className="secondary"
-                  onClick={() => act({ type: "assistance" })}
-                >
-                  Request emergency fuel
-                </button>
+                <h3>{t("ui.terminal.assistance.heading")}</h3>
                 <p className="hint">
-                  Available when fuel is depleted. Assistance becomes an
-                  obligation repaid by future exports.
+                  {t(
+                    snapshot.company.standing === "clear"
+                      ? "ui.terminal.assistance.clear"
+                      : "ui.terminal.assistance.recovery",
+                  )}
+                  {snapshot.company.standing === "recovery"
+                    ? " · " +
+                      t("ui.terminal.assistance.progress", {
+                        progress: snapshot.company.recoveryNetFuel,
+                        target: snapshot.company.recoveryTargetNetFuel,
+                      })
+                    : ""}
                 </p>
+                {snapshot.assistance.map((assistance) => (
+                  <article className="observation" key={assistance.id}>
+                    <small>
+                      {t("ui.terminal.assistance.package-meta", {
+                        grant: assistance.grantFuel,
+                        obligation: assistance.nextObligationFuel,
+                      })}
+                    </small>
+                    <h3>{t(assistance.nameKey)}</h3>
+                    <p>{t(assistance.briefKey)}</p>
+                    <button
+                      className="secondary"
+                      disabled={!assistance.eligible}
+                      onClick={() =>
+                        act({
+                          type: "assistance",
+                          packageId: assistance.id,
+                        })
+                      }
+                    >
+                      {t("ui.terminal.assistance.request")}
+                    </button>
+                    {!assistance.eligible && assistance.reason && (
+                      <span>
+                        {t(
+                          assistance.reason === "obligation-open"
+                            ? "ui.terminal.assistance.unavailable-obligation"
+                            : "ui.terminal.assistance.unavailable-fuel",
+                        )}
+                      </span>
+                    )}
+                  </article>
+                ))}
               </>
             )}
             {panel === "menu" && (

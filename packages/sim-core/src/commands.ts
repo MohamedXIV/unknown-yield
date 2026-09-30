@@ -4,6 +4,10 @@ import { amount, change, total, type Save, type CommandResult } from "./types";
 import { machineUnlocked } from "./progression";
 import { exchangeDefinition } from "./market";
 import {
+  applyAssistance,
+  assistanceEligibility,
+} from "./assistance";
+import {
   factoryError,
   machinePlacement,
   portError,
@@ -64,7 +68,7 @@ const schema = z.discriminatedUnion("type", [
     materialId: z.string(),
     policy: z.enum(["keep", "export"]),
   }),
-  z.object({ type: z.literal("assistance") }),
+  z.object({ type: z.literal("assistance"), packageId: z.string().optional() }),
 ]);
 const fail = (message: string): CommandResult => ({ ok: false, message });
 const ok = (message: string, cost = 0, id?: string): CommandResult => ({
@@ -272,14 +276,31 @@ export function applyCommand(
       if (apply) s.policies[cmd.materialId] = cmd.policy;
       return ok("Terminal policy updated");
     }
-    case "assistance":
-      if (s.fuel >= c.economy.assistanceBelow)
-        return fail("Emergency allocation requires depleted fuel");
-      if (apply) {
-        s.fuel += c.economy.grant;
-        s.debt += c.economy.grant;
-      }
-      return ok("Emergency fuel received; exports repay the obligation");
+    case "assistance": {
+      const eligibility = assistanceEligibility(c, s, cmd.packageId);
+      if (!eligibility.definition)
+        return {
+          ...fail("Unknown assistance package"),
+          messageKey: "ui.terminal.assistance.result.unknown",
+        };
+      if (!eligibility.eligible)
+        return {
+          ...fail(
+            eligibility.reason === "obligation-open"
+              ? "Make export repayment progress before requesting recovery continuation"
+              : "Emergency allocation requires depleted fuel",
+          ),
+          messageKey:
+            eligibility.reason === "obligation-open"
+              ? "ui.terminal.assistance.result.obligation-open"
+              : "ui.terminal.assistance.result.fuel-not-depleted",
+        };
+      if (apply) applyAssistance(c, s, cmd.packageId);
+      return {
+        ...ok("Corporate assistance approved; exports repay the obligation"),
+        messageKey: "ui.terminal.assistance.result.approved",
+      };
+    }
     case "dismantle": {
       if (Object.hasOwn(s.machines, cmd.id)) {
         const m = s.machines[cmd.id],
