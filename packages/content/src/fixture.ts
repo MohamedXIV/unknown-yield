@@ -245,5 +245,28 @@ export const fixture = validateContent({
         recoveryPerMarketTickBps: 250,
       },
     ],
+    orders: [
+      {
+        id: "granules-procurement",
+        nameKey: "order.granules-procurement.name",
+        briefKey: "order.granules-procurement.brief",
+        materialId: "granules",
+        quantity: 4,
+        durationTicks: 6000,
+        rewardFuel: 24,
+      },
+    ],
+    directives: [
+      {
+        id: "sealed-thermal-study",
+        nameKey: "directive.sealed-thermal-study.name",
+        briefKey: "directive.sealed-thermal-study.brief",
+        operationId: "heat",
+        inputMaterialId: "raw",
+        processConditionId: "sealed",
+        durationTicks: 6000,
+        rewardFuel: 18,
+      },
+    ],
   },
 });
