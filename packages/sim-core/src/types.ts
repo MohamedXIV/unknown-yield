@@ -121,6 +121,27 @@ export type MilestoneView = {
     unlocked: boolean;
   }[];
 };
+export type CompanyStanding = "clear" | "recovery";
+export type CompanyState = {
+  standing: CompanyStanding;
+  interventionStreak: number;
+  recoveryNetFuel: number;
+  recoveryPackageId: string | null;
+};
+export type AssistanceReason = "fuel-not-depleted" | "obligation-open" | null;
+export type AssistanceView = {
+  id: string;
+  nameKey: string;
+  briefKey: string;
+  grantFuel: number;
+  nextObligationFuel: number;
+  eligible: boolean;
+  reason: AssistanceReason;
+};
+export type CompanyView = CompanyState & {
+  recoveryTargetNetFuel: number;
+};
+
 export type OpportunityStatus = "offered" | "completed" | "expired";
 export type OpportunityState = {
   status: OpportunityStatus;
@@ -175,6 +196,7 @@ export type Save = {
   market: Record<string, MarketState>;
   opportunities: Record<string, OpportunityState>;
   milestones: Record<string, MilestoneState>;
+  company: CompanyState;
 };
 export type CommandResult = {
   ok: boolean;
@@ -194,7 +216,7 @@ export type GameCommand =
   | { type: "setEnabled"; machineId: string; enabled: boolean }
   | { type: "setOperation"; machineId: string; operation: string }
   | { type: "setPolicy"; materialId: string; policy: "keep" | "export" }
-  | { type: "assistance" };
+  | { type: "assistance"; packageId?: string };
 export type MachineView = Omit<Machine, "job" | "incident"> & {
   job: { remaining: number } | null;
   incident: { nameKey: string; textKey: string } | null;
@@ -259,6 +281,8 @@ export type PlayerSnapshot = {
   exchange: MarketListingView[];
   opportunities: OpportunityView[];
   milestones: MilestoneView[];
+  company: CompanyView;
+  assistance: AssistanceView[];
   knowledgeEntries: KnowledgeEntry[];
   observations: Observation[];
 };
