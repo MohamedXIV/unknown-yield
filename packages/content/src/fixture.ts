@@ -272,7 +272,7 @@ export const fixture = validateContent({
     terminalCapabilities: [
       {
         id: "sealed-sample-outbound",
-        nameKey: "terminal-capability.sealed-sample-outbound.name",
+        nameKey: "terminal.capability.sealed-sample-outbound.name",
       },
     ],
     milestones: [
@@ -282,8 +282,8 @@ export const fixture = validateContent({
         hintKey: "milestone.sealed-study-certified.hint",
         requires: [
           {
-            type: "directive-completed",
-            directiveId: "sealed-thermal-study",
+            type: "reaction-confirmed",
+            reactionId: "heat-raw-sealed",
           },
         ],
         unlockTerminalCapabilityIds: ["sealed-sample-outbound"],
