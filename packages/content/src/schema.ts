@@ -11,31 +11,6 @@ const id = z
 const positive = z.number().int().positive().max(1000000);
 const count = z.number().int().nonnegative().max(1000000);
 const pos = z.number().int().nonnegative();
-const opportunityBase = {
-  id,
-  titleKey: localeKeySchema,
-  descriptionKey: localeKeySchema,
-  offerTicks: positive,
-  activeTicks: positive,
-  rewardFuel: positive,
-};
-const opportunitySchema = z.discriminatedUnion("kind", [
-  z.object({
-    ...opportunityBase,
-    kind: z.literal("corporate-order"),
-    materialId: id,
-    quantity: positive,
-  }),
-  z.object({
-    ...opportunityBase,
-    kind: z.literal("special-directive"),
-    experiment: z.object({
-      operationId: id,
-      inputMaterialId: id,
-      processConditionId: id.optional(),
-    }),
-  }),
-]);
 export const contentSchema = z.object({
   version: z.string().min(1),
   tickMs: z.number().int().min(20).max(1000),
@@ -335,6 +310,8 @@ function validateContentInternal(
     );
     if (!reaction)
       throw new Error("Directive experiment has no authored outcome");
+    if (reaction.known)
+      throw new Error("Directive experiment must target an unconfirmed outcome");
     const capable = c.machines.some(
       (m) =>
         m.role === "processor" &&
