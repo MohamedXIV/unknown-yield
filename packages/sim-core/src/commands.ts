@@ -278,15 +278,28 @@ export function applyCommand(
     }
     case "assistance": {
       const eligibility = assistanceEligibility(c, s, cmd.packageId);
-      if (!eligibility.definition) return fail("Unknown assistance package");
+      if (!eligibility.definition)
+        return {
+          ...fail("Unknown assistance package"),
+          messageKey: "ui.terminal.assistance.result.unknown",
+        };
       if (!eligibility.eligible)
-        return fail(
-          eligibility.reason === "obligation-open"
-            ? "Repay the current corporate obligation first"
-            : "Emergency allocation requires depleted fuel",
-        );
+        return {
+          ...fail(
+            eligibility.reason === "obligation-open"
+              ? "Repay the current corporate obligation first"
+              : "Emergency allocation requires depleted fuel",
+          ),
+          messageKey:
+            eligibility.reason === "obligation-open"
+              ? "ui.terminal.assistance.result.obligation-open"
+              : "ui.terminal.assistance.result.fuel-not-depleted",
+        };
       if (apply) applyAssistance(c, s, cmd.packageId);
-      return ok("Corporate assistance approved; exports repay the obligation");
+      return {
+        ...ok("Corporate assistance approved; exports repay the obligation"),
+        messageKey: "ui.terminal.assistance.result.approved",
+      };
     }
     case "dismantle": {
       if (Object.hasOwn(s.machines, cmd.id)) {
