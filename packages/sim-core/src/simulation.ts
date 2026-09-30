@@ -7,6 +7,7 @@ import { machineUnlocked } from "./progression";
 import { marketListings, recoverMarkets } from "./market";
 import { opportunityViews, refreshOpportunities } from "./opportunities";
 import { milestoneViews, refreshMilestones } from "./milestones";
+import { assistanceViews, companyView } from "./assistance";
 import { footprint } from "./geometry";
 import { factoryView } from "./factory-contract";
 import { FactoryThroughputMonitor } from "./factory-throughput";
@@ -151,6 +152,8 @@ export class Simulation {
       exchange: marketListings(c, s),
       opportunities: opportunityViews(c, s),
       milestones: milestoneViews(c, s),
+      company: companyView(c, s),
+      assistance: assistanceViews(c, s),
       knowledgeEntries,
       machines: Object.values(s.machines).map((m) => {
         const d = c.machines.find((d) => d.id === m.definitionId)!;
@@ -214,7 +217,7 @@ export class Simulation {
       return {
         ok: false,
         message:
-          "Save rejected (requires schema 10): " +
+          "Save rejected (requires schema 11): " +
           (error instanceof Error ? error.message : "Invalid data"),
       };
     }
