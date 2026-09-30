@@ -126,6 +126,7 @@ export const contentSchema = z.object({
           baseDemandBps: z.number().int().min(1000).max(20000),
           saturationPerUnitBps: z.number().int().positive().max(10000),
           recoveryPerMarketTickBps: z.number().int().positive().max(10000),
+          requiredTerminalCapabilityId: id.optional(),
         }),
       )
       .min(1),
@@ -153,6 +154,55 @@ export const contentSchema = z.object({
           processConditionId: id.optional(),
           durationTicks: positive,
           rewardFuel: positive,
+        }),
+      )
+      .default([]),
+    terminalCapabilities: z
+      .array(
+        z.object({
+          id,
+          nameKey: localeKeySchema,
+        }),
+      )
+      .default([]),
+    milestones: z
+      .array(
+        z.object({
+          id,
+          nameKey: localeKeySchema,
+          hintKey: localeKeySchema,
+          requires: z
+            .array(
+              z.discriminatedUnion("type", [
+                z.object({
+                  type: z.literal("reaction-confirmed"),
+                  reactionId: id,
+                }),
+                z.object({
+                  type: z.literal("material-exported"),
+                  materialId: id,
+                  units: positive,
+                }),
+                z.object({
+                  type: z.literal("order-completed"),
+                  orderId: id,
+                }),
+                z.object({
+                  type: z.literal("directive-completed"),
+                  directiveId: id,
+                }),
+                z.object({
+                  type: z.literal("milestone-completed"),
+                  milestoneId: id,
+                }),
+                z.object({
+                  type: z.literal("terminal-capability"),
+                  capabilityId: id,
+                }),
+              ]),
+            )
+            .min(1),
+          unlockTerminalCapabilityIds: z.array(id).default([]),
         }),
       )
       .default([]),
@@ -335,6 +385,129 @@ function validateContentInternal(
     )
       throw new Error("Localization key must match its directive");
   }
+  const capabilityIds = new Set<string>();
+  for (const capability of c.economy.terminalCapabilities) {
+    if (capabilityIds.has(capability.id))
+      throw new Error("Duplicate terminal capability ID");
+    capabilityIds.add(capability.id);
+    if (capability.nameKey !== "terminal-capability." + capability.id + ".name")
+      throw new Error("Localization key must match terminal capability");
+  }
+
+  const milestoneIds = new Set(c.economy.milestones.map((m) => m.id));
+  if (milestoneIds.size !== c.economy.milestones.length)
+    throw new Error("Duplicate milestone ID");
+  const capabilityUnlocker = new Map<string, string>();
+  for (const milestone of c.economy.milestones) {
+    if (
+      milestone.nameKey !== "milestone." + milestone.id + ".name" ||
+      milestone.hintKey !== "milestone." + milestone.id + ".hint"
+    )
+      throw new Error("Localization key must match milestone");
+    for (const capabilityId of milestone.unlockTerminalCapabilityIds) {
+      if (!capabilityIds.has(capabilityId))
+        throw new Error("Missing terminal capability unlock");
+      if (capabilityUnlocker.has(capabilityId))
+        throw new Error("Terminal capability has multiple milestone unlockers");
+      capabilityUnlocker.set(capabilityId, milestone.id);
+    }
+    for (const requirement of milestone.requires) {
+      if (
+        (requirement.type === "reaction-confirmed" &&
+          !c.reactions.some((r) => r.id === requirement.reactionId)) ||
+        (requirement.type === "material-exported" &&
+          !materials.has(requirement.materialId)) ||
+        (requirement.type === "order-completed" &&
+          !c.economy.orders.some((order) => order.id === requirement.orderId)) ||
+        (requirement.type === "directive-completed" &&
+          !c.economy.directives.some(
+            (directive) => directive.id === requirement.directiveId,
+          )) ||
+        (requirement.type === "milestone-completed" &&
+          !milestoneIds.has(requirement.milestoneId)) ||
+        (requirement.type === "terminal-capability" &&
+          !capabilityIds.has(requirement.capabilityId))
+      )
+        throw new Error("Missing milestone evidence reference");
+    }
+  }
+  for (const listing of c.economy.exchange)
+    if (
+      listing.requiredTerminalCapabilityId &&
+      !capabilityIds.has(listing.requiredTerminalCapabilityId)
+    )
+      throw new Error("Missing exchange terminal capability");
+
+  const dependencies = (milestoneId: string) => {
+    const milestone = c.economy.milestones.find((m) => m.id === milestoneId)!;
+    return milestone.requires.flatMap((requirement) => {
+      if (requirement.type === "milestone-completed")
+        return [requirement.milestoneId];
+      if (requirement.type === "terminal-capability") {
+        const unlocker = capabilityUnlocker.get(requirement.capabilityId);
+        return unlocker ? [unlocker] : [];
+      }
+      return [];
+    });
+  };
+  const checked = new Set<string>();
+  const visiting = new Set<string>();
+  const visit = (milestoneId: string) => {
+    if (visiting.has(milestoneId))
+      throw new Error("Circular milestone dependency");
+    if (checked.has(milestoneId)) return;
+    visiting.add(milestoneId);
+    for (const dependency of dependencies(milestoneId)) visit(dependency);
+    visiting.delete(milestoneId);
+    checked.add(milestoneId);
+  };
+  for (const milestone of c.economy.milestones) visit(milestone.id);
+
+  const dependsOnBlockedExport = (
+    milestoneId: string,
+    materialId: string,
+    seen = new Set<string>(),
+  ): boolean => {
+    if (seen.has(milestoneId)) return false;
+    seen.add(milestoneId);
+    const milestone = c.economy.milestones.find((m) => m.id === milestoneId)!;
+    return milestone.requires.some((requirement) => {
+      if (
+        requirement.type === "material-exported" &&
+        requirement.materialId === materialId
+      )
+        return true;
+      if (requirement.type === "order-completed") {
+        const order = c.economy.orders.find(
+          (entry) => entry.id === requirement.orderId,
+        );
+        if (order?.materialId === materialId) return true;
+      }
+      if (requirement.type === "milestone-completed")
+        return dependsOnBlockedExport(
+          requirement.milestoneId,
+          materialId,
+          new Set(seen),
+        );
+      if (requirement.type === "terminal-capability") {
+        const unlocker = capabilityUnlocker.get(requirement.capabilityId);
+        return unlocker
+          ? dependsOnBlockedExport(unlocker, materialId, new Set(seen))
+          : false;
+      }
+      return false;
+    });
+  };
+  for (const listing of c.economy.exchange) {
+    const capabilityId = listing.requiredTerminalCapabilityId;
+    if (!capabilityId) continue;
+    const unlocker = capabilityUnlocker.get(capabilityId);
+    if (!unlocker)
+      throw new Error("Exchange terminal capability has no milestone unlock");
+    if (dependsOnBlockedExport(unlocker, listing.materialId))
+      throw new Error("Terminal handling unlock depends on blocked export");
+  }
+
   if (
     c.economy.grant < Math.max(...c.machines.map((m) => m.fuel)) * 8 ||
     c.economy.assistanceBelow > c.economy.grant
