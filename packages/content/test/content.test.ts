@@ -150,6 +150,11 @@ describe("content boundary", () => {
       /obligation cannot be smaller/i,
     );
 
+    const authoredIndependent = structuredClone(fixture);
+    authoredIndependent.economy.grant = 1;
+    authoredIndependent.economy.assistanceBelow = 1;
+    expect(() => validateContent(authoredIndependent)).not.toThrow();
+
     const missingDefault = structuredClone(fixture);
     missingDefault.economy.defaultAssistancePackageId = "missing-package";
     expect(() => validateContent(missingDefault)).toThrow(
