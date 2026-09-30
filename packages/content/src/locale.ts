@@ -105,10 +105,10 @@ export const enCatalog: LocaleCatalog = {
     "{{material}} → {{operation}} · {{setup}}",
   "ui.terminal.opportunity.experiment-fallback": "Experiment",
   "ui.terminal.opportunities.empty": "No active corporate opportunity.",
-  "terminal-capability.sealed-sample-outbound.name": "Sealed sample handling",
+  "terminal.capability.sealed-sample-outbound.name": "Sealed sample handling",
   "milestone.sealed-study-certified.name": "Outbound handling certified",
   "milestone.sealed-study-certified.hint":
-    "Complete the Sealed thermal study to certify expanded terminal handling.",
+    "Confirm the sealed Heat trial to certify expanded terminal handling.",
   "ui.terminal.milestones.heading": "Company milestones",
   "ui.terminal.milestone.completed": "COMPLETED",
   "ui.terminal.milestone.pending": "PENDING",
