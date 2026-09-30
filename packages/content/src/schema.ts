@@ -437,6 +437,13 @@ function validateContentInternal(
       !capabilityIds.has(listing.requiredTerminalCapabilityId)
     )
       throw new Error("Missing exchange terminal capability");
+  for (const milestone of c.economy.milestones)
+    for (const requirement of milestone.requires)
+      if (
+        requirement.type === "terminal-capability" &&
+        !capabilityUnlocker.has(requirement.capabilityId)
+      )
+        throw new Error("Milestone terminal capability has no unlocker");
 
   const dependencies = (milestoneId: string) => {
     const milestone = c.economy.milestones.find((m) => m.id === milestoneId)!;
