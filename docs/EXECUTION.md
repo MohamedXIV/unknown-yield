@@ -35,7 +35,8 @@ This document is intentionally procedural. Game/design truth lives in the domain
 - Completed Phase 5 child: **#69 — authoritative Materials Exchange baseline** (merged via PR #74).
 - Completed Phase 5 child: **#70 — Corporate Orders and Special Directives** (merged via PR #76).
 - Completed Phase 5 child: **#71 — evidence-driven milestones, terminal handling, and fuel classes** (merged via PR #77).
-- Active Phase 5 child: **#72 — corporate assistance, obligations, and recovery standing**.
+- Completed Phase 5 child: **#72 — corporate assistance, obligations, and recovery standing** (merged via PR #78).
+- Active Phase 5 gate: **#73 — end-to-end company progression exit review**.
 
 ## Phase 1.5 dependency graph
 
@@ -122,13 +123,13 @@ Phase 2 is complete.
 #71 milestones + terminal handling + fuel classes ✓
   │
   v
-#72 assistance + obligations + recovery standing
+#72 assistance + obligations + recovery standing ✓
   │
   v
 #73 Phase 5 exit review
 ```
 
-#12 is active. #69–#71 are complete; #72 is the only dependency-ready Phase 5 implementation issue.
+#12 is active. #69–#72 are complete; #73 is the only remaining Phase 5 gate. Do not mark Phase 5 complete or begin Phase 6 before its integrated evidence passes.
 
 ## Agent loop
 
@@ -175,6 +176,6 @@ There is currently no remote CI workflow. Do not represent absent checks as gree
 - #9 — experimentation and discovery depth — COMPLETE via children #30–#34
 - #10 — factory-as-function contracts and abstraction proof — COMPLETE via children #45–#50
 - #11 — Content Studio v1 — COMPLETE via children #60–#63
-- #12 — Materials Exchange and corporate progression — ACTIVE via #69–#73 (#69–#71 complete; #72 active)
+- #12 — Materials Exchange and corporate progression — ACTIVE via #69–#73 (#69–#72 complete; #73 exit review active)
 
 These are placeholders for future decomposition, not permission to work around the active gate.
