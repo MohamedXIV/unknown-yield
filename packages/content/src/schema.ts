@@ -553,15 +553,13 @@ function validateContentInternal(
       throw new Error("Terminal handling unlock depends on blocked export");
   }
 
-  const minimumRecoveryFuel =
+  const minimumLegacyRecoveryFuel =
     Math.max(...c.machines.map((m) => m.fuel)) * 8;
   if (
-    c.economy.grant < minimumRecoveryFuel ||
+    c.economy.grant < minimumLegacyRecoveryFuel ||
     c.economy.assistanceBelow > c.economy.grant ||
     c.economy.assistancePackages.some(
-      (assistance) =>
-        assistance.grantFuel < minimumRecoveryFuel ||
-        assistance.fuelBelow > assistance.grantFuel,
+      (assistance) => assistance.fuelBelow > assistance.grantFuel,
     )
   )
     throw new Error("Recovery grant cannot restart production");
