@@ -88,6 +88,7 @@ describe("evidence milestones and terminal handling", () => {
     state.staging.granules = content.site.stagingCapacity;
     state.flows.produced.granules = content.site.stagingCapacity + 1;
     state.policies.granules = "export";
+    state.stock[content.site.buildMaterial] -= content.site.beltCost;
     state.belts["37,26"] = {
       id: "b1",
       x: 37,
@@ -97,6 +98,8 @@ describe("evidence milestones and terminal handling", () => {
       alternate: null,
       switched: false,
     };
+
+    expect(auditLedger(content, state).ok).toBe(true);
 
     transport(content, state);
 
