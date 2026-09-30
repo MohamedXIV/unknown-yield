@@ -290,14 +290,14 @@ describe("automatic industry", () => {
     expect(s.command({ type: "dismantle", id: empty.id }).ok).toBe(true);
     expect(s.snapshot().stock.plates).toBe(plates + 1);
   });
-  it("keeps discovered granules staged until a real sealed trial unlocks export handling", () => {
+  it("keeps discovered granules staged while terminal handling is locked", () => {
     const s = make(),
       initial = JSON.stringify(s.snapshot());
     expect(initial).not.toContain("Conductive granules");
     expect(initial).not.toContain("crush-raw");
     const { processor } = line(s, true);
 
-    s.step(30000);
+    s.step(60000);
     expect(
       s.snapshot().observations.some((o) => o.outputId === "granules"),
     ).toBe(true);
@@ -307,64 +307,22 @@ describe("automatic industry", () => {
       s.snapshot().exchange.find((entry) => entry.materialId === "granules")
         ?.handling?.unlocked,
     ).toBe(false);
+    expect(s.snapshot().machines.find((m) => m.id === processor)?.enabled).toBe(
+      true,
+    );
+  });
 
-    const trialFactory = build(s, {
-      type: "placeFactory",
-      x: 48,
-      y: 34,
-      width: 9,
-      height: 12,
-    });
-    build(s, {
-      type: "placePort",
-      factoryId: trialFactory,
-      x: 56,
-      y: 41,
-      direction: 2,
-    });
-    build(s, {
-      type: "placeMachine",
-      definitionId: "extractor",
-      x: 58,
-      y: 40,
-      direction: 2,
-    });
-    build(s, {
-      type: "placeMachine",
-      definitionId: "sealed-furnace",
-      x: 53,
-      y: 40,
-      direction: 2,
-    });
-    build(s, {
-      type: "placeBelts",
-      points: [
-        { x: 57, y: 41 },
-        { x: 56, y: 41 },
-        { x: 55, y: 41 },
-      ],
-      direction: 2,
-    });
+  it("confirms the sealed trial through normal commands and then exports", () => {
+    const { s } = line(make(), true, true, "sealed-furnace");
 
     for (
       let ticks = 0;
-      ticks < 600 &&
-      !s
-        .snapshot()
-        .milestones.find((entry) => entry.id === "sealed-study-certified")
-        ?.completed;
+      ticks < 500 && !s.serialize().knowledge.includes("heat-raw-sealed");
       ticks++
     )
       s.step(100);
 
-    expect(
-      s.snapshot().observations.some(
-        (observation) =>
-          observation.operationId === "heat" &&
-          observation.inputId === "raw" &&
-          observation.outputId === "granules",
-      ),
-    ).toBe(true);
+    expect(s.serialize().knowledge).toContain("heat-raw-sealed");
     expect(
       s.snapshot().milestones.find(
         (entry) => entry.id === "sealed-study-certified",
@@ -374,14 +332,16 @@ describe("automatic industry", () => {
       s.snapshot().exchange.find((entry) => entry.materialId === "granules")
         ?.handling?.unlocked,
     ).toBe(true);
+    expect(s.snapshot().exported).toBe(0);
 
-    s.step(5000);
+    build(s, path(29, 37, 37, 37, 3));
+    build(s, path(37, 36, 37, 28, 0));
+    s.step(30000);
+
     expect(s.snapshot().exported).toBeGreaterThan(0);
     expect(s.snapshot().milestone).toBe(true);
-    expect(s.snapshot().machines.find((m) => m.id === processor)?.enabled).toBe(
-      true,
-    );
   });
+
   it("retains waste with an informative failed heat observation", () => {
     const { s, processor } = line(make(), true, true);
     s.step(20000);
