@@ -553,9 +553,16 @@ function validateContentInternal(
       throw new Error("Terminal handling unlock depends on blocked export");
   }
 
+  const minimumRecoveryFuel =
+    Math.max(...c.machines.map((m) => m.fuel)) * 8;
   if (
-    c.economy.grant < Math.max(...c.machines.map((m) => m.fuel)) * 8 ||
-    c.economy.assistanceBelow > c.economy.grant
+    c.economy.grant < minimumRecoveryFuel ||
+    c.economy.assistanceBelow > c.economy.grant ||
+    c.economy.assistancePackages.some(
+      (assistance) =>
+        assistance.grantFuel < minimumRecoveryFuel ||
+        assistance.fuelBelow > assistance.grantFuel,
+    )
   )
     throw new Error("Recovery grant cannot restart production");
   if (catalog) validateLocaleCoverage(c, catalog);
