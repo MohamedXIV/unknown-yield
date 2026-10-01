@@ -62,9 +62,17 @@ describe("localization boundary", () => {
       textKey: "reaction.press-ferrite.observation",
     });
     expect("text" in known).toBe(false);
-    const dumped = JSON.stringify(snapshot);
-    for (const value of Object.values(enCatalog))
-      expect(dumped).not.toContain(value);
+    // Match string values, not substrings inside stable IDs such as east-veins.
+    // A leaked translated direction ("east") must still fail this boundary.
+    const strings = (value: unknown): string[] => {
+      if (typeof value === "string") return [value];
+      if (value && typeof value === "object") return Object.values(value).flatMap(strings);
+      return [];
+    };
+    const values = strings(snapshot);
+    for (const value of Object.values(enCatalog)) expect(values).not.toContain(value);
+    expect(values).toContain("east-veins");
+    expect(values).not.toContain("east");
   });
 
   it("keeps sim-core source free of localization/UI/authoring imports", async () => {

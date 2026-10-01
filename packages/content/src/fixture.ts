@@ -107,6 +107,15 @@ export const fixture = validateContent({
       cost: 30,
     },
   ],
+  junctions: [
+    {
+      id: "splitter",
+      kind: "splitter",
+      nameKey: "junction.splitter.name",
+      cost: 8,
+    },
+    { id: "merger", kind: "merger", nameKey: "junction.merger.name", cost: 8 },
+  ],
   storages: [
     {
       id: "depot",

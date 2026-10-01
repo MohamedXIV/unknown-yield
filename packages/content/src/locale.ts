@@ -11,13 +11,8 @@ import type { Content } from "./schema";
  * and never requires a save migration. This package validates catalog shape
  * and key coverage; resolution (i18next) lives outside `sim-core`.
  */
-export const localeKeySchema = z
-  .string()
-  .regex(/^[a-z0-9]+(\.[a-z0-9-]+)+$/);
-export const localeCatalogSchema = z.record(
-  localeKeySchema,
-  z.string().min(1),
-);
+export const localeKeySchema = z.string().regex(/^[a-z0-9]+(\.[a-z0-9-]+)+$/);
+export const localeCatalogSchema = z.record(localeKeySchema, z.string().min(1));
 export type LocaleCatalog = z.infer<typeof localeCatalogSchema>;
 
 export function contentKeys(c: Content): string[] {
@@ -26,6 +21,7 @@ export function contentKeys(c: Content): string[] {
     ...c.operations.map((o) => o.nameKey),
     ...c.machines.map((m) => m.nameKey),
     ...c.machines.flatMap((m) => (m.unlock ? [m.unlock.hintKey] : [])),
+    ...c.junctions.map((j) => j.nameKey),
     ...c.storages.map((s) => s.nameKey),
     ...c.reactions.map((r) => r.observationKey),
     ...c.reactions.flatMap((r) =>
@@ -60,6 +56,28 @@ export function validateLocaleCoverage(
 }
 
 export const enCatalog: LocaleCatalog = {
+  "junction.splitter.name": "T splitter",
+  "junction.merger.name": "T merger",
+  "ui.junction.loaded": "Empty the junction through belts first",
+  "ui.junction.unknown": "Unknown junction definition",
+  "ui.junction.wall": "Junctions cannot occupy factory walls or ports",
+  "ui.junction.cost": "Not enough structural plates",
+  "ui.junction.manual": "Use the T configuration controls",
+  "ui.junction.updated": "Junction configuration updated",
+  "ui.junction.rotate": "Rotate T",
+  "ui.junction.mirror": "Mirror side arm",
+  "ui.junction.remove": "Remove T upgrade",
+  "ui.junction.upgrade": "Upgrade empty belt",
+  "ui.junction.preferred": "Next preferred arm",
+  "ui.junction.rule":
+    "One physical slot; turns advance after successful transfers. A blocked arm is skipped when the other is open.",
+  "ui.junction.buffer": "Central buffer",
+  "ui.junction.cost-label": "Upgrade: {{cost}} plates",
+  "ui.junction.reclaim": "Reclaim empty junction",
+  "ui.direction.east": "east",
+  "ui.direction.south": "south",
+  "ui.direction.west": "west",
+  "ui.direction.north": "north",
   "material.ferrite.name": "Ferrite rubble",
   "material.plates.name": "Structural plates",
   "material.raw.name": "Veined ore",
@@ -97,14 +115,12 @@ export const enCatalog: LocaleCatalog = {
   "ui.terminal.opportunities.heading": "Corporate opportunities",
   "ui.terminal.opportunities.hint":
     "Ship requested materials to fulfill orders. Complete requested experiments to fulfill directives. Successful opportunities grant bonus fuel.",
-  "ui.terminal.opportunity.order-meta":
-    "CORPORATE ORDER · +{{reward}} fuel",
+  "ui.terminal.opportunity.order-meta": "CORPORATE ORDER · +{{reward}} fuel",
   "ui.terminal.opportunity.directive-meta":
     "SPECIAL DIRECTIVE · +{{reward}} fuel",
   "ui.terminal.opportunity.order-progress":
     "{{material}} · {{progress}}/{{quantity}} shipped",
-  "ui.terminal.opportunity.directive-progress":
-    "{{material}} → {{operation}}",
+  "ui.terminal.opportunity.directive-progress": "{{material}} → {{operation}}",
   "ui.terminal.opportunity.directive-progress-setup":
     "{{material}} → {{operation}} · {{setup}}",
   "ui.terminal.opportunity.experiment-fallback": "Experiment",

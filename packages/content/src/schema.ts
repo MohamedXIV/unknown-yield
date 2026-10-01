@@ -1,9 +1,5 @@
 import { z } from "zod";
-import {
-  enCatalog,
-  localeKeySchema,
-  validateLocaleCoverage,
-} from "./locale";
+import { enCatalog, localeKeySchema, validateLocaleCoverage } from "./locale";
 const id = z
   .string()
   .regex(/^[a-z][a-z0-9-]*$/)
@@ -24,9 +20,7 @@ export const contentSchema = z.object({
       }),
     )
     .min(1),
-  operations: z
-    .array(z.object({ id, nameKey: localeKeySchema }))
-    .min(1),
+  operations: z.array(z.object({ id, nameKey: localeKeySchema })).min(1),
   machines: z
     .array(
       z.object({
@@ -62,6 +56,16 @@ export const contentSchema = z.object({
       }),
     )
     .min(1),
+  junctions: z
+    .array(
+      z.object({
+        id,
+        kind: z.enum(["splitter", "merger"]),
+        nameKey: localeKeySchema,
+        cost: positive,
+      }),
+    )
+    .default([]),
   reactions: z
     .array(
       z.object({
@@ -237,6 +241,7 @@ function validateContentInternal(
     c.operations,
     c.machines,
     c.storages,
+    c.junctions,
     c.reactions,
     c.site.deposits,
   ])
@@ -268,8 +273,7 @@ function validateContentInternal(
       hazardIds.add(r.hazard.id);
       if (
         r.hazard.nameKey !== "hazard." + r.hazard.id + ".name" ||
-        r.hazard.observationKey !==
-          "hazard." + r.hazard.id + ".observation"
+        r.hazard.observationKey !== "hazard." + r.hazard.id + ".observation"
       )
         throw new Error("Localization key must match its hazard");
     }
@@ -281,7 +285,9 @@ function validateContentInternal(
     );
     if (!capable.length)
       throw new Error("Missing process condition capability");
-    if (capable.some((m) => m.capacity < Math.max(r.inputAmount, r.outputAmount)))
+    if (
+      capable.some((m) => m.capacity < Math.max(r.inputAmount, r.outputAmount))
+    )
       throw new Error("Reaction exceeds machine capacity");
     if (
       r.known &&
@@ -352,7 +358,10 @@ function validateContentInternal(
     if (opportunityIds.has(order.id))
       throw new Error("Duplicate company opportunity ID");
     opportunityIds.add(order.id);
-    if (!materials.has(order.materialId) || !exchangeMaterials.has(order.materialId))
+    if (
+      !materials.has(order.materialId) ||
+      !exchangeMaterials.has(order.materialId)
+    )
       throw new Error("Corporate order requires an exchange material");
     if (
       order.nameKey !== "order." + order.id + ".name" ||
@@ -386,7 +395,9 @@ function validateContentInternal(
     if (!reaction)
       throw new Error("Directive experiment has no authored outcome");
     if (reaction.known)
-      throw new Error("Directive experiment must target an unconfirmed outcome");
+      throw new Error(
+        "Directive experiment must target an unconfirmed outcome",
+      );
     const capable = c.machines.some(
       (m) =>
         m.role === "processor" &&
@@ -462,7 +473,9 @@ function validateContentInternal(
         (requirement.type === "material-exported" &&
           !materials.has(requirement.materialId)) ||
         (requirement.type === "order-completed" &&
-          !c.economy.orders.some((order) => order.id === requirement.orderId)) ||
+          !c.economy.orders.some(
+            (order) => order.id === requirement.orderId,
+          )) ||
         (requirement.type === "directive-completed" &&
           !c.economy.directives.some(
             (directive) => directive.id === requirement.directiveId,
@@ -575,24 +588,16 @@ function validateContentInternal(
   // another entity's key would couple their display names forever.
   for (const m of c.materials)
     if (m.nameKey !== "material." + m.id + ".name")
-      throw new Error(
-        "Localization key must match its entity: " + m.nameKey,
-      );
+      throw new Error("Localization key must match its entity: " + m.nameKey);
   for (const o of c.operations)
     if (o.nameKey !== "operation." + o.id + ".name")
-      throw new Error(
-        "Localization key must match its entity: " + o.nameKey,
-      );
+      throw new Error("Localization key must match its entity: " + o.nameKey);
   for (const m of c.machines)
     if (m.nameKey !== "machine." + m.id + ".name")
-      throw new Error(
-        "Localization key must match its entity: " + m.nameKey,
-      );
+      throw new Error("Localization key must match its entity: " + m.nameKey);
   for (const s of c.storages)
     if (s.nameKey !== "storage." + s.id + ".name")
-      throw new Error(
-        "Localization key must match its entity: " + s.nameKey,
-      );
+      throw new Error("Localization key must match its entity: " + s.nameKey);
   for (const r of c.reactions)
     if (r.observationKey !== "reaction." + r.id + ".observation")
       throw new Error(

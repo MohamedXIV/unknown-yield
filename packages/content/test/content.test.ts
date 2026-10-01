@@ -34,15 +34,17 @@ describe("content boundary", () => {
   it("rejects a reaction condition no capable machine provides", () => {
     const c = structuredClone(fixture);
     const sealed = c.reactions.find((r) => r.id === "heat-raw-sealed")!;
-    (sealed as typeof sealed & { processConditionId: string }).processConditionId =
-      "vacuum";
+    (
+      sealed as typeof sealed & { processConditionId: string }
+    ).processConditionId = "vacuum";
     expect(() => validateContent(c)).toThrow(/condition/i);
   });
   it("rejects malformed stable condition IDs in the content schema", () => {
     const c = structuredClone(fixture);
     const sealed = c.reactions.find((r) => r.id === "heat-raw-sealed")!;
-    (sealed as typeof sealed & { processConditionId: string }).processConditionId =
-      "Sealed chamber";
+    (
+      sealed as typeof sealed & { processConditionId: string }
+    ).processConditionId = "Sealed chamber";
     expect(contentSchema.safeParse(c).success).toBe(false);
   });
   it("binds the oversealed capability unlock to stable confirmed reaction identity", () => {
@@ -59,13 +61,15 @@ describe("content boundary", () => {
   });
   it("rejects missing or borrowed machine unlock references", () => {
     const missing = structuredClone(fixture);
-    missing.machines.find((m) => m.id === "oversealed-furnace")!.unlock!.reactionId =
-      "missing-reaction";
+    missing.machines.find(
+      (m) => m.id === "oversealed-furnace",
+    )!.unlock!.reactionId = "missing-reaction";
     expect(() => validateContent(missing)).toThrow(/unlock reaction/i);
 
     const borrowed = structuredClone(fixture);
-    borrowed.machines.find((m) => m.id === "oversealed-furnace")!.unlock!.hintKey =
-      "machine.sealed-furnace.name";
+    borrowed.machines.find(
+      (m) => m.id === "oversealed-furnace",
+    )!.unlock!.hintKey = "machine.sealed-furnace.name";
     expect(() => validateContent(borrowed)).toThrow(/machine unlock/i);
   });
   it("accepts one explicit condition-driven hazard with localized identity", () => {
@@ -152,8 +156,7 @@ describe("content boundary", () => {
     );
 
     const impossibleContinuation = structuredClone(fixture);
-    impossibleContinuation.economy.assistancePackages[0].continuationObligationFuel =
-      37;
+    impossibleContinuation.economy.assistancePackages[0].continuationObligationFuel = 37;
     expect(() => validateContent(impossibleContinuation)).toThrow(
       /continuation obligation is not recoverable/i,
     );
@@ -220,7 +223,9 @@ describe("content boundary", () => {
     knownDirective.economy.directives[0].operationId = "crush";
     knownDirective.economy.directives[0].inputMaterialId = "ferrite";
     delete knownDirective.economy.directives[0].processConditionId;
-    expect(() => validateContent(knownDirective)).toThrow(/unconfirmed outcome/i);
+    expect(() => validateContent(knownDirective)).toThrow(
+      /unconfirmed outcome/i,
+    );
 
     const duplicate = structuredClone(fixture);
     duplicate.economy.directives[0].id = duplicate.economy.orders[0].id;
@@ -228,7 +233,9 @@ describe("content boundary", () => {
       "directive." + duplicate.economy.orders[0].id + ".name";
     duplicate.economy.directives[0].briefKey =
       "directive." + duplicate.economy.orders[0].id + ".brief";
-    expect(() => validateContent(duplicate)).toThrow(/Duplicate company opportunity/i);
+    expect(() => validateContent(duplicate)).toThrow(
+      /Duplicate company opportunity/i,
+    );
 
     const duplicateExperiment = structuredClone(fixture);
     duplicateExperiment.economy.directives.push({
@@ -347,5 +354,26 @@ describe("content boundary", () => {
     expect(() => localeCatalogSchema.parse({ "bad key!": "x" })).toThrow();
     expect(() => localeCatalogSchema.parse({ "a.b": "" })).toThrow();
     expect(() => localeCatalogSchema.parse({})).not.toThrow();
+  });
+});
+
+describe("junction content boundary", () => {
+  it("keeps legacy content additive and preserves authored junctions through Studio", () => {
+    const { junctions: unused, ...legacy } = fixture;
+    expect(unused).toHaveLength(2);
+    expect(validateContent(legacy).junctions).toEqual([]);
+    expect(
+      contentFromStore(createContentStore(fixture, enCatalog), fixture)
+        .junctions,
+    ).toEqual(fixture.junctions);
+  });
+  it("rejects invalid kind/cost, duplicate IDs and missing locale coverage", () => {
+    for (const junctions of [
+      [{ ...fixture.junctions[0], cost: 0 }],
+      [{ ...fixture.junctions[0], kind: "router" }],
+      [fixture.junctions[0], fixture.junctions[0]],
+      [{ ...fixture.junctions[0], nameKey: "junction.missing.name" }],
+    ])
+      expect(() => validateContent({ ...fixture, junctions })).toThrow();
   });
 });

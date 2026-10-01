@@ -125,15 +125,11 @@ export class Simulation {
         };
       }),
       storageDefinitions: c.storages,
+      junctionDefinitions: c.junctions,
       operations: c.operations,
       materials: c.materials.filter((m) => known.has(m.id)),
       factories: Object.values(s.factories).map((factory) =>
-        factoryView(
-          c,
-          s,
-          factory,
-          this.factoryThroughput.view(factory.id),
-        ),
+        factoryView(c, s, factory, this.factoryThroughput.view(factory.id)),
       ),
       belts: Object.values(s.belts),
       storages: Object.values(s.storages).map((t) => {
@@ -217,7 +213,7 @@ export class Simulation {
       return {
         ok: false,
         message:
-          "Save rejected (requires schema 11): " +
+          "Save rejected (requires schema 12): " +
           (error instanceof Error ? error.message : "Invalid data"),
       };
     }

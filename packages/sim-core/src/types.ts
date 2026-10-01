@@ -81,7 +81,9 @@ export type Machine = Point & {
   output: Inventory;
   job: Job | null;
 };
+export type Junction = { definitionId: string; branch: 1 | -1; cursor: 0 | 1 };
 export type Belt = Point & {
+  junction?: Junction | null;
   id: string;
   direction: number;
   cargo: string | null;
@@ -216,6 +218,13 @@ export type GameCommand =
   | ({ type: "placeFactory" } & Rect)
   | ({ type: "placePort"; factoryId: string; direction: number } & Point)
   | { type: "placeBelts"; points: Point[]; direction: number }
+  | {
+      type: "configureJunction";
+      beltId: string;
+      definitionId: string | null;
+      direction: number;
+      branch: 1 | -1;
+    }
   | { type: "rotateDivert"; beltId: string }
   | { type: "switchDivert"; beltId: string }
   | { type: "dismantle"; id: string }
@@ -276,6 +285,7 @@ export type PlayerSnapshot = {
   deposits: (Content["site"]["deposits"][number] & { remaining: number })[];
   definitions: MachineDefinitionView[];
   storageDefinitions: StorageDefinition[];
+  junctionDefinitions: Content["junctions"];
   operations: Content["operations"];
   materials: Content["materials"];
   machines: MachineView[];

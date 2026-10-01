@@ -37,6 +37,18 @@ export const TOOL_HOTKEYS: Record<Tool, string> = {
  * change happens to invalidate.
  */
 export function structureKey(s: PlayerSnapshot): string {
+  const adjacent = new Set(
+    s.belts
+      .filter((b) => b.junction)
+      .flatMap((b) =>
+        [
+          [b.x + 1, b.y],
+          [b.x - 1, b.y],
+          [b.x, b.y + 1],
+          [b.x, b.y - 1],
+        ].map(([x, y]) => x + "," + y),
+      ),
+  );
   return JSON.stringify([
     s.machines.map((m) => [m.id, m.x, m.y, m.direction]),
     s.factories.map((f) => [
@@ -47,7 +59,18 @@ export function structureKey(s: PlayerSnapshot): string {
       f.height,
       f.ports.map((p) => [p.id, p.x, p.y, p.direction, p.role]),
     ]),
-    s.belts.map((b) => [b.id, b.x, b.y, b.direction, b.alternate, b.switched]),
+    s.belts.map((b) => [
+      b.id,
+      b.x,
+      b.y,
+      b.direction,
+      b.alternate,
+      b.switched,
+      b.junction ?? null,
+    ]),
+    s.belts
+      .filter((b) => adjacent.has(b.x + "," + b.y))
+      .map((b) => [b.id, !!b.cargo]),
     s.storages.map((t) => [t.id, t.definitionId, t.x, t.y, t.direction]),
   ]);
 }

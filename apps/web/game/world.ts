@@ -399,6 +399,34 @@ export function createWorld(
           }
         }
         g.fillStyle(0x171f1a).fillCircle(cx, cy, 4);
+        if (view.junction) {
+          // Inward arrows distinguish merger/splitter roles without color.
+          for (const side of view.inlets) {
+            const [dx, dy] = vectors[side];
+            this.arrow(
+              g,
+              cx + dx * X * 0.3,
+              cy + dy * Y * 0.3,
+              (side + 2) % 4,
+              0xb7c6a0,
+              3,
+            );
+            if (side === view.preferredInlet)
+              g.lineStyle(1, 0xe5d198).strokeCircle(
+                cx + dx * X * 0.3,
+                cy + dy * Y * 0.3,
+                5,
+              );
+            if (view.disconnectedInlets?.includes(side))
+              g.lineStyle(2, 0xc49670).lineBetween(
+                cx + dx * (X / 2 - 2) - dy * 4,
+                cy + dy * (Y / 2 - 2) + dx * 4,
+                cx + dx * (X / 2 - 2) + dy * 4,
+                cy + dy * (Y / 2 - 2) - dx * 4,
+              );
+          }
+          g.lineStyle(1, 0xe5d198).strokeRect(cx - 4, cy - 4, 8, 8);
+        }
         for (const outlet of view.outlets) {
           const [dx, dy] = vectors[outlet.direction];
           const ax = cx + dx * X * 0.3,
@@ -421,6 +449,15 @@ export function createWorld(
               ay - dx * 4,
             );
           }
+          if (outlet.preferred)
+            g.lineStyle(1, 0xe5d198).strokeCircle(ax, ay, 5);
+          if (outlet.blocked)
+            g.lineStyle(2, 0xc49670).lineBetween(
+              ax - dy * 4,
+              ay + dx * 4,
+              ax + dy * 4,
+              ay - dx * 4,
+            );
           if (!outlet.connected) {
             // Broken destination: leave a gap before a short end stop.
             const ex = cx + dx * (X / 2 - 2),

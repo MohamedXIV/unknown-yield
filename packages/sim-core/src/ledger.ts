@@ -90,7 +90,8 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
   };
 
   // Sources present at genesis: starter stock + authored deposit units.
-  if (c.site.startStock > 0) row(c.site.buildMaterial).initial += c.site.startStock;
+  if (c.site.startStock > 0)
+    row(c.site.buildMaterial).initial += c.site.startStock;
   for (const d of c.site.deposits) row(d.material).initial += d.units;
 
   // Remaining source material still in the ground.
@@ -105,7 +106,8 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
 
   // Machine buffers.
   for (const m of Object.values(s.machines ?? {})) {
-    for (const [id, n] of Object.entries(m.input ?? {})) row(id).machineInput += n;
+    for (const [id, n] of Object.entries(m.input ?? {}))
+      row(id).machineInput += n;
     for (const [id, n] of Object.entries(m.output ?? {}))
       row(id).machineOutput += n;
   }
@@ -144,9 +146,17 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
     if (d) embodied += d.cost;
   }
   for (const f of Object.values(s.factories ?? {})) {
-    embodied += f.width * f.height * c.site.factoryCellCost + f.ports.length * c.site.portCost;
+    embodied +=
+      f.width * f.height * c.site.factoryCellCost +
+      f.ports.length * c.site.portCost;
   }
-  embodied += Object.keys(s.belts ?? {}).length * c.site.beltCost;
+  embodied += Object.values(s.belts ?? {}).reduce(
+    (n, b) =>
+      n +
+      c.site.beltCost +
+      (c.junctions.find((d) => d.id === b.junction?.definitionId)?.cost ?? 0),
+    0,
+  );
   if (embodied > 0) row(c.site.buildMaterial).embodied += embodied;
 
   // Cumulative defined sinks and transformation outputs.

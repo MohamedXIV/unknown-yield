@@ -22,10 +22,11 @@ export type FactoryBlueprintBelt = {
   direction: number;
   alternate: number | null;
   switched: boolean;
+  junction?: { definitionId: string; branch: 1 | -1 } | null;
 };
 
 export type FactoryBlueprint = {
-  schemaVersion: 1;
+  schemaVersion: 1 | 2;
   width: number;
   height: number;
   ports: FactoryBlueprintPort[];
@@ -92,10 +93,7 @@ const pointOrder = (a: { x: number; y: number }, b: { x: number; y: number }) =>
 const portOrder = (a: FactoryBlueprintPort, b: FactoryBlueprintPort) =>
   pointOrder(a, b) || a.direction - b.direction;
 
-const machineOrder = (
-  a: FactoryBlueprintMachine,
-  b: FactoryBlueprintMachine,
-) =>
+const machineOrder = (a: FactoryBlueprintMachine, b: FactoryBlueprintMachine) =>
   pointOrder(a, b) ||
   a.definitionId.localeCompare(b.definitionId) ||
   a.direction - b.direction ||
@@ -108,7 +106,7 @@ const beltOrder = (a: FactoryBlueprintBelt, b: FactoryBlueprintBelt) =>
   Number(a.switched) - Number(b.switched);
 
 const canonical = (blueprint: FactoryBlueprint): FactoryBlueprint => ({
-  schemaVersion: 1,
+  schemaVersion: blueprint.schemaVersion,
   width: blueprint.width,
   height: blueprint.height,
   ports: [...blueprint.ports].sort(portOrder),
@@ -142,7 +140,7 @@ export function validateFactoryBlueprint(
     ["schemaVersion", "width", "height", "ports", "machines", "belts"],
     "Factory blueprint",
   );
-  if (root.schemaVersion !== 1)
+  if (root.schemaVersion !== 1 && root.schemaVersion !== 2)
     throw new Error("Unsupported factory blueprint schema");
 
   const width = integer(
@@ -158,22 +156,24 @@ export function validateFactoryBlueprint(
       content.site.factoryMax,
     );
 
-  const ports: FactoryBlueprintPort[] = array(root.ports, "Blueprint ports").map(
-    (value, index) => {
-      const row = record(value, "Blueprint port " + index);
-      exactKeys(row, ["x", "y", "direction"], "Blueprint port " + index);
-      return {
-        x: integer(row.x, "Blueprint port x", 0, width - 1),
-        y: integer(row.y, "Blueprint port y", 0, height - 1),
-        direction: direction(row.direction, "Blueprint port direction"),
-      };
-    },
-  );
+  const ports: FactoryBlueprintPort[] = array(
+    root.ports,
+    "Blueprint ports",
+  ).map((value, index) => {
+    const row = record(value, "Blueprint port " + index);
+    exactKeys(row, ["x", "y", "direction"], "Blueprint port " + index);
+    return {
+      x: integer(row.x, "Blueprint port x", 0, width - 1),
+      y: integer(row.y, "Blueprint port y", 0, height - 1),
+      direction: direction(row.direction, "Blueprint port direction"),
+    };
+  });
 
   const factory = relativeFactory(width, height, []);
   const portCells = new Set<string>();
   for (const port of ports) {
-    if (!wall(factory, port)) throw new Error("Blueprint port must be on a wall");
+    if (!wall(factory, port))
+      throw new Error("Blueprint port must be on a wall");
     const vertical = port.x === 0 || port.x === width - 1,
       horizontal = port.y === 0 || port.y === height - 1;
     if (vertical && horizontal)
@@ -191,7 +191,9 @@ export function validateFactoryBlueprint(
   const machineDefinitions = new Map(
     content.machines.map((definition) => [definition.id, definition]),
   );
-  const operationIds = new Set(content.operations.map((operation) => operation.id));
+  const operationIds = new Set(
+    content.operations.map((operation) => operation.id),
+  );
   const machines: FactoryBlueprintMachine[] = array(
     root.machines,
     "Blueprint machines",
@@ -242,52 +244,78 @@ export function validateFactoryBlueprint(
         throw new Error("Blueprint machines overlap");
 
   const beltCells = new Set<string>();
-  const belts: FactoryBlueprintBelt[] = array(root.belts, "Blueprint belts").map(
-    (value, index) => {
-      const row = record(value, "Blueprint belt " + index);
-      exactKeys(
-        row,
-        ["x", "y", "direction", "alternate", "switched"],
-        "Blueprint belt " + index,
-      );
-      const belt: FactoryBlueprintBelt = {
-        x: integer(row.x, "Blueprint belt x", 0, width - 1),
-        y: integer(row.y, "Blueprint belt y", 0, height - 1),
-        direction: direction(row.direction, "Blueprint belt direction"),
-        alternate:
-          row.alternate === null
-            ? null
-            : direction(row.alternate, "Blueprint belt alternate"),
-        switched: boolean(row.switched, "Blueprint belt switched"),
-      };
-      if (belt.alternate === belt.direction)
-        throw new Error("Blueprint belt alternate must differ from primary");
-      if (belt.switched && belt.alternate === null)
-        throw new Error("Blueprint belt cannot switch without an alternate");
-      const cell = belt.x + "," + belt.y;
-      if (beltCells.has(cell)) throw new Error("Duplicate blueprint belt");
-      beltCells.add(cell);
-      if (machineRects.some((machine) => contains(machine, belt)))
-        throw new Error("Blueprint belt overlaps a machine");
-      if (wall(factory, belt)) {
-        if (belt.alternate !== null)
-          throw new Error("Blueprint wall belts cannot be diverters");
-        if (
-          !ports.some(
-            (port) =>
-              port.x === belt.x &&
-              port.y === belt.y &&
-              port.direction === belt.direction,
-          )
-        )
-          throw new Error("Blueprint wall belt requires a matching port");
+  const belts: FactoryBlueprintBelt[] = array(
+    root.belts,
+    "Blueprint belts",
+  ).map((value, index) => {
+    const row = record(value, "Blueprint belt " + index);
+    exactKeys(
+      row,
+      [
+        "x",
+        "y",
+        "direction",
+        "alternate",
+        "switched",
+        ...(root.schemaVersion === 2 ? ["junction"] : []),
+      ],
+      "Blueprint belt " + index,
+    );
+    const belt: FactoryBlueprintBelt = {
+      x: integer(row.x, "Blueprint belt x", 0, width - 1),
+      y: integer(row.y, "Blueprint belt y", 0, height - 1),
+      direction: direction(row.direction, "Blueprint belt direction"),
+      alternate:
+        row.alternate === null
+          ? null
+          : direction(row.alternate, "Blueprint belt alternate"),
+      switched: boolean(row.switched, "Blueprint belt switched"),
+    };
+    if (root.schemaVersion === 2) {
+      belt.junction = null;
+      if (row.junction !== null) {
+        const junction = record(row.junction, "Blueprint junction");
+        exactKeys(junction, ["definitionId", "branch"], "Blueprint junction");
+        const definitionId = string(
+          junction.definitionId,
+          "Blueprint junction definition",
+        );
+        if (!content.junctions.some((d) => d.id === definitionId))
+          throw new Error("Unknown blueprint junction definition");
+        if (junction.branch !== 1 && junction.branch !== -1)
+          throw new Error("Invalid blueprint junction branch");
+        if (belt.alternate !== null || belt.switched || wall(factory, belt))
+          throw new Error("Invalid blueprint junction topology");
+        belt.junction = { definitionId, branch: junction.branch };
       }
-      return belt;
-    },
-  );
+    }
+    if (belt.alternate === belt.direction)
+      throw new Error("Blueprint belt alternate must differ from primary");
+    if (belt.switched && belt.alternate === null)
+      throw new Error("Blueprint belt cannot switch without an alternate");
+    const cell = belt.x + "," + belt.y;
+    if (beltCells.has(cell)) throw new Error("Duplicate blueprint belt");
+    beltCells.add(cell);
+    if (machineRects.some((machine) => contains(machine, belt)))
+      throw new Error("Blueprint belt overlaps a machine");
+    if (wall(factory, belt)) {
+      if (belt.alternate !== null)
+        throw new Error("Blueprint wall belts cannot be diverters");
+      if (
+        !ports.some(
+          (port) =>
+            port.x === belt.x &&
+            port.y === belt.y &&
+            port.direction === belt.direction,
+        )
+      )
+        throw new Error("Blueprint wall belt requires a matching port");
+    }
+    return belt;
+  });
 
   return canonical({
-    schemaVersion: 1,
+    schemaVersion: root.schemaVersion,
     width,
     height,
     ports,
@@ -304,8 +332,11 @@ export function factoryBlueprint(
   const factory = state.factories[factoryId];
   if (!factory) throw new Error("Unknown factory");
 
+  const hasJunction = Object.values(state.belts).some(
+    (b) => contains(factory, b) && b.junction,
+  );
   return validateFactoryBlueprint(content, {
-    schemaVersion: 1,
+    schemaVersion: hasJunction ? 2 : 1,
     width: factory.width,
     height: factory.height,
     ports: factory.ports.map((port) => ({
@@ -330,6 +361,16 @@ export function factoryBlueprint(
         direction: belt.direction,
         alternate: belt.alternate,
         switched: belt.switched,
+        ...(hasJunction
+          ? {
+              junction: belt.junction
+                ? {
+                    definitionId: belt.junction.definitionId,
+                    branch: belt.junction.branch,
+                  }
+                : null,
+            }
+          : {}),
       })),
   });
 }
