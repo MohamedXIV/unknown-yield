@@ -9,10 +9,7 @@ import {
 } from "./types";
 import { initializeKnownMarkets, exchangeDefinition } from "./market";
 import { machineUnlocked } from "./progression";
-import {
-  milestoneSatisfied,
-  refreshMilestones,
-} from "./milestones";
+import { milestoneSatisfied, refreshMilestones } from "./milestones";
 import { assistanceDefinition } from "./assistance";
 import {
   factoryError,
@@ -63,6 +60,15 @@ const machine = z.object({
     .nullable(),
 });
 const belt = z.object({
+  junction: z
+    .object({
+      definitionId: safeId,
+      branch: z.union([z.literal(1), z.literal(-1)]),
+      cursor: z.union([z.literal(0), z.literal(1)]),
+    })
+    .strict()
+    .nullable()
+    .optional(),
   ...point,
   id: safeId,
   direction,
@@ -93,6 +99,7 @@ const schema = z.object({
     z.literal(9),
     z.literal(10),
     z.literal(11),
+    z.literal(12),
   ]),
   contentVersion: z.string(),
   tick: count,
@@ -159,7 +166,7 @@ const schema = z.object({
 });
 export function initialState(c: Content): Save {
   const state: Save = {
-    schemaVersion: 11,
+    schemaVersion: 12,
     contentVersion: c.version,
     tick: 0,
     remainder: 0,
@@ -215,6 +222,8 @@ export function initialState(c: Content): Save {
 }
 export function parseSave(input: unknown, c: Content): Save {
   const s = schema.parse(input);
+  if (s.schemaVersion < 12 && Object.values(s.belts).some((b) => b.junction))
+    throw new Error("Legacy save contains junction state");
   // Schema 4 predates belt diverters; every belt was plain, so stamping the
   // defaults is an exact migration rather than a guess.
   if (s.schemaVersion === 4) s.schemaVersion = 5;
@@ -286,8 +295,7 @@ export function parseSave(input: unknown, c: Content): Save {
             standing: "recovery",
             interventionStreak: 1,
             recoveryNetFuel: 0,
-            recoveryPackageId:
-              c.economy.defaultAssistancePackageId ?? null,
+            recoveryPackageId: c.economy.defaultAssistancePackageId ?? null,
             repaidSinceAssistanceFuel: 0,
           }
         : {
@@ -299,6 +307,7 @@ export function parseSave(input: unknown, c: Content): Save {
           };
     s.schemaVersion = 11;
   }
+  if (s.schemaVersion === 11) s.schemaVersion = 12;
   if (s.contentVersion !== c.version || s.remainder >= c.tickMs)
     throw new Error("Incompatible content or timing");
   if (
@@ -320,7 +329,9 @@ export function parseSave(input: unknown, c: Content): Save {
     .sort();
   if (
     Object.keys(s.market).sort().join() !== expectedMarkets.join() ||
-    Object.keys(s.market).some((materialId) => !exchangeDefinition(c, materialId))
+    Object.keys(s.market).some(
+      (materialId) => !exchangeDefinition(c, materialId),
+    )
   )
     throw new Error("Invalid market state");
   for (const [id, state] of Object.entries(s.opportunities)) {
@@ -330,7 +341,10 @@ export function parseSave(input: unknown, c: Content): Save {
     if (!definition) throw new Error("Unknown company opportunity");
     const target = order ? order.quantity : 1;
     if (order) {
-      if (!known.has(order.materialId) || !Object.hasOwn(s.market, order.materialId))
+      if (
+        !known.has(order.materialId) ||
+        !Object.hasOwn(s.market, order.materialId)
+      )
         throw new Error("Ineligible corporate order state");
     } else if (
       !known.has(directive!.inputMaterialId) ||
@@ -493,8 +507,7 @@ export function parseSave(input: unknown, c: Content): Save {
         m.job.remaining > d.durationTicks ||
         (d.role === "extractor"
           ? m.job.reaction !== null
-          :
-            !r ||
+          : !r ||
             r.operation !== m.operation ||
             r.processConditionId !== d.processConditionId) ||
         total(m.output) + (r?.outputAmount ?? 1) > d.capacity
@@ -522,9 +535,7 @@ export function parseSave(input: unknown, c: Content): Save {
       throw new Error("Experiment evidence disagrees with knowledge");
     if (
       entry.state === "hinted" &&
-      !Object.values(s.machines).some(
-        (m) => m.job?.reaction === reaction.id,
-      )
+      !Object.values(s.machines).some((m) => m.job?.reaction === reaction.id)
     )
       throw new Error("Hinted evidence has no active experiment");
   }
@@ -553,6 +564,16 @@ export function parseSave(input: unknown, c: Content): Save {
       Object.values(stage.factories).some((f) => wall(f, b))
     )
       throw new Error("Alternate exit not allowed on factory walls");
+    if (b.junction) {
+      if (!c.junctions.some((d) => d.id === b.junction!.definitionId))
+        throw new Error("Unknown junction definition");
+      if (
+        b.alternate !== null ||
+        b.switched ||
+        Object.values(stage.factories).some((f) => wall(f, b))
+      )
+        throw new Error("Invalid junction topology");
+    }
     stage.belts[location] = b;
   }
   for (const [id, t] of Object.entries(s.storages)) {
@@ -578,10 +599,7 @@ export function parseSave(input: unknown, c: Content): Save {
     if (Object.keys(inv).some((id) => !known.has(id)))
       throw new Error("Unknown inventory material");
   for (const [id, policy] of Object.entries(s.policies))
-    if (
-      !known.has(id) ||
-      (policy === "export" && !exchangeDefinition(c, id))
-    )
+    if (!known.has(id) || (policy === "export" && !exchangeDefinition(c, id)))
       throw new Error("Invalid terminal policy");
   return s;
 }

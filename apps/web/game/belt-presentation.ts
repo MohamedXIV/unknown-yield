@@ -1,4 +1,5 @@
 import {
+  beltArms,
   contains,
   key,
   socket,
@@ -8,13 +9,23 @@ import {
 
 export type BeltPresentation = {
   inlets: number[];
-  outlets: { direction: number; active: boolean; connected: boolean }[];
+  junction?: "splitter" | "merger";
+  preferredInlet?: number;
+  disconnectedInlets?: number[];
+  outlets: {
+    direction: number;
+    active: boolean;
+    connected: boolean;
+    preferred?: boolean;
+    blocked?: boolean;
+  }[];
 };
 
 /** Read-only topology projection; cargo and routing stay in sim-core. */
 export function beltPresentations(
   snapshot: PlayerSnapshot,
 ): Map<string, BeltPresentation> {
+  const content = { junctions: snapshot.junctionDefinitions };
   const belts = new Map(snapshot.belts.map((b) => [key(b), b]));
   const sources = new Map<string, Set<number>>();
   const destinations = new Map<string, Set<number>>();
@@ -67,30 +78,50 @@ export function beltPresentations(
       const v = vectors[side];
       const neighbor = belts.get(key({ x: belt.x + v.x, y: belt.y + v.y }));
       if (!neighbor) continue;
-      const exit =
-        neighbor.alternate !== null && neighbor.switched
-          ? neighbor.alternate
-          : neighbor.direction;
-      if (exit === (side + 2) % 4) inlets.add(side);
+      const exits = beltArms(content, neighbor).outlets;
+      if (exits.includes((side + 2) % 4)) inlets.add(side);
     }
     const active =
       belt.alternate !== null && belt.switched
         ? belt.alternate
         : belt.direction;
-    const exits =
-      belt.alternate === null
+    const arms = beltArms(content, belt);
+    const exits = arms.kind
+      ? arms.outlets
+      : belt.alternate === null
         ? [belt.direction]
         : [belt.direction, belt.alternate];
     result.set(belt.id, {
-      inlets: [...inlets].sort((a, b) => a - b),
+      inlets: arms.kind ? arms.inlets : [...inlets].sort((a, b) => a - b),
+      ...(arms.kind
+        ? {
+            junction: arms.kind,
+            preferredInlet:
+              arms.kind === "merger"
+                ? arms.inlets[belt.junction!.cursor]
+                : undefined,
+            disconnectedInlets: arms.inlets.filter((d) => !inlets.has(d)),
+          }
+        : {}),
       outlets: exits.map((direction) => {
         const v = vectors[direction],
           target = { x: belt.x + v.x, y: belt.y + v.y };
         return {
           direction,
-          active: direction === active,
+          active: arms.kind ? true : direction === active,
+          ...(arms.kind
+            ? {
+                preferred:
+                  arms.kind === "splitter" &&
+                  direction === arms.outlets[belt.junction!.cursor],
+                blocked: !!belts.get(key(target))?.cargo,
+              }
+            : {}),
           connected:
-            belts.has(key(target)) ||
+            (belts.has(key(target)) &&
+              beltArms(content, belts.get(key(target))!).inlets.includes(
+                (direction + 2) % 4,
+              )) ||
             destinations.get(key(belt))?.has(direction) === true ||
             contains(snapshot.map.terminal, target),
         };

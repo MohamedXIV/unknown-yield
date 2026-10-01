@@ -1,3 +1,4 @@
+import { beltArms } from "./junctions";
 import type { Content } from "@site/content";
 import {
   amount,
@@ -15,10 +16,7 @@ import {
   ensureMarket,
   exchangeDefinition,
 } from "./market";
-import {
-  recordDirectiveExperiment,
-  recordOrderExport,
-} from "./opportunities";
+import { recordDirectiveExperiment, recordOrderExport } from "./opportunities";
 import { terminalCanExport } from "./milestones";
 export function recipe(c: Content, m: Machine) {
   const definition = c.machines.find((d) => d.id === m.definitionId);
@@ -131,165 +129,211 @@ export function transport(
 ) {
   const belts = Object.values(s.belts).sort((a, b) => a.y - b.y || a.x - b.x);
   const occupied = new Set(belts.filter((b) => b.cargo).map(key));
-  const reserved = new Set<string>();
-  const received = new Map<string, number>();
-  const moves: {
-    from: string;
-    fromPoint: Point;
-    direction: number;
-    to: string | null;
-    machine: string | null;
-    storage: string | null;
-    staging: boolean;
+  type Source = {
+    point: Point;
     material: string;
-  }[] = [];
-  for (const b of belts) {
-    if (!b.cargo) continue;
-    // A switched diverter exits through its player-set alternate direction.
-    // In-transit cargo is untouched; only the next edge changes.
-    const exit = b.alternate !== null && b.switched ? b.alternate : b.direction;
-    const target = next(b, exit),
-      targetKey = key(target);
-    if (contains(c.site.terminal, target)) {
-      if (b.cargo === c.site.buildMaterial) {
-        moves.push({
-          from: key(b),
-          fromPoint: { x: b.x, y: b.y },
-          direction: exit,
-          to: null,
-          machine: null,
-          storage: null,
-          staging: false,
-          material: b.cargo,
-        });
-        continue;
-      }
-      // Terminal staging is a bounded physical location: when it is full the
-      // arrival waits on its belt and blocks upstream flow deterministically.
-      const staged = received.get("staging") ?? 0;
-      if (total(s.staging) + staged < c.site.stagingCapacity) {
-        received.set("staging", staged + 1);
-        moves.push({
-          from: key(b),
-          fromPoint: { x: b.x, y: b.y },
-          direction: exit,
-          to: null,
-          machine: null,
-          storage: null,
-          staging: true,
-          material: b.cargo,
-        });
-      }
-      continue;
-    }
-    const targetBelt = s.belts[targetKey];
-    if (targetBelt && !occupied.has(targetKey) && !reserved.has(targetKey)) {
-      reserved.add(targetKey);
-      moves.push({
-        from: key(b),
-        fromPoint: { x: b.x, y: b.y },
-        direction: exit,
-        to: targetKey,
-        machine: null,
-        storage: null,
-        staging: false,
-        material: b.cargo,
+    directions: number[];
+    belt?: (typeof belts)[number];
+    inventory?: Record<string, number>;
+    emission?: string;
+  };
+  type Target = {
+    id: string;
+    capacity: number;
+    inventory?: Record<string, number>;
+    belt?: (typeof belts)[number];
+    inlet: number;
+  };
+  const sources: Source[] = belts
+    .filter((b) => b.cargo)
+    .map((b) => {
+      const arms = beltArms(c, b);
+      const directions =
+        arms.kind === "splitter" && b.junction?.cursor === 1
+          ? [...arms.outlets].reverse()
+          : arms.outlets;
+      return { point: b, material: b.cargo!, directions, belt: b };
+    });
+  // Emitters participate in the same admission arbitration as incoming belts.
+  // Their ordinary priority remains after old belt cargo, as before.
+  for (const m of Object.values(s.machines)) {
+    const def = c.machines.find((d) => d.id === m.definitionId)!;
+    const material = Object.keys(m.output)
+      .sort()
+      .find((id) => m.output[id] > 0);
+    if (material)
+      sources.push({
+        point: m,
+        material,
+        directions: [m.direction],
+        inventory: m.output,
+        emission: key(socket(m, def, true)),
       });
-      continue;
-    }
+  }
+  for (const t of Object.values(s.storages)) {
+    const def = c.storages.find((d) => d.id === t.definitionId)!;
+    const material = Object.keys(t.inventory)
+      .sort()
+      .find((id) => t.inventory[id] > 0);
+    if (material && s.belts[key(socket(t, def, true))]?.junction)
+      sources.push({
+        point: t,
+        material,
+        directions: [t.direction],
+        inventory: t.inventory,
+        emission: key(socket(t, def, true)),
+      });
+  }
+  const targetFor = (source: Source, direction: number): Target | null => {
+    const inlet = (direction + 2) % 4;
+    const p = source.emission ? null : next(source.point, direction);
+    const loc = source.emission ?? key(p!);
+    // Terminal is checked before belts, preserving ordinary settlement order.
+    if (p && contains(c.site.terminal, p))
+      return source.material === c.site.buildMaterial
+        ? { id: "stock", capacity: Infinity, inventory: s.stock, inlet }
+        : {
+            id: "staging",
+            capacity: c.site.stagingCapacity - total(s.staging),
+            inventory: s.staging,
+            inlet,
+          };
+    const b = s.belts[loc];
+    if (b)
+      return !occupied.has(loc) && beltArms(c, b).inlets.includes(inlet)
+        ? { id: "belt:" + loc, capacity: 1, belt: b, inlet }
+        : null;
+    if (source.emission) return null;
     const m = Object.values(s.machines).find((m) => {
       const d = c.machines.find((d) => d.id === m.definitionId)!;
       return (
         d.role === "processor" &&
-        contains(footprint(m, d), target) &&
-        key(socket(m, d, false)) === key(b)
+        contains(footprint(m, d), p!) &&
+        key(socket(m, d, false)) === key(source.point)
       );
     });
-    if (m) {
-      const d = c.machines.find((d) => d.id === m.definitionId)!;
-      const n = received.get(m.id) ?? 0;
-      if (total(m.input) + n < d.capacity) {
-        received.set(m.id, n + 1);
-        moves.push({
-          from: key(b),
-          fromPoint: { x: b.x, y: b.y },
-          direction: exit,
-          to: null,
-          machine: m.id,
-          storage: null,
-          staging: false,
-          material: b.cargo,
-        });
-      }
-      continue;
-    }
-    const depot = Object.values(s.storages).find((t) => {
+    if (m)
+      return {
+        id: m.id,
+        capacity:
+          c.machines.find((d) => d.id === m.definitionId)!.capacity -
+          total(m.input),
+        inventory: m.input,
+        inlet,
+      };
+    const t = Object.values(s.storages).find((t) => {
       const d = c.storages.find((d) => d.id === t.definitionId)!;
       return (
-        contains(footprint(t, d), target) &&
-        key(socket(t, d, false)) === key(b)
+        contains(footprint(t, d), p!) &&
+        key(socket(t, d, false)) === key(source.point)
       );
     });
-    if (depot) {
-      const d = c.storages.find((d) => d.id === depot.definitionId)!;
-      const n = received.get(depot.id) ?? 0;
-      if (total(depot.inventory) + n < d.capacity) {
-        received.set(depot.id, n + 1);
-        moves.push({
-          from: key(b),
-          fromPoint: { x: b.x, y: b.y },
-          direction: exit,
-          to: null,
-          machine: null,
-          storage: depot.id,
-          staging: false,
-          material: b.cargo,
-        });
+    return t
+      ? {
+          id: t.id,
+          capacity:
+            c.storages.find((d) => d.id === t.definitionId)!.capacity -
+            total(t.inventory),
+          inventory: t.inventory,
+          inlet,
+        }
+      : null;
+  };
+  const accepted = new Set<Source>();
+  const received = new Map<string, number>();
+  const moves: { source: Source; target: Target; direction: number }[] = [];
+  // Each source proposes its first eligible arm, then retries its other arm if
+  // a reservation conflict denied it. A T has at most two candidates.
+  const candidates = new Map(
+    sources.map((source) => [source, [...source.directions]]),
+  );
+  for (let round = 0; round < 2; round++) {
+    const requests = new Map<
+      string,
+      { source: Source; target: Target; direction: number }[]
+    >();
+    for (const source of sources) {
+      if (accepted.has(source)) continue;
+      const exits = candidates.get(source)!;
+      while (exits.length) {
+        const direction = exits.shift()!;
+        const target = targetFor(source, direction);
+        if (!target || (received.get(target.id) ?? 0) >= target.capacity)
+          continue;
+        const group = requests.get(target.id) ?? [];
+        group.push({ source, target, direction });
+        requests.set(target.id, group);
+        break;
+      }
+    }
+    for (const group of requests.values()) {
+      const target = group[0].target;
+      if (target.belt && beltArms(c, target.belt).kind === "merger") {
+        const preferred = beltArms(c, target.belt).inlets[
+          target.belt.junction!.cursor
+        ];
+        group.sort(
+          (a, b) =>
+            Number(b.target.inlet === preferred) -
+            Number(a.target.inlet === preferred),
+        );
+      }
+      for (const move of group) {
+        const n = received.get(target.id) ?? 0;
+        if (n >= target.capacity) break;
+        received.set(target.id, n + 1);
+        accepted.add(move.source);
+        moves.push(move);
+        const destination = move.target.belt;
+        if (destination && beltArms(c, destination).kind === "merger") {
+          const arm = beltArms(c, destination).inlets.indexOf(
+            move.target.inlet,
+          );
+          destination.junction!.cursor = (1 - arm) as 0 | 1;
+        }
+        const b = move.source.belt;
+        if (b && beltArms(c, b).kind === "splitter") {
+          const arm = beltArms(c, b).outlets.indexOf(move.direction);
+          b.junction!.cursor = (1 - arm) as 0 | 1;
+        }
       }
     }
   }
-  // Clear sources before applying arrivals. All eligibility used old occupancy.
-  for (const move of moves) s.belts[move.from].cargo = null;
-  for (const move of moves) {
-    if (move.to) s.belts[move.to].cargo = move.material;
-    else if (move.machine)
-      change(s.machines[move.machine].input, move.material, 1);
-    else if (move.storage)
-      change(s.storages[move.storage].inventory, move.material, 1);
-    else if (move.staging) change(s.staging, move.material, 1);
-    else change(s.stock, move.material, 1);
-    onMove?.({
-      from: move.fromPoint,
-      direction: move.direction,
-      material: move.material,
-    });
+  // Old occupancy prevents a cell receiving and dispatching in this update.
+  // Clear sources before applying arrivals; every successful move has one sink.
+  for (const { source } of moves) {
+    if (source.belt) source.belt.cargo = null;
+    else change(source.inventory!, source.material, -1);
   }
-  for (const m of Object.values(s.machines)) {
-    const d = c.machines.find((d) => d.id === m.definitionId)!,
-      p = key(socket(m, d, true)),
-      b = s.belts[p];
-    if (!b || b.cargo || occupied.has(p) || reserved.has(p)) continue;
-    const material = Object.keys(m.output)
-      .sort()
-      .find((id) => m.output[id] > 0);
-    if (material) {
-      b.cargo = material;
-      change(m.output, material, -1);
-      reserved.add(p);
-    }
+  for (const { source, target, direction } of moves) {
+    if (target.belt) target.belt.cargo = source.material;
+    else change(target.inventory!, source.material, 1);
+    if (source.belt)
+      onMove?.({
+        from: { x: source.point.x, y: source.point.y },
+        direction,
+        material: source.material,
+      });
   }
   for (const t of Object.values(s.storages)) {
-    const d = c.storages.find((d) => d.id === t.definitionId)!,
-      p = key(socket(t, d, true)),
-      b = s.belts[p];
-    if (!b || b.cargo || occupied.has(p) || reserved.has(p)) continue;
+    const def = c.storages.find((d) => d.id === t.definitionId)!;
+    const location = key(socket(t, def, true)),
+      b = s.belts[location];
+    if (
+      !b ||
+      b.junction ||
+      b.cargo ||
+      occupied.has(location) ||
+      received.has("belt:" + location)
+    )
+      continue;
+    if (moves.some((move) => move.source.inventory === t.inventory)) continue;
     const material = Object.keys(t.inventory)
       .sort()
       .find((id) => t.inventory[id] > 0);
     if (material) {
       b.cargo = material;
       change(t.inventory, material, -1);
-      reserved.add(p);
     }
   }
   for (const material of c.materials) {

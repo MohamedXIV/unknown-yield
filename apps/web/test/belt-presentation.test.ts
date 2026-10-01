@@ -151,3 +151,54 @@ describe("belt topology presentation", () => {
     expect(beltPresentations(s).get("19,20")!.outlets[0].connected).toBe(false);
   });
 });
+
+describe("T snapshot presentation", () => {
+  it("draws configured directed arms, preferred/blocked outlets and missing inlets without mutation", () => {
+    const center = {
+      ...belt(20, 20, 0),
+      junction: {
+        definitionId: "splitter",
+        branch: 1 as const,
+        cursor: 1 as const,
+      },
+    };
+    const s = world([
+      belt(19, 20, 0),
+      center,
+      { ...belt(21, 20, 0), cargo: "plates" },
+      belt(20, 21, 1),
+    ]);
+    const before = structuredClone(s);
+    const view = beltPresentations(s).get(center.id)!;
+    expect(view.inlets).toEqual([2]);
+    expect(
+      view.outlets.map((o) => [o.direction, o.preferred, o.blocked]),
+    ).toEqual([
+      [0, false, true],
+      [1, true, false],
+    ]);
+    expect(s).toEqual(before);
+    const merged = world([
+      { ...center, junction: { definitionId: "merger", branch: 1, cursor: 1 } },
+      belt(19, 20, 0),
+    ]);
+    const merger = beltPresentations(merged).get(center.id)!;
+    expect(merger.inlets).toEqual([2, 1]);
+    expect(merger.preferredInlet).toBe(1);
+    expect(merger.disconnectedInlets).toEqual([1]);
+  });
+  it("never shows an incompatible T neighbor inlet as a connected outlet", () => {
+    const center = {
+      ...belt(20, 20, 0),
+      junction: {
+        definitionId: "splitter",
+        branch: 1 as const,
+        cursor: 0 as const,
+      },
+    };
+    const s = world([belt(19, 20, 0), center, belt(21, 20, 0)]);
+    expect(beltPresentations(s).get("19,20")!.outlets[0].connected).toBe(true);
+    center.direction = 1;
+    expect(beltPresentations(s).get("19,20")!.outlets[0].connected).toBe(false);
+  });
+});

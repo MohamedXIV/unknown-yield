@@ -1,3 +1,4 @@
+import { beltArms } from "./junctions";
 import type { Content } from "@site/content";
 import { contains, key, next, socket } from "./geometry";
 import { status, type TransportMoveEvent } from "./production";
@@ -85,6 +86,12 @@ function topologySignature(state: Save, factory: Factory) {
       direction: belt.direction,
       alternate: belt.alternate,
       switched: belt.switched,
+      junction: belt.junction
+        ? {
+            definitionId: belt.junction.definitionId,
+            branch: belt.junction.branch,
+          }
+        : null,
     }));
   const ports = [...factory.ports]
     .sort((a, b) => key(a).localeCompare(key(b)))
@@ -124,21 +131,12 @@ function machineRuntime(content: Content, state: Save, id: string) {
 // backlog is being consumed. Include only the logistics component actually
 // connected to this factory's ports so certification waits for the observed
 // boundary environment to repeat too, without coupling unrelated site lines.
-function connectedRuntime(
-  content: Content,
-  state: Save,
-  factory: Factory,
-) {
+function connectedRuntime(content: Content, state: Save, factory: Factory) {
   const incoming = new Map<string, string[]>(),
-    owners = new Map<
-      string,
-      { kind: "machine" | "storage"; id: string }[]
-    >();
+    owners = new Map<string, { kind: "machine" | "storage"; id: string }[]>();
 
-  const exitDirection = (belt: (typeof state.belts)[string]) =>
-    belt.alternate !== null && belt.switched
-      ? belt.alternate
-      : belt.direction;
+  const exits = (belt: (typeof state.belts)[string]) =>
+    beltArms(content, belt).outlets;
   const addOwner = (
     pointKey: string,
     owner: { kind: "machine" | "storage"; id: string },
@@ -149,11 +147,18 @@ function connectedRuntime(
   };
 
   for (const belt of Object.values(state.belts)) {
-    const targetKey = key(next(belt, exitDirection(belt)));
-    if (!state.belts[targetKey]) continue;
-    const list = incoming.get(targetKey) ?? [];
-    list.push(key(belt));
-    incoming.set(targetKey, list);
+    for (const direction of exits(belt)) {
+      const targetKey = key(next(belt, direction));
+      const target = state.belts[targetKey];
+      if (
+        !target ||
+        !beltArms(content, target).inlets.includes((direction + 2) % 4)
+      )
+        continue;
+      const list = incoming.get(targetKey) ?? [];
+      list.push(key(belt));
+      incoming.set(targetKey, list);
+    }
   }
 
   for (const machine of Object.values(state.machines)) {
@@ -200,10 +205,18 @@ function connectedRuntime(
     if (!belt) continue;
     seenBelts.add(pointKey);
 
-    const target = next(belt, exitDirection(belt)),
-      targetKey = key(target);
-    if (state.belts[targetKey]) queue.push(targetKey);
-    if (contains(content.site.terminal, target)) touchesTerminal = true;
+    for (const direction of exits(belt)) {
+      const target = next(belt, direction),
+        targetKey = key(target);
+      if (
+        state.belts[targetKey] &&
+        beltArms(content, state.belts[targetKey]).inlets.includes(
+          (direction + 2) % 4,
+        )
+      )
+        queue.push(targetKey);
+      if (contains(content.site.terminal, target)) touchesTerminal = true;
+    }
     for (const source of incoming.get(pointKey) ?? []) queue.push(source);
 
     for (const owner of owners.get(pointKey) ?? []) {
@@ -235,28 +248,31 @@ function connectedRuntime(
   }
 
   return {
-    belts: [...seenBelts]
-      .sort()
-      .map((pointKey) => {
-        const belt = state.belts[pointKey];
-        return {
-          x: belt.x,
-          y: belt.y,
-          cargo: belt.cargo,
-          direction: belt.direction,
-          alternate: belt.alternate,
-          switched: belt.switched,
-        };
-      }),
+    belts: [...seenBelts].sort().map((pointKey) => {
+      const belt = state.belts[pointKey];
+      return {
+        x: belt.x,
+        y: belt.y,
+        cargo: belt.cargo,
+        junctionCursor: belt.junction?.cursor ?? null,
+        direction: belt.direction,
+        alternate: belt.alternate,
+        switched: belt.switched,
+        junction: belt.junction
+          ? {
+              definitionId: belt.junction.definitionId,
+              branch: belt.junction.branch,
+            }
+          : null,
+      };
+    }),
     machines: [...seenMachines]
       .sort()
       .map((id) => machineRuntime(content, state, id)),
-    storages: [...seenStorages]
-      .sort()
-      .map((id) => ({
-        id,
-        inventory: sortedInventory(state.storages[id].inventory),
-      })),
+    storages: [...seenStorages].sort().map((id) => ({
+      id,
+      inventory: sortedInventory(state.storages[id].inventory),
+    })),
     staging: touchesTerminal ? sortedInventory(state.staging) : null,
   };
 }
@@ -281,11 +297,7 @@ function stateSignature(content: Content, state: Save, factory: Factory) {
   });
 }
 
-function rateRows(
-  inventory: Inventory,
-  cycleTicks: number,
-  tickMs: number,
-) {
+function rateRows(inventory: Inventory, cycleTicks: number, tickMs: number) {
   return Object.entries(sortedInventory(inventory)).map(
     ([materialId, units]) => ({
       materialId,
@@ -358,7 +370,9 @@ export class FactoryThroughputMonitor {
         .filter((machine) => machine.factoryId === factory.id)
         .map((machine) => status(content, state, machine));
 
-      if (statuses.some((machineStatus) => blockedStatuses.has(machineStatus))) {
+      if (
+        statuses.some((machineStatus) => blockedStatuses.has(machineStatus))
+      ) {
         tracker.stable = null;
         tracker.seen.clear();
         continue;
@@ -368,7 +382,10 @@ export class FactoryThroughputMonitor {
         tracker.stable &&
         tracker.lastBoundaryTick !== null &&
         state.tick - tracker.lastBoundaryTick >
-          Math.max(tracker.stable.cycleTicks! * 2, content.site.transportEveryTicks * 20)
+          Math.max(
+            tracker.stable.cycleTicks! * 2,
+            content.site.transportEveryTicks * 20,
+          )
       ) {
         tracker.stable = null;
         tracker.seen.clear();
@@ -399,9 +416,7 @@ export class FactoryThroughputMonitor {
           });
           current.candidateKey = candidateKey;
           current.repeats =
-            previous.candidateKey === candidateKey
-              ? previous.repeats + 1
-              : 1;
+            previous.candidateKey === candidateKey ? previous.repeats + 1 : 1;
           if (current.repeats >= 2) {
             tracker.stable = {
               state: "stable",

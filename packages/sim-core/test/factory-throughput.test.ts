@@ -1,3 +1,4 @@
+import { FactoryThroughputMonitor } from "../src/factory-throughput";
 import { describe, expect, it } from "vitest";
 import { fixture } from "@site/content";
 import {
@@ -12,7 +13,9 @@ import {
 function withGranuleHandling() {
   const sim = new Simulation(fixture),
     save = sim.serialize(),
-    reaction = fixture.reactions.find((entry) => entry.id === "heat-raw-sealed")!;
+    reaction = fixture.reactions.find(
+      (entry) => entry.id === "heat-raw-sealed",
+    )!;
   save.knowledge.push(reaction.id);
   save.evidence[
     experimentEvidenceKey(
@@ -30,7 +33,9 @@ function withGranuleHandling() {
   const loaded = sim.load(save);
   expect(loaded.ok, loaded.message).toBe(true);
   expect(
-    sim.snapshot().milestones.find((entry) => entry.id === "sealed-study-certified")
+    sim
+      .snapshot()
+      .milestones.find((entry) => entry.id === "sealed-study-certified")
       ?.completed,
   ).toBe(true);
   expect(
@@ -165,9 +170,8 @@ function makeBackloggedTerminalLine() {
 }
 
 function throughput(sim: Simulation, factoryId: string) {
-  return sim
-    .snapshot()
-    .factories.find((factory) => factory.id === factoryId)!.contract.throughput;
+  return sim.snapshot().factories.find((factory) => factory.id === factoryId)!
+    .contract.throughput;
 }
 
 function certify(sim: Simulation, factoryId: string, limit = 700) {
@@ -253,7 +257,8 @@ describe("stable factory throughput contract", () => {
     const { sim, factoryId } = makeBackloggedTerminalLine();
     const before = certify(sim, factoryId, 1600);
     expect(before.state).toBe("stable");
-    if (before.state !== "stable") throw new Error("Expected stable throughput");
+    if (before.state !== "stable")
+      throw new Error("Expected stable throughput");
     expect(before.inputs).toEqual([
       expect.objectContaining({
         materialId: "raw",
@@ -312,11 +317,74 @@ describe("stable factory throughput contract", () => {
     expect(sim.load(starved).ok).toBe(true);
     sim.step(10000);
     expect(
-      sim
-        .snapshot()
-        .machines.find((machine) => machine.id === processorId)?.status,
+      sim.snapshot().machines.find((machine) => machine.id === processorId)
+        ?.status,
     ).toBe("needs-fuel");
     expect(throughput(sim, factoryId).state).toBe("measuring");
     expect(auditLedger(fixture, sim.serialize()).ok).toBe(true);
   });
+});
+
+describe("T logistics throughput", () => {
+  it("certifies extraction/transformation through split and merge and restores identically", () => {
+    const { sim, factoryId } = makeLine();
+    build(sim, {
+      type: "placeBelts",
+      points: [
+        { x: 30, y: 28 },
+        { x: 31, y: 28 },
+        { x: 32, y: 28 },
+      ],
+      direction: 3,
+    });
+    for (const [x, definitionId] of [
+      [30, "splitter"],
+      [32, "merger"],
+    ] as const) {
+      const belt = sim.snapshot().belts.find((b) => b.x === x && b.y === 27)!;
+      build(sim, {
+        type: "configureJunction",
+        beltId: belt.id,
+        definitionId,
+        direction: 0,
+        branch: 1,
+      });
+    }
+    const before = certify(sim, factoryId, 1500);
+    stable(before);
+    expect(before.outputs[0].units).toBe(before.inputs[0].units * 3);
+    expect(auditLedger(fixture, sim.serialize()).ok).toBe(true);
+    const restored = new Simulation(fixture);
+    expect(restored.load(sim.serialize()).ok).toBe(true);
+    expect(certify(restored, factoryId, 1500)).toEqual(before);
+    expect(auditLedger(fixture, restored.serialize()).ok).toBe(true);
+  });
+});
+
+it("does not mistake a changed T cursor for the same throughput cycle state", () => {
+  const { sim, factoryId } = makeLine();
+  const state = sim.serialize();
+  const belt = state.belts["30,27"];
+  belt.junction = { definitionId: "splitter", branch: 1, cursor: 0 };
+  const monitor = new FactoryThroughputMonitor();
+  for (let i = 0; i < 5; i++) {
+    state.tick = i;
+    belt.junction.cursor = (i % 2) as 0 | 1;
+    monitor.recordMove(state, {
+      from: { x: 24, y: 27 },
+      direction: 0,
+      material: "ferrite",
+    });
+    monitor.recordMove(state, {
+      from: { x: 33, y: 27 },
+      direction: 0,
+      material: "plates",
+    });
+    monitor.observe(fixture, state);
+    if (i < 4) expect(monitor.view(factoryId).state).toBe("measuring");
+  }
+  expect(monitor.view(factoryId).cycleTicks).toBe(2);
+  belt.junction.branch = -1;
+  monitor.observe(fixture, state);
+  expect(monitor.view(factoryId).state).toBe("measuring");
 });

@@ -4,6 +4,7 @@ import { I18nextProvider, useTranslation } from "react-i18next";
 import { i18n } from "../game/i18n";
 import { machineStatusLabel } from "../game/machine-status";
 import { factoryContractPresentation } from "../game/factory-presentation";
+import { beltArms } from "@site/sim-core";
 import type {
   GameCommand,
   CommandResult,
@@ -75,7 +76,8 @@ const descriptions: Record<Tool, string> = {
   crusher: "Place inside a factory. Cyan is input; gold is output.",
   furnace: "Place inside a factory.",
   "sealed-furnace": "Place inside a factory.",
-  "oversealed-furnace": "Place inside a factory. This setup is intentionally experimental.",
+  "oversealed-furnace":
+    "Place inside a factory. This setup is intentionally experimental.",
   depot:
     "Place on clear ground. Belts move any material in and out until full.",
   belt: "Drag a ground path. Release to build. Click for one cell; R changes its direction.",
@@ -138,9 +140,7 @@ function GameClientInner() {
   const act = (cmd: GameCommand) => {
     const result = session.command(cmd);
     setNotice(
-      result.messageKey
-        ? { ...result, message: t(result.messageKey) }
-        : result,
+      result.messageKey ? { ...result, message: t(result.messageKey) } : result,
     );
     if (result.ok && cmd.type === "placeFactory" && result.id)
       setMode((m) => ({
@@ -213,9 +213,7 @@ function GameClientInner() {
       " Operation: " +
       (key ? t(key) : "heat") +
       ". Outcomes require observation.";
-    return unlock
-      ? "Unlocked by " + t(unlock.hintKey) + ". " + base
-      : base;
+    return unlock ? "Unlocked by " + t(unlock.hintKey) + ". " + base : base;
   };
   const buffer = (inv: Inventory) => (
     <div className="inventory">
@@ -236,7 +234,9 @@ function GameClientInner() {
       )}
     </div>
   );
-  const fresh = snapshot.knowledgeEntries.filter((entry) => !entry.initial).length;
+  const fresh = snapshot.knowledgeEntries.filter(
+    (entry) => !entry.initial,
+  ).length;
   const toolCost = (tool: Tool) =>
     tool === "factory"
       ? snapshot.map.factoryCellCost
@@ -521,9 +521,9 @@ function GameClientInner() {
                     {buffer(machine.output)}
                     <p className="hint">
                       Cyan arrow: incoming belt. Gold arrow: outgoing belt.
-                      Unfamiliar outcomes are recorded after processing.
-                      Buffers survive disable and save/load. Dismantling needs
-                      empty buffers: drain output through belts first.
+                      Unfamiliar outcomes are recorded after processing. Buffers
+                      survive disable and save/load. Dismantling needs empty
+                      buffers: drain output through belts first.
                     </p>
                     <button
                       className="danger"
@@ -553,7 +553,8 @@ function GameClientInner() {
                     </button>
                     <p className="hint">
                       Roof state is presentation-only. Every machine, belt,
-                      buffer and cargo slot continues in the detailed simulation.
+                      buffer and cargo slot continues in the detailed
+                      simulation.
                     </p>
                     <h3>External contract</h3>
                     {factoryPresentation && (
@@ -574,8 +575,9 @@ function GameClientInner() {
                         Input ports
                         <b>
                           {
-                            factory.ports.filter((port) => port.role === "input")
-                              .length
+                            factory.ports.filter(
+                              (port) => port.role === "input",
+                            ).length
                           }
                         </b>
                       </span>
@@ -641,7 +643,9 @@ function GameClientInner() {
                       This is a read-only view of detailed simulation. Closing
                       the roof never replaces it with aggregate execution.
                     </p>
-                    <h3>{factoryOpen ? "Diagnostic buffers" : "Observed buffers"}</h3>
+                    <h3>
+                      {factoryOpen ? "Diagnostic buffers" : "Observed buffers"}
+                    </h3>
                     {buffer(
                       snapshot.machines
                         .filter((m) => m.factoryId === factory.id)
@@ -651,7 +655,9 @@ function GameClientInner() {
                           return sum;
                         }, {}),
                     )}
-                    <h3>{factoryOpen ? "Diagnostic equipment" : "Equipment"}</h3>
+                    <h3>
+                      {factoryOpen ? "Diagnostic equipment" : "Equipment"}
+                    </h3>
                     {snapshot.machines
                       .filter((m) => m.factoryId === factory.id)
                       .map((m) => (
@@ -695,36 +701,149 @@ function GameClientInner() {
                     ) : (
                       <p className="muted">No cargo</p>
                     )}
-                    <h3>Diverter</h3>
-                    <p className="hint">
-                      {belt.alternate === null
-                        ? "No alternate exit."
-                        : "Alternate exit: " +
-                          ["east", "south", "west", "north"][belt.alternate] +
-                          (belt.switched ? " (active)." : " (standby).")}
-                    </p>
-                    <button
-                      className="secondary"
-                      onClick={() =>
-                        act({ type: "rotateDivert", beltId: belt.id })
-                      }
-                    >
-                      Cycle alternate exit
-                    </button>
-                    <button
-                      className="secondary"
-                      disabled={belt.alternate === null}
-                      onClick={() =>
-                        act({ type: "switchDivert", beltId: belt.id })
-                      }
-                    >
-                      {belt.switched ? "Restore main exit" : "Switch exit"}
-                    </button>
+                    {!belt.junction && (
+                      <>
+                        <h3>Diverter</h3>
+                        <p className="hint">
+                          {belt.alternate === null
+                            ? "No alternate exit."
+                            : "Alternate exit: " +
+                              ["east", "south", "west", "north"][
+                                belt.alternate
+                              ] +
+                              (belt.switched ? " (active)." : " (standby).")}
+                        </p>
+                        <button
+                          className="secondary"
+                          onClick={() =>
+                            act({ type: "rotateDivert", beltId: belt.id })
+                          }
+                        >
+                          Cycle alternate exit
+                        </button>
+                        <button
+                          className="secondary"
+                          disabled={belt.alternate === null}
+                          onClick={() =>
+                            act({ type: "switchDivert", beltId: belt.id })
+                          }
+                        >
+                          {belt.switched ? "Restore main exit" : "Switch exit"}
+                        </button>
+                      </>
+                    )}
+                    <h3>
+                      {belt.junction
+                        ? t(
+                            snapshot.junctionDefinitions.find(
+                              (d) => d.id === belt.junction!.definitionId,
+                            )?.nameKey ?? "ui.junction.upgrade",
+                          )
+                        : t("ui.junction.upgrade")}
+                    </h3>
+                    <p className="hint">{t("ui.junction.rule")}</p>
+                    {snapshot.junctionDefinitions
+                      .filter((d) => d.id !== belt.junction?.definitionId)
+                      .map((d) => (
+                        <button
+                          className="secondary"
+                          key={d.id}
+                          onClick={() =>
+                            act({
+                              type: "configureJunction",
+                              beltId: belt.id,
+                              definitionId: d.id,
+                              direction: belt.direction,
+                              branch: belt.junction?.branch ?? 1,
+                            })
+                          }
+                        >
+                          {t(d.nameKey)} ·{" "}
+                          {t("ui.junction.cost-label", {
+                            cost:
+                              d.cost -
+                              (snapshot.junctionDefinitions.find(
+                                (old) => old.id === belt.junction?.definitionId,
+                              )?.cost ?? 0),
+                          })}
+                        </button>
+                      ))}
+                    {belt.junction && (
+                      <>
+                        <p className="hint">
+                          {t("ui.junction.preferred")}:{" "}
+                          {t(
+                            "ui.direction." +
+                              ["east", "south", "west", "north"][
+                                (snapshot.junctionDefinitions.find(
+                                  (d) => d.id === belt.junction!.definitionId,
+                                )?.kind === "merger"
+                                  ? beltArms(
+                                      {
+                                        junctions: snapshot.junctionDefinitions,
+                                      },
+                                      belt,
+                                    ).inlets
+                                  : beltArms(
+                                      {
+                                        junctions: snapshot.junctionDefinitions,
+                                      },
+                                      belt,
+                                    ).outlets)[belt.junction.cursor]
+                              ],
+                          )}
+                        </p>
+                        <button
+                          className="secondary"
+                          onClick={() =>
+                            act({
+                              type: "configureJunction",
+                              beltId: belt.id,
+                              definitionId: belt.junction!.definitionId,
+                              direction: (belt.direction + 1) % 4,
+                              branch: belt.junction!.branch,
+                            })
+                          }
+                        >
+                          {t("ui.junction.rotate")}
+                        </button>
+                        <button
+                          className="secondary"
+                          onClick={() =>
+                            act({
+                              type: "configureJunction",
+                              beltId: belt.id,
+                              definitionId: belt.junction!.definitionId,
+                              direction: belt.direction,
+                              branch: belt.junction!.branch === 1 ? -1 : 1,
+                            })
+                          }
+                        >
+                          {t("ui.junction.mirror")}
+                        </button>
+                        <button
+                          className="secondary"
+                          onClick={() =>
+                            act({
+                              type: "configureJunction",
+                              beltId: belt.id,
+                              definitionId: null,
+                              direction: belt.direction,
+                              branch: 1,
+                            })
+                          }
+                        >
+                          {t("ui.junction.remove")}
+                        </button>
+                      </>
+                    )}
                     <button
                       className="danger"
                       onClick={() => act({ type: "dismantle", id: belt.id })}
                     >
-                      Reclaim belt & cargo
+                      {belt.junction
+                        ? t("ui.junction.reclaim")
+                        : "Reclaim belt & cargo"}
                     </button>
                   </>
                 )}
@@ -759,9 +878,7 @@ function GameClientInner() {
                     </p>
                     <button
                       className="danger"
-                      onClick={() =>
-                        act({ type: "dismantle", id: storage.id })
-                      }
+                      onClick={() => act({ type: "dismantle", id: storage.id })}
                     >
                       Dismantle empty storage
                     </button>
@@ -883,9 +1000,7 @@ function GameClientInner() {
                   </article>
                 ))}
                 <h3>{t("ui.terminal.opportunities.heading")}</h3>
-                <p className="hint">
-                  {t("ui.terminal.opportunities.hint")}
-                </p>
+                <p className="hint">{t("ui.terminal.opportunities.hint")}</p>
                 {snapshot.opportunities.length ? (
                   snapshot.opportunities.map((opportunity) => {
                     const operation =
@@ -927,20 +1042,21 @@ function GameClientInner() {
                                     setup: t(opportunity.setupNameKey),
                                   },
                                 )
-                              : t("ui.terminal.opportunity.directive-progress", {
-                                  material: materialName(
-                                    opportunity.inputMaterialId,
-                                  ),
-                                  operation: operationName,
-                                })}
+                              : t(
+                                  "ui.terminal.opportunity.directive-progress",
+                                  {
+                                    material: materialName(
+                                      opportunity.inputMaterialId,
+                                    ),
+                                    operation: operationName,
+                                  },
+                                )}
                         </span>
                       </article>
                     );
                   })
                 ) : (
-                  <p className="hint">
-                    {t("ui.terminal.opportunities.empty")}
-                  </p>
+                  <p className="hint">{t("ui.terminal.opportunities.empty")}</p>
                 )}
                 <h3>Terminal staging & policies</h3>
                 <p className="hint">
@@ -967,7 +1083,9 @@ function GameClientInner() {
                             ? "· " +
                               exchangeFor(m.id)!.compensationPerUnit +
                               " fuel/unit · " +
-                              Math.round(exchangeFor(m.id)!.saturationBps / 100) +
+                              Math.round(
+                                exchangeFor(m.id)!.saturationBps / 100,
+                              ) +
                               "% saturated"
                             : ""}
                           {exchangeFor(m.id)?.handling

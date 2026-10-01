@@ -203,3 +203,56 @@ describe("factory blueprint serialization", () => {
     );
   });
 });
+
+describe("junction blueprint version boundary", () => {
+  it("round-trips T topology in v2 while excluding fairness and cargo", () => {
+    const { state, factoryId } = makeFactory(24, 22);
+    const sim = new Simulation(fixture);
+    expect(sim.load(state).ok).toBe(true);
+    const belt = state.belts["25,27"];
+    expect(
+      sim.command({
+        type: "configureJunction",
+        beltId: belt.id,
+        definitionId: "splitter",
+        direction: 0,
+        branch: -1,
+      }).ok,
+    ).toBe(true);
+    const save = sim.serialize();
+    const text = serializeFactoryBlueprint(fixture, save, factoryId);
+    const bp = parseFactoryBlueprint(fixture, text);
+    expect(bp.schemaVersion).toBe(2);
+    expect(bp.belts.find((b) => b.x === 1 && b.y === 5)?.junction).toEqual({
+      definitionId: "splitter",
+      branch: -1,
+    });
+    save.belts["25,27"].junction!.cursor = 1;
+    save.belts["25,27"].cargo = "plates";
+    expect(serializeFactoryBlueprint(fixture, save, factoryId)).toBe(text);
+    const legacy = parseFactoryBlueprint(
+      fixture,
+      serializeFactoryBlueprint(fixture, state, factoryId),
+    );
+    expect(legacy.schemaVersion).toBe(1);
+    for (const junction of [
+      { definitionId: "missing", branch: 1 },
+      { definitionId: "splitter", branch: 0 },
+      { definitionId: "splitter", branch: 1, cursor: 0 },
+    ]) {
+      const bad = structuredClone(bp);
+      bad.belts.find((b) => b.x === 1 && b.y === 5)!.junction =
+        junction as (typeof bp.belts)[number]["junction"];
+      expect(() => parseFactoryBlueprint(fixture, bad)).toThrow();
+    }
+    const wall = structuredClone(bp);
+    wall.belts.find((b) => b.x === 0 && b.y === 5)!.junction = {
+      definitionId: "splitter",
+      branch: 1,
+    };
+    expect(() => parseFactoryBlueprint(fixture, wall)).toThrow();
+    expect(() =>
+      parseFactoryBlueprint(fixture, { ...bp, schemaVersion: 1 }),
+    ).toThrow();
+  });
+});

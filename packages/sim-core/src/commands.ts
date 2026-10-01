@@ -3,10 +3,7 @@ import type { Content } from "@site/content";
 import { amount, change, total, type Save, type CommandResult } from "./types";
 import { machineUnlocked } from "./progression";
 import { exchangeDefinition } from "./market";
-import {
-  applyAssistance,
-  assistanceEligibility,
-} from "./assistance";
+import { applyAssistance, assistanceEligibility } from "./assistance";
 import {
   factoryError,
   machinePlacement,
@@ -49,6 +46,13 @@ const schema = z.discriminatedUnion("type", [
     type: z.literal("placeBelts"),
     points: z.array(z.object(point)).min(1).max(4800),
     direction,
+  }),
+  z.object({
+    type: z.literal("configureJunction"),
+    beltId: z.string(),
+    definitionId: z.string().nullable(),
+    direction,
+    branch: z.union([z.literal(1), z.literal(-1)]),
   }),
   z.object({ type: z.literal("rotateDivert"), beltId: z.string() }),
   z.object({ type: z.literal("switchDivert"), beltId: z.string() }),
@@ -210,9 +214,47 @@ export function applyCommand(
         };
       return ok("Belt path built", cost);
     }
+    case "configureJunction": {
+      const b = Object.values(s.belts).find((b) => b.id === cmd.beltId);
+      if (!b) return fail("Unknown belt");
+      const reject = (name: string) => ({
+        ...fail(name),
+        messageKey: "ui.junction." + name,
+      });
+      if (b.cargo) return reject("loaded");
+      if (Object.values(s.factories).some((f) => wall(f, b)))
+        return reject("wall");
+      const def =
+        cmd.definitionId === null
+          ? null
+          : c.junctions.find((d) => d.id === cmd.definitionId);
+      if (cmd.definitionId !== null && !def) return reject("unknown");
+      const old = c.junctions.find((d) => d.id === b.junction?.definitionId);
+      const cost = (def?.cost ?? 0) - (old?.cost ?? 0);
+      if (cost > 0 && !affordable(cost)) return reject("cost");
+      if (apply) {
+        pay(cost);
+        const cursor = old?.id === def?.id ? (b.junction?.cursor ?? 0) : 0;
+        b.junction = def
+          ? { definitionId: def.id, branch: cmd.branch, cursor }
+          : null;
+        b.direction = cmd.direction;
+        b.alternate = null;
+        b.switched = false;
+      }
+      return {
+        ...ok("Junction updated", cost),
+        messageKey: "ui.junction.updated",
+      };
+    }
     case "rotateDivert": {
       const belt = Object.values(s.belts).find((b) => b.id === cmd.beltId);
       if (!belt) return fail("Unknown belt");
+      if (belt.junction)
+        return {
+          ...fail("Use junction configuration"),
+          messageKey: "ui.junction.manual",
+        };
       // A wall/port belt may only ever exit through its matching port
       // direction; an alternate could reverse or bypass that one-way rule.
       if (Object.values(s.factories).some((f) => wall(f, belt)))
@@ -234,7 +276,8 @@ export function applyCommand(
     case "switchDivert": {
       const belt = Object.values(s.belts).find((b) => b.id === cmd.beltId);
       if (!belt) return fail("Unknown belt");
-      if (belt.alternate === null) return fail("No alternate exit to switch to");
+      if (belt.alternate === null)
+        return fail("No alternate exit to switch to");
       const next = !belt.switched;
       if (apply) belt.switched = next;
       return ok(next ? "Flow switched" : "Flow restored");
@@ -354,11 +397,22 @@ export function applyCommand(
         // return to the build reserve, but dismantling must not teleport
         // other cargo across the map, so a loaded belt stays until its cargo
         // moves on. Nothing is deleted.
+        if (belt.junction && belt.cargo)
+          return {
+            ...fail("Empty junction first"),
+            messageKey: "ui.junction.loaded",
+          };
         if (belt.cargo && belt.cargo !== c.site.buildMaterial)
           return fail("Route the cargo out first");
         if (apply) {
           if (belt.cargo) change(s.stock, belt.cargo, 1);
-          change(s.stock, c.site.buildMaterial, c.site.beltCost);
+          change(
+            s.stock,
+            c.site.buildMaterial,
+            c.site.beltCost +
+              (c.junctions.find((d) => d.id === belt.junction?.definitionId)
+                ?.cost ?? 0),
+          );
           delete s.belts[key(belt)];
         }
         return ok("Belt and cargo reclaimed");

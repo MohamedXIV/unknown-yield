@@ -1,10 +1,6 @@
 export { Simulation } from "./simulation";
 export { collectLedger, auditLedger } from "./ledger";
-export type {
-  LedgerRow,
-  LedgerSnapshot,
-  LedgerReport,
-} from "./ledger";
+export type { LedgerRow, LedgerSnapshot, LedgerReport } from "./ledger";
 export {
   socket,
   footprint,
@@ -101,3 +97,5 @@ export {
   recordNetExportRecovery,
   recordObligationRepayment,
 } from "./assistance";
+
+export { beltArms } from "./junctions";
