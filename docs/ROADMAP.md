@@ -199,9 +199,9 @@ A player who collapses basic fuel production can recover through the designed as
 
 ## Phase 6 — Logistics depth
 
-**Epic:** #80 — readable belts and controlled ground junctions. **Design documented; implementation pending.**
+**Epic:** #80 — readable belts and controlled ground junctions. **ACTIVE:** #81 accepted through PR #86; #82–#84 pending.
 
-**Execution:** #81 → #82 → #83 → #84. First unblocked issue: #81.
+**Execution:** #81 ✓ → #82 → #83 → #84. First unblocked issue: #82. #81 evidence: [PHASE6_BELT_ACCEPTANCE.md](PHASE6_BELT_ACCEPTANCE.md).
 
 ### Question
 
@@ -290,4 +290,4 @@ The following should not be treated as progress during foundation unless require
 
 The accepted implementation and evidence are summarized in [FIRST_PLAYABLE.md](FIRST_PLAYABLE.md) and [BROWSER_SMOKE.md](BROWSER_SMOKE.md). Continue from this foundation; do not rebuild the retired dashboard prototype.
 
-Phase 1.5 is complete through Issue #8 / PR #29, Phase 2 through Issue #34 / PR #44, Phase 3 through Issue #50, Phase 4 through Issue #63 / PR #67, and Phase 5 through Issue #73 / PR #79 (`dcbe1a567cc26ab150f13e159d35bf50030ee570`). Phase 6 / #80 is documented and decomposed into #81–#84; implementation is pending and #81 is first.
+Phase 1.5 is complete through Issue #8 / PR #29, Phase 2 through Issue #34 / PR #44, Phase 3 through Issue #50, Phase 4 through Issue #63 / PR #67, and Phase 5 through Issue #73 / PR #79 (`dcbe1a567cc26ab150f13e159d35bf50030ee570`). Phase 6 / #80 is active: #81 accepted through PR #86; #82 is next, followed by #83 and #84.

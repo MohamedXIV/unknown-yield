@@ -1,6 +1,6 @@
 # Game Design
 
-**Planned Phase 6 routing:** [PHASE6_JUNCTIONS.md](PHASE6_JUNCTIONS.md) records the approved ground-belt scope: truthful L/manual-diverter visuals, directed T splitting/merging and a controlled `+` crossing with independent routes. This develops readable spatial industry before underground transport; the features are not yet implemented. D-033 and live Issue #2 define scope and order.
+**Phase 6 routing:** [PHASE6_JUNCTIONS.md](PHASE6_JUNCTIONS.md) records the approved ground-belt scope: truthful L/manual-diverter visuals, directed T splitting/merging and a controlled `+` crossing with independent routes. #81 visuals are accepted through PR #86; T/crossing implementation remains pending. This develops readable spatial industry before underground transport. D-033 and live Issue #2 define scope and order.
 
 ## 1. High concept
 
