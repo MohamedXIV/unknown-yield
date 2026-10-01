@@ -58,6 +58,16 @@ export function validateLocaleCoverage(
 export const enCatalog: LocaleCatalog = {
   "junction.splitter.name": "T splitter",
   "junction.merger.name": "T merger",
+  "junction.crossing.name": "Controlled crossing",
+  "ui.crossing.rule":
+    "One shared slot. Each stream keeps its opposite outlet; a pending signal waits for clearance.",
+  "ui.crossing.horizontal": "Horizontal",
+  "ui.crossing.vertical": "Vertical",
+  "ui.crossing.signal": "Admission: {{axis}} · {{steps}} transport steps left",
+  "ui.crossing.pending": "Waiting to open {{axis}} after the center clears",
+  "ui.crossing.held": "Held route: {{axis}} → {{direction}}",
+  "ui.crossing.rotate": "Rotate crossing",
+  "ui.crossing.remove": "Remove crossing upgrade",
   "ui.junction.loaded": "Empty the junction through belts first",
   "ui.junction.unknown": "Unknown junction definition",
   "ui.junction.wall": "Junctions cannot occupy factory walls or ports",

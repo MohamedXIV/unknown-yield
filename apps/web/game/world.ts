@@ -417,6 +417,13 @@ export function createWorld(
                 cy + dy * Y * 0.3,
                 5,
               );
+            if (view.closedInlets?.includes(side))
+              g.lineStyle(3, 0xe5d198).lineBetween(
+                cx + dx * X * 0.3 - dy * 5,
+                cy + dy * Y * 0.3 + dx * 5,
+                cx + dx * X * 0.3 + dy * 5,
+                cy + dy * Y * 0.3 - dx * 5,
+              );
             if (view.disconnectedInlets?.includes(side))
               g.lineStyle(2, 0xc49670).lineBetween(
                 cx + dx * (X / 2 - 2) - dy * 4,
@@ -449,6 +456,8 @@ export function createWorld(
               ay - dx * 4,
             );
           }
+          if (outlet.direction === view.heldOutlet)
+            g.lineStyle(2, 0xe5d198).strokeRect(ax - 4, ay - 4, 8, 8);
           if (outlet.preferred)
             g.lineStyle(1, 0xe5d198).strokeCircle(ax, ay, 5);
           if (outlet.blocked)

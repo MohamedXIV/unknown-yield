@@ -1,8 +1,8 @@
 # Phase 6 — Readable belts and controlled junctions
 
-**Status:** #81 belt presentation accepted through PR #86 and #82 T junctions through PR #87; #83–#84 implementation pending. Recorded 2026-10-01. **Epic:** [#80](https://github.com/MohamedXIV/unknown-yield/issues/80). First-milestone evidence: [PHASE6_BELT_ACCEPTANCE.md](PHASE6_BELT_ACCEPTANCE.md).
+**Status:** #81 belt presentation accepted through PR #86 and #82 T junctions through PR #87; #83 controlled crossing implemented through PR #88; #84 review pending. Recorded 2026-10-01. **Epic:** [#80](https://github.com/MohamedXIV/unknown-yield/issues/80). First-milestone evidence: [PHASE6_BELT_ACCEPTANCE.md](PHASE6_BELT_ACCEPTANCE.md).
 
-This is the Phase 6 implementation contract. #81 implements belt presentation and #82 directed T split/merge behavior; controlled crossings remain pending. T evidence: [PHASE6_T_ACCEPTANCE.md](PHASE6_T_ACCEPTANCE.md). GitHub Issue #2 owns the live order; the linked epic and child issues own completion evidence. If code implements only part of this contract, report the gap instead of treating the code as a new design decision.
+This is the Phase 6 implementation contract. #81 implements belt presentation and #82 directed T split/merge behavior; controlled crossings are implemented by #83 / PR #88. T evidence: [PHASE6_T_ACCEPTANCE.md](PHASE6_T_ACCEPTANCE.md). Crossing evidence: [PHASE6_CROSSING_ACCEPTANCE.md](PHASE6_CROSSING_ACCEPTANCE.md). GitHub Issue #2 owns the live order; the linked epic and child issues own completion evidence. If code implements only part of this contract, report the gap instead of treating the code as a new design decision.
 
 ## Intent and scope
 
@@ -57,6 +57,14 @@ The first `+` is two independent directed routes sharing an at-grade intersectio
 - An empty/inactive axis still gets its scheduled window. Do not add demand-adaptive phase skipping implicitly.
 - A new crossing starts with the horizontal axis open for a full authored window, no pending switch and an empty center. Counters advance on transport updates only; pausing the simulation pauses the signal. Restoring a save resumes its recorded phase rather than restarting this initial state.
 - Signals and the held cargo route must be readable on the map without relying solely on color. Both streams can carry different materials without switching destinations or duplicating units.
+
+### Implemented scheduling representation (#83)
+
+Fixture definition `crossing` uses provisional cost 12 and `windowSteps: 4`. Direction plus perpendicular branch encode the two outlets; `beltArms` orders horizontal first and vertical second regardless of rotation. `junction.crossing` persists axis (0 horizontal / 1 vertical), remaining, pending axis or null, and held axis or null. The belt cargo slot is the only buffer; crossing cursor is 0 and T junctions have no crossing state.
+
+At update start, an empty pending center opens the requested axis with the full authored count. Plan admissions and dispatches against previous occupancy. At update end decrement the window and request the other axis at zero. A four-step window admits on four updates: expiry after update 4 opens on update 5 if the center starts empty. If update 5 dispatches held cargo, opening waits for update 6. Pending windows stay at zero. Held cargo cannot belong to a different phase because switching requires an empty center.
+
+Empty rotation/mirroring of the same definition preserves scheduling. Changing definition starts its own initial full horizontal window. Save schema 13 migrates 12 without changing T state. Generic blueprint v2 topology already carries crossings; runtime scheduling stays outside it. Internal and connected throughput fingerprints include crossing state. Map inlet gates and marked held outlets distinguish closed admissions from residual dispatch.
 
 ## Shared architecture, content and persistence
 

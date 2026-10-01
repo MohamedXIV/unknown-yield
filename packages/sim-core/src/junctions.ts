@@ -11,6 +11,11 @@ export function beltArms(c: Pick<Content, "junctions">, b: Belt) {
     return { inlets: [back], outlets: [b.direction, side], kind };
   if (kind === "merger")
     return { inlets: [back, side], outlets: [b.direction], kind };
+  if (kind === "crossing") {
+    const outlets =
+      b.direction % 2 === 0 ? [b.direction, side] : [side, b.direction];
+    return { inlets: outlets.map((d) => (d + 2) % 4), outlets, kind };
+  }
   return {
     inlets: [0, 1, 2, 3],
     outlets: [b.alternate !== null && b.switched ? b.alternate : b.direction],

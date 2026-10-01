@@ -741,7 +741,13 @@ function GameClientInner() {
                           )
                         : t("ui.junction.upgrade")}
                     </h3>
-                    <p className="hint">{t("ui.junction.rule")}</p>
+                    <p className="hint">
+                      {t(
+                        belt.junction?.crossing
+                          ? "ui.crossing.rule"
+                          : "ui.junction.rule",
+                      )}
+                    </p>
                     {snapshot.junctionDefinitions
                       .filter((d) => d.id !== belt.junction?.definitionId)
                       .map((d) => (
@@ -770,29 +776,80 @@ function GameClientInner() {
                       ))}
                     {belt.junction && (
                       <>
-                        <p className="hint">
-                          {t("ui.junction.preferred")}:{" "}
-                          {t(
-                            "ui.direction." +
-                              ["east", "south", "west", "north"][
-                                (snapshot.junctionDefinitions.find(
-                                  (d) => d.id === belt.junction!.definitionId,
-                                )?.kind === "merger"
-                                  ? beltArms(
-                                      {
-                                        junctions: snapshot.junctionDefinitions,
-                                      },
-                                      belt,
-                                    ).inlets
-                                  : beltArms(
-                                      {
-                                        junctions: snapshot.junctionDefinitions,
-                                      },
-                                      belt,
-                                    ).outlets)[belt.junction.cursor]
-                              ],
-                          )}
-                        </p>
+                        {belt.junction.crossing ? (
+                          <>
+                            <p className="hint">
+                              {t("ui.crossing.signal", {
+                                axis: t(
+                                  belt.junction.crossing.axis === 0
+                                    ? "ui.crossing.horizontal"
+                                    : "ui.crossing.vertical",
+                                ),
+                                steps: belt.junction.crossing.remaining,
+                              })}
+                            </p>
+                            {belt.junction.crossing.pending !== null && (
+                              <p className="hint">
+                                {t("ui.crossing.pending", {
+                                  axis: t(
+                                    belt.junction.crossing.pending === 0
+                                      ? "ui.crossing.horizontal"
+                                      : "ui.crossing.vertical",
+                                  ),
+                                })}
+                              </p>
+                            )}
+                            {belt.junction.crossing.held !== null && (
+                              <p className="hint">
+                                {t("ui.crossing.held", {
+                                  axis: t(
+                                    belt.junction.crossing.held === 0
+                                      ? "ui.crossing.horizontal"
+                                      : "ui.crossing.vertical",
+                                  ),
+                                  direction: t(
+                                    "ui.direction." +
+                                      ["east", "south", "west", "north"][
+                                        beltArms(
+                                          {
+                                            junctions:
+                                              snapshot.junctionDefinitions,
+                                          },
+                                          belt,
+                                        ).outlets[belt.junction.crossing.held]
+                                      ],
+                                  ),
+                                })}
+                              </p>
+                            )}
+                          </>
+                        ) : (
+                          <p className="hint">
+                            {t("ui.junction.preferred")}:{" "}
+                            {t(
+                              "ui.direction." +
+                                ["east", "south", "west", "north"][
+                                  (snapshot.junctionDefinitions.find(
+                                    (d) => d.id === belt.junction!.definitionId,
+                                  )?.kind === "merger"
+                                    ? beltArms(
+                                        {
+                                          junctions:
+                                            snapshot.junctionDefinitions,
+                                        },
+                                        belt,
+                                      ).inlets
+                                    : beltArms(
+                                        {
+                                          junctions:
+                                            snapshot.junctionDefinitions,
+                                        },
+                                        belt,
+                                      ).outlets)[belt.junction.cursor]
+                                ],
+                            )}
+                          </p>
+                        )}
                         <button
                           className="secondary"
                           onClick={() =>
@@ -805,7 +862,11 @@ function GameClientInner() {
                             })
                           }
                         >
-                          {t("ui.junction.rotate")}
+                          {t(
+                            belt.junction.crossing
+                              ? "ui.crossing.rotate"
+                              : "ui.junction.rotate",
+                          )}
                         </button>
                         <button
                           className="secondary"
@@ -833,7 +894,11 @@ function GameClientInner() {
                             })
                           }
                         >
-                          {t("ui.junction.remove")}
+                          {t(
+                            belt.junction.crossing
+                              ? "ui.crossing.remove"
+                              : "ui.junction.remove",
+                          )}
                         </button>
                       </>
                     )}

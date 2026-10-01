@@ -235,8 +235,22 @@ export function applyCommand(
       if (apply) {
         pay(cost);
         const cursor = old?.id === def?.id ? (b.junction?.cursor ?? 0) : 0;
+        const crossing =
+          def?.kind === "crossing"
+            ? ((old?.id === def.id ? b.junction?.crossing : undefined) ?? {
+                axis: 0 as const,
+                remaining: def.windowSteps!,
+                pending: null,
+                held: null,
+              })
+            : undefined;
         b.junction = def
-          ? { definitionId: def.id, branch: cmd.branch, cursor }
+          ? {
+              definitionId: def.id,
+              branch: cmd.branch,
+              cursor: def.kind === "crossing" ? 0 : cursor,
+              ...(crossing ? { crossing } : {}),
+            }
           : null;
         b.direction = cmd.direction;
         b.alternate = null;

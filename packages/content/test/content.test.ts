@@ -8,6 +8,16 @@ import {
 import { createContentStore, contentFromStore } from "../src/studio";
 
 describe("content boundary", () => {
+  it("requires positive integral transport windows on crossings only", () => {
+    for (const windowSteps of [undefined, 0, -1, 1.5]) {
+      const c = structuredClone(fixture);
+      c.junctions.find((d) => d.kind === "crossing")!.windowSteps = windowSteps;
+      expect(() => validateContent(c)).toThrow();
+    }
+    const c = structuredClone(fixture);
+    c.junctions.find((d) => d.kind === "splitter")!.windowSteps = 4;
+    expect(() => validateContent(c)).toThrow();
+  });
   it("accepts the complete tiny scenario", () => {
     const c = validateContent(fixture);
     expect(c.machines).toHaveLength(5);
@@ -360,7 +370,7 @@ describe("content boundary", () => {
 describe("junction content boundary", () => {
   it("keeps legacy content additive and preserves authored junctions through Studio", () => {
     const { junctions: unused, ...legacy } = fixture;
-    expect(unused).toHaveLength(2);
+    expect(unused).toHaveLength(3);
     expect(validateContent(legacy).junctions).toEqual([]);
     expect(
       contentFromStore(createContentStore(fixture, enCatalog), fixture)
@@ -376,4 +386,15 @@ describe("junction content boundary", () => {
     ])
       expect(() => validateContent({ ...fixture, junctions })).toThrow();
   });
+});
+
+it("requires positive integral transport windows on crossings only", () => {
+  for (const windowSteps of [undefined, 0, -1, 1.5]) {
+    const c = structuredClone(fixture);
+    c.junctions.find((d) => d.kind === "crossing")!.windowSteps = windowSteps;
+    expect(() => validateContent(c)).toThrow();
+  }
+  const c = structuredClone(fixture);
+  c.junctions.find((d) => d.kind === "splitter")!.windowSteps = 4;
+  expect(() => validateContent(c)).toThrow();
 });

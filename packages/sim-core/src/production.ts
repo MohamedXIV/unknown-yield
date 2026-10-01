@@ -129,6 +129,17 @@ export function transport(
 ) {
   const belts = Object.values(s.belts).sort((a, b) => a.y - b.y || a.x - b.x);
   const occupied = new Set(belts.filter((b) => b.cargo).map(key));
+  // Clearance is observed at update start, never after a dispatch in this update.
+  for (const b of belts) {
+    const signal = b.junction?.crossing;
+    if (signal && signal.pending !== null && !b.cargo) {
+      signal.axis = signal.pending;
+      signal.pending = null;
+      signal.remaining = c.junctions.find(
+        (d) => d.id === b.junction!.definitionId,
+      )!.windowSteps!;
+    }
+  }
   type Source = {
     point: Point;
     material: string;
@@ -149,9 +160,11 @@ export function transport(
     .map((b) => {
       const arms = beltArms(c, b);
       const directions =
-        arms.kind === "splitter" && b.junction?.cursor === 1
-          ? [...arms.outlets].reverse()
-          : arms.outlets;
+        arms.kind === "crossing"
+          ? [arms.outlets[b.junction!.crossing!.held!]]
+          : arms.kind === "splitter" && b.junction?.cursor === 1
+            ? [...arms.outlets].reverse()
+            : arms.outlets;
       return { point: b, material: b.cargo!, directions, belt: b };
     });
   // Emitters participate in the same admission arbitration as incoming belts.
@@ -200,7 +213,11 @@ export function transport(
           };
     const b = s.belts[loc];
     if (b)
-      return !occupied.has(loc) && beltArms(c, b).inlets.includes(inlet)
+      return !occupied.has(loc) &&
+        beltArms(c, b).inlets.includes(inlet) &&
+        (!b.junction?.crossing ||
+          (b.junction.crossing.pending === null &&
+            inlet === beltArms(c, b).inlets[b.junction.crossing.axis]))
         ? { id: "belt:" + loc, capacity: 1, belt: b, inlet }
         : null;
     if (source.emission) return null;
@@ -302,12 +319,21 @@ export function transport(
   // Old occupancy prevents a cell receiving and dispatching in this update.
   // Clear sources before applying arrivals; every successful move has one sink.
   for (const { source } of moves) {
-    if (source.belt) source.belt.cargo = null;
-    else change(source.inventory!, source.material, -1);
+    if (source.belt) {
+      source.belt.cargo = null;
+      if (source.belt.junction?.crossing)
+        source.belt.junction.crossing.held = null;
+    } else change(source.inventory!, source.material, -1);
   }
   for (const { source, target, direction } of moves) {
-    if (target.belt) target.belt.cargo = source.material;
-    else change(target.inventory!, source.material, 1);
+    if (target.belt) {
+      target.belt.cargo = source.material;
+      if (target.belt.junction?.crossing)
+        target.belt.junction.crossing.held = beltArms(
+          c,
+          target.belt,
+        ).inlets.indexOf(target.inlet) as 0 | 1;
+    } else change(target.inventory!, source.material, 1);
     if (source.belt)
       onMove?.({
         from: { x: source.point.x, y: source.point.y },
@@ -335,6 +361,11 @@ export function transport(
       b.cargo = material;
       change(t.inventory, material, -1);
     }
+  }
+  for (const b of belts) {
+    const signal = b.junction?.crossing;
+    if (signal && signal.pending === null && --signal.remaining === 0)
+      signal.pending = (1 - signal.axis) as 0 | 1;
   }
   for (const material of c.materials) {
     const n = amount(s.staging, material.id);

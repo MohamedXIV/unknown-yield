@@ -202,3 +202,43 @@ describe("T snapshot presentation", () => {
     expect(beltPresentations(s).get("19,20")!.outlets[0].connected).toBe(false);
   });
 });
+
+it("shows closed admission gates and held outlet independently of pending signal", () => {
+  const center = belt(20, 20, 0);
+  center.junction = {
+    definitionId: "crossing",
+    branch: 1,
+    cursor: 0,
+    crossing: { axis: 0, remaining: 0, pending: 1, held: 0 },
+  };
+  center.cargo = "ferrite";
+  const blocked = { ...belt(21, 20, 0), cargo: "ferrite" };
+  const s = world([
+      center,
+      blocked,
+      belt(20, 19, 1),
+      belt(19, 20, 0),
+      belt(20, 21, 1),
+    ]),
+    before = structuredClone(s);
+  const p = beltPresentations(s).get(center.id)!;
+  expect(p.closedInlets).toEqual([2, 3]);
+  expect(p.heldOutlet).toBe(0);
+  expect(p.outlets[0]).toMatchObject({
+    direction: 0,
+    active: true,
+    blocked: true,
+  });
+  expect(p.outlets[1]).toMatchObject({ direction: 1, active: false });
+  expect(s).toEqual(before);
+  center.cargo = null;
+  center.junction.crossing = {
+    axis: 1,
+    remaining: 4,
+    pending: null,
+    held: null,
+  };
+  expect(
+    beltPresentations(world([center])).get(center.id)!.closedInlets,
+  ).toEqual([2]);
+});

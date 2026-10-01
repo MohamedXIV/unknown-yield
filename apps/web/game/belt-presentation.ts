@@ -9,7 +9,9 @@ import {
 
 export type BeltPresentation = {
   inlets: number[];
-  junction?: "splitter" | "merger";
+  junction?: "splitter" | "merger" | "crossing";
+  closedInlets?: number[];
+  heldOutlet?: number;
   preferredInlet?: number;
   disconnectedInlets?: number[];
   outlets: {
@@ -96,6 +98,19 @@ export function beltPresentations(
       ...(arms.kind
         ? {
             junction: arms.kind,
+            ...(belt.junction?.crossing
+              ? {
+                  closedInlets: arms.inlets.filter(
+                    (_, axis) =>
+                      belt.junction!.crossing!.pending !== null ||
+                      axis !== belt.junction!.crossing!.axis,
+                  ),
+                  heldOutlet:
+                    belt.junction.crossing.held === null
+                      ? undefined
+                      : arms.outlets[belt.junction.crossing.held],
+                }
+              : {}),
             preferredInlet:
               arms.kind === "merger"
                 ? arms.inlets[belt.junction!.cursor]
@@ -108,7 +123,14 @@ export function beltPresentations(
           target = { x: belt.x + v.x, y: belt.y + v.y };
         return {
           direction,
-          active: arms.kind ? true : direction === active,
+          active: belt.junction?.crossing
+            ? direction ===
+              arms.outlets[
+                belt.junction.crossing.held ?? belt.junction.crossing.axis
+              ]
+            : arms.kind
+              ? true
+              : direction === active,
           ...(arms.kind
             ? {
                 preferred:
