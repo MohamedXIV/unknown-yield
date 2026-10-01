@@ -1,14 +1,14 @@
 # Content Model
 
-## Implemented content contract (2026-09-26)
+## Implemented content contract (2026-10-01)
 
-**Planned Phase 6 extension:** [PHASE6_JUNCTIONS.md](PHASE6_JUNCTIONS.md) defines junction kinds with stable identity, authored costs and crossing-window intervals measured in transport steps, plus localized player text. Fairness cursors, phase counters and held cargo routes are runtime/save state, not authored recipe truth. The extension must define and test content compatibility explicitly; this documentation does not change current content or save versions and does not expand Content Studio v1.
+**Phase 6 T extension (#82 / PR #87):** optional `junctions` definitions default to `[]` in legacy content. Each has a stable `id`, `kind` (`splitter`/`merger`), `nameKey` and positive `cost`. Fixture costs are provisional. Runtime `Belt.junction` stores definition ID, perpendicular branch side (-1/1) and fairness cursor (0/1); its single belt cargo slot remains the physical buffer. Save schema 12 migrates schemas 4–11 without auto-converting old belts. Blueprint v2 carries topology only; v1 remains valid for old layouts. Studio preserves this table as base content. [PHASE6_T_ACCEPTANCE.md](PHASE6_T_ACCEPTANCE.md) records exact evidence. Crossing intervals/phase/held-route state remain planned for #83 under [PHASE6_JUNCTIONS.md](PHASE6_JUNCTIONS.md).
 
 The current Zod contract lives in `packages/content/src/schema.ts`. It separates machine definitions (footprint, operations, buffers, fuel, duration and build cost) from placed runtime instances. Materials, operations, reactions, authored site/deposits, terminal bounds, factory limits, belt/port costs and fuel assistance are editable data.
 
 The starter fixture contains a known construction chain plus hidden outcomes of the same alien input. A crusher accepts different physical inputs; recipes are not baked into the renderer. `known` marks initial knowledge only. Runtime observations unlock public material metadata and notebook entries; authored truth never goes straight to player UI.
 
-Content version `world-01-v6` is independent of save schema 11. Phase 5 #69 moves export compensation out of per-material static values into data-driven Materials Exchange definitions plus persisted runtime market memory (demand/saturation). Phase 5 #70 adds authored Corporate Orders and Special Directives plus persisted opportunity history additively; existing `world-01-v6` content without those arrays validates them as empty. Since Issue #14 the schema carries localization keys (`nameKey`, `observationKey`) instead of literal English `name`/`observation` strings; the English catalog lives in `packages/content/src/locale.ts` and is validated by Zod plus semantic key-coverage checks. Issue #4 added a `storages` table (bulk storage definitions: capacity, footprint, cost) and `site.stagingCapacity` for bounded terminal staging. Phase 4 replaces the old materials-only TinyBase proof with Content Studio v1: materials, operations, machines and reactions are editable authoring tables; English source/fallback text is authored alongside their stable localization-key references; the whole bundle validates before export/import; reverse references and isolated simulation preview are development-only tools. Site/economy/storage breadth remains preserved base content in v1 rather than a generic everything-editor.
+Content version `world-01-v6` is independent of save schema 12. Phase 5 #69 moves export compensation out of per-material static values into data-driven Materials Exchange definitions plus persisted runtime market memory (demand/saturation). Phase 5 #70 adds authored Corporate Orders and Special Directives plus persisted opportunity history additively; existing `world-01-v6` content without those arrays validates them as empty. Since Issue #14 the schema carries localization keys (`nameKey`, `observationKey`) instead of literal English `name`/`observation` strings; the English catalog lives in `packages/content/src/locale.ts` and is validated by Zod plus semantic key-coverage checks. Issue #4 added a `storages` table (bulk storage definitions: capacity, footprint, cost) and `site.stagingCapacity` for bounded terminal staging. Phase 4 replaces the old materials-only TinyBase proof with Content Studio v1: materials, operations, machines and reactions are editable authoring tables; English source/fallback text is authored alongside their stable localization-key references; the whole bundle validates before export/import; reverse references and isolated simulation preview are development-only tools. Site/economy/storage breadth remains preserved base content in v1 rather than a generic everything-editor.
 
 
 ### Company opportunities (Issue #70)
@@ -189,7 +189,7 @@ Knowledge may track:
 
 ### Factory blueprint
 
-Player-authored data, not base content.
+Player-authored data, not base content. The current serializer emits schema 1 for layouts without junctions and schema 2 for internal T topology, and validates both explicitly. Schema 2 belt rows include nullable `{ definitionId, branch }`; cargo, fairness cursors and company state are runtime data and are rejected from blueprint junction rows.
 
 Stores:
 

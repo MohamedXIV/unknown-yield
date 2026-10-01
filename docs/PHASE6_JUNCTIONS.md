@@ -1,8 +1,8 @@
 # Phase 6 — Readable belts and controlled junctions
 
-**Status:** #81 belt presentation accepted through PR #86; #82–#84 implementation pending. Recorded 2026-10-01. **Epic:** [#80](https://github.com/MohamedXIV/unknown-yield/issues/80). First-milestone evidence: [PHASE6_BELT_ACCEPTANCE.md](PHASE6_BELT_ACCEPTANCE.md).
+**Status:** #81 belt presentation accepted through PR #86 and #82 T junctions through PR #87; #83–#84 implementation pending. Recorded 2026-10-01. **Epic:** [#80](https://github.com/MohamedXIV/unknown-yield/issues/80). First-milestone evidence: [PHASE6_BELT_ACCEPTANCE.md](PHASE6_BELT_ACCEPTANCE.md).
 
-This is the Phase 6 implementation contract. #81 implements its presentation milestone only; automatic T junctions and controlled crossings do not yet exist. GitHub Issue #2 owns the live order; the linked epic and child issues own completion evidence. If code implements only part of this contract, report the gap instead of treating the code as a new design decision.
+This is the Phase 6 implementation contract. #81 implements belt presentation and #82 directed T split/merge behavior; controlled crossings remain pending. T evidence: [PHASE6_T_ACCEPTANCE.md](PHASE6_T_ACCEPTANCE.md). GitHub Issue #2 owns the live order; the linked epic and child issues own completion evidence. If code implements only part of this contract, report the gap instead of treating the code as a new design decision.
 
 ## Intent and scope
 
