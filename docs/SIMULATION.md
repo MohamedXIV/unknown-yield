@@ -14,7 +14,7 @@ Save schema 11 records topology, identities, inventories, cargo, jobs, discovere
 
 ### Planned junction contract (Phase 6, not implemented)
 
-[PHASE6_JUNCTIONS.md](PHASE6_JUNCTIONS.md) defines the approved target beyond the implemented spatial contract above. #81 changes L/manual-diverter presentation only. #82 adds directed T splitter/merger fairness after successful transfers. #83 adds a one-slot crossing with persisted cargo route and simulation-timed axis windows, stopping new admissions during a requested switch until the center clears. Junction state must remain physical, conserved, deterministic and included in save validation and factory throughput fingerprints. These features are pending; current row/column belt contention is not proof of fair junction behavior.
+[PHASE6_JUNCTIONS.md](PHASE6_JUNCTIONS.md) defines the approved target beyond the implemented spatial contract above. #81 implements L/manual-diverter presentation only, accepted through PR #86 without changing routing/save rules. Pending #82 adds directed T splitter/merger fairness after successful transfers. Pending #83 adds a one-slot crossing with persisted cargo route and simulation-timed axis windows, stopping new admissions during a requested switch until the center clears. Junction state must remain physical, conserved, deterministic and included in save validation and factory throughput fingerprints. Current row/column belt contention is not proof of fair junction behavior.
 
 ### Corporate assistance and recovery standing (Issue #72)
 

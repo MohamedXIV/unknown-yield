@@ -1,5 +1,7 @@
 # Browser acceptance — spatial game
 
+Phase 6 #81's accepted normal-controls path and exact implementation evidence are recorded in [PHASE6_BELT_ACCEPTANCE.md](PHASE6_BELT_ACCEPTANCE.md): L turns, live manual switching with cargo, standby/active save/load and open/closed factory wall-port presentation. This is the belt-presentation milestone only; T/crossing acceptance remains pending.
+
 Use `npm run dev` and http://127.0.0.1:3000. All gameplay actions below use the UI; do not inject simulation commands through the console.
 
 ## Phase 5 exit gate — Issue #73 — accepted / merged

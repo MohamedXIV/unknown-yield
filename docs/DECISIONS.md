@@ -461,13 +461,13 @@ The recovery path must remain independent from time-limited opportunities: an ex
 
 ## D-033 — Readable ground junctions precede underground transport
 
-**Status:** accepted direction and documented target for Phase 6 #80, 2026-10-01; implementation pending.
+**Status:** accepted direction and documented target for Phase 6 #80, 2026-10-01; #81 presentation accepted through PR #86, #82–#84 pending.
 
 The user selected visual L turns/manual-diverter paths, then T splitters/mergers, then a controlled `+` crossing before underground belts. The earlier roadmap's logistics examples are deferred possibilities, not mandatory Phase 6 systems. [PHASE6_JUNCTIONS.md](PHASE6_JUNCTIONS.md) is the detailed contract; #81 → #82 → #83 → #84 is the dependency order.
 
 L appearance follows actual inlet connections and configured outlets; active arrows must agree with simulation. Manual diverters retain their existing behavior. T splitters/mergers use successful-transfer round-robin with unavailable-arm skipping and persisted fairness. The first `+` keeps horizontal/vertical routes independent through a single physical center slot: authored simulation-step windows alternate admission, and a requested switch stops new old-axis admissions until held cargo leaves through its original outlet. A blocked crossing can hold up the other axis; that shared-capacity limitation is deliberate. No unrestricted four-way routing or wall-clock scheduling is implied by the shape.
 
-Material conservation, backpressure, migration of existing worlds, blueprint compatibility and factory throughput fingerprints are acceptance requirements. Costs/timing are validated content; fixture balance remains provisional. The runtime does not yet implement this target. Missing features or contradictory visuals must be reported as gaps; agents must not silently reinterpret partial implementation as the design or invent fallback semantics.
+Material conservation, backpressure, migration of existing worlds, blueprint compatibility and factory throughput fingerprints are acceptance requirements. Costs/timing are validated content; fixture balance remains provisional. The runtime implements only #81 visuals so far, without new simulation/save state. Missing features or contradictory visuals must be reported as gaps; agents must not silently reinterpret partial implementation as the design or invent fallback semantics.
 
 ---
 

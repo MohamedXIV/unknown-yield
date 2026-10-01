@@ -1,8 +1,8 @@
 # Phase 6 — Readable belts and controlled junctions
 
-**Status:** approved direction; implementation pending. Recorded 2026-10-01. **Epic:** [#80](https://github.com/MohamedXIV/unknown-yield/issues/80).
+**Status:** #81 belt presentation accepted through PR #86; #82–#84 implementation pending. Recorded 2026-10-01. **Epic:** [#80](https://github.com/MohamedXIV/unknown-yield/issues/80). First-milestone evidence: [PHASE6_BELT_ACCEPTANCE.md](PHASE6_BELT_ACCEPTANCE.md).
 
-This is the Phase 6 implementation contract, not a claim that junctions already exist. GitHub Issue #2 owns the live order; the linked epic and child issues own completion evidence. If code implements only part of this contract, report the gap instead of treating the code as a new design decision.
+This is the Phase 6 implementation contract. #81 implements its presentation milestone only; automatic T junctions and controlled crossings do not yet exist. GitHub Issue #2 owns the live order; the linked epic and child issues own completion evidence. If code implements only part of this contract, report the gap instead of treating the code as a new design decision.
 
 ## Intent and scope
 
@@ -10,11 +10,11 @@ The player must understand and control factory routes from the world itself. Fir
 
 The user explicitly preferred these improvements before underground belts. Underground/elevated transport, pipes, pressure systems, vehicles, rail, drones, new materials and a general traffic framework are deferred. Phase 6 is not permission to implement the old roadmap's entire possible-scope list.
 
-## What exists today
+## Baseline before #81
 
 - `Belt.direction` is the primary outgoing direction, not a stored inlet direction.
 - `alternate` and `switched` select one alternate outgoing direction. `rotateDivert` configures it; `switchDivert` activates it. Configuring an alternate alone does not change cargo routing.
-- `world.ts` draws a straight belt using the primary direction and a colored circle for the diverter. It does not draw the actual bend or the alternate branch.
+- Before #81, `world.ts` drew a straight belt using the primary direction and a colored circle for the diverter. #81 replaced that presentation with derived connected arms, truthful active arrows and dashed/gated standby branches; routing remains unchanged.
 - Transport uses one cargo slot per belt cell, previous occupancy, deterministic reservations and at most one edge per transport update. A cell cannot currently contain two independent belts.
 - A probe of the current placement validator rejected a perpendicular route through an occupied belt cell with `A belt already occupies this cell`. This proves a topology limitation, not a measured player frustration or a throughput benchmark.
 - Existing input contention uses deterministic row/column order. It is not already a fair merger.

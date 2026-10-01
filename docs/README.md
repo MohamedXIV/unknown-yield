@@ -22,7 +22,7 @@ This directory is the project design and engineering source of truth. Documents 
 
 ## Documentation principles
 
-Phase 6's planned contract is [PHASE6_JUNCTIONS.md](PHASE6_JUNCTIONS.md): readable L/manual-diverter routes, T splitting/merging, controlled `+` crossing, blocked-flow policies, persistence and acceptance. Read it alongside D-033 and live Issue #2 before implementing #81–#84. These are intended behaviors, not completed runtime features.
+Phase 6's contract is [PHASE6_JUNCTIONS.md](PHASE6_JUNCTIONS.md): readable L/manual-diverter routes, T splitting/merging, controlled `+` crossing, blocked-flow policies, persistence and acceptance. Read it alongside D-033 and live Issue #2 before implementation. [PHASE6_BELT_ACCEPTANCE.md](PHASE6_BELT_ACCEPTANCE.md) records accepted #81 visuals; #82–#84 remain pending.
 
 ### Current design beats implementation accidents
 
