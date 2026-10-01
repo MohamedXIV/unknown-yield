@@ -256,3 +256,41 @@ describe("junction blueprint version boundary", () => {
     ).toThrow();
   });
 });
+
+it("round-trips crossing topology in generic v2 without runtime scheduling", () => {
+  const { state, factoryId } = makeFactory(24, 22);
+  const sim = new Simulation(fixture);
+  expect(sim.load(state).ok).toBe(true);
+  expect(
+    sim.command({
+      type: "configureJunction",
+      beltId: state.belts["25,27"].id,
+      definitionId: "crossing",
+      direction: 2,
+      branch: -1,
+    }).ok,
+  ).toBe(true);
+  const save = sim.serialize(),
+    text = serializeFactoryBlueprint(fixture, save, factoryId),
+    bp = parseFactoryBlueprint(fixture, text);
+  expect(bp.schemaVersion).toBe(2);
+  expect(bp.belts.find((b) => b.x === 1 && b.y === 5)).toMatchObject({
+    direction: 2,
+    junction: { definitionId: "crossing", branch: -1 },
+  });
+  expect(text).not.toContain("remaining");
+  expect(text).not.toContain("held");
+  save.belts["25,27"].junction!.crossing = {
+    axis: 1,
+    remaining: 0,
+    pending: 0,
+    held: 1,
+  };
+  save.belts["25,27"].cargo = "raw";
+  expect(serializeFactoryBlueprint(fixture, save, factoryId)).toBe(text);
+  const bad = structuredClone(bp);
+  Object.assign(bad.belts.find((b) => b.x === 1 && b.y === 5)!.junction!, {
+    remaining: 4,
+  });
+  expect(() => parseFactoryBlueprint(fixture, bad)).toThrow();
+});

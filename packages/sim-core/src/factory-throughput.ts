@@ -255,6 +255,7 @@ function connectedRuntime(content: Content, state: Save, factory: Factory) {
         y: belt.y,
         cargo: belt.cargo,
         junctionCursor: belt.junction?.cursor ?? null,
+        crossingState: belt.junction?.crossing ?? null,
         direction: belt.direction,
         alternate: belt.alternate,
         switched: belt.switched,
@@ -289,6 +290,8 @@ function stateSignature(content: Content, state: Save, factory: Factory) {
       x: belt.x,
       y: belt.y,
       cargo: belt.cargo,
+      junctionCursor: belt.junction?.cursor ?? null,
+      crossingState: belt.junction?.crossing ?? null,
     }));
   return JSON.stringify({
     machines,

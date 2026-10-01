@@ -58,12 +58,21 @@ export const contentSchema = z.object({
     .min(1),
   junctions: z
     .array(
-      z.object({
-        id,
-        kind: z.enum(["splitter", "merger"]),
-        nameKey: localeKeySchema,
-        cost: positive,
-      }),
+      z
+        .object({
+          id,
+          kind: z.enum(["splitter", "merger", "crossing"]),
+          nameKey: localeKeySchema,
+          cost: positive,
+          windowSteps: positive.optional(),
+        })
+        .refine(
+          (d) =>
+            d.kind === "crossing"
+              ? d.windowSteps !== undefined
+              : d.windowSteps === undefined,
+          "Only crossings require a positive transport-step window",
+        ),
     )
     .default([]),
   reactions: z

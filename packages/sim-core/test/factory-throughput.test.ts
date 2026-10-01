@@ -388,3 +388,59 @@ it("does not mistake a changed T cursor for the same throughput cycle state", ()
   monitor.observe(fixture, state);
   expect(monitor.view(factoryId).state).toBe("measuring");
 });
+
+it("certifies a physical crossing line with full empty-axis windows and restores the same cycle", () => {
+  const { sim, factoryId } = makeLine();
+  const b = sim.snapshot().belts.find((b) => b.x === 22 && b.y === 27)!;
+  build(sim, {
+    type: "configureJunction",
+    beltId: b.id,
+    definitionId: "crossing",
+    direction: 0,
+    branch: 1,
+  });
+  const before = certify(sim, factoryId, 2000);
+  stable(before);
+  expect(before.outputs[0].units).toBe(before.inputs[0].units * 3);
+  expect(auditLedger(fixture, sim.serialize()).ok).toBe(true);
+  const restored = new Simulation(fixture);
+  expect(restored.load(sim.serialize()).ok).toBe(true);
+  expect(certify(restored, factoryId, 2000)).toEqual(before);
+});
+
+it("includes crossing phase, countdown and pending request in throughput recurrence", () => {
+  const { sim, factoryId } = makeLine(),
+    state = sim.serialize(),
+    belt = state.belts["30,27"];
+  belt.junction = {
+    definitionId: "crossing",
+    branch: 1,
+    cursor: 0,
+    crossing: { axis: 0, remaining: 4, pending: null, held: null },
+  };
+  const monitor = new FactoryThroughputMonitor();
+  for (let i = 0; i <= 20; i++) {
+    state.tick = i;
+    const axis = (Math.floor(i / 5) % 2) as 0 | 1,
+      remaining = 4 - (i % 5);
+    belt.junction.crossing = {
+      axis,
+      remaining,
+      pending: remaining === 0 ? ((1 - axis) as 0 | 1) : null,
+      held: null,
+    };
+    monitor.recordMove(state, {
+      from: { x: 24, y: 27 },
+      direction: 0,
+      material: "ferrite",
+    });
+    monitor.recordMove(state, {
+      from: { x: 33, y: 27 },
+      direction: 0,
+      material: "plates",
+    });
+    monitor.observe(fixture, state);
+    if (i < 20) expect(monitor.view(factoryId).state).toBe("measuring");
+  }
+  expect(monitor.view(factoryId).cycleTicks).toBe(10);
+});

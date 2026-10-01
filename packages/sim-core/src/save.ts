@@ -65,6 +65,15 @@ const belt = z.object({
       definitionId: safeId,
       branch: z.union([z.literal(1), z.literal(-1)]),
       cursor: z.union([z.literal(0), z.literal(1)]),
+      crossing: z
+        .object({
+          axis: z.union([z.literal(0), z.literal(1)]),
+          remaining: count,
+          pending: z.union([z.literal(0), z.literal(1)]).nullable(),
+          held: z.union([z.literal(0), z.literal(1)]).nullable(),
+        })
+        .strict()
+        .optional(),
     })
     .strict()
     .nullable()
@@ -100,6 +109,7 @@ const schema = z.object({
     z.literal(10),
     z.literal(11),
     z.literal(12),
+    z.literal(13),
   ]),
   contentVersion: z.string(),
   tick: count,
@@ -166,7 +176,7 @@ const schema = z.object({
 });
 export function initialState(c: Content): Save {
   const state: Save = {
-    schemaVersion: 12,
+    schemaVersion: 13,
     contentVersion: c.version,
     tick: 0,
     remainder: 0,
@@ -224,6 +234,16 @@ export function parseSave(input: unknown, c: Content): Save {
   const s = schema.parse(input);
   if (s.schemaVersion < 12 && Object.values(s.belts).some((b) => b.junction))
     throw new Error("Legacy save contains junction state");
+  if (
+    s.schemaVersion < 13 &&
+    Object.values(s.belts).some(
+      (b) =>
+        b.junction?.crossing ||
+        c.junctions.find((d) => d.id === b.junction?.definitionId)?.kind ===
+          "crossing",
+    )
+  )
+    throw new Error("Legacy save contains crossing state");
   // Schema 4 predates belt diverters; every belt was plain, so stamping the
   // defaults is an exact migration rather than a guess.
   if (s.schemaVersion === 4) s.schemaVersion = 5;
@@ -308,6 +328,7 @@ export function parseSave(input: unknown, c: Content): Save {
     s.schemaVersion = 11;
   }
   if (s.schemaVersion === 11) s.schemaVersion = 12;
+  if (s.schemaVersion === 12) s.schemaVersion = 13;
   if (s.contentVersion !== c.version || s.remainder >= c.tickMs)
     throw new Error("Incompatible content or timing");
   if (
@@ -565,8 +586,25 @@ export function parseSave(input: unknown, c: Content): Save {
     )
       throw new Error("Alternate exit not allowed on factory walls");
     if (b.junction) {
-      if (!c.junctions.some((d) => d.id === b.junction!.definitionId))
-        throw new Error("Unknown junction definition");
+      const definition = c.junctions.find(
+        (d) => d.id === b.junction!.definitionId,
+      );
+      if (!definition) throw new Error("Unknown junction definition");
+      const signal = b.junction.crossing;
+      if (definition.kind === "crossing") {
+        if (
+          !signal ||
+          b.junction.cursor !== 0 ||
+          signal.remaining > definition.windowSteps! ||
+          (signal.pending === null
+            ? signal.remaining === 0
+            : signal.remaining !== 0 || signal.pending === signal.axis) ||
+          (b.cargo === null
+            ? signal.held !== null
+            : signal.held !== signal.axis)
+        )
+          throw new Error("Impossible crossing phase or held route");
+      } else if (signal) throw new Error("Crossing state on T junction");
       if (
         b.alternate !== null ||
         b.switched ||

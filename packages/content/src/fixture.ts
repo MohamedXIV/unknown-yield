@@ -115,6 +115,13 @@ export const fixture = validateContent({
       cost: 8,
     },
     { id: "merger", kind: "merger", nameKey: "junction.merger.name", cost: 8 },
+    {
+      id: "crossing",
+      kind: "crossing",
+      nameKey: "junction.crossing.name",
+      cost: 12,
+      windowSteps: 4,
+    },
   ],
   storages: [
     {

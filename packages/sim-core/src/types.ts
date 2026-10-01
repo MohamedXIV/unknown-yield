@@ -81,7 +81,18 @@ export type Machine = Point & {
   output: Inventory;
   job: Job | null;
 };
-export type Junction = { definitionId: string; branch: 1 | -1; cursor: 0 | 1 };
+export type CrossingState = {
+  axis: 0 | 1;
+  remaining: number;
+  pending: 0 | 1 | null;
+  held: 0 | 1 | null;
+};
+export type Junction = {
+  definitionId: string;
+  branch: 1 | -1;
+  cursor: 0 | 1;
+  crossing?: CrossingState;
+};
 export type Belt = Point & {
   junction?: Junction | null;
   id: string;
