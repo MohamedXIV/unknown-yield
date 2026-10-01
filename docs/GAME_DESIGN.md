@@ -1,5 +1,7 @@
 # Game Design
 
+**Planned Phase 6 routing:** [PHASE6_JUNCTIONS.md](PHASE6_JUNCTIONS.md) records the approved ground-belt scope: truthful L/manual-diverter visuals, directed T splitting/merging and a controlled `+` crossing with independent routes. This develops readable spatial industry before underground transport; the features are not yet implemented. D-033 and live Issue #2 define scope and order.
+
 ## 1. High concept
 
 Unknown Yield is a 2D top-down / three-quarter industrial discovery game set on an off-world extraction site.

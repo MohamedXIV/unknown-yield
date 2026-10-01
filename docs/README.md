@@ -22,6 +22,8 @@ This directory is the project design and engineering source of truth. Documents 
 
 ## Documentation principles
 
+Phase 6's planned contract is [PHASE6_JUNCTIONS.md](PHASE6_JUNCTIONS.md): readable L/manual-diverter routes, T splitting/merging, controlled `+` crossing, blocked-flow policies, persistence and acceptance. Read it alongside D-033 and live Issue #2 before implementing #81–#84. These are intended behaviors, not completed runtime features.
+
 ### Current design beats implementation accidents
 
 The first playable contains deliberate shortcuts. A shortcut is not a design decision merely because code exists for it. `FIRST_PLAYABLE.md` identifies those exceptions; `DECISIONS.md` and the domain docs define the forward contract.

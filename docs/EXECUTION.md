@@ -38,7 +38,13 @@ This document is intentionally procedural. Game/design truth lives in the domain
 - Completed Phase 5 child: **#72 — corporate assistance, obligations, and recovery standing** (merged via PR #78).
 - Completed Phase 5 gate: **#73 — end-to-end company progression exit review** (merged via PR #79 / `dcbe1a567cc26ab150f13e159d35bf50030ee570`).
   - Accepted evidence: `packages/sim-core/test/phase5-exit.test.ts` + `docs/PHASE5_EXIT_REVIEW.md`.
-  - Phase 6 remains undecomposed; no Phase 6 implementation was started during this closeout.
+  - No Phase 6 implementation was started during the Phase 5 closeout.
+- Planned phase: **Phase 6 — readable belts and controlled ground junctions (#80)**. Design documented; implementation pending.
+- First unblocked Phase 6 child: **#81 — truthful L turns and manual diverter paths**.
+- Planned Phase 6 child: **#82 — directed T splitters and fair mergers**, depends on #81.
+- Planned Phase 6 child: **#83 — controlled ground crossing**, depends on #82.
+- Planned Phase 6 gate: **#84 — end-to-end junction exit review**, depends on #81–#83.
+  - Design contract: `docs/PHASE6_JUNCTIONS.md` + D-033. Partial implementation does not redefine intent.
 
 ## Phase 1.5 dependency graph
 
@@ -131,7 +137,26 @@ Phase 2 is complete.
 #73 Phase 5 exit review ✓
 ```
 
-#12 is complete. #69–#73 are complete; the integrated exit gate merged via PR #79 as `dcbe1a567cc26ab150f13e159d35bf50030ee570`. Phase 6 remains a roadmap-only future phase and has not been decomposed into implementation work.
+#12 is complete. #69–#73 are complete; the integrated exit gate merged via PR #79 as `dcbe1a567cc26ab150f13e159d35bf50030ee570`.
+
+## Phase 6 dependency graph
+
+```text
+#81 readable L turns + manual diverters
+  │
+  v
+#82 directed T splitters + fair mergers
+  │
+  v
+#83 controlled + crossing
+  │
+  v
+#84 integrated junction exit review
+```
+
+#80 is planned, not implemented or complete. Start with #81; continue any canonical open PR before creating another. Each feature milestone includes playable interaction, relevant focused checks and browser acceptance. The final gate proves the continuous world and full baseline. Underground transport remains deferred.
+
+Read `PHASE6_JUNCTIONS.md` before changing routing, visuals or persistence. Missing fairness, phase clearance, ledger accounting or migration is an implementation gap, not permission to invent replacement semantics. Record conflicts and amend D-033 explicitly when evidence changes the decision.
 
 ## Agent loop
 
@@ -171,7 +196,7 @@ There is currently no remote CI workflow. Do not represent absent checks as gree
 - Do not add Rust/WASM without benchmark/profiler evidence.
 - Do not expand Content Studio, advanced logistics, market depth, or broad content volume as a prerequisite to Phase 2.
 - Phase 2 experimentation must preserve hidden authored truth vs player knowledge and remain deterministic from authoritative simulation conditions.
-- Do not create large issue trees for Phases 6–8 until preceding gates reveal concrete requirements.
+- Phase 6 is limited to #80 / #81–#84. Do not create speculative issue trees for its deferred technologies or Phases 7–8.
 
 ## Active/later phase epics
 
@@ -179,5 +204,6 @@ There is currently no remote CI workflow. Do not represent absent checks as gree
 - #10 — factory-as-function contracts and abstraction proof — COMPLETE via children #45–#50
 - #11 — Content Studio v1 — COMPLETE via children #60–#63
 - #12 — Materials Exchange and corporate progression — COMPLETE via #69–#73; exit gate #73 merged through PR #79 / `dcbe1a567cc26ab150f13e159d35bf50030ee570`
+- #80 — readable belts and controlled ground junctions — PLANNED via #81–#84; first unblocked #81, implementation pending
 
-These are placeholders for future decomposition, not permission to work around the active gate.
+Follow the live dependency order in Issue #2. Deferred roadmap possibilities are not permission to work around the active gate.
