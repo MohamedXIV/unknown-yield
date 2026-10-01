@@ -164,7 +164,6 @@ it("invalidates world geometry on diverter switch/rotate", () => {
   expect(structureKey(sim.snapshot())).not.toBe(diverted);
 });
 
-
 it("keeps dynamic factory contracts out of the structural fingerprint", () => {
   const sim = new Simulation(fixture);
   expect(
@@ -207,7 +206,6 @@ it("keeps dynamic factory contracts out of the structural fingerprint", () => {
   expect(structureKey(dynamic)).not.toBe(structureKey(base));
 });
 
-
 it("keeps roof open/closed state outside the authoritative simulation", () => {
   const sim = new Simulation(fixture);
   const placed = sim.command({
@@ -230,4 +228,27 @@ it("keeps roof open/closed state outside the authoritative simulation", () => {
   const closed = toggleFactoryOpen(opened, placed.id!);
   expect(closed.openFactories).toEqual([]);
   expect(sim.serialize()).toEqual(before);
+});
+
+it("invalidates belt topology when loading different positions with reused IDs", () => {
+  const first = new Simulation(fixture),
+    second = new Simulation(fixture);
+  expect(
+    first.command({
+      type: "placeBelts",
+      points: [{ x: 20, y: 20 }],
+      direction: 0,
+    }).ok,
+  ).toBe(true);
+  expect(
+    second.command({
+      type: "placeBelts",
+      points: [{ x: 22, y: 20 }],
+      direction: 0,
+    }).ok,
+  ).toBe(true);
+  expect(first.snapshot().belts[0].id).toBe(second.snapshot().belts[0].id);
+  expect(structureKey(first.snapshot())).not.toBe(
+    structureKey(second.snapshot()),
+  );
 });

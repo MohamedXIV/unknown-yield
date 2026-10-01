@@ -47,7 +47,7 @@ export function structureKey(s: PlayerSnapshot): string {
       f.height,
       f.ports.map((p) => [p.id, p.x, p.y, p.direction, p.role]),
     ]),
-    s.belts.map((b) => [b.id, b.direction, b.alternate, b.switched]),
+    s.belts.map((b) => [b.id, b.x, b.y, b.direction, b.alternate, b.switched]),
     s.storages.map((t) => [t.id, t.definitionId, t.x, t.y, t.direction]),
   ]);
 }

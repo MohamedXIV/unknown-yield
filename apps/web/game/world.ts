@@ -21,6 +21,7 @@ import { t as translate } from "./i18n";
 import { machineStatusLabel } from "./machine-status";
 import { observationKey, unseenObservations } from "./observations";
 import { factoryContractPresentation } from "./factory-presentation";
+import { beltPresentations } from "./belt-presentation";
 export type WorldControls = {
   setSnapshot(s: PlayerSnapshot): void;
   setMode(mode: WorldMode): void;
@@ -348,6 +349,7 @@ export function createWorld(
         for (let y = f.y + 1; y < f.y + f.height; y++)
           g.lineBetween(f.x * X, y * Y, (f.x + f.width) * X, y * Y);
       }
+      const beltViews = beltPresentations(snapshot);
       for (const b of snapshot.belts) {
         if (
           snapshot.factories.some(
@@ -357,20 +359,79 @@ export function createWorld(
           continue;
         const x = b.x * X,
           y = b.y * Y;
-        g.fillStyle(0x171f1a).fillRect(x + 2, y + 2, X - 4, Y - 4);
-        g.lineStyle(2, 0x777862, 0.8);
-        if (b.direction % 2 === 0) {
-          g.lineBetween(x + 1, y + 3, x + X - 1, y + 3);
-          g.lineBetween(x + 1, y + Y - 3, x + X - 1, y + Y - 3);
-        } else {
-          g.lineBetween(x + 3, y + 1, x + 3, y + Y - 1);
-          g.lineBetween(x + X - 3, y + 1, x + X - 3, y + Y - 1);
+        const view = beltViews.get(b.id)!;
+        const cx = x + X / 2,
+          cy = y + Y / 2;
+        const vectors = [
+          [1, 0],
+          [0, 1],
+          [-1, 0],
+          [0, -1],
+        ];
+        const arms = new Set([
+          ...view.inlets,
+          ...view.outlets.map((o) => o.direction),
+        ]);
+        // Physical track follows connected inlets and configured exits; a
+        // standby branch stays visible but is dashed and gated, never active.
+        for (const side of arms) {
+          const [dx, dy] = vectors[side];
+          const outlet = view.outlets.find((o) => o.direction === side);
+          const standby =
+            outlet && !outlet.active && !view.inlets.includes(side);
+          const ex = cx + (dx * X) / 2,
+            ey = cy + (dy * Y) / 2;
+          if (standby) {
+            for (const [from, to] of [
+              [0.15, 0.4],
+              [0.6, 0.85],
+            ]) {
+              g.lineStyle(6, 0x68756d, 0.65).lineBetween(
+                cx + ((dx * X) / 2) * from,
+                cy + ((dy * Y) / 2) * from,
+                cx + ((dx * X) / 2) * to,
+                cy + ((dy * Y) / 2) * to,
+              );
+            }
+          } else {
+            g.lineStyle(12, 0x727762, 0.9).lineBetween(cx, cy, ex, ey);
+            g.lineStyle(8, 0x171f1a).lineBetween(cx, cy, ex, ey);
+          }
         }
-        this.arrow(g, x + X / 2, y + Y / 2, b.direction, 0x69765e, 4);
-        if (b.alternate !== null) {
-          // Diverter ring: gold while the alternate exit is active, cyan on standby.
-          g.lineStyle(2, b.switched ? 0xd4bd7d : 0x9bd0c4, 0.9);
-          g.strokeCircle(x + X / 2, y + Y / 2, 5);
+        g.fillStyle(0x171f1a).fillCircle(cx, cy, 4);
+        for (const outlet of view.outlets) {
+          const [dx, dy] = vectors[outlet.direction];
+          const ax = cx + dx * X * 0.3,
+            ay = cy + dy * Y * 0.3;
+          if (outlet.active) {
+            this.arrow(
+              g,
+              ax,
+              ay,
+              outlet.direction,
+              b.alternate === null ? 0xb7c6a0 : 0xd4bd7d,
+              3,
+            );
+          } else {
+            // A transverse gate makes inactive exits readable without color.
+            g.lineStyle(2, 0x9ba69a).lineBetween(
+              ax - dy * 4,
+              ay + dx * 4,
+              ax + dy * 4,
+              ay - dx * 4,
+            );
+          }
+          if (!outlet.connected) {
+            // Broken destination: leave a gap before a short end stop.
+            const ex = cx + dx * (X / 2 - 2),
+              ey = cy + dy * (Y / 2 - 2);
+            g.lineStyle(2, 0xc49670).lineBetween(
+              ex - dy * 4,
+              ey + dx * 4,
+              ex + dy * 4,
+              ey - dx * 4,
+            );
+          }
         }
       }
       const t = snapshot.map.terminal;
@@ -479,7 +540,12 @@ export function createWorld(
         g.lineStyle(2, 0x354933).strokeRect(x - w / 2 + 6, y - 10, w - 12, 20);
         g.lineStyle(1, 0x354933, 0.6);
         for (let i = 1; i < 3; i++)
-          g.lineBetween(x - w / 2 + 6, y - 10 + i * 7, x + w / 2 - 6, y - 10 + i * 7);
+          g.lineBetween(
+            x - w / 2 + 6,
+            y - 10 + i * 7,
+            x + w / 2 - 6,
+            y - 10 + i * 7,
+          );
         const output = socket(t, def, true),
           input = socket(t, def, false);
         this.arrow(
