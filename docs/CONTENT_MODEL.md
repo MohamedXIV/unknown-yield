@@ -2,6 +2,8 @@
 
 ## Implemented content contract (2026-09-26)
 
+**Planned Phase 6 extension:** [PHASE6_JUNCTIONS.md](PHASE6_JUNCTIONS.md) defines junction kinds with stable identity, authored costs and crossing-window intervals measured in transport steps, plus localized player text. Fairness cursors, phase counters and held cargo routes are runtime/save state, not authored recipe truth. The extension must define and test content compatibility explicitly; this documentation does not change current content or save versions and does not expand Content Studio v1.
+
 The current Zod contract lives in `packages/content/src/schema.ts`. It separates machine definitions (footprint, operations, buffers, fuel, duration and build cost) from placed runtime instances. Materials, operations, reactions, authored site/deposits, terminal bounds, factory limits, belt/port costs and fuel assistance are editable data.
 
 The starter fixture contains a known construction chain plus hidden outcomes of the same alien input. A crusher accepts different physical inputs; recipes are not baked into the renderer. `known` marks initial knowledge only. Runtime observations unlock public material metadata and notebook entries; authored truth never goes straight to player UI.

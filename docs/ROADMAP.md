@@ -178,7 +178,7 @@ Phase 4 intentionally stops before economy/site/storage/asset/general-purpose sc
 - #72 — corporate assistance, obligations, and recovery standing — **COMPLETE** via PR #78;
 - #73 — end-to-end company progression exit review — **COMPLETE** via PR #79 / `dcbe1a567cc26ab150f13e159d35bf50030ee570`.
 
-Phase 5 closed with the integrated gate accepted. Market/company state remains authoritative in sim-core and preserves physical inventory plus hidden-knowledge boundaries. Phase 6 remains undecomposed and was not started during this closeout.
+Phase 5 closed with the integrated gate accepted. Market/company state remains authoritative in sim-core and preserves physical inventory plus hidden-knowledge boundaries. Phase 6 was not started during that closeout; its subsequently approved scope is recorded below.
 
 ### Scope
 
@@ -199,24 +199,28 @@ A player who collapses basic fuel production can recover through the designed as
 
 ## Phase 6 — Logistics depth
 
-### Possible scope
+**Epic:** #80 — readable belts and controlled ground junctions. **Design documented; implementation pending.**
 
-Only add systems justified by the game at this stage:
+**Execution:** #81 → #82 → #83 → #84. First unblocked issue: #81.
 
-- pipes;
-- pressure handling;
-- vehicles;
-- underground routes;
-- elevated routes;
-- specialized containment;
-- rail-like bulk transport;
-- drones/high-value cargo.
+### Question
 
-These should not all be assumed mandatory.
+Can readable bends and controlled ground junctions improve spatial factory routing while preserving physical cargo and understandable backpressure?
+
+### Approved scope
+
+- #81 — truthful L turns and visible manual diverter paths, preserving existing routing;
+- #82 — directed T splitters and fair mergers, alternating successful transfers;
+- #83 — a controlled `+` crossing with two independent directed routes, simulation-timed admission windows and clearance before switching axes;
+- #84 — a continuous-world integrated exit review.
+
+[PHASE6_JUNCTIONS.md](PHASE6_JUNCTIONS.md) defines exact routing, blocked-arm policies, persistence, visuals, content and acceptance. D-033 records the accepted direction. Shape alone is not the behavior contract.
+
+Underground/elevated routes, pipes, pressure, vehicles, specialized containment, rail and drones remain deferred possibilities. The user explicitly selected ground-belt improvements before underground transport; none of those deferred systems are prerequisites or mandatory Phase 6 work.
 
 ### Exit criteria
 
-At least one later logistics technology solves a spatial or material-handling constraint the player has already experienced.
+In one persistent playable world, a player can read actual L/diverter routes, fairly split/merge flow through T junctions, and cross two distinct material streams through a controlled `+` without changing destinations or losing cargo. Blockage, phase clearance, suspend/reroute/resume and save/load preserve deterministic physical state. Domain/content/persistence/blueprint/throughput regressions, the full baseline and real browser acceptance close #84 before #80 is complete.
 
 ## Phase 7 — Scale and performance
 
@@ -286,4 +290,4 @@ The following should not be treated as progress during foundation unless require
 
 The accepted implementation and evidence are summarized in [FIRST_PLAYABLE.md](FIRST_PLAYABLE.md) and [BROWSER_SMOKE.md](BROWSER_SMOKE.md). Continue from this foundation; do not rebuild the retired dashboard prototype.
 
-Phase 1.5 is complete through Issue #8 / PR #29, Phase 2 through Issue #34 / PR #44, Phase 3 through Issue #50, Phase 4 through Issue #63 / PR #67, and Phase 5 through Issue #73 / PR #79 (`dcbe1a567cc26ab150f13e159d35bf50030ee570`). Phase 6 remains roadmap-only and undecomposed.
+Phase 1.5 is complete through Issue #8 / PR #29, Phase 2 through Issue #34 / PR #44, Phase 3 through Issue #50, Phase 4 through Issue #63 / PR #67, and Phase 5 through Issue #73 / PR #79 (`dcbe1a567cc26ab150f13e159d35bf50030ee570`). Phase 6 / #80 is documented and decomposed into #81–#84; implementation is pending and #81 is first.
