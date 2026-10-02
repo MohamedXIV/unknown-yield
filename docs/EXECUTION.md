@@ -236,6 +236,6 @@ The roadmap now records Phases 9–16 for the major gameplay directions that wer
 - Phase 15 — content scale and expedition arc;
 - Phase 16 — production vertical slice.
 
-These are planning contracts in [ROADMAP.md](ROADMAP.md), not eight simultaneously active implementation epics. Phase 9 is the recommended next gameplay milestone. When implementation begins, create one canonical parent epic and dependency-safe child issues for that phase only.
+Canonical GitHub epics and children are now created: Phase 9 #100 (#108–#113), Phase 10 #101 (#114–#119), Phase 11 #102 (#120–#125), Phase 12 #103 (#126–#131), Phase 13 #104 (#132–#138), Phase 14 #105 (#139–#144), Phase 15 #106 (#145–#152), and Phase 16 #107 (#153–#161). They are not eight simultaneously active implementation phases: Phase 9 / #100 is active-next and #108 is first unblocked; later phases remain dependency-ordered planning/execution queues.
 
 Phase 7 remains deferred with its accepted unmet performance budget preserved. Phase 8 remains a parallel art-pipeline track and does not block Phase 9 gameplay work. Do not reopen completed Phase 2/5/6 foundations merely because later phases deepen discovery, company systems or logistics; extend the accepted contracts.
