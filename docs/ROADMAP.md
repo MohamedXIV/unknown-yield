@@ -224,7 +224,7 @@ In one persistent playable world, a player can read actual L/diverter routes, fa
 
 ## Phase 7 — Scale and performance
 
-**ACTIVE:** #90 — single-world simulation/snapshot baseline. [Approved measurement contract](PHASE7_BASELINE.md). Rendering/target-hardware budgets and any optimization follow measured evidence.
+**Phase 7 ACTIVE; baseline COMPLETE:** #90 through PR #91 — single-world simulation/snapshot baseline. [Approved measurement contract](PHASE7_BASELINE.md). Rendering/target-hardware budgets and any optimization follow measured evidence.
 
 ### Work
 
@@ -292,4 +292,4 @@ The following should not be treated as progress during foundation unless require
 
 The accepted implementation and evidence are summarized in [FIRST_PLAYABLE.md](FIRST_PLAYABLE.md) and [BROWSER_SMOKE.md](BROWSER_SMOKE.md). Continue from this foundation; do not rebuild the retired dashboard prototype.
 
-Phase 1.5 is complete through Issue #8 / PR #29, Phase 2 through Issue #34 / PR #44, Phase 3 through Issue #50, Phase 4 through Issue #63 / PR #67, and Phase 5 through Issue #73 / PR #79 (`dcbe1a567cc26ab150f13e159d35bf50030ee570`). Phase 6 / #80 is complete through #84 / PR #89. Phase 7 begins with #90: reproducible single-world simulation/snapshot baseline; budgets and optimization follow measured evidence.
+Phase 1.5 is complete through Issue #8 / PR #29, Phase 2 through Issue #34 / PR #44, Phase 3 through Issue #50, Phase 4 through Issue #63 / PR #67, and Phase 5 through Issue #73 / PR #79 (`dcbe1a567cc26ab150f13e159d35bf50030ee570`). Phase 6 / #80 is complete through #84 / PR #89. Phase 7 baseline #90 is complete through PR #91; agree budgets/hardware and profile the measured workload before selecting optimization.
