@@ -1,4 +1,17 @@
-import { performance } from "node:perf_hooks";
+import {
+  performance,
+  PerformanceObserver,
+  type PerformanceEntry,
+} from "node:perf_hooks";
+import { Session } from "node:inspector/promises";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { resolve } from "node:path";
+import {
+  cpuSummary,
+  latencySummary,
+  type Window,
+  type GCEvent,
+} from "./profile-analysis";
 import { cpus, totalmem } from "node:os";
 import { expect, it } from "vitest";
 import { fixture, validateContent, type Content } from "@site/content";
@@ -253,6 +266,130 @@ it.skipIf(process.env.SINGLE_WORLD_BENCHMARK !== "1")(
           rows,
         }),
     );
+  },
+  300000,
+);
+
+it.skipIf(!process.env.SINGLE_WORLD_PROFILE)(
+  "profiles single-world combined latency, transport updates and observed GC",
+  async () => {
+    const mode = process.env.SINGLE_WORLD_PROFILE;
+    if (mode !== "timing" && mode !== "cpu")
+      throw new Error("Unknown profiling mode");
+    const directory = resolve("artifacts/phase7-profiling");
+    mkdirSync(directory, { recursive: true });
+    const rows = [];
+    for (const cells of [8, 32])
+      for (const blocked of [false, true]) {
+        const { content, seed } = scenario(cells, blocked);
+        const windows: Window[] = [],
+          gc: GCEvent[] = [],
+          profiles = [];
+        const observer = new PerformanceObserver((list) => {
+          for (const entry of list.getEntries()) {
+            const detail = (
+              entry as PerformanceEntry & { detail?: { kind: number } }
+            ).detail;
+            gc.push({
+              start: entry.startTime,
+              duration: entry.duration,
+              kind: detail?.kind ?? null,
+            });
+          }
+        });
+        observer.observe({ entryTypes: ["gc"] });
+        const repeats = mode === "cpu" ? 1 : SAMPLES;
+        try {
+          for (let sample = 0; sample < repeats; sample++) {
+            const sim = load(content, seed);
+            for (let i = 0; i < WARMUP_TICKS; i++) sim.step(content.tickMs);
+            await new Promise<void>((done) => setImmediate(done));
+            const session = mode === "cpu" ? new Session() : null;
+            try {
+              if (session) {
+                session.connect();
+                await session.post("Profiler.enable");
+                await session.post("Profiler.setSamplingInterval", {
+                  interval: 1000,
+                });
+                await session.post("Profiler.start");
+              }
+              for (let i = 0; i < SAMPLE_TICKS; i++) {
+                const start = performance.now();
+                sim.step(content.tickMs);
+                const afterStep = performance.now();
+                sim.snapshot();
+                const end = performance.now();
+                windows.push({
+                  start,
+                  end,
+                  stepMs: afterStep - start,
+                  snapshotMs: end - afterStep,
+                  combinedMs: end - start,
+                  transport:
+                    (seed.tick + WARMUP_TICKS + i + 1) %
+                      content.site.transportEveryTicks ===
+                    0,
+                });
+              }
+              if (session) {
+                const { profile } = await session.post("Profiler.stop");
+                const file =
+                  "cpu-" +
+                  cells +
+                  "-" +
+                  (blocked ? "backpressured" : "flowing") +
+                  "-" +
+                  sample +
+                  ".cpuprofile";
+                writeFileSync(
+                  resolve(directory, file),
+                  JSON.stringify(profile),
+                );
+                profiles.push({ artifact: file, ...cpuSummary(profile) });
+              }
+            } finally {
+              session?.disconnect();
+            }
+            await new Promise<void>((done) => setImmediate(done));
+            audit(content, sim);
+          }
+          await new Promise<void>((done) => setImmediate(done));
+        } finally {
+          observer.disconnect();
+        }
+        const latency = latencySummary(windows, gc);
+        rows.push({
+          cells,
+          case: blocked ? "backpressured" : "flowing",
+          samples: repeats,
+          latency,
+          budget:
+            mode === "timing"
+              ? { p95CombinedMs: 10, pass: latency.all.combined!.p95Ms <= 10 }
+              : null,
+          profiles,
+        });
+      }
+    const result = {
+      schema: 1,
+      mode,
+      node: process.version,
+      platform: process.platform,
+      arch: process.arch,
+      cpu: cpus()[0]?.model,
+      logicalCpus: cpus().length,
+      totalMemoryBytes: totalmem(),
+      tickMs: fixture.tickMs,
+      warmupTicks: WARMUP_TICKS,
+      sampleTicks: SAMPLE_TICKS,
+      rows,
+    };
+    writeFileSync(
+      resolve(directory, mode + "-summary.json"),
+      JSON.stringify(result, null, 2) + "\n",
+    );
+    console.log("SINGLE_WORLD_PROFILE " + JSON.stringify(result));
   },
   300000,
 );
