@@ -293,3 +293,5 @@ The following should not be treated as progress during foundation unless require
 The accepted implementation and evidence are summarized in [FIRST_PLAYABLE.md](FIRST_PLAYABLE.md) and [BROWSER_SMOKE.md](BROWSER_SMOKE.md). Continue from this foundation; do not rebuild the retired dashboard prototype.
 
 Phase 1.5 is complete through Issue #8 / PR #29, Phase 2 through Issue #34 / PR #44, Phase 3 through Issue #50, Phase 4 through Issue #63 / PR #67, and Phase 5 through Issue #73 / PR #79 (`dcbe1a567cc26ab150f13e159d35bf50030ee570`). Phase 6 / #80 is complete through #84 / PR #89. Phase 7 baseline #90 is complete through PR #91; #92 profiling is complete through PR #93. The approved 32-factory budget is unmet; next propose scoped optimization of repeated connected topology indexing, preserving dynamic recurrence and correctness gates.
+
+Active approved optimization: #94, shared per-observation topology indexing. See PHASE7_TOPOLOGY_OPTIMIZATION.md. Phase 7 remains open.

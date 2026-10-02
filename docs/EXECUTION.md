@@ -209,3 +209,5 @@ There is currently no remote CI workflow. Do not represent absent checks as gree
 - Completed Phase 7 baseline: **#90 — single-world simulation/snapshot baseline**, through PR #91. Evidence: PHASE7_BASELINE.md. Phase 7 remains open; #92 profiling completed through PR #93; 32-factory / 10ms joint-p95 budget FAILS. Evidence: PHASE7_PROFILING.md. Next propose a scoped optimization of repeated connected topology indexing in throughput observation; preserve all dynamic recurrence checks. Browser costs remain a separate gate.
 
 Follow the live dependency order in Issue #2. Deferred roadmap possibilities are not permission to work around the active gate.
+
+Active approved optimization: #94, shared per-observation topology indexing. See PHASE7_TOPOLOGY_OPTIMIZATION.md. Phase 7 remains open.

@@ -444,3 +444,57 @@ it("includes crossing phase, countdown and pending request in throughput recurre
   }
   expect(monitor.view(factoryId).cycleTicks).toBe(10);
 });
+
+it("keeps factories independent and rebuilds external routing on the next observation", () => {
+  const { sim, factoryId } = makeLine();
+  const state = sim.serialize();
+  const secondId = "independent-factory";
+  const first = state.factories[factoryId];
+  state.factories[secondId] = {
+    ...structuredClone(first),
+    id: secondId,
+    y: first.y + 12,
+    ports: first.ports.map((port) => ({ ...port, y: port.y + 12 })),
+  };
+  for (const belt of Object.values(state.belts)) {
+    const copy = { ...structuredClone(belt), y: belt.y + 12 };
+    state.belts[`${copy.x},${copy.y}`] = copy;
+  }
+  for (const machine of Object.values(state.machines)) {
+    if (machine.factoryId !== factoryId) continue;
+    const copy = {
+      ...structuredClone(machine),
+      id: `${machine.id}-independent`,
+      y: machine.y + 12,
+      factoryId: secondId,
+    };
+    state.machines[copy.id] = copy;
+  }
+  const monitor = new FactoryThroughputMonitor();
+  // Initially disconnect the external feeder. Reconnect it between observations.
+  state.belts["23,27"].direction = 3;
+  for (let tick = 0; tick < 7; tick++) {
+    state.tick = tick;
+    if (tick === 2) state.belts["23,27"].direction = 0;
+    state.belts["22,27"].cargo = tick % 2 ? "ferrite" : null;
+    for (const y of [27, 39]) {
+      monitor.recordMove(state, {
+        from: { x: 24, y },
+        direction: 0,
+        material: "ferrite",
+      });
+      monitor.recordMove(state, {
+        from: { x: 33, y },
+        direction: 0,
+        material: "plates",
+      });
+    }
+    monitor.observe(fixture, state);
+    if (tick === 2) {
+      expect(monitor.view(factoryId).state).toBe("measuring");
+      expect(monitor.view(secondId).state).toBe("stable");
+    }
+  }
+  expect(monitor.view(factoryId).cycleTicks).toBe(2);
+  expect(monitor.view(secondId).cycleTicks).toBe(1);
+});

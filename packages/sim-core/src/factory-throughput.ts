@@ -127,20 +127,19 @@ function machineRuntime(content: Content, state: Save, id: string) {
   };
 }
 
-// Internal recurrence alone can look stable while a pre-existing feeder/drain
-// backlog is being consumed. Include only the logistics component actually
-// connected to this factory's ports so certification waits for the observed
-// boundary environment to repeat too, without coupling unrelated site lines.
-function connectedRuntime(content: Content, state: Save, factory: Factory) {
+type ConnectedOwner = { kind: "machine" | "storage"; id: string };
+type ConnectedTopology = {
+  incoming: ReadonlyMap<string, readonly string[]>;
+  owners: ReadonlyMap<string, readonly ConnectedOwner[]>;
+};
+
+function connectedTopology(content: Content, state: Save): ConnectedTopology {
   const incoming = new Map<string, string[]>(),
-    owners = new Map<string, { kind: "machine" | "storage"; id: string }[]>();
+    owners = new Map<string, ConnectedOwner[]>();
 
   const exits = (belt: (typeof state.belts)[string]) =>
     beltArms(content, belt).outlets;
-  const addOwner = (
-    pointKey: string,
-    owner: { kind: "machine" | "storage"; id: string },
-  ) => {
+  const addOwner = (pointKey: string, owner: ConnectedOwner) => {
     const list = owners.get(pointKey) ?? [];
     list.push(owner);
     owners.set(pointKey, list);
@@ -190,6 +189,22 @@ function connectedRuntime(content: Content, state: Save, factory: Factory) {
     });
   }
 
+  return { incoming, owners };
+}
+
+// Internal recurrence alone can look stable while a pre-existing feeder/drain
+// backlog is being consumed. Include only the logistics component actually
+// connected to this factory's ports so certification waits for the observed
+// boundary environment to repeat too, without coupling unrelated site lines.
+function connectedRuntime(
+  content: Content,
+  state: Save,
+  factory: Factory,
+  topology: ConnectedTopology,
+) {
+  const { incoming, owners } = topology;
+  const exits = (belt: (typeof state.belts)[string]) =>
+    beltArms(content, belt).outlets;
   const queue = factory.ports
       .map((port) => key(port))
       .filter((pointKey) => state.belts[pointKey]),
@@ -278,7 +293,12 @@ function connectedRuntime(content: Content, state: Save, factory: Factory) {
   };
 }
 
-function stateSignature(content: Content, state: Save, factory: Factory) {
+function stateSignature(
+  content: Content,
+  state: Save,
+  factory: Factory,
+  topology: ConnectedTopology,
+) {
   const machines = Object.values(state.machines)
     .filter((machine) => machine.factoryId === factory.id)
     .sort((a, b) => a.id.localeCompare(b.id))
@@ -296,7 +316,7 @@ function stateSignature(content: Content, state: Save, factory: Factory) {
   return JSON.stringify({
     machines,
     belts,
-    connected: connectedRuntime(content, state, factory),
+    connected: connectedRuntime(content, state, factory, topology),
   });
 }
 
@@ -363,6 +383,8 @@ export class FactoryThroughputMonitor {
   }
 
   observe(content: Content, state: Save) {
+    // Shared only within this synchronous observation; next call rebuilds routing.
+    let topology: ConnectedTopology | undefined;
     const live = new Set(Object.keys(state.factories));
     for (const id of this.trackers.keys())
       if (!live.has(id)) this.trackers.delete(id);
@@ -394,7 +416,12 @@ export class FactoryThroughputMonitor {
         tracker.seen.clear();
       }
 
-      const signature = stateSignature(content, state, factory);
+      const signature = stateSignature(
+        content,
+        state,
+        factory,
+        (topology ??= connectedTopology(content, state)),
+      );
       const previous = tracker.seen.get(signature);
       const current: SeenState = {
         tick: state.tick,
