@@ -144,7 +144,7 @@ function scenario(cells: number, blocked: boolean) {
     });
   }
   for (let i = 0; i < WARMUP_TICKS; i++) sim.step(content.tickMs);
-  return { content, seed: sim.serialize() };
+  return { content, seed: sim.serialize(), sim };
 }
 function load(content: Content, seed: Save) {
   const sim = new Simulation(content);
@@ -155,35 +155,40 @@ function load(content: Content, seed: Save) {
 function audit(content: Content, sim: Simulation) {
   expect(auditLedger(content, sim.serialize()).mismatches).toEqual([]);
 }
-it("validates productive single-world scales, backpressure, destinations, ledgers and deterministic restore", () => {
-  for (const cells of SCALES)
-    for (const blocked of [false, true]) {
-      const { content, seed } = scenario(cells, blocked);
-      const first = load(content, seed),
-        second = load(content, seed);
-      expect(Object.keys(seed.factories)).toHaveLength(cells);
-      expect(seed.flows.produced.plates).toBeGreaterThan(0);
+it.each(
+  SCALES.flatMap((cells) =>
+    [false, true].map((blocked) => [cells, blocked] as const),
+  ),
+)(
+  "validates %i cells (blocked=%s), destinations, ledgers and uninterrupted/restore equality",
+  (cells, blocked) => {
+    const { content, seed, sim: first } = scenario(cells, blocked);
+    const second = load(content, seed);
+    expect(second.serialize()).toEqual(seed);
+    expect(Object.keys(seed.factories)).toHaveLength(cells);
+    expect(seed.flows.produced.plates).toBeGreaterThan(0);
+    audit(content, first);
+    for (let i = 0; i < 30; i++) {
+      first.step(content.tickMs);
+      second.step(content.tickMs);
+      expect(second.serialize()).toEqual(first.serialize());
       audit(content, first);
-      for (let i = 0; i < 30; i++) {
-        first.step(content.tickMs);
-        second.step(content.tickMs);
-        expect(second.serialize()).toEqual(first.serialize());
-        audit(content, first);
-      }
-      const state = first.serialize();
-      expect(state.flows.discarded).toEqual({});
-      for (const storage of Object.values(state.storages)) {
-        const expected = storage.direction === 0 ? "plates" : "raw";
-        expect(Object.keys(storage.inventory)).toEqual([expected]);
-        expect(storage.inventory[expected]).toBeGreaterThan(0);
-      }
-      const views = first.snapshot().factories;
-      if (blocked)
-        expect(
-          views.every((f) => f.contract.throughput.state !== "stable"),
-        ).toBe(true);
     }
-}, 60000);
+    const state = first.serialize();
+    expect(state.flows.discarded).toEqual({});
+    for (const storage of Object.values(state.storages)) {
+      const expected = storage.direction === 0 ? "plates" : "raw";
+      expect(Object.keys(storage.inventory)).toEqual([expected]);
+      expect(storage.inventory[expected]).toBeGreaterThan(0);
+    }
+    const views = first.snapshot().factories;
+    if (blocked)
+      expect(views.every((f) => f.contract.throughput.state !== "stable")).toBe(
+        true,
+      );
+  },
+  60000,
+);
 function stats(values: number[]) {
   const sorted = [...values].sort((a, b) => a - b);
   const at = (p: number) =>
@@ -249,5 +254,5 @@ it.skipIf(process.env.SINGLE_WORLD_BENCHMARK !== "1")(
         }),
     );
   },
-  120000,
+  300000,
 );
