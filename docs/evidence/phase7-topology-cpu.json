@@ -1,0 +1,1485 @@
+{
+  "schema": 1,
+  "mode": "cpu",
+  "node": "v24.20.0",
+  "platform": "win32",
+  "arch": "x64",
+  "cpu": "Intel(R) Core(TM) i7-7700HQ CPU @ 2.80GHz",
+  "logicalCpus": 8,
+  "totalMemoryBytes": 34246660096,
+  "tickMs": 100,
+  "warmupTicks": 300,
+  "sampleTicks": 300,
+  "rows": [
+    {
+      "cells": 8,
+      "case": "flowing",
+      "samples": 1,
+      "latency": {
+        "all": {
+          "step": {
+            "medianMs": 1.3808,
+            "p95Ms": 3.6812,
+            "observations": 300
+          },
+          "snapshot": {
+            "medianMs": 1.3195,
+            "p95Ms": 2.3635,
+            "observations": 300
+          },
+          "combined": {
+            "medianMs": 3.0928,
+            "p95Ms": 5.8454,
+            "observations": 300
+          }
+        },
+        "transport": {
+          "step": {
+            "medianMs": 1.8706,
+            "p95Ms": 4.0903,
+            "observations": 100
+          },
+          "snapshot": {
+            "medianMs": 1.3648,
+            "p95Ms": 2.3287,
+            "observations": 100
+          },
+          "combined": {
+            "medianMs": 3.5958,
+            "p95Ms": 6.1784,
+            "observations": 100
+          }
+        },
+        "nonTransport": {
+          "step": {
+            "medianMs": 0.7107,
+            "p95Ms": 3.2541,
+            "observations": 200
+          },
+          "snapshot": {
+            "medianMs": 1.3021,
+            "p95Ms": 2.3906,
+            "observations": 200
+          },
+          "combined": {
+            "medianMs": 2.4563,
+            "p95Ms": 5.7951,
+            "observations": 200
+          }
+        },
+        "gcOverlapping": {
+          "step": {
+            "medianMs": 1.1639,
+            "p95Ms": 5.506,
+            "observations": 6
+          },
+          "snapshot": {
+            "medianMs": 1.889,
+            "p95Ms": 2.2432,
+            "observations": 6
+          },
+          "combined": {
+            "medianMs": 3.0529,
+            "p95Ms": 7.5633,
+            "observations": 6
+          }
+        },
+        "withoutObservedGC": {
+          "step": {
+            "medianMs": 1.3808,
+            "p95Ms": 3.6672,
+            "observations": 294
+          },
+          "snapshot": {
+            "medianMs": 1.3146,
+            "p95Ms": 2.3662,
+            "observations": 294
+          },
+          "combined": {
+            "medianMs": 3.0928,
+            "p95Ms": 5.7957,
+            "observations": 294
+          }
+        },
+        "gc": {
+          "events": 6,
+          "totalEventDurationMs": 5.551099993288517,
+          "byKind": {
+            "1": 6
+          }
+        }
+      },
+      "budget": null,
+      "profiles": [
+        {
+          "artifact": "cpu-8-flowing-0.cpuprofile",
+          "samples": 535,
+          "sampledMs": 1082.274,
+          "self": [
+            {
+              "name": "structuredClone (js_transferable:113)",
+              "sampledMs": 397.884,
+              "percent": 36.764
+            },
+            {
+              "name": "post (node:inspector:115)",
+              "sampledMs": 134.019,
+              "percent": 12.383
+            },
+            {
+              "name": "topologySignature (factory-throughput.ts:30)",
+              "sampledMs": 88.883,
+              "percent": 8.213
+            },
+            {
+              "name": "connectedRuntime (factory-throughput.ts:129)",
+              "sampledMs": 76.034,
+              "percent": 7.025
+            },
+            {
+              "name": "stateSignature (factory-throughput.ts:193)",
+              "sampledMs": 68.104,
+              "percent": 6.293
+            },
+            {
+              "name": "transport (production.ts:87)",
+              "sampledMs": 30.227,
+              "percent": 2.793
+            },
+            {
+              "name": "observe (factory-throughput.ts:263)",
+              "sampledMs": 28.294,
+              "percent": 2.614
+            },
+            {
+              "name": "footprint (geometry.ts:41)",
+              "sampledMs": 27.702,
+              "percent": 2.56
+            },
+            {
+              "name": "(anonymous) (factory-throughput.ts:41)",
+              "sampledMs": 26.93,
+              "percent": 2.488
+            },
+            {
+              "name": "key (geometry.ts:16)",
+              "sampledMs": 20.472,
+              "percent": 1.892
+            },
+            {
+              "name": "targetFor (production.ts:133)",
+              "sampledMs": 19.401,
+              "percent": 1.793
+            },
+            {
+              "name": "snapshot (simulation.ts:71)",
+              "sampledMs": 15.517,
+              "percent": 1.434
+            },
+            {
+              "name": "sortedInventory (factory-throughput.ts:20)",
+              "sampledMs": 14.786,
+              "percent": 1.366
+            },
+            {
+              "name": "connectedTopology (factory-throughput.ts:80)",
+              "sampledMs": 14.528,
+              "percent": 1.342
+            },
+            {
+              "name": "(anonymous) (single-world-baseline.test.ts:271)",
+              "sampledMs": 12.133,
+              "percent": 1.121
+            }
+          ],
+          "inclusive": [
+            {
+              "name": "(root) (native:0)",
+              "sampledMs": 1082.274,
+              "percent": 100
+            },
+            {
+              "name": "runNextTicks (task_queues:63)",
+              "sampledMs": 1077.044,
+              "percent": 99.517
+            },
+            {
+              "name": "processImmediate (timers:525)",
+              "sampledMs": 1077.044,
+              "percent": 99.517
+            },
+            {
+              "name": "(anonymous) (single-world-baseline.test.ts:271)",
+              "sampledMs": 1075.055,
+              "percent": 99.333
+            },
+            {
+              "name": "step (simulation.ts:47)",
+              "sampledMs": 464.469,
+              "percent": 42.916
+            },
+            {
+              "name": "snapshot (simulation.ts:71)",
+              "sampledMs": 457.382,
+              "percent": 42.261
+            },
+            {
+              "name": "structuredClone (js_transferable:113)",
+              "sampledMs": 402.402,
+              "percent": 37.181
+            },
+            {
+              "name": "observe (factory-throughput.ts:263)",
+              "sampledMs": 358.561,
+              "percent": 33.13
+            },
+            {
+              "name": "stateSignature (factory-throughput.ts:193)",
+              "sampledMs": 187.91,
+              "percent": 17.363
+            },
+            {
+              "name": "post (node:inspector:115)",
+              "sampledMs": 136.009,
+              "percent": 12.567
+            },
+            {
+              "name": "(anonymous) (util:478)",
+              "sampledMs": 136.009,
+              "percent": 12.567
+            },
+            {
+              "name": "fn (util:477)",
+              "sampledMs": 136.009,
+              "percent": 12.567
+            },
+            {
+              "name": "topologySignature (factory-throughput.ts:30)",
+              "sampledMs": 125.553,
+              "percent": 11.601
+            },
+            {
+              "name": "ensure (factory-throughput.ts:234)",
+              "sampledMs": 125.553,
+              "percent": 11.601
+            },
+            {
+              "name": "connectedRuntime (factory-throughput.ts:129)",
+              "sampledMs": 105.041,
+              "percent": 9.706
+            },
+            {
+              "name": "transport (production.ts:87)",
+              "sampledMs": 96.703,
+              "percent": 8.935
+            },
+            {
+              "name": "(anonymous) (factory-throughput.ts:41)",
+              "sampledMs": 32.881,
+              "percent": 3.038
+            },
+            {
+              "name": "(anonymous) (simulation.ts:60)",
+              "sampledMs": 29.193,
+              "percent": 2.697
+            },
+            {
+              "name": "footprint (geometry.ts:41)",
+              "sampledMs": 27.702,
+              "percent": 2.56
+            },
+            {
+              "name": "targetFor (production.ts:133)",
+              "sampledMs": 27.474,
+              "percent": 2.539
+            }
+          ],
+          "modulesBySelf": [
+            {
+              "name": "js_transferable",
+              "sampledMs": 397.884,
+              "percent": 36.764
+            },
+            {
+              "name": "factory-throughput.ts",
+              "sampledMs": 346.009,
+              "percent": 31.971
+            },
+            {
+              "name": "node:inspector",
+              "sampledMs": 134.019,
+              "percent": 12.383
+            },
+            {
+              "name": "production.ts",
+              "sampledMs": 66.13,
+              "percent": 6.11
+            },
+            {
+              "name": "geometry.ts",
+              "sampledMs": 52.101,
+              "percent": 4.814
+            },
+            {
+              "name": "simulation.ts",
+              "sampledMs": 32.352,
+              "percent": 2.989
+            },
+            {
+              "name": "native",
+              "sampledMs": 13.274,
+              "percent": 1.226
+            },
+            {
+              "name": "single-world-baseline.test.ts",
+              "sampledMs": 12.133,
+              "percent": 1.121
+            },
+            {
+              "name": "factory-contract.ts",
+              "sampledMs": 11.302,
+              "percent": 1.044
+            },
+            {
+              "name": "milestones.ts",
+              "sampledMs": 4.529,
+              "percent": 0.418
+            },
+            {
+              "name": "module-evaluator.js",
+              "sampledMs": 3.526,
+              "percent": 0.326
+            },
+            {
+              "name": "junctions.ts",
+              "sampledMs": 2.99,
+              "percent": 0.276
+            },
+            {
+              "name": "opportunities.ts",
+              "sampledMs": 2.033,
+              "percent": 0.188
+            },
+            {
+              "name": "types.ts",
+              "sampledMs": 2.003,
+              "percent": 0.185
+            },
+            {
+              "name": "task_queues",
+              "sampledMs": 1.989,
+              "percent": 0.184
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cells": 8,
+      "case": "backpressured",
+      "samples": 1,
+      "latency": {
+        "all": {
+          "step": {
+            "medianMs": 0.9416,
+            "p95Ms": 3.3079,
+            "observations": 300
+          },
+          "snapshot": {
+            "medianMs": 1.6311,
+            "p95Ms": 3.0009,
+            "observations": 300
+          },
+          "combined": {
+            "medianMs": 2.9129,
+            "p95Ms": 5.4434,
+            "observations": 300
+          }
+        },
+        "transport": {
+          "step": {
+            "medianMs": 1.6519,
+            "p95Ms": 3.7548,
+            "observations": 100
+          },
+          "snapshot": {
+            "medianMs": 1.6661,
+            "p95Ms": 2.8912,
+            "observations": 100
+          },
+          "combined": {
+            "medianMs": 3.5535,
+            "p95Ms": 5.6343,
+            "observations": 100
+          }
+        },
+        "nonTransport": {
+          "step": {
+            "medianMs": 0.6962,
+            "p95Ms": 2.8069,
+            "observations": 200
+          },
+          "snapshot": {
+            "medianMs": 1.6,
+            "p95Ms": 3.0009,
+            "observations": 200
+          },
+          "combined": {
+            "medianMs": 2.6931,
+            "p95Ms": 4.4974,
+            "observations": 200
+          }
+        },
+        "gcOverlapping": {
+          "step": {
+            "medianMs": 4.4587,
+            "p95Ms": 7.6773,
+            "observations": 3
+          },
+          "snapshot": {
+            "medianMs": 2.8912,
+            "p95Ms": 3.1642,
+            "observations": 3
+          },
+          "combined": {
+            "medianMs": 6.5927,
+            "p95Ms": 10.8415,
+            "observations": 3
+          }
+        },
+        "withoutObservedGC": {
+          "step": {
+            "medianMs": 0.9414,
+            "p95Ms": 3.1685,
+            "observations": 297
+          },
+          "snapshot": {
+            "medianMs": 1.6311,
+            "p95Ms": 3.0009,
+            "observations": 297
+          },
+          "combined": {
+            "medianMs": 2.9042,
+            "p95Ms": 5.2168,
+            "observations": 297
+          }
+        },
+        "gc": {
+          "events": 3,
+          "totalEventDurationMs": 6.069700002670288,
+          "byKind": {
+            "1": 2,
+            "4": 1
+          }
+        }
+      },
+      "budget": null,
+      "profiles": [
+        {
+          "artifact": "cpu-8-backpressured-0.cpuprofile",
+          "samples": 527,
+          "sampledMs": 1157.691,
+          "self": [
+            {
+              "name": "structuredClone (js_transferable:113)",
+              "sampledMs": 483.829,
+              "percent": 41.793
+            },
+            {
+              "name": "post (node:inspector:115)",
+              "sampledMs": 211.911,
+              "percent": 18.305
+            },
+            {
+              "name": "topologySignature (factory-throughput.ts:30)",
+              "sampledMs": 106.369,
+              "percent": 9.188
+            },
+            {
+              "name": "connectedRuntime (factory-throughput.ts:129)",
+              "sampledMs": 43.196,
+              "percent": 3.731
+            },
+            {
+              "name": "stateSignature (factory-throughput.ts:193)",
+              "sampledMs": 34.521,
+              "percent": 2.982
+            },
+            {
+              "name": "transport (production.ts:87)",
+              "sampledMs": 28.899,
+              "percent": 2.496
+            },
+            {
+              "name": "(anonymous) (factory-throughput.ts:41)",
+              "sampledMs": 28.446,
+              "percent": 2.457
+            },
+            {
+              "name": "targetFor (production.ts:133)",
+              "sampledMs": 21.493,
+              "percent": 1.857
+            },
+            {
+              "name": "footprint (geometry.ts:41)",
+              "sampledMs": 18.865,
+              "percent": 1.63
+            },
+            {
+              "name": "key (geometry.ts:16)",
+              "sampledMs": 17.053,
+              "percent": 1.473
+            },
+            {
+              "name": "(anonymous) (single-world-baseline.test.ts:271)",
+              "sampledMs": 12.59,
+              "percent": 1.088
+            },
+            {
+              "name": "observe (factory-throughput.ts:263)",
+              "sampledMs": 11.51,
+              "percent": 0.994
+            },
+            {
+              "name": "snapshot (simulation.ts:71)",
+              "sampledMs": 11.169,
+              "percent": 0.965
+            },
+            {
+              "name": "(garbage collector) (native:0)",
+              "sampledMs": 10.439,
+              "percent": 0.902
+            },
+            {
+              "name": "(anonymous) (simulation.ts:142)",
+              "sampledMs": 9.486,
+              "percent": 0.819
+            }
+          ],
+          "inclusive": [
+            {
+              "name": "(root) (native:0)",
+              "sampledMs": 1157.691,
+              "percent": 100
+            },
+            {
+              "name": "runNextTicks (task_queues:63)",
+              "sampledMs": 1147.252,
+              "percent": 99.098
+            },
+            {
+              "name": "processImmediate (timers:525)",
+              "sampledMs": 1147.252,
+              "percent": 99.098
+            },
+            {
+              "name": "(anonymous) (single-world-baseline.test.ts:271)",
+              "sampledMs": 1142.332,
+              "percent": 98.673
+            },
+            {
+              "name": "snapshot (simulation.ts:71)",
+              "sampledMs": 546.872,
+              "percent": 47.238
+            },
+            {
+              "name": "structuredClone (js_transferable:113)",
+              "sampledMs": 485.354,
+              "percent": 41.924
+            },
+            {
+              "name": "step (simulation.ts:47)",
+              "sampledMs": 360.478,
+              "percent": 31.138
+            },
+            {
+              "name": "observe (factory-throughput.ts:263)",
+              "sampledMs": 268.13,
+              "percent": 23.161
+            },
+            {
+              "name": "post (node:inspector:115)",
+              "sampledMs": 217.318,
+              "percent": 18.772
+            },
+            {
+              "name": "(anonymous) (util:478)",
+              "sampledMs": 217.318,
+              "percent": 18.772
+            },
+            {
+              "name": "fn (util:477)",
+              "sampledMs": 217.318,
+              "percent": 18.772
+            },
+            {
+              "name": "ensure (factory-throughput.ts:234)",
+              "sampledMs": 157.946,
+              "percent": 13.643
+            },
+            {
+              "name": "topologySignature (factory-throughput.ts:30)",
+              "sampledMs": 153.324,
+              "percent": 13.244
+            },
+            {
+              "name": "stateSignature (factory-throughput.ts:193)",
+              "sampledMs": 95.404,
+              "percent": 8.241
+            },
+            {
+              "name": "transport (production.ts:87)",
+              "sampledMs": 81.6,
+              "percent": 7.049
+            },
+            {
+              "name": "connectedRuntime (factory-throughput.ts:129)",
+              "sampledMs": 53.885,
+              "percent": 4.655
+            },
+            {
+              "name": "(anonymous) (factory-throughput.ts:41)",
+              "sampledMs": 43.378,
+              "percent": 3.747
+            },
+            {
+              "name": "targetFor (production.ts:133)",
+              "sampledMs": 41.604,
+              "percent": 3.594
+            },
+            {
+              "name": "footprint (geometry.ts:41)",
+              "sampledMs": 18.865,
+              "percent": 1.63
+            },
+            {
+              "name": "key (geometry.ts:16)",
+              "sampledMs": 17.053,
+              "percent": 1.473
+            }
+          ],
+          "modulesBySelf": [
+            {
+              "name": "js_transferable",
+              "sampledMs": 483.829,
+              "percent": 41.793
+            },
+            {
+              "name": "factory-throughput.ts",
+              "sampledMs": 250.081,
+              "percent": 21.602
+            },
+            {
+              "name": "node:inspector",
+              "sampledMs": 211.911,
+              "percent": 18.305
+            },
+            {
+              "name": "production.ts",
+              "sampledMs": 63.591,
+              "percent": 5.493
+            },
+            {
+              "name": "simulation.ts",
+              "sampledMs": 47.673,
+              "percent": 4.118
+            },
+            {
+              "name": "geometry.ts",
+              "sampledMs": 43.642,
+              "percent": 3.77
+            },
+            {
+              "name": "native",
+              "sampledMs": 17.371,
+              "percent": 1.5
+            },
+            {
+              "name": "single-world-baseline.test.ts",
+              "sampledMs": 12.59,
+              "percent": 1.088
+            },
+            {
+              "name": "assistance.ts",
+              "sampledMs": 7.798,
+              "percent": 0.674
+            },
+            {
+              "name": "task_queues",
+              "sampledMs": 4.92,
+              "percent": 0.425
+            },
+            {
+              "name": "junctions.ts",
+              "sampledMs": 3.646,
+              "percent": 0.315
+            },
+            {
+              "name": "module-evaluator.js",
+              "sampledMs": 3.56,
+              "percent": 0.308
+            },
+            {
+              "name": "factory-contract.ts",
+              "sampledMs": 3.553,
+              "percent": 0.307
+            },
+            {
+              "name": "milestones.ts",
+              "sampledMs": 2.012,
+              "percent": 0.174
+            },
+            {
+              "name": "performance",
+              "sampledMs": 1.514,
+              "percent": 0.131
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cells": 32,
+      "case": "flowing",
+      "samples": 1,
+      "latency": {
+        "all": {
+          "step": {
+            "medianMs": 11.102,
+            "p95Ms": 25.2107,
+            "observations": 300
+          },
+          "snapshot": {
+            "medianMs": 4.9619,
+            "p95Ms": 8.1509,
+            "observations": 300
+          },
+          "combined": {
+            "medianMs": 16.9797,
+            "p95Ms": 30.5176,
+            "observations": 300
+          }
+        },
+        "transport": {
+          "step": {
+            "medianMs": 13.7659,
+            "p95Ms": 29.5131,
+            "observations": 100
+          },
+          "snapshot": {
+            "medianMs": 4.9253,
+            "p95Ms": 8.0115,
+            "observations": 100
+          },
+          "combined": {
+            "medianMs": 20.0471,
+            "p95Ms": 34.4227,
+            "observations": 100
+          }
+        },
+        "nonTransport": {
+          "step": {
+            "medianMs": 5.8629,
+            "p95Ms": 19.1275,
+            "observations": 200
+          },
+          "snapshot": {
+            "medianMs": 4.9678,
+            "p95Ms": 8.1509,
+            "observations": 200
+          },
+          "combined": {
+            "medianMs": 11.8376,
+            "p95Ms": 26.6433,
+            "observations": 200
+          }
+        },
+        "gcOverlapping": {
+          "step": {
+            "medianMs": 15.2903,
+            "p95Ms": 30.766,
+            "observations": 16
+          },
+          "snapshot": {
+            "medianMs": 6.4638,
+            "p95Ms": 10.1578,
+            "observations": 16
+          },
+          "combined": {
+            "medianMs": 22.6158,
+            "p95Ms": 40.9238,
+            "observations": 16
+          }
+        },
+        "withoutObservedGC": {
+          "step": {
+            "medianMs": 10.8399,
+            "p95Ms": 25.2107,
+            "observations": 284
+          },
+          "snapshot": {
+            "medianMs": 4.9096,
+            "p95Ms": 8.1049,
+            "observations": 284
+          },
+          "combined": {
+            "medianMs": 16.3433,
+            "p95Ms": 29.8365,
+            "observations": 284
+          }
+        },
+        "gc": {
+          "events": 16,
+          "totalEventDurationMs": 23.660800002515316,
+          "byKind": {
+            "1": 15,
+            "4": 1
+          }
+        }
+      },
+      "budget": null,
+      "profiles": [
+        {
+          "artifact": "cpu-32-flowing-0.cpuprofile",
+          "samples": 2764,
+          "sampledMs": 5272.423,
+          "self": [
+            {
+              "name": "structuredClone (js_transferable:113)",
+              "sampledMs": 1471.471,
+              "percent": 27.909
+            },
+            {
+              "name": "topologySignature (factory-throughput.ts:30)",
+              "sampledMs": 894.05,
+              "percent": 16.957
+            },
+            {
+              "name": "stateSignature (factory-throughput.ts:193)",
+              "sampledMs": 569.448,
+              "percent": 10.8
+            },
+            {
+              "name": "(anonymous) (factory-throughput.ts:41)",
+              "sampledMs": 346.221,
+              "percent": 6.567
+            },
+            {
+              "name": "connectedRuntime (factory-throughput.ts:129)",
+              "sampledMs": 326.538,
+              "percent": 6.193
+            },
+            {
+              "name": "(anonymous) (factory-throughput.ts:195)",
+              "sampledMs": 165.306,
+              "percent": 3.135
+            },
+            {
+              "name": "key (geometry.ts:16)",
+              "sampledMs": 144.087,
+              "percent": 2.733
+            },
+            {
+              "name": "post (node:inspector:115)",
+              "sampledMs": 143.802,
+              "percent": 2.727
+            },
+            {
+              "name": "observe (factory-throughput.ts:263)",
+              "sampledMs": 123.912,
+              "percent": 2.35
+            },
+            {
+              "name": "connectedTopology (factory-throughput.ts:80)",
+              "sampledMs": 120.875,
+              "percent": 2.293
+            },
+            {
+              "name": "footprint (geometry.ts:41)",
+              "sampledMs": 111.124,
+              "percent": 2.108
+            },
+            {
+              "name": "transport (production.ts:87)",
+              "sampledMs": 92.585,
+              "percent": 1.756
+            },
+            {
+              "name": "targetFor (production.ts:133)",
+              "sampledMs": 80.567,
+              "percent": 1.528
+            },
+            {
+              "name": "factoryView (factory-contract.ts:13)",
+              "sampledMs": 61.818,
+              "percent": 1.172
+            },
+            {
+              "name": "recordMove (factory-throughput.ts:252)",
+              "sampledMs": 59.627,
+              "percent": 1.131
+            }
+          ],
+          "inclusive": [
+            {
+              "name": "(root) (native:0)",
+              "sampledMs": 5272.423,
+              "percent": 100
+            },
+            {
+              "name": "runNextTicks (task_queues:63)",
+              "sampledMs": 5223.307,
+              "percent": 99.068
+            },
+            {
+              "name": "processImmediate (timers:525)",
+              "sampledMs": 5223.307,
+              "percent": 99.068
+            },
+            {
+              "name": "(anonymous) (single-world-baseline.test.ts:271)",
+              "sampledMs": 5221.977,
+              "percent": 99.043
+            },
+            {
+              "name": "step (simulation.ts:47)",
+              "sampledMs": 3402.094,
+              "percent": 64.526
+            },
+            {
+              "name": "observe (factory-throughput.ts:263)",
+              "sampledMs": 2767.495,
+              "percent": 52.49
+            },
+            {
+              "name": "snapshot (simulation.ts:71)",
+              "sampledMs": 1652.481,
+              "percent": 31.342
+            },
+            {
+              "name": "structuredClone (js_transferable:113)",
+              "sampledMs": 1472.982,
+              "percent": 27.937
+            },
+            {
+              "name": "ensure (factory-throughput.ts:234)",
+              "sampledMs": 1333.273,
+              "percent": 25.288
+            },
+            {
+              "name": "topologySignature (factory-throughput.ts:30)",
+              "sampledMs": 1306.665,
+              "percent": 24.783
+            },
+            {
+              "name": "stateSignature (factory-throughput.ts:193)",
+              "sampledMs": 1204.822,
+              "percent": 22.851
+            },
+            {
+              "name": "transport (production.ts:87)",
+              "sampledMs": 620.042,
+              "percent": 11.76
+            },
+            {
+              "name": "connectedRuntime (factory-throughput.ts:129)",
+              "sampledMs": 452.663,
+              "percent": 8.585
+            },
+            {
+              "name": "(anonymous) (factory-throughput.ts:41)",
+              "sampledMs": 393.1,
+              "percent": 7.456
+            },
+            {
+              "name": "(anonymous) (simulation.ts:60)",
+              "sampledMs": 323.96,
+              "percent": 6.144
+            },
+            {
+              "name": "recordMove (factory-throughput.ts:252)",
+              "sampledMs": 293.638,
+              "percent": 5.569
+            },
+            {
+              "name": "connectedTopology (factory-throughput.ts:80)",
+              "sampledMs": 177.299,
+              "percent": 3.363
+            },
+            {
+              "name": "(anonymous) (factory-throughput.ts:195)",
+              "sampledMs": 176.227,
+              "percent": 3.342
+            },
+            {
+              "name": "targetFor (production.ts:133)",
+              "sampledMs": 153.372,
+              "percent": 2.909
+            },
+            {
+              "name": "post (node:inspector:115)",
+              "sampledMs": 146.988,
+              "percent": 2.788
+            }
+          ],
+          "modulesBySelf": [
+            {
+              "name": "factory-throughput.ts",
+              "sampledMs": 2811.295,
+              "percent": 53.321
+            },
+            {
+              "name": "js_transferable",
+              "sampledMs": 1471.471,
+              "percent": 27.909
+            },
+            {
+              "name": "geometry.ts",
+              "sampledMs": 304.992,
+              "percent": 5.785
+            },
+            {
+              "name": "production.ts",
+              "sampledMs": 223.861,
+              "percent": 4.246
+            },
+            {
+              "name": "node:inspector",
+              "sampledMs": 143.802,
+              "percent": 2.727
+            },
+            {
+              "name": "simulation.ts",
+              "sampledMs": 96.177,
+              "percent": 1.824
+            },
+            {
+              "name": "factory-contract.ts",
+              "sampledMs": 80.53,
+              "percent": 1.527
+            },
+            {
+              "name": "junctions.ts",
+              "sampledMs": 49.902,
+              "percent": 0.946
+            },
+            {
+              "name": "native",
+              "sampledMs": 48.199,
+              "percent": 0.914
+            },
+            {
+              "name": "single-world-baseline.test.ts",
+              "sampledMs": 14.866,
+              "percent": 0.282
+            },
+            {
+              "name": "types.ts",
+              "sampledMs": 12.134,
+              "percent": 0.23
+            },
+            {
+              "name": "module-evaluator.js",
+              "sampledMs": 3.564,
+              "percent": 0.068
+            },
+            {
+              "name": "milestones.ts",
+              "sampledMs": 2.742,
+              "percent": 0.052
+            },
+            {
+              "name": "market.ts",
+              "sampledMs": 2.028,
+              "percent": 0.038
+            },
+            {
+              "name": "assistance.ts",
+              "sampledMs": 1.994,
+              "percent": 0.038
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cells": 32,
+      "case": "backpressured",
+      "samples": 1,
+      "latency": {
+        "all": {
+          "step": {
+            "medianMs": 5.3926,
+            "p95Ms": 17.5554,
+            "observations": 300
+          },
+          "snapshot": {
+            "medianMs": 5.2238,
+            "p95Ms": 8.0139,
+            "observations": 300
+          },
+          "combined": {
+            "medianMs": 11.9689,
+            "p95Ms": 22.9194,
+            "observations": 300
+          }
+        },
+        "transport": {
+          "step": {
+            "medianMs": 9.4701,
+            "p95Ms": 22.5126,
+            "observations": 100
+          },
+          "snapshot": {
+            "medianMs": 5.0768,
+            "p95Ms": 7.7624,
+            "observations": 100
+          },
+          "combined": {
+            "medianMs": 15.006,
+            "p95Ms": 27.1327,
+            "observations": 100
+          }
+        },
+        "nonTransport": {
+          "step": {
+            "medianMs": 3.7705,
+            "p95Ms": 15.2097,
+            "observations": 200
+          },
+          "snapshot": {
+            "medianMs": 5.3312,
+            "p95Ms": 8.0431,
+            "observations": 200
+          },
+          "combined": {
+            "medianMs": 9.5362,
+            "p95Ms": 20.6952,
+            "observations": 200
+          }
+        },
+        "gcOverlapping": {
+          "step": {
+            "medianMs": 8.393,
+            "p95Ms": 24.4617,
+            "observations": 12
+          },
+          "snapshot": {
+            "medianMs": 5.5468,
+            "p95Ms": 8.0431,
+            "observations": 12
+          },
+          "combined": {
+            "medianMs": 14.4936,
+            "p95Ms": 31.4021,
+            "observations": 12
+          }
+        },
+        "withoutObservedGC": {
+          "step": {
+            "medianMs": 5.2269,
+            "p95Ms": 16.9326,
+            "observations": 288
+          },
+          "snapshot": {
+            "medianMs": 5.2131,
+            "p95Ms": 8.0139,
+            "observations": 288
+          },
+          "combined": {
+            "medianMs": 11.8569,
+            "p95Ms": 22.1706,
+            "observations": 288
+          }
+        },
+        "gc": {
+          "events": 12,
+          "totalEventDurationMs": 16.493099998682737,
+          "byKind": {
+            "1": 11,
+            "4": 1
+          }
+        }
+      },
+      "budget": null,
+      "profiles": [
+        {
+          "artifact": "cpu-32-backpressured-0.cpuprofile",
+          "samples": 2193,
+          "sampledMs": 4106.752,
+          "self": [
+            {
+              "name": "structuredClone (js_transferable:113)",
+              "sampledMs": 1466.773,
+              "percent": 35.716
+            },
+            {
+              "name": "topologySignature (factory-throughput.ts:30)",
+              "sampledMs": 482.166,
+              "percent": 11.741
+            },
+            {
+              "name": "ensure (factory-throughput.ts:234)",
+              "sampledMs": 385.054,
+              "percent": 9.376
+            },
+            {
+              "name": "stateSignature (factory-throughput.ts:193)",
+              "sampledMs": 186.598,
+              "percent": 4.544
+            },
+            {
+              "name": "(anonymous) (factory-throughput.ts:41)",
+              "sampledMs": 185.85,
+              "percent": 4.525
+            },
+            {
+              "name": "connectedRuntime (factory-throughput.ts:129)",
+              "sampledMs": 143.087,
+              "percent": 3.484
+            },
+            {
+              "name": "targetFor (production.ts:133)",
+              "sampledMs": 137.453,
+              "percent": 3.347
+            },
+            {
+              "name": "footprint (geometry.ts:41)",
+              "sampledMs": 132.488,
+              "percent": 3.226
+            },
+            {
+              "name": "post (node:inspector:115)",
+              "sampledMs": 131.968,
+              "percent": 3.213
+            },
+            {
+              "name": "transport (production.ts:87)",
+              "sampledMs": 106.064,
+              "percent": 2.583
+            },
+            {
+              "name": "observe (factory-throughput.ts:263)",
+              "sampledMs": 88.113,
+              "percent": 2.146
+            },
+            {
+              "name": "factoryView (factory-contract.ts:13)",
+              "sampledMs": 65.985,
+              "percent": 1.607
+            },
+            {
+              "name": "key (geometry.ts:16)",
+              "sampledMs": 64.851,
+              "percent": 1.579
+            },
+            {
+              "name": "connectedTopology (factory-throughput.ts:80)",
+              "sampledMs": 62.732,
+              "percent": 1.528
+            },
+            {
+              "name": "(anonymous) (factory-throughput.ts:195)",
+              "sampledMs": 61.049,
+              "percent": 1.487
+            }
+          ],
+          "inclusive": [
+            {
+              "name": "(root) (native:0)",
+              "sampledMs": 4106.752,
+              "percent": 100
+            },
+            {
+              "name": "(anonymous) (single-world-baseline.test.ts:271)",
+              "sampledMs": 4081.03,
+              "percent": 99.374
+            },
+            {
+              "name": "runNextTicks (task_queues:63)",
+              "sampledMs": 4081.03,
+              "percent": 99.374
+            },
+            {
+              "name": "processImmediate (timers:525)",
+              "sampledMs": 4081.03,
+              "percent": 99.374
+            },
+            {
+              "name": "step (simulation.ts:47)",
+              "sampledMs": 2259.39,
+              "percent": 55.016
+            },
+            {
+              "name": "observe (factory-throughput.ts:263)",
+              "sampledMs": 1710.73,
+              "percent": 41.657
+            },
+            {
+              "name": "snapshot (simulation.ts:71)",
+              "sampledMs": 1668.961,
+              "percent": 40.639
+            },
+            {
+              "name": "structuredClone (js_transferable:113)",
+              "sampledMs": 1473.262,
+              "percent": 35.874
+            },
+            {
+              "name": "ensure (factory-throughput.ts:234)",
+              "sampledMs": 1092.899,
+              "percent": 26.612
+            },
+            {
+              "name": "topologySignature (factory-throughput.ts:30)",
+              "sampledMs": 707.845,
+              "percent": 17.236
+            },
+            {
+              "name": "transport (production.ts:87)",
+              "sampledMs": 509.688,
+              "percent": 12.411
+            },
+            {
+              "name": "stateSignature (factory-throughput.ts:193)",
+              "sampledMs": 463.36,
+              "percent": 11.283
+            },
+            {
+              "name": "targetFor (production.ts:133)",
+              "sampledMs": 295.82,
+              "percent": 7.203
+            },
+            {
+              "name": "(anonymous) (factory-throughput.ts:41)",
+              "sampledMs": 222.639,
+              "percent": 5.421
+            },
+            {
+              "name": "connectedRuntime (factory-throughput.ts:129)",
+              "sampledMs": 200.556,
+              "percent": 4.884
+            },
+            {
+              "name": "post (node:inspector:115)",
+              "sampledMs": 133.973,
+              "percent": 3.262
+            },
+            {
+              "name": "(anonymous) (util:478)",
+              "sampledMs": 133.973,
+              "percent": 3.262
+            },
+            {
+              "name": "fn (util:477)",
+              "sampledMs": 133.973,
+              "percent": 3.262
+            },
+            {
+              "name": "footprint (geometry.ts:41)",
+              "sampledMs": 132.488,
+              "percent": 3.226
+            },
+            {
+              "name": "(anonymous) (production.ts:157)",
+              "sampledMs": 106.533,
+              "percent": 2.594
+            }
+          ],
+          "modulesBySelf": [
+            {
+              "name": "factory-throughput.ts",
+              "sampledMs": 1658.546,
+              "percent": 40.386
+            },
+            {
+              "name": "js_transferable",
+              "sampledMs": 1466.773,
+              "percent": 35.716
+            },
+            {
+              "name": "production.ts",
+              "sampledMs": 333.294,
+              "percent": 8.116
+            },
+            {
+              "name": "geometry.ts",
+              "sampledMs": 236.031,
+              "percent": 5.747
+            },
+            {
+              "name": "node:inspector",
+              "sampledMs": 131.968,
+              "percent": 3.213
+            },
+            {
+              "name": "simulation.ts",
+              "sampledMs": 117.73,
+              "percent": 2.867
+            },
+            {
+              "name": "factory-contract.ts",
+              "sampledMs": 85.112,
+              "percent": 2.072
+            },
+            {
+              "name": "native",
+              "sampledMs": 35.641,
+              "percent": 0.868
+            },
+            {
+              "name": "junctions.ts",
+              "sampledMs": 17.332,
+              "percent": 0.422
+            },
+            {
+              "name": "single-world-baseline.test.ts",
+              "sampledMs": 11.575,
+              "percent": 0.282
+            },
+            {
+              "name": "types.ts",
+              "sampledMs": 8.938,
+              "percent": 0.218
+            },
+            {
+              "name": "module-evaluator.js",
+              "sampledMs": 2.112,
+              "percent": 0.051
+            },
+            {
+              "name": "assistance.ts",
+              "sampledMs": 1.7,
+              "percent": 0.041
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "recordedDate": "2026-10-02",
+  "measuredCommit": "6e9fa0fe40f14d26cbdd5982b2d6bb3418386331",
+  "baselineCommit": "b7f7f2b7fbf324c0b38a19aebea316e397a3cc75",
+  "rawProfiles": [
+    {
+      "file": "cpu-32-backpressured-0.cpuprofile",
+      "sha256": "2424f229bdd2a2fdcded5ba614685e0031dd6420a4381337e1ec1b28e1faccc5",
+      "bytes": 44376
+    },
+    {
+      "file": "cpu-32-flowing-0.cpuprofile",
+      "sha256": "13eaac6e2f6ad889636af9c336561e9f47f0e17e946a472c6fe478ea8100726f",
+      "bytes": 56124
+    },
+    {
+      "file": "cpu-8-backpressured-0.cpuprofile",
+      "sha256": "9b1c53ae180cd7442da21e0d08e76cbdd98b4647eeda6eaec5951a03201f50fa",
+      "bytes": 23104
+    },
+    {
+      "file": "cpu-8-flowing-0.cpuprofile",
+      "sha256": "0d6c8ea84af8eb5c562bea38e6e2412e2a4b66883743c801b6a9976de0aa3fb3",
+      "bytes": 27527
+    }
+  ]
+}
