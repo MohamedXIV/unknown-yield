@@ -1,6 +1,6 @@
 # Execution Guide
 
-This document is intentionally procedural. Game/design truth lives in the domain docs; GitHub Issue #2 is the live execution index.
+This document is intentionally procedural. Game/design truth lives in the domain docs; GitHub Issue #2 is archived execution history; current direction is recorded below and active scope belongs to the next explicitly agreed issue.
 
 ## Current state
 
@@ -161,7 +161,7 @@ Read `PHASE6_JUNCTIONS.md` before changing routing, visuals or persistence. Miss
 
 ## Agent loop
 
-1. Read Issue #2 and identify the first unblocked incomplete issue.
+1. Read this guide and the current agreed GitHub issue. Issue #2 is historical; do not infer active work from its old NEXT entries.
 2. If that issue already has an open PR, continue/review it; do not create a competing implementation.
 3. Read the issue, `AGENTS.md`, and only the directly relevant design/architecture docs.
 4. Create/use a focused branch named for the issue, e.g. `feat/3-material-ledger`.
@@ -169,7 +169,7 @@ Read `PHASE6_JUNCTIONS.md` before changing routing, visuals or persistence. Miss
 6. Run focused tests first. Then run the broader checks required by the touched scope.
 7. Open one focused PR referencing the issue. Record exact commands/results and intentional save/content compatibility changes.
 8. Resolve review findings, re-check the exact PR head, then squash merge when the acceptance gate is satisfied.
-9. Confirm the issue closes or close it with evidence, update Issue #2 if needed, then select the next unblocked issue.
+9. Confirm the issue closes or close it with evidence, update current execution docs, then select the next agreed task.
 
 ## Verification baseline
 
@@ -208,8 +208,16 @@ There is currently no remote CI workflow. Do not represent absent checks as gree
 - #80 — readable belts and controlled ground junctions — COMPLETE through #84 / PR #89.
 - Completed Phase 7 baseline: **#90 — single-world simulation/snapshot baseline**, through PR #91. Evidence: PHASE7_BASELINE.md. Phase 7 remains open; #92 profiling completed through PR #93; 32-factory / 10ms joint-p95 budget FAILS. Evidence: PHASE7_PROFILING.md. Optimization #94 is complete through PR #95: shared connected topology indexing within each throughput observation; all dynamic recurrence checks retained. Browser costs remain a separate gate.
 
-Follow the live dependency order in Issue #2. Deferred roadmap possibilities are not permission to work around the active gate.
+Preserve the active issue dependency order. Archived Issue #2 NEXT entries and deferred roadmap possibilities do not authorize new work.
 
 Completed optimization: #94 through PR #95, shared per-observation topology indexing. See [measurement and verification](PHASE7_TOPOLOGY_OPTIMIZATION.md). 32-factory joint p95: 31.0466ms flowing / 24.4467ms backpressured, both above the fixed 10ms budget. Follow-up #96 is complete through PR #97; the current measurement below supersedes these #94 results.
 
 Completed optimization: #96 through PR #97, fresh local membership reused within observation. See [measurement and verification](PHASE7_MEMBERSHIP_OPTIMIZATION.md). 32-factory joint p95: 24.5777ms flowing / 19.6748ms backpressured, both above fixed 10ms. Fresh parent control: 33.0945 / 27.9175ms. Phase 7 remains open; assess remaining membership/signature and snapshot cloning costs under a separate approved scope.
+
+## Execution reset — 2026-10-02
+
+User chose to return to gameplay after #96 / PR #97 rather than continue snapshot optimization now. #2 is closed as a retired execution index, not evidence that every roadmap gate passed. #75 is closed as not planned: Vercel repair/deployment is outside the current scope, not fixed. Completed gameplay phases 1.5–6 and accepted Phase 7 measurements/optimizations remain documented.
+
+Phase 7 performance work is deferred. The fixed 32-factory joint p95 <=10ms gate remains unmet (24.5777ms flowing / 19.6748ms backpressured); browser/device gates remain unverified. Keep existing evidence and correctness boundaries. Revisit when an actual browser-playability problem or an agreed feature scale requirement justifies it. Old NEXT recommendations in profiling docs are historical candidates, not active assignments.
+
+Next: agree one substantial gameplay milestone, document its intent and acceptance, then open its canonical issue. No new gameplay feature, Phase 8 work, underground transport or optimization is implicitly selected by this reset.
