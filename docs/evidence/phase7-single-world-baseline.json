@@ -1,0 +1,149 @@
+{
+  "recordedDate": "2026-10-02",
+  "measuredCommit": "6b7c530ab4c0862f345de54a2a6671c9f12f2f2d",
+  "schema": 1,
+  "node": "v24.20.0",
+  "platform": "win32",
+  "arch": "x64",
+  "cpu": "Intel(R) Core(TM) i7-7700HQ CPU @ 2.80GHz",
+  "logicalCpus": 8,
+  "totalMemoryBytes": 34246660096,
+  "tickMs": 100,
+  "warmupTicks": 300,
+  "sampleTicks": 300,
+  "samples": 3,
+  "rows": [
+    {
+      "cells": 1,
+      "case": "flowing",
+      "counts": {
+        "factories": 1,
+        "machines": 3,
+        "belts": 27,
+        "junctions": 3,
+        "storages": 2,
+        "occupiedBelts": 14
+      },
+      "step": {
+        "medianMs": 0.1294,
+        "p95Ms": 0.3651,
+        "observations": 900
+      },
+      "snapshot": {
+        "medianMs": 0.2538,
+        "p95Ms": 0.5257,
+        "observations": 900
+      }
+    },
+    {
+      "cells": 1,
+      "case": "backpressured",
+      "counts": {
+        "factories": 1,
+        "machines": 3,
+        "belts": 27,
+        "junctions": 3,
+        "storages": 2,
+        "occupiedBelts": 24
+      },
+      "step": {
+        "medianMs": 0.0619,
+        "p95Ms": 0.2983,
+        "observations": 900
+      },
+      "snapshot": {
+        "medianMs": 0.2343,
+        "p95Ms": 0.4797,
+        "observations": 900
+      }
+    },
+    {
+      "cells": 8,
+      "case": "flowing",
+      "counts": {
+        "factories": 8,
+        "machines": 24,
+        "belts": 216,
+        "junctions": 24,
+        "storages": 16,
+        "occupiedBelts": 112
+      },
+      "step": {
+        "medianMs": 1.6831,
+        "p95Ms": 9.0598,
+        "observations": 900
+      },
+      "snapshot": {
+        "medianMs": 1.7571,
+        "p95Ms": 3.0794,
+        "observations": 900
+      }
+    },
+    {
+      "cells": 8,
+      "case": "backpressured",
+      "counts": {
+        "factories": 8,
+        "machines": 24,
+        "belts": 216,
+        "junctions": 24,
+        "storages": 16,
+        "occupiedBelts": 192
+      },
+      "step": {
+        "medianMs": 0.5675,
+        "p95Ms": 4.6914,
+        "observations": 900
+      },
+      "snapshot": {
+        "medianMs": 1.0939,
+        "p95Ms": 2.1822,
+        "observations": 900
+      }
+    },
+    {
+      "cells": 32,
+      "case": "flowing",
+      "counts": {
+        "factories": 32,
+        "machines": 96,
+        "belts": 864,
+        "junctions": 96,
+        "storages": 64,
+        "occupiedBelts": 448
+      },
+      "step": {
+        "medianMs": 7.78,
+        "p95Ms": 60.8002,
+        "observations": 900
+      },
+      "snapshot": {
+        "medianMs": 3.8318,
+        "p95Ms": 6.7843,
+        "observations": 900
+      }
+    },
+    {
+      "cells": 32,
+      "case": "backpressured",
+      "counts": {
+        "factories": 32,
+        "machines": 96,
+        "belts": 864,
+        "junctions": 96,
+        "storages": 64,
+        "occupiedBelts": 768
+      },
+      "step": {
+        "medianMs": 3.9457,
+        "p95Ms": 56.786,
+        "observations": 900
+      },
+      "snapshot": {
+        "medianMs": 3.8594,
+        "p95Ms": 6.7448,
+        "observations": 900
+      }
+    }
+  ]
+}
