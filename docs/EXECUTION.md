@@ -206,6 +206,6 @@ There is currently no remote CI workflow. Do not represent absent checks as gree
 - #11 — Content Studio v1 — COMPLETE via children #60–#63
 - #12 — Materials Exchange and corporate progression — COMPLETE via #69–#73; exit gate #73 merged through PR #79 / `dcbe1a567cc26ab150f13e159d35bf50030ee570`
 - #80 — readable belts and controlled ground junctions — COMPLETE through #84 / PR #89.
-- Phase 7 — undecomposed. Establish measured benchmark scenarios and budgets before choosing optimization work.
+- Active Phase 7 milestone: **#90 — single-world simulation/snapshot baseline**. Contract: `PHASE7_BASELINE.md`. Measure before selecting budgets/optimization; no performance rewrite is authorized.
 
 Follow the live dependency order in Issue #2. Deferred roadmap possibilities are not permission to work around the active gate.
