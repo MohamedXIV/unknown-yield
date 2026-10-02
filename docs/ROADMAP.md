@@ -224,7 +224,7 @@ In one persistent playable world, a player can read actual L/diverter routes, fa
 
 ## Phase 7 — Scale and performance
 
-**Phase 7 ACTIVE; baseline COMPLETE:** #90 through PR #91 — single-world simulation/snapshot baseline. [Approved measurement contract](PHASE7_BASELINE.md). Active #92: [step-tail profiling and approved reference budget](PHASE7_PROFILING.md). Browser/representative-device budgets and any optimization follow measured evidence.
+**Phase 7 ACTIVE; baseline COMPLETE:** #90 through PR #91 — single-world simulation/snapshot baseline. [Approved measurement contract](PHASE7_BASELINE.md). #92 profiling COMPLETE through PR #93: [step-tail profiling and approved reference budget](PHASE7_PROFILING.md); the 32-factory budget FAILS and remains fixed. Browser/representative-device budgets and any optimization follow measured evidence.
 
 ### Work
 
@@ -292,4 +292,4 @@ The following should not be treated as progress during foundation unless require
 
 The accepted implementation and evidence are summarized in [FIRST_PLAYABLE.md](FIRST_PLAYABLE.md) and [BROWSER_SMOKE.md](BROWSER_SMOKE.md). Continue from this foundation; do not rebuild the retired dashboard prototype.
 
-Phase 1.5 is complete through Issue #8 / PR #29, Phase 2 through Issue #34 / PR #44, Phase 3 through Issue #50, Phase 4 through Issue #63 / PR #67, and Phase 5 through Issue #73 / PR #79 (`dcbe1a567cc26ab150f13e159d35bf50030ee570`). Phase 6 / #80 is complete through #84 / PR #89. Phase 7 baseline #90 is complete through PR #91; active #92 profiles the measured workload against the approved reference budget before selecting optimization.
+Phase 1.5 is complete through Issue #8 / PR #29, Phase 2 through Issue #34 / PR #44, Phase 3 through Issue #50, Phase 4 through Issue #63 / PR #67, and Phase 5 through Issue #73 / PR #79 (`dcbe1a567cc26ab150f13e159d35bf50030ee570`). Phase 6 / #80 is complete through #84 / PR #89. Phase 7 baseline #90 is complete through PR #91; #92 profiling is complete through PR #93. The approved 32-factory budget is unmet; next propose scoped optimization of repeated connected topology indexing, preserving dynamic recurrence and correctness gates.
