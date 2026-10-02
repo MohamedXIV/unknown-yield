@@ -41,7 +41,6 @@ it("refuses malformed saved JSON without replacing live state", () => {
   expect(s.snapshot()).toEqual(before);
 });
 
-
 it("writes the current save key and reads the previous compatible key", () => {
   const current = new Session();
   const records = new Map<string, string>();
@@ -52,10 +51,10 @@ it("writes the current save key and reads the previous compatible key", () => {
       },
     }).ok,
   ).toBe(true);
-  expect(records.has("industrial-site-save-v7")).toBe(true);
+  expect(records.has("industrial-site-save-v8")).toBe(true);
 
   const restored = new Session();
-  const previous = records.get("industrial-site-save-v7")!;
+  const previous = records.get("industrial-site-save-v8")!;
   expect(
     restored.restore({
       getItem(key) {
@@ -63,4 +62,25 @@ it("writes the current save key and reads the previous compatible key", () => {
       },
     }).ok,
   ).toBe(true);
+});
+
+it("preserves older content records and rejects them without replacing the expedition", () => {
+  const s = new Session(),
+    records = new Map<string, string>();
+  s.save({ setItem: (key, value) => records.set(key, value) });
+  const old = JSON.parse(records.get("industrial-site-save-v8")!);
+  old.contentVersion = "world-01-v6";
+  records.set("industrial-site-save-v7", JSON.stringify(old));
+  records.delete("industrial-site-save-v8");
+  const before = s.snapshot();
+  expect(s.restore({ getItem: (key) => records.get(key) ?? null }).ok).toBe(
+    false,
+  );
+  expect(s.snapshot()).toEqual(before);
+  expect(s.save({ setItem: (key, value) => records.set(key, value) }).ok).toBe(
+    true,
+  );
+  expect(
+    JSON.parse(records.get("industrial-site-save-v7")!).contentVersion,
+  ).toBe("world-01-v6");
 });

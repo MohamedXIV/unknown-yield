@@ -22,6 +22,9 @@ import {
 import GameHost from "./GameHost";
 function Glyph({ type, size = 20 }: { type: string; size?: number }) {
   const paths: Record<string, string> = {
+    pipe: "M3 6h9v12h9 M3 10h5v12h13",
+    tank: "M5 5c0-4 14-4 14 0v14c0 4-14 4-14 0z M5 5c0 4 14 4 14 0",
+    pump: "M3 12h5 M16 12h5 M8 8h8v8H8z M10 10l4 2-4 2",
     select: "M5 3l14 10-7 1-3 7z",
     extractor: "M5 21V4h13 M6 7h10 M15 4v14 M12 10l6 3-6 3 6 3",
     factory: "M3 21V9l6 4V7l6 5V4h5v17z M7 17h2 M12 17h2 M17 17h1",
@@ -67,7 +70,7 @@ const genericNames: Record<string, string> = {
   port: "Wall port",
   demolish: "Dismantle",
 };
-const descriptions: Record<Tool, string> = {
+const descriptions: Partial<Record<Tool, string>> = {
   select:
     "Click equipment to inspect. Drag with the right mouse button to pan.",
   extractor:
@@ -173,6 +176,9 @@ function GameClientInner() {
   const machine = snapshot.machines.find((m) => m.id === mode.selected),
     factory = snapshot.factories.find((f) => f.id === mode.selected),
     belt = snapshot.belts.find((b) => b.id === mode.selected),
+    pipe = snapshot.pipes.find((p) => p.id === mode.selected),
+    tank = snapshot.tanks.find((p) => p.id === mode.selected),
+    pump = snapshot.pumps.find((p) => p.id === mode.selected),
     storage = snapshot.storages.find((t) => t.id === mode.selected),
     portFactory = snapshot.factories.find((f) =>
       f.ports.some((p) => p.id === mode.selected),
@@ -191,6 +197,8 @@ function GameClientInner() {
   // Machine-tool labels resolve from content definitions so a catalog rename
   // updates the toolbar and inspector together. Generic tools stay English.
   const toolName = (tool: Tool) => {
+    if (["pipe", "tank", "pump"].includes(tool))
+      return t("ui.liquid." + tool + ".name");
     const key =
       snapshot.definitions.find((d) => d.id === tool)?.nameKey ??
       snapshot.storageDefinitions.find((d) => d.id === tool)?.nameKey;
@@ -198,6 +206,8 @@ function GameClientInner() {
   };
   // Furnace descriptions name their operation, which is content data.
   const toolDescription = (tool: Tool) => {
+    if (["pipe", "tank", "pump", "liquefier", "precipitator"].includes(tool))
+      return t("ui.liquid." + tool + ".description");
     const unlock = unlockFor(tool);
     if (unlock && !unlock.unlocked)
       return "Locked · Requires " + t(unlock.hintKey) + ".";
@@ -238,14 +248,16 @@ function GameClientInner() {
     (entry) => !entry.initial,
   ).length;
   const toolCost = (tool: Tool) =>
-    tool === "factory"
-      ? snapshot.map.factoryCellCost
-      : tool === "belt"
-        ? snapshot.map.beltCost
-        : tool === "port"
-          ? snapshot.map.portCost
-          : (snapshot.definitions.find((d) => d.id === tool)?.cost ??
-            snapshot.storageDefinitions.find((d) => d.id === tool)?.cost);
+    tool === "pipe" || tool === "tank" || tool === "pump"
+      ? snapshot.liquidLogistics?.[tool].cost
+      : tool === "factory"
+        ? snapshot.map.factoryCellCost
+        : tool === "belt"
+          ? snapshot.map.beltCost
+          : tool === "port"
+            ? snapshot.map.portCost
+            : (snapshot.definitions.find((d) => d.id === tool)?.cost ??
+              snapshot.storageDefinitions.find((d) => d.id === tool)?.cost);
   const close = () => {
     setPanel(null);
     setMode((m) => ({ ...m, selected: null }));
@@ -417,6 +429,112 @@ function GameClientInner() {
           <div className="context-body">
             {panel === "selection" && (
               <>
+                {(pipe || tank || pump) && (
+                  <>
+                    <h2>
+                      {t(
+                        "ui.liquid." +
+                          (pipe ? "pipe" : tank ? "tank" : "pump") +
+                          ".name",
+                      )}
+                    </h2>
+                    {(pipe || tank) && (
+                      <p>
+                        {(pipe ?? tank)!.materialId
+                          ? materialName((pipe ?? tank)!.materialId!)
+                          : t("ui.liquid.empty")}{" "}
+                        · {(pipe ?? tank)!.quantity} /{" "}
+                        {tank?.capacity ??
+                          snapshot.liquidLogistics!.pipe.capacity}
+                      </p>
+                    )}
+                    {pump && (
+                      <>
+                        <p>{t("ui.liquid.status." + pump.status)}</p>
+                        <button
+                          onClick={() =>
+                            act({
+                              type: "setPumpEnabled",
+                              id: pump.id,
+                              enabled: !pump.enabled,
+                            })
+                          }
+                        >
+                          {t(
+                            pump.enabled
+                              ? "ui.liquid.disable"
+                              : "ui.liquid.enable",
+                          )}
+                        </button>
+                      </>
+                    )}
+                    {pipe && (
+                      <>
+                        <p>
+                          {t("ui.liquid.inlet")}:{" "}
+                          {t(
+                            "ui.direction." +
+                              ["east", "south", "west", "north"][pipe.inlet],
+                          )}{" "}
+                          · {t("ui.liquid.outlet")}:{" "}
+                          {t(
+                            "ui.direction." +
+                              ["east", "south", "west", "north"][pipe.outlet],
+                          )}
+                        </p>
+                        <button
+                          disabled={pipe.quantity > 0}
+                          onClick={() =>
+                            act({
+                              type: "configurePipe",
+                              id: pipe.id,
+                              inlet: (pipe.inlet + 1) % 4,
+                              outlet: (pipe.outlet + 1) % 4,
+                            })
+                          }
+                        >
+                          {t("ui.liquid.rotate")}
+                        </button>
+                        {[0, 1, 2, 3]
+                          .filter((d) => d !== pipe.inlet && d !== pipe.outlet)
+                          .map((d) => (
+                            <button
+                              key={d}
+                              disabled={pipe.quantity > 0}
+                              onClick={() =>
+                                act({
+                                  type: "configurePipe",
+                                  id: pipe.id,
+                                  inlet: pipe.inlet,
+                                  outlet: d,
+                                })
+                              }
+                            >
+                              {t("ui.liquid.outlet")}:{" "}
+                              {t(
+                                "ui.direction." +
+                                  ["east", "south", "west", "north"][d],
+                              )}
+                            </button>
+                          ))}
+                      </>
+                    )}
+                    {pipe?.quantity || tank?.quantity ? (
+                      <p>{t("ui.liquid.drain-first")}</p>
+                    ) : (
+                      <button
+                        onClick={() =>
+                          act({
+                            type: "dismantle",
+                            id: (pipe ?? tank ?? pump)!.id,
+                          })
+                        }
+                      >
+                        {t("ui.liquid.reclaim")}
+                      </button>
+                    )}
+                  </>
+                )}
                 {machine && (
                   <>
                     <small className="eyebrow">
@@ -520,10 +638,15 @@ function GameClientInner() {
                     </h3>
                     {buffer(machine.output)}
                     <p className="hint">
-                      Cyan arrow: incoming belt. Gold arrow: outgoing belt.
-                      Unfamiliar outcomes are recorded after processing. Buffers
-                      survive disable and save/load. Dismantling needs empty
-                      buffers: drain output through belts first.
+                      {snapshot.definitions
+                        .find((d) => d.id === machine.definitionId)
+                        ?.inputStates.includes("liquid")
+                        ? t("ui.liquid.processor-input-help")
+                        : snapshot.definitions
+                              .find((d) => d.id === machine.definitionId)
+                              ?.outputStates.includes("liquid")
+                          ? t("ui.liquid.processor-output-help")
+                          : "Cyan arrow: incoming belt. Gold arrow: outgoing belt. Unfamiliar outcomes are recorded after processing. Buffers survive disable and save/load. Dismantling needs empty buffers: drain output through belts first."}
                     </p>
                     <button
                       className="danger"
@@ -610,6 +733,13 @@ function GameClientInner() {
                         <span className="muted">No internal equipment</span>
                       )}
                     </div>
+                    {!!Object.keys(factory.contract.liquidInventory ?? {})
+                      .length && (
+                      <>
+                        <h3>{t("ui.liquid.factory-buffer")}</h3>
+                        {buffer(factory.contract.liquidInventory ?? {})}
+                      </>
+                    )}
                     <h3>Measured throughput</h3>
                     {factoryPresentation?.certified ? (
                       <>
@@ -1343,6 +1473,11 @@ function GameClientInner() {
               "belt",
               "port",
               "depot",
+              "liquefier",
+              "precipitator",
+              "pipe",
+              "tank",
+              "pump",
               "demolish",
             ] as Tool[]
           ).map((tool) => (

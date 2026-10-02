@@ -622,3 +622,92 @@ describe("fresh throughput topology membership", () => {
     expect(monitor.view(factoryId)).toEqual(certified);
   });
 });
+
+describe("liquid recurrence boundary", () => {
+  function monitorLine() {
+    const sim = new Simulation(fixture);
+    const factoryId = build(sim, {
+      type: "placeFactory",
+      x: 25,
+      y: 10,
+      width: 10,
+      height: 10,
+    });
+    build(sim, { type: "placePort", factoryId, x: 25, y: 15, direction: 0 });
+    build(sim, { type: "placePort", factoryId, x: 34, y: 15, direction: 0 });
+    build(sim, { type: "placeTank", x: 21, y: 14, direction: 0 });
+    build(sim, { type: "placePump", x: 23, y: 15, direction: 0 });
+    build(sim, {
+      type: "placePipes",
+      points: Array.from({ length: 11 }, (_, i) => ({
+        x: 24 + i,
+        y: 15,
+        inlet: 2,
+        outlet: 0,
+      })),
+    });
+    const state = sim.serialize(),
+      monitor = new FactoryThroughputMonitor();
+    return { state, monitor, factoryId };
+  }
+  function pulse(
+    state: ReturnType<Simulation["serialize"]>,
+    monitor: FactoryThroughputMonitor,
+  ) {
+    monitor.recordMove(state, {
+      from: { x: 25, y: 15 },
+      direction: 0,
+      material: "liquid-0",
+      units: 2,
+    });
+    monitor.recordMove(state, {
+      from: { x: 34, y: 15 },
+      direction: 0,
+      material: "liquid-0",
+      units: 2,
+    });
+    monitor.observe(fixture, state);
+  }
+  it("waits for connected reservoir backlog recurrence, but ignores unrelated reservoirs", () => {
+    const { state, monitor, factoryId } = monitorLine();
+    const tank = Object.values(state.tanks)[0];
+    tank.materialId = "liquid-0";
+    for (let i = 1; i < 8; i++) {
+      state.tick = i;
+      tank.quantity = 20 - i;
+      pulse(state, monitor);
+    }
+    expect(monitor.view(factoryId).state).toBe("measuring");
+    state.tanks.t99 = {
+      id: "t99",
+      x: 5,
+      y: 5,
+      direction: 0,
+      materialId: "liquid-0",
+      quantity: 20,
+    };
+    for (let i = 8; i < 16; i++) {
+      state.tick = i;
+      state.tanks.t99.quantity--;
+      pulse(state, monitor);
+    }
+    expect(monitor.view(factoryId).state).toBe("stable");
+    expect(monitor.view(factoryId).outputs[0].units).toBe(2);
+    tank.quantity--;
+    state.tick++;
+    pulse(state, monitor);
+    expect(monitor.view(factoryId).state).toBe("measuring");
+  });
+  it("invalidates certification when an internal pipe route changes", () => {
+    const { state, monitor, factoryId } = monitorLine();
+    for (let i = 1; i < 8; i++) {
+      state.tick = i;
+      pulse(state, monitor);
+    }
+    expect(monitor.view(factoryId).state).toBe("stable");
+    state.pipes["30,15"].outlet = 1;
+    state.tick++;
+    monitor.observe(fixture, state);
+    expect(monitor.view(factoryId).state).toBe("measuring");
+  });
+});

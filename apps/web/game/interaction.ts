@@ -6,6 +6,11 @@ import {
   type GameCommand,
 } from "@site/sim-core";
 export type Tool =
+  | "pipe"
+  | "tank"
+  | "pump"
+  | "liquefier"
+  | "precipitator"
   | "select"
   | "extractor"
   | "factory"
@@ -18,6 +23,11 @@ export type Tool =
   | "port"
   | "demolish";
 export const TOOL_HOTKEYS: Record<Tool, string> = {
+  pipe: "P",
+  tank: "T",
+  pump: "U",
+  liquefier: "L",
+  precipitator: "C",
   select: "↖",
   extractor: "1",
   factory: "2",
@@ -71,6 +81,9 @@ export function structureKey(s: PlayerSnapshot): string {
     s.belts
       .filter((b) => adjacent.has(b.x + "," + b.y))
       .map((b) => [b.id, !!b.cargo]),
+    s.pipes.map((p) => [p.id, p.x, p.y, p.inlet, p.outlet]),
+    s.tanks.map((t) => [t.id, t.x, t.y, t.direction]),
+    s.pumps.map((p) => [p.id, p.x, p.y, p.direction]),
     s.storages.map((t) => [t.id, t.definitionId, t.x, t.y, t.direction]),
   ]);
 }
@@ -119,6 +132,12 @@ export function hitTest(
   if (m) return m.id;
   const t = s.storages.find((t) => contains(t, p));
   if (t) return t.id;
+  const tank = s.tanks.find((t) => contains(t, p));
+  if (tank) return tank.id;
+  const liquid = [...s.pipes, ...s.pumps].find(
+    (t) => t.x === p.x && t.y === p.y,
+  );
+  if (liquid) return liquid.id;
   const b = s.belts.find((b) => b.x === p.x && b.y === p.y);
   if (b) return b.id;
   const port = factory?.ports.find((a) => a.x === p.x && a.y === p.y);
@@ -144,6 +163,8 @@ export function buildCommand(
   }
   if (
     [
+      "liquefier",
+      "precipitator",
       "extractor",
       "crusher",
       "furnace",
@@ -164,6 +185,31 @@ export function buildCommand(
       ...p,
       direction: mode.direction,
     };
+  if (mode.tool === "tank" || mode.tool === "pump")
+    return {
+      type: mode.tool === "tank" ? "placeTank" : "placePump",
+      ...p,
+      direction: mode.direction,
+    };
+  if (mode.tool === "pipe") {
+    const path = beltPath(anchor ?? p, p);
+    const facing = (a: Point, b: Point) =>
+      b.x > a.x ? 0 : b.y > a.y ? 1 : b.x < a.x ? 2 : 3;
+    return {
+      type: "placePipes",
+      points: path.map((point, i) => {
+        const inlet = i
+          ? (facing(path[i - 1], point) + 2) % 4
+          : ((path[1] ? facing(point, path[1]) : mode.direction) + 2) % 4;
+        const outlet = path[i + 1]
+          ? facing(point, path[i + 1])
+          : i
+            ? facing(path[i - 1], point)
+            : mode.direction;
+        return { ...point, inlet, outlet };
+      }),
+    };
+  }
   if (mode.tool === "belt") {
     const points = beltPath(anchor ?? p, p),
       previous = points.at(-2);

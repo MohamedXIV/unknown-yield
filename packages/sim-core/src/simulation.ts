@@ -8,6 +8,7 @@ import { marketListings, recoverMarkets } from "./market";
 import { opportunityViews, refreshOpportunities } from "./opportunities";
 import { milestoneViews, refreshMilestones } from "./milestones";
 import { assistanceViews, companyView } from "./assistance";
+import { transportLiquids, liquidPumpStatus } from "./liquids";
 import { footprint } from "./geometry";
 import { factoryView } from "./factory-contract";
 import { FactoryThroughputMonitor } from "./factory-throughput";
@@ -48,6 +49,9 @@ export class Simulation {
       );
       refreshMilestones(c, s);
       if (s.tick % c.site.transportEveryTicks === 0) {
+        transportLiquids(c, s, (event) =>
+          this.factoryThroughput.recordMove(s, event),
+        );
         transport(c, s, (event) => this.factoryThroughput.recordMove(s, event));
         refreshMilestones(c, s);
       }
@@ -179,6 +183,17 @@ export class Simulation {
           progress: m.job ? 1 - m.job.remaining / d.durationTicks : 0,
         };
       }),
+      pipes: Object.values(s.pipes),
+      tanks: Object.values(s.tanks).map((t) => ({
+        ...t,
+        ...footprint(t, c.liquidLogistics!.tank),
+        capacity: c.liquidLogistics!.tank.capacity,
+      })),
+      pumps: Object.values(s.pumps).map((p) => ({
+        ...p,
+        status: liquidPumpStatus(c, s, p),
+      })),
+      liquidLogistics: c.liquidLogistics,
       observations: reactions.map((r) => ({
         operationId: r.operation,
         inputId: r.input,
@@ -213,7 +228,7 @@ export class Simulation {
       return {
         ok: false,
         message:
-          "Save rejected (requires schema 13): " +
+          "Save rejected (requires schema 14): " +
           (error instanceof Error ? error.message : "Invalid data"),
       };
     }

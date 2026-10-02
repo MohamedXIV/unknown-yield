@@ -16,6 +16,7 @@ export const contentSchema = z.object({
         id,
         nameKey: localeKeySchema,
         color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+        handlingState: z.enum(["solid", "liquid"]).default("solid"),
         known: z.boolean(),
       }),
     )
@@ -34,6 +35,14 @@ export const contentSchema = z.object({
             hintKey: localeKeySchema,
           })
           .optional(),
+        inputStates: z
+          .array(z.enum(["solid", "liquid"]))
+          .min(1)
+          .default(["solid"]),
+        outputStates: z
+          .array(z.enum(["solid", "liquid"]))
+          .min(1)
+          .default(["solid"]),
         operations: z.array(id),
         capacity: positive,
         fuel: positive,
@@ -44,6 +53,22 @@ export const contentSchema = z.object({
       }),
     )
     .min(1),
+  liquidLogistics: z
+    .object({
+      pipe: z.object({
+        capacity: positive,
+        transfer: positive,
+        cost: positive,
+      }),
+      tank: z.object({
+        capacity: positive,
+        width: positive,
+        height: positive,
+        cost: positive,
+      }),
+      pump: z.object({ transfer: positive, fuel: positive, cost: positive }),
+    })
+    .optional(),
   storages: z
     .array(
       z.object({
@@ -292,6 +317,18 @@ function validateContentInternal(
         m.operations.includes(r.operation) &&
         m.processConditionId === r.processConditionId,
     );
+    const inputState = c.materials.find((m) => m.id === r.input)!.handlingState;
+    const outputState = c.materials.find(
+      (m) => m.id === r.output,
+    )!.handlingState;
+    if (
+      capable.some(
+        (m) =>
+          !m.inputStates.includes(inputState) ||
+          !m.outputStates.includes(outputState),
+      )
+    )
+      throw new Error("Reaction handling state mismatches machine interface");
     if (!capable.length)
       throw new Error("Missing process condition capability");
     if (

@@ -117,6 +117,7 @@ export function completeAndStart(
   }
 }
 export type TransportMoveEvent = {
+  units?: number;
   from: Point;
   direction: number;
   material: string;
@@ -173,7 +174,11 @@ export function transport(
     const def = c.machines.find((d) => d.id === m.definitionId)!;
     const material = Object.keys(m.output)
       .sort()
-      .find((id) => m.output[id] > 0);
+      .find(
+        (id) =>
+          m.output[id] > 0 &&
+          c.materials.find((a) => a.id === id)?.handlingState === "solid",
+      );
     if (material)
       sources.push({
         point: m,
@@ -198,6 +203,11 @@ export function transport(
       });
   }
   const targetFor = (source: Source, direction: number): Target | null => {
+    if (
+      c.materials.find((m) => m.id === source.material)?.handlingState !==
+      "solid"
+    )
+      return null;
     const inlet = (direction + 2) % 4;
     const p = source.emission ? null : next(source.point, direction);
     const loc = source.emission ?? key(p!);
@@ -225,6 +235,7 @@ export function transport(
       const d = c.machines.find((d) => d.id === m.definitionId)!;
       return (
         d.role === "processor" &&
+        d.inputStates.includes("solid") &&
         contains(footprint(m, d), p!) &&
         key(socket(m, d, false)) === key(source.point)
       );

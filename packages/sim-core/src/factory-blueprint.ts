@@ -26,7 +26,10 @@ export type FactoryBlueprintBelt = {
 };
 
 export type FactoryBlueprint = {
-  schemaVersion: 1 | 2;
+  schemaVersion: 1 | 2 | 3;
+  pipes?: { x: number; y: number; inlet: number; outlet: number }[];
+  tanks?: { x: number; y: number; direction: number }[];
+  pumps?: { x: number; y: number; direction: number; enabled: boolean }[];
   width: number;
   height: number;
   ports: FactoryBlueprintPort[];
@@ -112,6 +115,13 @@ const canonical = (blueprint: FactoryBlueprint): FactoryBlueprint => ({
   ports: [...blueprint.ports].sort(portOrder),
   machines: [...blueprint.machines].sort(machineOrder),
   belts: [...blueprint.belts].sort(beltOrder),
+  ...(blueprint.schemaVersion === 3
+    ? {
+        pipes: [...blueprint.pipes!].sort(pointOrder),
+        tanks: [...blueprint.tanks!].sort(pointOrder),
+        pumps: [...blueprint.pumps!].sort(pointOrder),
+      }
+    : {}),
 });
 
 const relativeFactory = (
@@ -137,10 +147,22 @@ export function validateFactoryBlueprint(
   const root = record(input, "Factory blueprint");
   exactKeys(
     root,
-    ["schemaVersion", "width", "height", "ports", "machines", "belts"],
+    [
+      "schemaVersion",
+      "width",
+      "height",
+      "ports",
+      "machines",
+      "belts",
+      ...(root.schemaVersion === 3 ? ["pipes", "tanks", "pumps"] : []),
+    ],
     "Factory blueprint",
   );
-  if (root.schemaVersion !== 1 && root.schemaVersion !== 2)
+  if (
+    root.schemaVersion !== 1 &&
+    root.schemaVersion !== 2 &&
+    root.schemaVersion !== 3
+  )
     throw new Error("Unsupported factory blueprint schema");
 
   const width = integer(
@@ -257,7 +279,7 @@ export function validateFactoryBlueprint(
         "direction",
         "alternate",
         "switched",
-        ...(root.schemaVersion === 2 ? ["junction"] : []),
+        ...(root.schemaVersion !== 1 ? ["junction"] : []),
       ],
       "Blueprint belt " + index,
     );
@@ -271,7 +293,7 @@ export function validateFactoryBlueprint(
           : direction(row.alternate, "Blueprint belt alternate"),
       switched: boolean(row.switched, "Blueprint belt switched"),
     };
-    if (root.schemaVersion === 2) {
+    if (root.schemaVersion !== 1) {
       belt.junction = null;
       if (row.junction !== null) {
         const junction = record(row.junction, "Blueprint junction");
@@ -314,8 +336,86 @@ export function validateFactoryBlueprint(
     return belt;
   });
 
+  const liquid = root.schemaVersion === 3;
+  const pipes = liquid
+    ? array(root.pipes, "Blueprint pipes").map((value) => {
+        const r = record(value, "Blueprint pipe");
+        exactKeys(r, ["x", "y", "inlet", "outlet"], "Blueprint pipe");
+        const p = {
+          x: integer(r.x, "Pipe x", 0, width - 1),
+          y: integer(r.y, "Pipe y", 0, height - 1),
+          inlet: direction(r.inlet, "Pipe inlet"),
+          outlet: direction(r.outlet, "Pipe outlet"),
+        };
+        if (p.inlet === p.outlet)
+          throw new Error("Pipe inlet and outlet coincide");
+        return p;
+      })
+    : [];
+  const tanks = liquid
+    ? array(root.tanks, "Blueprint tanks").map((value) => {
+        const r = record(value, "Blueprint tank");
+        exactKeys(r, ["x", "y", "direction"], "Blueprint tank");
+        return {
+          x: integer(r.x, "Tank x", 0, width - 1),
+          y: integer(r.y, "Tank y", 0, height - 1),
+          direction: direction(r.direction, "Tank direction"),
+        };
+      })
+    : [];
+  const pumps = liquid
+    ? array(root.pumps, "Blueprint pumps").map((value) => {
+        const r = record(value, "Blueprint pump");
+        exactKeys(r, ["x", "y", "direction", "enabled"], "Blueprint pump");
+        return {
+          x: integer(r.x, "Pump x", 0, width - 1),
+          y: integer(r.y, "Pump y", 0, height - 1),
+          direction: direction(r.direction, "Pump direction"),
+          enabled: boolean(r.enabled, "Pump enabled"),
+        };
+      })
+    : [];
+  if (liquid && !content.liquidLogistics)
+    throw new Error("Liquid infrastructure is not authored");
+  const occupied = [
+    ...machineRects,
+    ...belts.map((b) => ({ ...b, width: 1, height: 1 })),
+  ];
+  for (const [kind, rows] of [
+    ["tank", tanks],
+    ["pipe", pipes],
+    ["pump", pumps],
+  ] as const)
+    for (const p of rows) {
+      const r =
+        kind === "tank"
+          ? footprint(
+              p as { x: number; y: number; direction: number },
+              content.liquidLogistics!.tank,
+            )
+          : { ...p, width: 1, height: 1 };
+      if (kind === "tank" && !inside(factory, r))
+        throw new Error("Blueprint tank must fit inside walls");
+      if (occupied.some((o) => overlaps(o, r)))
+        throw new Error("Blueprint liquid infrastructure overlaps");
+      if (wall(factory, p)) {
+        const d = "outlet" in p ? p.outlet : p.direction;
+        if (
+          !ports.some(
+            (port) => port.x === p.x && port.y === p.y && port.direction === d,
+          ) ||
+          ("inlet" in p && p.inlet !== (d + 2) % 4)
+        )
+          throw new Error(
+            "Blueprint liquid wall requires a matching straight port",
+          );
+      }
+      occupied.push(r);
+    }
+
   return canonical({
     schemaVersion: root.schemaVersion,
+    ...(liquid ? { pipes, tanks, pumps } : {}),
     width,
     height,
     ports,
@@ -332,11 +432,38 @@ export function factoryBlueprint(
   const factory = state.factories[factoryId];
   if (!factory) throw new Error("Unknown factory");
 
+  const liquidRows = {
+    pipes: Object.values(state.pipes)
+      .filter((p) => contains(factory, p))
+      .map((p) => ({
+        x: p.x - factory.x,
+        y: p.y - factory.y,
+        inlet: p.inlet,
+        outlet: p.outlet,
+      })),
+    tanks: Object.values(state.tanks)
+      .filter((p) => contains(factory, p))
+      .map((p) => ({
+        x: p.x - factory.x,
+        y: p.y - factory.y,
+        direction: p.direction,
+      })),
+    pumps: Object.values(state.pumps)
+      .filter((p) => contains(factory, p))
+      .map((p) => ({
+        x: p.x - factory.x,
+        y: p.y - factory.y,
+        direction: p.direction,
+        enabled: p.enabled,
+      })),
+  };
+  const hasLiquid = Object.values(liquidRows).some((rows) => rows.length);
   const hasJunction = Object.values(state.belts).some(
     (b) => contains(factory, b) && b.junction,
   );
   return validateFactoryBlueprint(content, {
-    schemaVersion: hasJunction ? 2 : 1,
+    schemaVersion: hasLiquid ? 3 : hasJunction ? 2 : 1,
+    ...(hasLiquid ? liquidRows : {}),
     width: factory.width,
     height: factory.height,
     ports: factory.ports.map((port) => ({
@@ -361,7 +488,7 @@ export function factoryBlueprint(
         direction: belt.direction,
         alternate: belt.alternate,
         switched: belt.switched,
-        ...(hasJunction
+        ...(hasJunction || hasLiquid
           ? {
               junction: belt.junction
                 ? {
