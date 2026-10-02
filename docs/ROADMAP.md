@@ -261,7 +261,7 @@ Multiple assets created by the pipeline read as one coherent game and can be reg
 
 ## Phase 9 — Material-state logistics and containment
 
-**Epic:** GitHub Issue #100. **NEXT GAMEPLAY PHASE.** First unblocked child: #108.
+**Epic:** GitHub Issue #100. **ACTIVE GAMEPLAY PHASE.** #108 liquid logistics acceptance passed; #109 gases and pressurized transport is next after merge. Evidence: [PHASE9_LIQUID_ACCEPTANCE.md](PHASE9_LIQUID_ACCEPTANCE.md).
 
 ### Question
 
@@ -502,4 +502,4 @@ User chose to return to gameplay after #96 / PR #97 rather than continue snapsho
 
 Phase 7 performance work is deferred. The fixed 32-factory joint p95 <=10ms gate remains unmet (24.5777ms flowing / 19.6748ms backpressured); browser/device gates remain unverified. Keep existing evidence and correctness boundaries. Revisit when an actual browser-playability problem or an agreed feature scale requirement justifies it. Old NEXT recommendations in profiling docs are historical candidates, not active assignments.
 
-Roadmap expansion approved on 2026-10-02: Phases 9–16 now capture the major post-foundation gameplay discussed but not represented by the earlier execution phases. Canonical epics #100–#107 and children #108–#161 are now open. Phase 9 / #100 is the next gameplay milestone and #108 is first unblocked; later phases remain planned dependency-ordered work, not authorization to stack speculative implementations. Phase 7 remains deferred and Phase 8 remains a parallel art-production track.
+Roadmap expansion approved on 2026-10-02: Phases 9–16 now capture the major post-foundation gameplay discussed but not represented by the earlier execution phases. Canonical epics #100–#107 and children #108–#161 form the canonical queue. Phase 9 / #100 is active; #108 liquid logistics has passed acceptance and #109 is next after its merge; later phases remain planned dependency-ordered work, not authorization to stack speculative implementations. Phase 7 remains deferred and Phase 8 remains a parallel art-production track.

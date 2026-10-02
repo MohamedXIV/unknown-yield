@@ -16,7 +16,7 @@ Materials gain an authored handling state with existing materials defaulting to 
 
 Pipes have an explicit inlet behind and outlet ahead, including readable directed bends as needed for the playable route. Connectivity requires matching endpoints; no arbitrary junctions, implicit cross-connections or hidden transport. No T/+ pipe machinery in this slice. Tanks have explicit directional input/output sockets.
 
-A source pump admits material from a compatible machine output or tank output into the directed pipe route. Its footprint, capacity, transfer limit and fuel cost are content-defined. Disabled/no-fuel/blocked pumps stop new feed; liquid already admitted into pipes can drain downstream. Pumps expend fuel only for successful defined transfers. A tank output requires its own pump for a new route; no magical siphoning. These are abstract conveyor-like transfer rules for quantity accounting, not claims of fluid physics.
+A source pump admits material from a compatible machine output or tank output into the directed pipe route. It is a one-cell socket adapter with no quantity buffer; transfer limit and fuel cost are content-defined. Disabled/no-fuel/blocked pumps stop new feed; liquid already admitted into pipes can drain downstream. Pumps expend fuel only for successful defined transfers. A tank output requires its own pump for a new route; no magical siphoning. These are abstract conveyor-like transfer rules for quantity accounting, not claims of fluid physics.
 
 Transport resolves deterministically from pre-step quantities, reserves destination capacity and commits successful transfers atomically. A unit advances at most one transport edge per step; blocked outlets retain all upstream quantity. Iteration/insertion ordering must not create extra throughput or overfill. There is no deletion or silent spill/reclaim fallback.
 
@@ -34,7 +34,7 @@ Provide compatible endpoint checks at existing physical terminal staging. Do not
 
 ## Save, content and ledger
 
-Version new persisted pipes/pumps/tanks, migrate supported old saves with empty new structures and existing solid material defaults, and reject malformed locations/quantities/compatibility atomically. Use stable IDs and localized presentation. Update content version independently when the demonstration content changes; explicitly document older-content compatibility.
+Version new persisted pipes/pumps/tanks and reject malformed locations/quantities/compatibility atomically. Cheap schema-only migrations may add empty new structures; older content versions can be rejected explicitly during pre-release development. Use stable IDs and localized presentation. Update content version independently when the demonstration content changes; explicitly document older-content compatibility.
 
 Extend the ledger to reconcile liquid locations and embodied construction costs alongside buffers, jobs, solid cargo, storage and staging. Pump fuel is defined fuel expenditure; it must not disappear material. Snapshot views remain detached from mutable authoritative objects and do not leak hidden reactions. Loading must resume the same future transfers, blockage and discovery.
 
@@ -47,3 +47,7 @@ Extend the ledger to reconcile liquid locations and embodied construction costs 
 5. Focused regressions, then one substantial full test/typecheck/lint/build gate and real normal-controls browser acceptance. Demonstrate discovery, physical flow into tank/processor, blockage, stopping feed, draining/rerouting/resuming and save/restore; conservation at every checkpoint.
 
 No new dependencies, workers, snapshot optimization, gas/pressure implementation, hazardous leaks, terminal module expansion or later-phase systems. Record any conflict with existing contracts before adjusting this draft.
+
+## User ruling — pre-release saves (2026-10-02)
+
+User approved native execution and explicitly deprioritized backward save compatibility. New schema/content versions remain explicit. Cheap exact migrations are optional; old content/save combinations may be rejected with a readable error and atomic state preservation. The planned v6-to-v7 compatibility and schema-13 migration are not acceptance requirements. Keep existing supported migrations where cheap, but do not constrain liquid design for pre-release saves.

@@ -236,6 +236,10 @@ The roadmap now records Phases 9–16 for the major gameplay directions that wer
 - Phase 15 — content scale and expedition arc;
 - Phase 16 — production vertical slice.
 
-Canonical GitHub epics and children are now created: Phase 9 #100 (#108–#113), Phase 10 #101 (#114–#119), Phase 11 #102 (#120–#125), Phase 12 #103 (#126–#131), Phase 13 #104 (#132–#138), Phase 14 #105 (#139–#144), Phase 15 #106 (#145–#152), and Phase 16 #107 (#153–#161). They are not eight simultaneously active implementation phases: Phase 9 / #100 is active-next and #108 is first unblocked; later phases remain dependency-ordered planning/execution queues.
+Canonical GitHub epics and children are now created: Phase 9 #100 (#108–#113), Phase 10 #101 (#114–#119), Phase 11 #102 (#120–#125), Phase 12 #103 (#126–#131), Phase 13 #104 (#132–#138), Phase 14 #105 (#139–#144), Phase 15 #106 (#145–#152), and Phase 16 #107 (#153–#161). They are not eight simultaneously active implementation phases: Phase 9 / #100 is active. #108 liquid logistics has passed its acceptance gate; #109 gases and pressurized transport is next after #108 merge; later phases remain dependency-ordered planning/execution queues.
 
 Phase 7 remains deferred with its accepted unmet performance budget preserved. Phase 8 remains a parallel art-pipeline track and does not block Phase 9 gameplay work. Do not reopen completed Phase 2/5/6 foundations merely because later phases deepen discovery, company systems or logistics; extend the accepted contracts.
+
+## Phase 9 liquid gate — #108
+
+Directed pipes, source pumps, single-material tanks and the normal solid → liquid → solid chain are accepted. Evidence: [PHASE9_LIQUID_ACCEPTANCE.md](PHASE9_LIQUID_ACCEPTANCE.md). Save schema 14 / world-01-v7 explicitly reject incompatible earlier content; pre-release compatibility is not a scope constraint. #100 remains open for #109–#113. Next agreed gameplay scope is #109, preserving its dependency on #108.
