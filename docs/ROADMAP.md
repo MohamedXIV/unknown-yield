@@ -259,6 +259,188 @@ Art validation begins earlier, but broad production should wait until the camera
 
 Multiple assets created by the pipeline read as one coherent game and can be regenerated predictably.
 
+## Phase 9 — Material-state logistics and containment
+
+### Question
+
+Do liquids, gases and hazardous handling classes create meaningfully different factory layouts without turning the game into a fluid-dynamics simulator?
+
+### Scope
+
+- physical liquid storage, pumps and directed pipe networks;
+- pressurized gas storage and pressure-line/cylinder handling;
+- authored transport/containment compatibility for corrosive, hot, atmosphere-sensitive or otherwise hazardous materials;
+- process chains that intentionally move material between solid, liquid, slurry and gas states;
+- terminal staging and handling that respects those physical classes;
+- exact conservation through tanks, pipes, machine buffers and terminal staging;
+- one recoverable handling failure caused by an understandable incompatibility.
+
+The phase does **not** introduce real fluid dynamics, per-particle liquids, magical global fluid inventory or a generic “pipe everything” abstraction.
+
+### Exit criteria
+
+One persistent playable chain crosses at least two materially different handling states from extraction/processing to terminal export. Blocking, rerouting, suspension and save/load preserve quantity and destination truth. The player can diagnose why a material cannot enter an incompatible route or terminal module from world/UI evidence without seeing hidden reaction definitions.
+
+## Phase 10 — Industrial exploration and deep extraction
+
+### Question
+
+Can industry itself reveal the next layer of the world, without turning Unknown Yield into an adventure/exploration game?
+
+### Scope
+
+- scanner/probe capabilities with deliberately incomplete observations;
+- deposits that are unknown until the required capability exists;
+- depth as an authored extraction constraint;
+- at least one deep-extraction machine or operating mode;
+- one non-surface resource source such as atmospheric collection or another industrially sensed source;
+- manufactured products that become new exploration/extraction capabilities;
+- discoveries feeding the existing knowledge/milestone model rather than generic XP.
+
+### Exit criteria
+
+The player manufactures an industrial capability, uses it to reveal a previously unavailable resource opportunity, establishes extraction, and turns that resource into a new useful material/product chain. The company/player knowledge boundary remains truthful: undiscovered authored deposits and outputs are not leaked through UI, saves or market state.
+
+## Phase 11 — Hazardous industrial science and recovery
+
+### Question
+
+Can failure become useful industrial knowledge and an emergent story rather than opaque punishment?
+
+### Scope
+
+- deterministic authored hazard classes such as thermal runaway, pressure expansion, corrosion, instability and contamination;
+- a consequence spectrum from lost batch/jam through leak, machine damage and bounded local factory damage;
+- persisted waste, damaged equipment and contaminated/blocked state where applicable;
+- observation text that explains what physically happened rather than reporting “recipe failed”;
+- knowledge gained from hazardous outcomes;
+- safety/containment capabilities unlocked by demonstrated evidence;
+- repair, cleanup, reclaim or safe-disposal flows using existing physical-inventory rules.
+
+Hazards must be attributable to explicit state/conditions. This phase does not add arbitrary catastrophic RNG or routine campaign-ending accidents.
+
+### Exit criteria
+
+A hazardous experiment can be reproduced under the same authored conditions, teaches actionable evidence, leaves conservative physical consequences, survives save/load, and can be recovered from through normal industrial play. A later safer setup can prevent or contain the same class of failure for a reason the player can understand.
+
+## Phase 12 — Factory lifecycle and district reconfiguration
+
+### Question
+
+Can solved factories behave like persistent capital that the player adapts, expands and relocates instead of disposable recipes that must be rebuilt?
+
+### Scope
+
+- controlled post-build factory expansion/reshape where surrounding space permits;
+- relocation of an intact factory while preserving its internal layout, buffers and machine state;
+- explicit disconnection/reconnection of external logistics during relocation;
+- relocation cost and downtime as industrial constraints rather than content deletion;
+- stronger district-level routing controls for switching persistent production lines;
+- storage geography as part of reconfiguration rather than global inventory;
+- evaluate factory-as-module composition for larger industrial complexes only after relocation/expansion proves useful.
+
+### Exit criteria
+
+A populated factory can be suspended, moved or expanded under defined rules, reconnected, and resumed without material loss or internal-layout reconstruction. At least two persistent production lines can be reallocated around existing storage/logistics without destructive teardown. Conservation and deterministic restore remain exact.
+
+## Phase 13 — Terminal and off-world exchange depth
+
+### Question
+
+Can the company/terminal layer create strategic industrial decisions without turning the game into a dashboard market simulator?
+
+### Scope
+
+Build on the accepted Phase 5 baseline rather than replacing it:
+
+- cargo manifests and meaningful shipment capacity/handling dimensions;
+- two-way terminal logistics for imports that cannot yet be produced locally;
+- deeper use of dry, liquid, gas, cryogenic, hazardous and secure handling modules as actual logistics gates;
+- market memory/saturation that remains slow enough for industrial planning;
+- discovery-created market listings and authored demand shocks after classification;
+- broader Corporate Orders and Special Directives, including property/quality/experimental requests;
+- strategic physical stockpiles that can respond to later demand without magical inventory movement.
+
+### Exit criteria
+
+A newly characterized material can create a new company opportunity; the player can physically stage a shipment under handling/capacity constraints, choose what to send, receive a specialized import/reward, and later benefit from or react to demand change using persistent factories and stock. No market state may reference undiscovered material truth.
+
+## Phase 14 — Layered and long-distance logistics
+
+### Question
+
+Can late-game logistics solve real space, congestion and distance problems by changing topology rather than merely increasing belt speed?
+
+### Scope
+
+Introduce only modes justified by demonstrated map problems, in a measured order:
+
+- underground solid/liquid routes with explicit entrances/exits;
+- elevated gantries, pipe racks or utility routes;
+- utility tunnels where they meaningfully consolidate infrastructure;
+- one flexible long-distance freight mode (vehicle or equivalent) if distance warrants it;
+- one high-throughput bulk mode (rail/monorail equivalent) only if scale warrants it;
+- one low-mass/high-value mode (drone or equivalent) only if its cargo niche exists;
+- routing, loading, storage and terminal integration for every accepted mode.
+
+This phase is not permission to implement every transport idea at once. Each added mode must own a distinct industrial use-case.
+
+### Exit criteria
+
+At least two accepted advanced modes solve different measured layout/throughput problems in the same persistent world, with understandable loading/routing constraints and exact cargo persistence. The player gains spatial freedom or freight capability, not a cosmetic Mk2 replacement.
+
+## Phase 15 — Content scale and expedition arc
+
+### Question
+
+Can the proven systems sustain a coherent expedition from primitive extraction to genuinely strange late-game industry?
+
+### Scope
+
+- multiple authored material families whose properties create different processing/logistics decisions;
+- a broader but still partially hidden knowledge graph;
+- meaningful chains from basic to advanced and research-grade/exotic company fuel;
+- company technology that can recursively depend on materials first discovered by the player;
+- additional terminal modules, directives, hazards and transport requirements using already-proven systems;
+- products that alternate between export value and new local capability;
+- pacing/balance passes that avoid grind milestones and one-product dominant strategies;
+- Content Studio expansion only where repeated authoring pain proves a missing tool.
+
+### Exit criteria
+
+A fresh expedition can progress through several qualitatively different industrial eras without debug intervention or repetitive XP grind: discover -> experiment -> industrialize -> export -> unlock deeper capability. At least one late capability depends on a material/application that did not exist in company knowledge at expedition start.
+
+## Phase 16 — Production vertical slice
+
+### Question
+
+Do the full systems, presentation and pacing now feel like one coherent game rather than a collection of accepted technical proofs?
+
+### Scope
+
+- integrate the Phase 8 art pipeline into representative final-quality world assets;
+- audio/FX feedback for machines, logistics, discovery and hazards;
+- onboarding that teaches observation and experimentation without revealing recipes;
+- production-quality inspectors, notebook/knowledge presentation and terminal interaction;
+- representative content/balance tuning;
+- save compatibility/migration hardening;
+- browser/device performance validation at the actual slice scale;
+- structured playtesting focused on comprehension, experimentation, reconfiguration and economic motivation.
+
+### Exit criteria
+
+A representative production-quality expedition slice can be played from landing through an advanced industrial objective without debug tools. Players can understand what happened when a process succeeds, fails or blocks; can reconfigure rather than rebuild solved industry; and can explain the core loop as **Discover -> Experiment -> Industrialize -> Export**. The slice meets its agreed browser/device budgets and visual/audio consistency bar.
+
+### Post-foundation gameplay order
+
+The recommended gameplay sequence is:
+
+`Phase 9 -> Phase 10 -> Phase 11 -> Phase 12 -> Phase 13 -> Phase 14 -> Phase 15 -> Phase 16`
+
+Phase 7 remains a deferred evidence gate, not a prerequisite for ordinary gameplay work unless actual scale/browser evidence makes it one. Phase 8 is a production pipeline track that can run in parallel where a gameplay phase needs representative assets; broad art production still waits for proven asset/camera contracts.
+
+The sequence is intentionally dependency-aware: first make material states physically meaningful, then let industry reveal deeper resources, then deepen hazards/recovery, then make factories easier to adapt, then expand company/terminal strategy, then add advanced infrastructure only where the larger world proves a need. Content breadth comes after these systems are stable, and the production vertical slice integrates them rather than inventing another foundation.
+
 ## Deferred decisions
 
 Do not prematurely lock:
@@ -304,4 +486,4 @@ User chose to return to gameplay after #96 / PR #97 rather than continue snapsho
 
 Phase 7 performance work is deferred. The fixed 32-factory joint p95 <=10ms gate remains unmet (24.5777ms flowing / 19.6748ms backpressured); browser/device gates remain unverified. Keep existing evidence and correctness boundaries. Revisit when an actual browser-playability problem or an agreed feature scale requirement justifies it. Old NEXT recommendations in profiling docs are historical candidates, not active assignments.
 
-Next: agree one substantial gameplay milestone, document its intent and acceptance, then open its canonical issue. No new gameplay feature, Phase 8 work, underground transport or optimization is implicitly selected by this reset.
+Roadmap expansion approved on 2026-10-02: Phases 9–16 now capture the major post-foundation gameplay discussed but not represented by the earlier execution phases. Phase 9 — material-state logistics and containment — is the recommended next gameplay milestone. Open its canonical epic/children only when implementation starts; later phases are planning contracts, not authorization to stack speculative work. Phase 7 remains deferred and Phase 8 remains a parallel art-production track.
