@@ -221,3 +221,21 @@ User chose to return to gameplay after #96 / PR #97 rather than continue snapsho
 Phase 7 performance work is deferred. The fixed 32-factory joint p95 <=10ms gate remains unmet (24.5777ms flowing / 19.6748ms backpressured); browser/device gates remain unverified. Keep existing evidence and correctness boundaries. Revisit when an actual browser-playability problem or an agreed feature scale requirement justifies it. Old NEXT recommendations in profiling docs are historical candidates, not active assignments.
 
 Next: agree one substantial gameplay milestone, document its intent and acceptance, then open its canonical issue. No new gameplay feature, Phase 8 work, underground transport or optimization is implicitly selected by this reset.
+
+
+## Post-foundation gameplay roadmap — 2026-10-02
+
+The roadmap now records Phases 9–16 for the major gameplay directions that were already part of the design discussion but were not represented by the completed execution phases:
+
+- Phase 9 — material-state logistics and containment;
+- Phase 10 — industrial exploration and deep extraction;
+- Phase 11 — hazardous industrial science and recovery;
+- Phase 12 — factory lifecycle and district reconfiguration;
+- Phase 13 — terminal and off-world exchange depth;
+- Phase 14 — layered and long-distance logistics;
+- Phase 15 — content scale and expedition arc;
+- Phase 16 — production vertical slice.
+
+These are planning contracts in [ROADMAP.md](ROADMAP.md), not eight simultaneously active implementation epics. Phase 9 is the recommended next gameplay milestone. When implementation begins, create one canonical parent epic and dependency-safe child issues for that phase only.
+
+Phase 7 remains deferred with its accepted unmet performance budget preserved. Phase 8 remains a parallel art-pipeline track and does not block Phase 9 gameplay work. Do not reopen completed Phase 2/5/6 foundations merely because later phases deepen discovery, company systems or logistics; extend the accepted contracts.
