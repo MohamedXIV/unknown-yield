@@ -206,6 +206,6 @@ There is currently no remote CI workflow. Do not represent absent checks as gree
 - #11 — Content Studio v1 — COMPLETE via children #60–#63
 - #12 — Materials Exchange and corporate progression — COMPLETE via #69–#73; exit gate #73 merged through PR #79 / `dcbe1a567cc26ab150f13e159d35bf50030ee570`
 - #80 — readable belts and controlled ground junctions — COMPLETE through #84 / PR #89.
-- Completed Phase 7 baseline: **#90 — single-world simulation/snapshot baseline**, through PR #91. Evidence: PHASE7_BASELINE.md. Phase 7 remains open; next agree budgets/hardware and design profiling of measured step tails and browser costs before selecting optimization.
+- Completed Phase 7 baseline: **#90 — single-world simulation/snapshot baseline**, through PR #91. Evidence: PHASE7_BASELINE.md. Phase 7 remains open; active #92 profiles measured step tails against the approved 32-factory / 10ms joint-p95 reference budget. Contract: PHASE7_PROFILING.md. Browser costs remain a separate gate.
 
 Follow the live dependency order in Issue #2. Deferred roadmap possibilities are not permission to work around the active gate.

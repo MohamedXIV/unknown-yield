@@ -14,7 +14,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p apps/web/tsconfig.json",
     "lint": "eslint .",
     "evaluate:factory": "vitest run packages/sim-core/test/factory-aggregate-evaluation.test.ts --reporter=verbose",
-    "evaluate:world": "node scripts/evaluate-world.mjs"
+    "evaluate:world": "node scripts/evaluate-world.mjs",
+    "profile:world": "node scripts/profile-world.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
