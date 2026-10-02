@@ -261,6 +261,8 @@ Multiple assets created by the pipeline read as one coherent game and can be reg
 
 ## Phase 9 — Material-state logistics and containment
 
+**Epic:** GitHub Issue #100. **NEXT GAMEPLAY PHASE.** First unblocked child: #108.
+
 ### Question
 
 Do liquids, gases and hazardous handling classes create meaningfully different factory layouts without turning the game into a fluid-dynamics simulator?
@@ -283,6 +285,8 @@ One persistent playable chain crosses at least two materially different handling
 
 ## Phase 10 — Industrial exploration and deep extraction
 
+**Epic:** GitHub Issue #101. Planned after Phase 9. Children #114–#119.
+
 ### Question
 
 Can industry itself reveal the next layer of the world, without turning Unknown Yield into an adventure/exploration game?
@@ -302,6 +306,8 @@ Can industry itself reveal the next layer of the world, without turning Unknown 
 The player manufactures an industrial capability, uses it to reveal a previously unavailable resource opportunity, establishes extraction, and turns that resource into a new useful material/product chain. The company/player knowledge boundary remains truthful: undiscovered authored deposits and outputs are not leaked through UI, saves or market state.
 
 ## Phase 11 — Hazardous industrial science and recovery
+
+**Epic:** GitHub Issue #102. Planned after Phase 10. Children #120–#125.
 
 ### Question
 
@@ -325,6 +331,8 @@ A hazardous experiment can be reproduced under the same authored conditions, tea
 
 ## Phase 12 — Factory lifecycle and district reconfiguration
 
+**Epic:** GitHub Issue #103. Planned after Phase 11. Children #126–#131.
+
 ### Question
 
 Can solved factories behave like persistent capital that the player adapts, expands and relocates instead of disposable recipes that must be rebuilt?
@@ -344,6 +352,8 @@ Can solved factories behave like persistent capital that the player adapts, expa
 A populated factory can be suspended, moved or expanded under defined rules, reconnected, and resumed without material loss or internal-layout reconstruction. At least two persistent production lines can be reallocated around existing storage/logistics without destructive teardown. Conservation and deterministic restore remain exact.
 
 ## Phase 13 — Terminal and off-world exchange depth
+
+**Epic:** GitHub Issue #104. Planned after Phase 12. Children #132–#138.
 
 ### Question
 
@@ -366,6 +376,8 @@ Build on the accepted Phase 5 baseline rather than replacing it:
 A newly characterized material can create a new company opportunity; the player can physically stage a shipment under handling/capacity constraints, choose what to send, receive a specialized import/reward, and later benefit from or react to demand change using persistent factories and stock. No market state may reference undiscovered material truth.
 
 ## Phase 14 — Layered and long-distance logistics
+
+**Epic:** GitHub Issue #105. Planned after Phase 13. Children #139–#144.
 
 ### Question
 
@@ -391,6 +403,8 @@ At least two accepted advanced modes solve different measured layout/throughput 
 
 ## Phase 15 — Content scale and expedition arc
 
+**Epic:** GitHub Issue #106. Planned after Phase 14. Children #145–#152.
+
 ### Question
 
 Can the proven systems sustain a coherent expedition from primitive extraction to genuinely strange late-game industry?
@@ -411,6 +425,8 @@ Can the proven systems sustain a coherent expedition from primitive extraction t
 A fresh expedition can progress through several qualitatively different industrial eras without debug intervention or repetitive XP grind: discover -> experiment -> industrialize -> export -> unlock deeper capability. At least one late capability depends on a material/application that did not exist in company knowledge at expedition start.
 
 ## Phase 16 — Production vertical slice
+
+**Epic:** GitHub Issue #107. Planned after Phase 15. Children #153–#161.
 
 ### Question
 
@@ -486,4 +502,4 @@ User chose to return to gameplay after #96 / PR #97 rather than continue snapsho
 
 Phase 7 performance work is deferred. The fixed 32-factory joint p95 <=10ms gate remains unmet (24.5777ms flowing / 19.6748ms backpressured); browser/device gates remain unverified. Keep existing evidence and correctness boundaries. Revisit when an actual browser-playability problem or an agreed feature scale requirement justifies it. Old NEXT recommendations in profiling docs are historical candidates, not active assignments.
 
-Roadmap expansion approved on 2026-10-02: Phases 9–16 now capture the major post-foundation gameplay discussed but not represented by the earlier execution phases. Phase 9 — material-state logistics and containment — is the recommended next gameplay milestone. Open its canonical epic/children only when implementation starts; later phases are planning contracts, not authorization to stack speculative work. Phase 7 remains deferred and Phase 8 remains a parallel art-production track.
+Roadmap expansion approved on 2026-10-02: Phases 9–16 now capture the major post-foundation gameplay discussed but not represented by the earlier execution phases. Canonical epics #100–#107 and children #108–#161 are now open. Phase 9 / #100 is the next gameplay milestone and #108 is first unblocked; later phases remain planned dependency-ordered work, not authorization to stack speculative implementations. Phase 7 remains deferred and Phase 8 remains a parallel art-production track.
