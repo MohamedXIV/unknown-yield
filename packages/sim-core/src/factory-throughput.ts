@@ -63,36 +63,67 @@ function deltaInventory(current: Inventory, previous: Inventory): Inventory {
   return sortedInventory(result);
 }
 
-function topologySignature(state: Save, factory: Factory) {
-  const machines = Object.values(state.machines)
-    .filter((machine) => machine.factoryId === factory.id)
-    .sort((a, b) => a.id.localeCompare(b.id))
-    .map((machine) => ({
-      id: machine.id,
-      definitionId: machine.definitionId,
-      x: machine.x,
-      y: machine.y,
-      direction: machine.direction,
-      operation: machine.operation,
-      enabled: machine.enabled,
-      incident: machine.incident,
-    }));
-  const belts = Object.values(state.belts)
-    .filter((belt) => contains(factory, belt))
-    .sort((a, b) => key(a).localeCompare(key(b)))
-    .map((belt) => ({
-      x: belt.x,
-      y: belt.y,
-      direction: belt.direction,
-      alternate: belt.alternate,
-      switched: belt.switched,
-      junction: belt.junction
-        ? {
-            definitionId: belt.junction.definitionId,
-            branch: belt.junction.branch,
-          }
-        : null,
-    }));
+type FactoryMembers = {
+  machines: Save["machines"][string][];
+  belts: Save["belts"][string][];
+};
+
+// Saves and commands validate integer cell coordinates and canonical belt keys.
+// Membership is fresh per call; sorting changes only these temporary arrays.
+function factoryMembers(
+  state: Save,
+  factory: Factory,
+  machines = Object.values(state.machines).filter(
+    (machine) => machine.factoryId === factory.id,
+  ),
+): FactoryMembers {
+  const belts: FactoryMembers["belts"] = [];
+  for (let y = factory.y; y < factory.y + factory.height; y++)
+    for (let x = factory.x; x < factory.x + factory.width; x++) {
+      const belt = state.belts[key({ x, y })];
+      if (belt) belts.push(belt);
+    }
+  return {
+    machines: machines.sort((a, b) => a.id.localeCompare(b.id)),
+    belts: belts.sort((a, b) => key(a).localeCompare(key(b))),
+  };
+}
+
+function machineMembership(state: Save) {
+  const groups = new Map<string, FactoryMembers["machines"]>();
+  for (const machine of Object.values(state.machines)) {
+    if (machine.factoryId === null) continue;
+    const members = groups.get(machine.factoryId) ?? [];
+    members.push(machine);
+    groups.set(machine.factoryId, members);
+  }
+  return groups;
+}
+
+function topologySignature(factory: Factory, members: FactoryMembers) {
+  const machines = members.machines.map((machine) => ({
+    id: machine.id,
+    definitionId: machine.definitionId,
+    x: machine.x,
+    y: machine.y,
+    direction: machine.direction,
+    operation: machine.operation,
+    enabled: machine.enabled,
+    incident: machine.incident,
+  }));
+  const belts = members.belts.map((belt) => ({
+    x: belt.x,
+    y: belt.y,
+    direction: belt.direction,
+    alternate: belt.alternate,
+    switched: belt.switched,
+    junction: belt.junction
+      ? {
+          definitionId: belt.junction.definitionId,
+          branch: belt.junction.branch,
+        }
+      : null,
+  }));
   const ports = [...factory.ports]
     .sort((a, b) => key(a).localeCompare(key(b)))
     .map((port) => ({
@@ -298,21 +329,18 @@ function stateSignature(
   state: Save,
   factory: Factory,
   topology: ConnectedTopology,
+  members: FactoryMembers,
 ) {
-  const machines = Object.values(state.machines)
-    .filter((machine) => machine.factoryId === factory.id)
-    .sort((a, b) => a.id.localeCompare(b.id))
-    .map((machine) => machineRuntime(content, state, machine.id));
-  const belts = Object.values(state.belts)
-    .filter((belt) => contains(factory, belt))
-    .sort((a, b) => key(a).localeCompare(key(b)))
-    .map((belt) => ({
-      x: belt.x,
-      y: belt.y,
-      cargo: belt.cargo,
-      junctionCursor: belt.junction?.cursor ?? null,
-      crossingState: belt.junction?.crossing ?? null,
-    }));
+  const machines = members.machines.map((machine) =>
+    machineRuntime(content, state, machine.id),
+  );
+  const belts = members.belts.map((belt) => ({
+    x: belt.x,
+    y: belt.y,
+    cargo: belt.cargo,
+    junctionCursor: belt.junction?.cursor ?? null,
+    crossingState: belt.junction?.crossing ?? null,
+  }));
   return JSON.stringify({
     machines,
     belts,
@@ -348,8 +376,8 @@ export class FactoryThroughputMonitor {
     this.trackers.clear();
   }
 
-  private ensure(state: Save, factory: Factory) {
-    const topology = topologySignature(state, factory);
+  private ensure(factory: Factory, members: FactoryMembers) {
+    const topology = topologySignature(factory, members);
     let tracker = this.trackers.get(factory.id);
     if (!tracker || tracker.topology !== topology) {
       tracker = {
@@ -372,7 +400,7 @@ export class FactoryThroughputMonitor {
           candidate.direction === event.direction,
       );
       if (!port) continue;
-      const tracker = this.ensure(state, factory);
+      const tracker = this.ensure(factory, factoryMembers(state, factory));
       const role = contains(factory, next(port, port.direction))
         ? "inputs"
         : "outputs";
@@ -385,15 +413,21 @@ export class FactoryThroughputMonitor {
   observe(content: Content, state: Save) {
     // Shared only within this synchronous observation; next call rebuilds routing.
     let topology: ConnectedTopology | undefined;
+    const machinesByFactory = machineMembership(state);
     const live = new Set(Object.keys(state.factories));
     for (const id of this.trackers.keys())
       if (!live.has(id)) this.trackers.delete(id);
 
     for (const factory of Object.values(state.factories)) {
-      const tracker = this.ensure(state, factory);
-      const statuses = Object.values(state.machines)
-        .filter((machine) => machine.factoryId === factory.id)
-        .map((machine) => status(content, state, machine));
+      const members = factoryMembers(
+        state,
+        factory,
+        machinesByFactory.get(factory.id) ?? [],
+      );
+      const tracker = this.ensure(factory, members);
+      const statuses = members.machines.map((machine) =>
+        status(content, state, machine),
+      );
 
       if (
         statuses.some((machineStatus) => blockedStatuses.has(machineStatus))
@@ -421,6 +455,7 @@ export class FactoryThroughputMonitor {
         state,
         factory,
         (topology ??= connectedTopology(content, state)),
+        members,
       );
       const previous = tracker.seen.get(signature);
       const current: SeenState = {

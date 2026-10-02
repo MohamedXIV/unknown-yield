@@ -211,3 +211,5 @@ There is currently no remote CI workflow. Do not represent absent checks as gree
 Follow the live dependency order in Issue #2. Deferred roadmap possibilities are not permission to work around the active gate.
 
 Completed optimization: #94 through PR #95, shared per-observation topology indexing. See [measurement and verification](PHASE7_TOPOLOGY_OPTIMIZATION.md). 32-factory joint p95: 31.0466ms flowing / 24.4467ms backpressured, both above the fixed 10ms budget. Phase 7 remains open; assess a separately scoped next candidate from the remaining topologySignature/snapshot costs.
+
+Active approved optimization: #96, fresh local membership reused within observation; see PHASE7_MEMBERSHIP_OPTIMIZATION.md. Phase 7 remains open.
