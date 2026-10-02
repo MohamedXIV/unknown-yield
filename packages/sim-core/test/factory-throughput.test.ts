@@ -498,3 +498,127 @@ it("keeps factories independent and rebuilds external routing on the next observ
   expect(monitor.view(factoryId).cycleTicks).toBe(2);
   expect(monitor.view(secondId).cycleTicks).toBe(1);
 });
+
+describe("fresh throughput topology membership", () => {
+  const changes: [
+    string,
+    (
+      state: ReturnType<Simulation["serialize"]>,
+      factoryId: string,
+      processorId: string,
+    ) => void,
+  ][] = [
+    [
+      "internal placement",
+      (state) => {
+        state.belts["31,28"] = {
+          ...state.belts["30,27"],
+          id: "b-new",
+          x: 31,
+          y: 28,
+        };
+      },
+    ],
+    [
+      "internal removal",
+      (state) => {
+        delete state.belts["30,27"];
+      },
+    ],
+    [
+      "input wall routing",
+      (state) => {
+        state.belts["24,27"].direction = 1;
+      },
+    ],
+    [
+      "output wall routing",
+      (state) => {
+        state.belts["33,27"].direction = 1;
+      },
+    ],
+    [
+      "machine membership",
+      (state, _factoryId, processorId) => {
+        state.machines[processorId].factoryId = null;
+      },
+    ],
+    [
+      "factory geometry",
+      (state, factoryId) => {
+        state.factories[factoryId].width++;
+      },
+    ],
+    [
+      "port direction",
+      (state, factoryId) => {
+        state.factories[factoryId].ports[0].direction = 1;
+      },
+    ],
+  ];
+
+  it.each(changes)(
+    "resets before recording new flow after %s changes",
+    (_name, mutate) => {
+      const { sim, factoryId, processorId } = makeLine();
+      const state = sim.serialize();
+      const monitor = new FactoryThroughputMonitor();
+      for (let tick = 0; tick < 3; tick++) {
+        state.tick = tick;
+        for (const x of [24, 33])
+          monitor.recordMove(state, {
+            from: { x, y: 27 },
+            direction: 0,
+            material: x === 24 ? "ferrite" : "plates",
+          });
+        monitor.observe(fixture, state);
+      }
+      expect(monitor.view(factoryId).state).toBe("stable");
+      mutate(state, factoryId, processorId);
+      // Output port is unchanged by these mutations, so this is a matching event.
+      monitor.recordMove(state, {
+        from: { x: 33, y: 27 },
+        direction: 0,
+        material: "plates",
+      });
+      expect(monitor.view(factoryId).state).toBe("measuring");
+    },
+  );
+
+  it("preserves topology identity across record ordering and changes outside the half-open rectangle", () => {
+    const { sim, factoryId } = makeLine();
+    const state = sim.serialize();
+    const monitor = new FactoryThroughputMonitor();
+    for (let tick = 0; tick < 3; tick++) {
+      state.tick = tick;
+      for (const x of [24, 33])
+        monitor.recordMove(state, {
+          from: { x, y: 27 },
+          direction: 0,
+          material: x === 24 ? "ferrite" : "plates",
+        });
+      monitor.observe(fixture, state);
+    }
+    const certified = monitor.view(factoryId);
+    expect(certified.state).toBe("stable");
+    state.belts = Object.fromEntries(Object.entries(state.belts).reverse());
+    state.machines = Object.fromEntries(
+      Object.entries(state.machines).reverse(),
+    );
+    state.factories[factoryId].ports.reverse();
+    // x=34 is just outside the right boundary; bottom edge is outside too.
+    state.belts["34,27"].direction = 1;
+    state.belts["31,32"] = {
+      ...state.belts["30,27"],
+      id: "b-outside",
+      x: 31,
+      y: 32,
+    };
+    monitor.recordMove(state, {
+      from: { x: 33, y: 27 },
+      direction: 0,
+      material: "plates",
+    });
+    expect(monitor.view(factoryId)).toEqual(certified);
+  });
+});

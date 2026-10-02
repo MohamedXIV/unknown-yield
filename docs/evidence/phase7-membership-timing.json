@@ -1,0 +1,438 @@
+{
+  "schema": 1,
+  "mode": "timing",
+  "node": "v24.20.0",
+  "platform": "win32",
+  "arch": "x64",
+  "cpu": "Intel(R) Core(TM) i7-7700HQ CPU @ 2.80GHz",
+  "logicalCpus": 8,
+  "totalMemoryBytes": 34246660096,
+  "tickMs": 100,
+  "warmupTicks": 300,
+  "sampleTicks": 300,
+  "rows": [
+    {
+      "cells": 8,
+      "case": "flowing",
+      "samples": 3,
+      "latency": {
+        "all": {
+          "step": {
+            "medianMs": 1.4568,
+            "p95Ms": 3.3207,
+            "observations": 900
+          },
+          "snapshot": {
+            "medianMs": 1.1645,
+            "p95Ms": 2.2238,
+            "observations": 900
+          },
+          "combined": {
+            "medianMs": 2.7578,
+            "p95Ms": 5.0023,
+            "observations": 900
+          }
+        },
+        "transport": {
+          "step": {
+            "medianMs": 1.9475,
+            "p95Ms": 3.9458,
+            "observations": 300
+          },
+          "snapshot": {
+            "medianMs": 1.1683,
+            "p95Ms": 2.3124,
+            "observations": 300
+          },
+          "combined": {
+            "medianMs": 3.3574,
+            "p95Ms": 5.441,
+            "observations": 300
+          }
+        },
+        "nonTransport": {
+          "step": {
+            "medianMs": 0.8616,
+            "p95Ms": 2.988,
+            "observations": 600
+          },
+          "snapshot": {
+            "medianMs": 1.1619,
+            "p95Ms": 2.1879,
+            "observations": 600
+          },
+          "combined": {
+            "medianMs": 2.631,
+            "p95Ms": 4.7447,
+            "observations": 600
+          }
+        },
+        "gcOverlapping": {
+          "step": {
+            "medianMs": 2.382,
+            "p95Ms": 4.5359,
+            "observations": 20
+          },
+          "snapshot": {
+            "medianMs": 1.5285,
+            "p95Ms": 2.248,
+            "observations": 20
+          },
+          "combined": {
+            "medianMs": 4.2012,
+            "p95Ms": 6.6936,
+            "observations": 20
+          }
+        },
+        "withoutObservedGC": {
+          "step": {
+            "medianMs": 1.4146,
+            "p95Ms": 3.2107,
+            "observations": 880
+          },
+          "snapshot": {
+            "medianMs": 1.1591,
+            "p95Ms": 2.2224,
+            "observations": 880
+          },
+          "combined": {
+            "medianMs": 2.7433,
+            "p95Ms": 4.9699,
+            "observations": 880
+          }
+        },
+        "gc": {
+          "events": 20,
+          "totalEventDurationMs": 15.263899996876717,
+          "byKind": {
+            "1": 19,
+            "4": 1
+          }
+        }
+      },
+      "budget": {
+        "p95CombinedMs": 10,
+        "pass": true
+      },
+      "profiles": []
+    },
+    {
+      "cells": 8,
+      "case": "backpressured",
+      "samples": 3,
+      "latency": {
+        "all": {
+          "step": {
+            "medianMs": 0.9351,
+            "p95Ms": 3.2594,
+            "observations": 900
+          },
+          "snapshot": {
+            "medianMs": 1.3098,
+            "p95Ms": 2.5285,
+            "observations": 900
+          },
+          "combined": {
+            "medianMs": 2.5717,
+            "p95Ms": 5.2663,
+            "observations": 900
+          }
+        },
+        "transport": {
+          "step": {
+            "medianMs": 1.5621,
+            "p95Ms": 3.894,
+            "observations": 300
+          },
+          "snapshot": {
+            "medianMs": 1.2943,
+            "p95Ms": 2.495,
+            "observations": 300
+          },
+          "combined": {
+            "medianMs": 3.1603,
+            "p95Ms": 6.1675,
+            "observations": 300
+          }
+        },
+        "nonTransport": {
+          "step": {
+            "medianMs": 0.672,
+            "p95Ms": 3.0237,
+            "observations": 600
+          },
+          "snapshot": {
+            "medianMs": 1.315,
+            "p95Ms": 2.5409,
+            "observations": 600
+          },
+          "combined": {
+            "medianMs": 2.306,
+            "p95Ms": 5.0314,
+            "observations": 600
+          }
+        },
+        "gcOverlapping": {
+          "step": {
+            "medianMs": 3.0136,
+            "p95Ms": 6.4152,
+            "observations": 7
+          },
+          "snapshot": {
+            "medianMs": 2.235,
+            "p95Ms": 2.5783,
+            "observations": 7
+          },
+          "combined": {
+            "medianMs": 4.6444,
+            "p95Ms": 8.9935,
+            "observations": 7
+          }
+        },
+        "withoutObservedGC": {
+          "step": {
+            "medianMs": 0.9327,
+            "p95Ms": 3.2482,
+            "observations": 893
+          },
+          "snapshot": {
+            "medianMs": 1.3081,
+            "p95Ms": 2.5259,
+            "observations": 893
+          },
+          "combined": {
+            "medianMs": 2.5527,
+            "p95Ms": 5.2637,
+            "observations": 893
+          }
+        },
+        "gc": {
+          "events": 7,
+          "totalEventDurationMs": 8.888099998235703,
+          "byKind": {
+            "1": 6,
+            "4": 1
+          }
+        }
+      },
+      "budget": {
+        "p95CombinedMs": 10,
+        "pass": true
+      },
+      "profiles": []
+    },
+    {
+      "cells": 32,
+      "case": "flowing",
+      "samples": 3,
+      "latency": {
+        "all": {
+          "step": {
+            "medianMs": 7.3819,
+            "p95Ms": 17.9229,
+            "observations": 900
+          },
+          "snapshot": {
+            "medianMs": 4.6872,
+            "p95Ms": 8.116,
+            "observations": 900
+          },
+          "combined": {
+            "medianMs": 12.2473,
+            "p95Ms": 24.5777,
+            "observations": 900
+          }
+        },
+        "transport": {
+          "step": {
+            "medianMs": 10.3973,
+            "p95Ms": 21.2009,
+            "observations": 300
+          },
+          "snapshot": {
+            "medianMs": 4.6701,
+            "p95Ms": 8.5162,
+            "observations": 300
+          },
+          "combined": {
+            "medianMs": 15.6976,
+            "p95Ms": 27.7006,
+            "observations": 300
+          }
+        },
+        "nonTransport": {
+          "step": {
+            "medianMs": 3.4562,
+            "p95Ms": 12.6157,
+            "observations": 600
+          },
+          "snapshot": {
+            "medianMs": 4.6974,
+            "p95Ms": 7.8906,
+            "observations": 600
+          },
+          "combined": {
+            "medianMs": 10.347,
+            "p95Ms": 19.8843,
+            "observations": 600
+          }
+        },
+        "gcOverlapping": {
+          "step": {
+            "medianMs": 10.3841,
+            "p95Ms": 20.4851,
+            "observations": 46
+          },
+          "snapshot": {
+            "medianMs": 4.9778,
+            "p95Ms": 10.1151,
+            "observations": 46
+          },
+          "combined": {
+            "medianMs": 15.9451,
+            "p95Ms": 29.3471,
+            "observations": 46
+          }
+        },
+        "withoutObservedGC": {
+          "step": {
+            "medianMs": 7.1954,
+            "p95Ms": 17.8076,
+            "observations": 854
+          },
+          "snapshot": {
+            "medianMs": 4.6752,
+            "p95Ms": 8.0937,
+            "observations": 854
+          },
+          "combined": {
+            "medianMs": 11.9322,
+            "p95Ms": 23.9331,
+            "observations": 854
+          }
+        },
+        "gc": {
+          "events": 46,
+          "totalEventDurationMs": 55.45049999654293,
+          "byKind": {
+            "1": 45,
+            "4": 1
+          }
+        }
+      },
+      "budget": {
+        "p95CombinedMs": 10,
+        "pass": false
+      },
+      "profiles": []
+    },
+    {
+      "cells": 32,
+      "case": "backpressured",
+      "samples": 3,
+      "latency": {
+        "all": {
+          "step": {
+            "medianMs": 3.4847,
+            "p95Ms": 13.6385,
+            "observations": 900
+          },
+          "snapshot": {
+            "medianMs": 4.5067,
+            "p95Ms": 7.8472,
+            "observations": 900
+          },
+          "combined": {
+            "medianMs": 9.376,
+            "p95Ms": 19.6748,
+            "observations": 900
+          }
+        },
+        "transport": {
+          "step": {
+            "medianMs": 7.1206,
+            "p95Ms": 16.0185,
+            "observations": 300
+          },
+          "snapshot": {
+            "medianMs": 4.3369,
+            "p95Ms": 7.9552,
+            "observations": 300
+          },
+          "combined": {
+            "medianMs": 12.0298,
+            "p95Ms": 21.5028,
+            "observations": 300
+          }
+        },
+        "nonTransport": {
+          "step": {
+            "medianMs": 2.4504,
+            "p95Ms": 11.2808,
+            "observations": 600
+          },
+          "snapshot": {
+            "medianMs": 4.5768,
+            "p95Ms": 7.77,
+            "observations": 600
+          },
+          "combined": {
+            "medianMs": 7.5789,
+            "p95Ms": 16.7723,
+            "observations": 600
+          }
+        },
+        "gcOverlapping": {
+          "step": {
+            "medianMs": 7.497,
+            "p95Ms": 22.6867,
+            "observations": 35
+          },
+          "snapshot": {
+            "medianMs": 4.7056,
+            "p95Ms": 8.4959,
+            "observations": 35
+          },
+          "combined": {
+            "medianMs": 12.8506,
+            "p95Ms": 27.4246,
+            "observations": 35
+          }
+        },
+        "withoutObservedGC": {
+          "step": {
+            "medianMs": 3.3301,
+            "p95Ms": 13.239,
+            "observations": 865
+          },
+          "snapshot": {
+            "medianMs": 4.5035,
+            "p95Ms": 7.8472,
+            "observations": 865
+          },
+          "combined": {
+            "medianMs": 9.2973,
+            "p95Ms": 19.1334,
+            "observations": 865
+          }
+        },
+        "gc": {
+          "events": 35,
+          "totalEventDurationMs": 49.196200001984835,
+          "byKind": {
+            "1": 33,
+            "4": 2
+          }
+        }
+      },
+      "budget": {
+        "p95CombinedMs": 10,
+        "pass": false
+      },
+      "profiles": []
+    }
+  ],
+  "recordedDate": "2026-10-02",
+  "measuredCommit": "5296eebd9dd9b1fec338d78e13092f599f46da2d",
+  "baselineCommit": "6e9fa0fe40f14d26cbdd5982b2d6bb3418386331"
+}
