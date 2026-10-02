@@ -20,8 +20,8 @@ describe("content boundary", () => {
   });
   it("accepts the complete tiny scenario", () => {
     const c = validateContent(fixture);
-    expect(c.machines).toHaveLength(5);
-    expect(c.version).toBe("world-01-v6");
+    expect(c.machines).toHaveLength(7);
+    expect(c.version).toBe("world-01-v7");
     expect(c.storages).toHaveLength(1);
     expect(c.storages[0]).toMatchObject({ id: "depot", capacity: 40 });
     expect(c.site.stagingCapacity).toBe(24);
@@ -192,8 +192,10 @@ describe("content boundary", () => {
   });
   it("keeps pre-#72 world-01-v6 assistance content additively compatible", () => {
     const legacy = structuredClone(fixture) as unknown as {
+      version: string;
       economy: Record<string, unknown>;
     };
+    legacy.version = "world-01-v6";
     delete legacy.economy.assistancePackages;
     delete legacy.economy.defaultAssistancePackageId;
     const parsed = validateContent(legacy);
@@ -260,10 +262,12 @@ describe("content boundary", () => {
   });
   it("keeps pre-#70 world-01-v6 content additively compatible", () => {
     const legacy = structuredClone(fixture) as unknown as {
+      version: string;
       economy: Record<string, unknown> & {
         exchange: Array<Record<string, unknown>>;
       };
     };
+    legacy.version = "world-01-v6";
     delete legacy.economy.orders;
     delete legacy.economy.directives;
     delete legacy.economy.terminalCapabilities;

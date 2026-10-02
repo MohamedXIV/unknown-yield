@@ -614,6 +614,72 @@ export function createWorld(
         this.labels.set(t.id, label);
         this.structures.add(label);
       }
+
+      const hiddenLiquid = (p: Point) =>
+        snapshot.factories.some(
+          (f) => contains(f, p) && !mode.openFactories.includes(f.id),
+        );
+      for (const p of snapshot.pipes) {
+        if (hiddenLiquid(p)) continue;
+        const cx = (p.x + 0.5) * X,
+          cy = (p.y + 0.5) * Y,
+          vectors = [
+            [1, 0],
+            [0, 1],
+            [-1, 0],
+            [0, -1],
+          ];
+        for (const side of [p.inlet, p.outlet]) {
+          const [dx, dy] = vectors[side];
+          g.lineStyle(10, 0x658a91).lineBetween(
+            cx,
+            cy,
+            cx + (dx * X) / 2,
+            cy + (dy * Y) / 2,
+          );
+          g.lineStyle(5, 0x183238).lineBetween(
+            cx,
+            cy,
+            cx + (dx * X) / 2,
+            cy + (dy * Y) / 2,
+          );
+        }
+        this.arrow(g, cx, cy, p.outlet, 0xa9dce3, 4);
+      }
+      for (const t of snapshot.tanks) {
+        if (hiddenLiquid(t)) continue;
+        this.box(g, t, 0x729ca5, 0x36535b, 12);
+        const input = socket(t, t, false),
+          output = socket(t, t, true);
+        for (const [p, tint] of [
+          [input, 0x9bd0c4],
+          [output, 0xe5c481],
+        ] as const)
+          this.arrow(g, (p.x + 0.5) * X, (p.y + 0.5) * Y, t.direction, tint, 5);
+        const label = this.text(
+          (t.x + t.width / 2) * X,
+          (t.y + t.height) * Y + 12,
+          "",
+          9,
+        );
+        this.labels.set(t.id, label);
+        this.structures.add(label);
+      }
+      for (const p of snapshot.pumps) {
+        if (hiddenLiquid(p)) continue;
+        this.box(g, { ...p, width: 1, height: 1 }, 0x88b1b6, 0x36535b, 7);
+        this.arrow(
+          g,
+          (p.x + 0.5) * X,
+          (p.y + 0.5) * Y,
+          p.direction,
+          0xe5c481,
+          5,
+        );
+        const label = this.text((p.x + 0.5) * X, (p.y + 1) * Y + 12, "", 8);
+        this.labels.set(p.id, label);
+        this.structures.add(label);
+      }
       for (const f of snapshot.factories) {
         const x = f.x * X,
           y = f.y * Y,
@@ -683,6 +749,12 @@ export function createWorld(
           ?.setText(n + " / " + t.capacity)
           .setColor(n >= t.capacity ? "#e5ad75" : "#c0c6a9");
       }
+      for (const t of snapshot.tanks)
+        this.labels.get(t.id)?.setText(t.quantity + " / " + t.capacity);
+      for (const p of snapshot.pumps)
+        this.labels
+          .get(p.id)
+          ?.setText(translate("ui.liquid.short." + p.status));
       for (const f of snapshot.factories) {
         const presentation = factoryContractPresentation(f, (id) => {
           const key = snapshot.materials.find((m) => m.id === id)?.nameKey;
@@ -785,10 +857,30 @@ export function createWorld(
           );
         }
       }
+      for (const p of snapshot.pipes) {
+        if (
+          !p.quantity ||
+          snapshot.factories.some(
+            (f) => contains(f, p) && !mode.openFactories.includes(f.id),
+          )
+        )
+          continue;
+        const mat = snapshot.materials.find((m) => m.id === p.materialId);
+        g.fillStyle(color(mat?.color ?? "#69bac8")).fillRect(
+          p.x * X + 3,
+          p.y * Y + Y - 4,
+          ((X - 6) * p.quantity) / snapshot.liquidLogistics!.pipe.capacity,
+          3,
+        );
+      }
       const selected =
         snapshot.machines.find((m) => m.id === mode.selected) ??
         snapshot.factories.find((f) => f.id === mode.selected) ??
         snapshot.storages.find((t) => t.id === mode.selected) ??
+        snapshot.tanks.find((t) => t.id === mode.selected) ??
+        [...snapshot.pipes, ...snapshot.pumps]
+          .filter((p) => p.id === mode.selected)
+          .map((p) => ({ ...p, width: 1, height: 1 }))[0] ??
         (mode.selected === "terminal" ? snapshot.map.terminal : null);
       if (selected)
         g.lineStyle(2, 0xe3c78a, 0.85).strokeRect(
@@ -822,14 +914,17 @@ export function createWorld(
           );
       } else if (
         command.type === "placeMachine" ||
-        command.type === "placeStorage"
+        command.type === "placeStorage" ||
+        command.type === "placeTank"
       ) {
         const d =
           command.type === "placeMachine"
             ? snapshot.definitions.find((d) => d.id === command.definitionId)!
-            : snapshot.storageDefinitions.find(
-                (d) => d.id === command.definitionId,
-              )!;
+            : command.type === "placeTank"
+              ? snapshot.liquidLogistics!.tank
+              : snapshot.storageDefinitions.find(
+                  (d) => d.id === command.definitionId,
+                )!;
         const w = command.direction % 2 ? d.height : d.width,
           h = command.direction % 2 ? d.width : d.height;
         ghost
@@ -844,6 +939,20 @@ export function createWorld(
           tint,
           7,
         );
+      } else if (command.type === "placePipes") {
+        for (const p of command.points) {
+          ghost
+            .fillRect(p.x * X, p.y * Y, X, Y)
+            .strokeRect(p.x * X, p.y * Y, X, Y);
+          this.arrow(
+            ghost,
+            (p.x + 0.5) * X,
+            (p.y + 0.5) * Y,
+            p.outlet,
+            tint,
+            5,
+          );
+        }
       } else if (command.type === "placeBelts")
         for (let i = 0; i < command.points.length; i++) {
           const p = command.points[i],
@@ -868,7 +977,7 @@ export function createWorld(
         ghost
           .fillRect(this.hover.x * X, this.hover.y * Y, X, Y)
           .strokeRect(this.hover.x * X, this.hover.y * Y, X, Y);
-        if (command.type === "placePort")
+        if (command.type === "placePort" || command.type === "placePump")
           this.arrow(
             ghost,
             (command.x + 0.5) * X,
@@ -886,7 +995,9 @@ export function createWorld(
             "," +
             this.hover.y +
             "  " +
-            result.message +
+            (result.messageKey
+              ? translate(result.messageKey)
+              : result.message) +
             (result.cost ? " · " + result.cost + " " + this.buildUnit() : ""),
         )
         .setColor(result.ok ? "#d3e4ba" : "#f0ba9a");

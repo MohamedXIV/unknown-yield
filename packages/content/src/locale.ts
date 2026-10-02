@@ -56,6 +56,75 @@ export function validateLocaleCoverage(
 }
 
 export const enCatalog: LocaleCatalog = {
+  "ui.liquid.processor-input-help":
+    "Cyan is the liquid pipe input socket; gold is the solid output belt socket. Observe outputs to discover them. Drain buffers through compatible routes before dismantling.",
+  "ui.liquid.processor-output-help":
+    "Cyan is the solid input belt socket; gold is the liquid output socket. Place a source pump there, followed by directed pipe. Observe outputs to discover them. Drain buffers through compatible routes before dismantling.",
+
+  "ui.liquid.short.disabled": "Feed off",
+  "ui.liquid.short.needs-fuel": "No fuel",
+  "ui.liquid.short.needs-input": "No liquid",
+  "ui.liquid.short.incompatible": "Mismatch",
+  "ui.liquid.short.output-full": "Blocked",
+  "ui.liquid.short.ready": "Ready",
+
+  "ui.liquid.command.unavailable": "Liquid infrastructure is not authored",
+  "ui.liquid.command.invalid-path": "Invalid directed pipe path",
+  "ui.liquid.command.disconnected": "Pipe endpoints must connect",
+  "ui.liquid.command.place-pipes": "Place pipes",
+  "ui.liquid.command.pipes-placed": "Pipes placed",
+  "ui.liquid.command.place-structure": "Place liquid structure",
+  "ui.liquid.command.placed": "Liquid structure placed",
+  "ui.liquid.command.unknown-pump": "Unknown pump",
+  "ui.liquid.command.pump-updated": "Pump updated",
+  "ui.liquid.command.unknown-pipe": "Unknown pipe",
+  "ui.liquid.command.drain-pipe": "Drain the pipe before rerouting",
+  "ui.liquid.command.different-ends": "Pipe inlet and outlet must differ",
+  "ui.liquid.command.pipe-updated": "Pipe updated",
+  "ui.liquid.command.drain-first": "Drain liquid contents before dismantling",
+  "ui.liquid.command.reclaimed": "Liquid structure reclaimed",
+  "ui.liquid.command.remove-port":
+    "Remove liquid infrastructure on this port first",
+  "ui.liquid.factory-buffer": "Physical liquid buffers",
+  "ui.liquid.pipe.name": "Directed pipe",
+  "ui.liquid.tank.name": "Liquid tank",
+  "ui.liquid.pump.name": "Source pump",
+  "ui.liquid.pipe.description":
+    "Drag a directed path. R rotates a single pipe. Loaded pipes must drain before rerouting.",
+  "ui.liquid.tank.description":
+    "Stores one liquid. Cyan is input; gold is output. Connect a pump to its output socket.",
+  "ui.liquid.pump.description":
+    "Place at a tank or liquid machine output socket, facing the next pipe. Fuel is spent only on successful admission.",
+  "ui.liquid.liquefier.description":
+    "Place inside a factory. Feed solids by belt; observe the result. A source pump feeds liquid output into pipes.",
+  "ui.liquid.precipitator.description":
+    "Place inside a factory. Feed liquid into the cyan socket by directed pipe; solids leave by belt.",
+  "ui.liquid.empty": "Empty",
+  "ui.liquid.enable": "Enable source feed",
+  "ui.liquid.disable": "Stop source feed",
+  "ui.liquid.inlet": "Inlet",
+  "ui.liquid.outlet": "Outlet",
+  "ui.liquid.rotate": "Rotate empty pipe",
+  "ui.liquid.drain-first":
+    "Drain the liquid through the route before editing or reclaiming.",
+  "ui.liquid.reclaim": "Reclaim empty structure",
+  "ui.liquid.status.disabled":
+    "Source feed disabled; admitted liquid can drain",
+  "ui.liquid.status.needs-fuel": "Needs fuel",
+  "ui.liquid.status.needs-input": "Needs a compatible liquid source",
+  "ui.liquid.status.incompatible": "Outlet contains a different liquid",
+  "ui.liquid.status.output-full": "Outlet missing, reversed or full",
+  "ui.liquid.status.ready": "Ready",
+
+  "material.liquid-0.name": "Vein liquor",
+  "operation.liquefy.name": "Liquefy",
+  "operation.precipitate.name": "Precipitate",
+  "machine.liquefier.name": "Liquefier",
+  "machine.precipitator.name": "Precipitator",
+  "reaction.liquefy-raw.observation":
+    "The veined stone leaves a flowing liquid.",
+  "reaction.precipitate-liquid-0.observation":
+    "The liquid leaves solid granules.",
   "junction.splitter.name": "T splitter",
   "junction.merger.name": "T merger",
   "junction.crossing.name": "Controlled crossing",

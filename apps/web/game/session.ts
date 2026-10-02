@@ -4,7 +4,7 @@ import {
   type GameCommand,
   type CommandResult,
 } from "@site/sim-core";
-const SAVE_KEY = "industrial-site-save-v7";
+const SAVE_KEY = "industrial-site-save-v8";
 type StorageReader = { getItem(key: string): string | null };
 type StorageWriter = { setItem(key: string, value: string): void };
 export class Session {
@@ -59,10 +59,11 @@ export class Session {
   }
   restore(storage: StorageReader): CommandResult {
     try {
-      // Schemas 4-10 migrate to the current format, so previous browser
+      // Cheap schema migrations remain available only for matching content; older browser
       // storage keys stay readable; schema 3 and earlier cannot.
       const raw =
         storage.getItem(SAVE_KEY) ??
+        storage.getItem("industrial-site-save-v7") ??
         storage.getItem("industrial-site-save-v6") ??
         storage.getItem("industrial-site-save-v5") ??
         storage.getItem("industrial-site-save-v4");

@@ -1,8 +1,20 @@
 import { validateContent } from "./schema";
 export const fixture = validateContent({
-  version: "world-01-v6",
+  version: "world-01-v7",
   tickMs: 100,
+  liquidLogistics: {
+    pipe: { capacity: 4, transfer: 1, cost: 2 },
+    tank: { capacity: 64, width: 2, height: 2, cost: 24 },
+    pump: { transfer: 1, fuel: 1, cost: 12 },
+  },
   materials: [
+    {
+      id: "liquid-0",
+      nameKey: "material.liquid-0.name",
+      color: "#69bac8",
+      known: false,
+      handlingState: "liquid",
+    },
     {
       id: "ferrite",
       nameKey: "material.ferrite.name",
@@ -35,10 +47,40 @@ export const fixture = validateContent({
     },
   ],
   operations: [
+    { id: "liquefy", nameKey: "operation.liquefy.name" },
+    { id: "precipitate", nameKey: "operation.precipitate.name" },
     { id: "crush", nameKey: "operation.crush.name" },
     { id: "heat", nameKey: "operation.heat.name" },
   ],
   machines: [
+    {
+      id: "liquefier",
+      nameKey: "machine.liquefier.name",
+      role: "processor",
+      operations: ["liquefy"],
+      inputStates: ["solid"],
+      outputStates: ["liquid"],
+      capacity: 12,
+      fuel: 2,
+      durationTicks: 30,
+      width: 2,
+      height: 2,
+      cost: 32,
+    },
+    {
+      id: "precipitator",
+      nameKey: "machine.precipitator.name",
+      role: "processor",
+      operations: ["precipitate"],
+      inputStates: ["liquid"],
+      outputStates: ["solid"],
+      capacity: 12,
+      fuel: 2,
+      durationTicks: 30,
+      width: 2,
+      height: 2,
+      cost: 32,
+    },
     {
       id: "extractor",
       nameKey: "machine.extractor.name",
@@ -134,6 +176,26 @@ export const fixture = validateContent({
     },
   ],
   reactions: [
+    {
+      id: "liquefy-raw",
+      operation: "liquefy",
+      input: "raw",
+      inputAmount: 2,
+      output: "liquid-0",
+      outputAmount: 2,
+      observationKey: "reaction.liquefy-raw.observation",
+      known: false,
+    },
+    {
+      id: "precipitate-liquid-0",
+      operation: "precipitate",
+      input: "liquid-0",
+      inputAmount: 2,
+      output: "granules",
+      outputAmount: 1,
+      observationKey: "reaction.precipitate-liquid-0.observation",
+      known: false,
+    },
     {
       id: "press-ferrite",
       operation: "crush",

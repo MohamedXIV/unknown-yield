@@ -9,7 +9,7 @@ import type { Save } from "./types";
  * The per-material invariant is:
  *
  *   deposits + stock + staging + machineInput + machineOutput + belts
- *     + storage + escrow + embodied
+ *     + pipes + tanks + storage + escrow + embodied
  *     + flows.exported + flows.discarded + flows.consumed
  *       = initial + flows.produced
  *
@@ -37,6 +37,8 @@ export type LedgerRow = {
   machineInput: number;
   machineOutput: number;
   belts: number;
+  pipes: number;
+  tanks: number;
   storage: number;
   escrow: number;
   embodied: number;
@@ -65,6 +67,8 @@ function blank(material: string): LedgerRow {
     machineInput: 0,
     machineOutput: 0,
     belts: 0,
+    pipes: 0,
+    tanks: 0,
     storage: 0,
     escrow: 0,
     embodied: 0,
@@ -123,6 +127,11 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
       row(id).storage += n;
   }
 
+  for (const p of Object.values(s.pipes ?? {}))
+    if (p.materialId) row(p.materialId).pipes += p.quantity;
+  for (const t of Object.values(s.tanks ?? {}))
+    if (t.materialId) row(t.materialId).tanks += t.quantity;
+
   // In-flight batches: reserved material not yet in any buffer.
   for (const m of Object.values(s.machines ?? {})) {
     if (!m.job) continue;
@@ -137,6 +146,11 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
 
   // Construction plates sunk into placed structures.
   let embodied = 0;
+  if (c.liquidLogistics)
+    embodied +=
+      Object.keys(s.pipes ?? {}).length * c.liquidLogistics.pipe.cost +
+      Object.keys(s.tanks ?? {}).length * c.liquidLogistics.tank.cost +
+      Object.keys(s.pumps ?? {}).length * c.liquidLogistics.pump.cost;
   for (const m of Object.values(s.machines ?? {})) {
     const d = c.machines.find((a) => a.id === m.definitionId);
     if (d) embodied += d.cost;
@@ -177,6 +191,8 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
       r.machineInput +
       r.machineOutput +
       r.belts +
+      r.pipes +
+      r.tanks +
       r.storage +
       r.escrow +
       r.embodied +

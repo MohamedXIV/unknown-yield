@@ -66,6 +66,9 @@ function deltaInventory(current: Inventory, previous: Inventory): Inventory {
 type FactoryMembers = {
   machines: Save["machines"][string][];
   belts: Save["belts"][string][];
+  pipes: Save["pipes"][string][];
+  tanks: Save["tanks"][string][];
+  pumps: Save["pumps"][string][];
 };
 
 // Saves and commands validate integer cell coordinates and canonical belt keys.
@@ -84,6 +87,15 @@ function factoryMembers(
       if (belt) belts.push(belt);
     }
   return {
+    pipes: Object.values(state.pipes)
+      .filter((p) => contains(factory, p))
+      .sort((a, b) => key(a).localeCompare(key(b))),
+    tanks: Object.values(state.tanks)
+      .filter((p) => contains(factory, p))
+      .sort((a, b) => a.id.localeCompare(b.id)),
+    pumps: Object.values(state.pumps)
+      .filter((p) => contains(factory, p))
+      .sort((a, b) => a.id.localeCompare(b.id)),
     machines: machines.sort((a, b) => a.id.localeCompare(b.id)),
     belts: belts.sort((a, b) => key(a).localeCompare(key(b))),
   };
@@ -139,6 +151,20 @@ function topologySignature(factory: Factory, members: FactoryMembers) {
     ports,
     machines,
     belts,
+    pipes: members.pipes.map(({ id, x, y, inlet, outlet }) => ({
+      id,
+      x,
+      y,
+      inlet,
+      outlet,
+    })),
+    tanks: members.tanks.map(({ id, x, y, direction }) => ({
+      id,
+      x,
+      y,
+      direction,
+    })),
+    pumps: members.pumps,
   });
 }
 
@@ -162,6 +188,7 @@ type ConnectedOwner = { kind: "machine" | "storage"; id: string };
 type ConnectedTopology = {
   incoming: ReadonlyMap<string, readonly string[]>;
   owners: ReadonlyMap<string, readonly ConnectedOwner[]>;
+  liquids: ReadonlyMap<string, readonly string[]>;
 };
 
 function connectedTopology(content: Content, state: Save): ConnectedTopology {
@@ -220,7 +247,109 @@ function connectedTopology(content: Content, state: Save): ConnectedTopology {
     });
   }
 
-  return { incoming, owners };
+  return { incoming, owners, liquids: liquidTopology(content, state) };
+}
+
+function liquidTopology(content: Content, state: Save) {
+  const graph = new Map<string, string[]>(),
+    cfg = content.liquidLogistics;
+  if (
+    !cfg ||
+    (!Object.keys(state.pipes).length &&
+      !Object.keys(state.pumps).length &&
+      !Object.keys(state.tanks).length)
+  )
+    return graph;
+  const link = (a: string, b: string) => {
+    for (const [from, to] of [
+      [a, b],
+      [b, a],
+    ]) {
+      const list = graph.get(from) ?? [];
+      list.push(to);
+      graph.set(from, list);
+    }
+  };
+  const endpoint = (p: { x: number; y: number }, direction: number) => {
+    for (const t of Object.values(state.tanks))
+      if (
+        t.direction === direction &&
+        key(socket(t, cfg.tank, false)) === key(p)
+      )
+        return "tank:" + t.id;
+    for (const m of Object.values(state.machines)) {
+      const d = content.machines.find((d) => d.id === m.definitionId)!;
+      if (
+        d.inputStates.includes("liquid") &&
+        m.direction === direction &&
+        key(socket(m, d, false)) === key(p)
+      )
+        return "machine:" + m.id;
+    }
+    return null;
+  };
+  for (const p of Object.values(state.pipes)) {
+    const target = state.pipes[key(next(p, p.outlet))];
+    if (target && target.inlet === (p.outlet + 2) % 4)
+      link("pipe:" + key(p), "pipe:" + key(target));
+    const owner = endpoint(p, p.outlet);
+    if (owner) link("pipe:" + key(p), owner);
+  }
+  for (const p of Object.values(state.pumps)) {
+    const node = "pump:" + p.id,
+      target = state.pipes[key(next(p, p.direction))];
+    if (target && target.inlet === (p.direction + 2) % 4)
+      link(node, "pipe:" + key(target));
+    for (const t of Object.values(state.tanks))
+      if (
+        t.direction === p.direction &&
+        key(socket(t, cfg.tank, true)) === key(p)
+      )
+        link(node, "tank:" + t.id);
+    for (const m of Object.values(state.machines)) {
+      const d = content.machines.find((d) => d.id === m.definitionId)!;
+      if (
+        d.outputStates.includes("liquid") &&
+        m.direction === p.direction &&
+        key(socket(m, d, true)) === key(p)
+      )
+        link(node, "machine:" + m.id);
+    }
+  }
+  return graph;
+}
+function liquidRuntime(
+  content: Content,
+  state: Save,
+  members: FactoryMembers,
+  graph: ConnectedTopology["liquids"],
+) {
+  const queue = [
+      ...members.pipes.map((p) => "pipe:" + key(p)),
+      ...members.tanks.map((p) => "tank:" + p.id),
+      ...members.pumps.map((p) => "pump:" + p.id),
+      ...members.machines.map((m) => "machine:" + m.id),
+    ],
+    seen = new Set<string>();
+  for (let i = 0; i < queue.length; i++) {
+    const node = queue[i];
+    if (seen.has(node)) continue;
+    seen.add(node);
+    for (const neighbour of graph.get(node) ?? [])
+      if (!seen.has(neighbour)) queue.push(neighbour);
+  }
+  return [...seen]
+    .sort()
+    .filter((node) => !node.startsWith("machine:") || graph.has(node))
+    .map((node) => {
+      const split = node.indexOf(":"),
+        kind = node.slice(0, split),
+        id = node.slice(split + 1);
+      if (kind === "pipe") return { node, ...state.pipes[id] };
+      if (kind === "tank") return { node, ...state.tanks[id] };
+      if (kind === "pump") return { node, ...state.pumps[id] };
+      return { node, ...machineRuntime(content, state, id) };
+    });
 }
 
 // Internal recurrence alone can look stable while a pre-existing feeder/drain
@@ -345,6 +474,7 @@ function stateSignature(
     machines,
     belts,
     connected: connectedRuntime(content, state, factory, topology),
+    liquids: liquidRuntime(content, state, members, topology.liquids),
   });
 }
 
@@ -404,7 +534,7 @@ export class FactoryThroughputMonitor {
       const role = contains(factory, next(port, port.direction))
         ? "inputs"
         : "outputs";
-      change(tracker.totals[role], event.material, 1);
+      change(tracker.totals[role], event.material, event.units ?? 1);
       tracker.lastBoundaryTick = state.tick;
       return;
     }
@@ -458,6 +588,9 @@ export class FactoryThroughputMonitor {
         members,
       );
       const previous = tracker.seen.get(signature);
+      // A certificate describes a repeated detailed state. A newly observed
+      // connected backlog or route state must earn recurrence again.
+      if (!previous) tracker.stable = null;
       const current: SeenState = {
         tick: state.tick,
         inputs: copyInventory(tracker.totals.inputs),

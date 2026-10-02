@@ -294,3 +294,38 @@ it("round-trips crossing topology in generic v2 without runtime scheduling", () 
   });
   expect(() => parseFactoryBlueprint(fixture, bad)).toThrow();
 });
+
+describe("liquid factory blueprints", () => {
+  it("exports relative liquid layout/settings without duplicating contents", () => {
+    const sim = new Simulation(fixture);
+    const id = build(sim, {
+      type: "placeFactory",
+      x: 25,
+      y: 10,
+      width: 12,
+      height: 10,
+    });
+    const tank = build(sim, { type: "placeTank", x: 27, y: 12, direction: 0 });
+    const pump = build(sim, { type: "placePump", x: 29, y: 13, direction: 0 });
+    build(sim, {
+      type: "placePipes",
+      points: [{ x: 30, y: 13, inlet: 2, outlet: 0 }],
+    });
+    const state = sim.serialize();
+    state.tanks[tank].materialId = "liquid-0";
+    state.tanks[tank].quantity = 8;
+    state.pumps[pump].enabled = false;
+    const encoded = serializeFactoryBlueprint(fixture, state, id),
+      bp = parseFactoryBlueprint(fixture, encoded);
+    expect(bp.schemaVersion).toBe(3);
+    expect(bp.tanks).toEqual([{ x: 2, y: 2, direction: 0 }]);
+    expect(bp.pumps).toEqual([{ x: 4, y: 3, direction: 0, enabled: false }]);
+    expect(bp.pipes).toEqual([{ x: 5, y: 3, inlet: 2, outlet: 0 }]);
+    expect(encoded).not.toContain("liquid-0");
+    expect(encoded).not.toContain("quantity");
+    const bad = structuredClone(bp);
+    bad.pipes![0].x = 2;
+    bad.pipes![0].y = 2;
+    expect(() => parseFactoryBlueprint(fixture, bad)).toThrow(/overlap/i);
+  });
+});

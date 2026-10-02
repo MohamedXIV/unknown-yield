@@ -13,11 +13,36 @@ import {
   wall,
   key,
   contains,
+  liquidPlacementError,
+  liquidRects,
+  overlaps,
+  next,
 } from "./geometry";
 const coordinate = z.number().int().min(0).max(10000),
   direction = z.number().int().min(0).max(3),
   point = { x: coordinate, y: coordinate };
 const schema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("placePipes"),
+    points: z
+      .array(z.object({ ...point, inlet: direction, outlet: direction }))
+      .min(1)
+      .max(4800),
+  }),
+  z.object({ type: z.literal("placeTank"), ...point, direction }),
+  z.object({ type: z.literal("placePump"), ...point, direction }),
+  z.object({
+    type: z.literal("setPumpEnabled"),
+    id: z.string(),
+    enabled: z.boolean(),
+  }),
+  z.object({
+    type: z.literal("configurePipe"),
+    id: z.string(),
+    inlet: direction,
+    outlet: direction,
+  }),
+
   z.object({
     type: z.literal("placeFactory"),
     ...point,
@@ -74,10 +99,34 @@ const schema = z.discriminatedUnion("type", [
   }),
   z.object({ type: z.literal("assistance"), packageId: z.string().optional() }),
 ]);
-const fail = (message: string): CommandResult => ({ ok: false, message });
+const liquidMessages: Record<string, string> = {
+  "Liquid infrastructure is not authored": "ui.liquid.command.unavailable",
+  "Invalid directed pipe path": "ui.liquid.command.invalid-path",
+  "Pipe endpoints must connect": "ui.liquid.command.disconnected",
+  "Place pipes": "ui.liquid.command.place-pipes",
+  "Pipes placed": "ui.liquid.command.pipes-placed",
+  "Place liquid structure": "ui.liquid.command.place-structure",
+  "Liquid structure placed": "ui.liquid.command.placed",
+  "Unknown pump": "ui.liquid.command.unknown-pump",
+  "Pump updated": "ui.liquid.command.pump-updated",
+  "Unknown pipe": "ui.liquid.command.unknown-pipe",
+  "Drain the pipe before rerouting": "ui.liquid.command.drain-pipe",
+  "Pipe inlet and outlet must differ": "ui.liquid.command.different-ends",
+  "Pipe updated": "ui.liquid.command.pipe-updated",
+  "Drain liquid contents before dismantling": "ui.liquid.command.drain-first",
+  "Liquid structure reclaimed": "ui.liquid.command.reclaimed",
+  "Remove liquid infrastructure on this port first":
+    "ui.liquid.command.remove-port",
+};
+const fail = (message: string): CommandResult => ({
+  ok: false,
+  message,
+  ...(liquidMessages[message] ? { messageKey: liquidMessages[message] } : {}),
+});
 const ok = (message: string, cost = 0, id?: string): CommandResult => ({
   ok: true,
   message,
+  ...(liquidMessages[message] ? { messageKey: liquidMessages[message] } : {}),
   cost,
   id,
 });
@@ -97,6 +146,103 @@ export function applyCommand(
   if ("machineId" in cmd && !Object.hasOwn(s.machines, cmd.machineId))
     return fail("Unknown machine");
   switch (cmd.type) {
+    case "placePipes": {
+      const cfg = c.liquidLogistics;
+      if (!cfg) return fail("Liquid infrastructure is not authored");
+      const stage = structuredClone(s),
+        seen = new Set<string>();
+      for (let i = 0; i < cmd.points.length; i++) {
+        const point = cmd.points[i],
+          prev = cmd.points[i - 1];
+        if (seen.has(key(point)) || point.inlet === point.outlet)
+          return fail("Invalid directed pipe path");
+        if (
+          prev &&
+          (key(next(prev, prev.outlet)) !== key(point) ||
+            point.inlet !== (prev.outlet + 2) % 4)
+        )
+          return fail("Pipe endpoints must connect");
+        const error = liquidPlacementError(c, stage, point, "pipe");
+        if (error) return fail(error);
+        seen.add(key(point));
+        stage.pipes[key(point)] = {
+          ...point,
+          id: "preview",
+          materialId: null,
+          quantity: 0,
+        };
+      }
+      const cost = cmd.points.length * cfg.pipe.cost;
+      if (!affordable(cost)) return fail("Not enough structural plates");
+      if (!apply) return ok("Place pipes", cost);
+      pay(cost);
+      for (const point of cmd.points)
+        s.pipes[key(point)] = {
+          ...point,
+          id: issue("l"),
+          materialId: null,
+          quantity: 0,
+        };
+      return ok("Pipes placed", cost);
+    }
+    case "placeTank":
+    case "placePump": {
+      const cfg = c.liquidLogistics;
+      if (!cfg) return fail("Liquid infrastructure is not authored");
+      const kind = cmd.type === "placeTank" ? "tank" : "pump",
+        error = liquidPlacementError(c, s, cmd, kind);
+      if (error) return fail(error);
+      const cost = cfg[kind].cost;
+      if (!affordable(cost)) return fail("Not enough structural plates");
+      if (!apply) return ok("Place liquid structure", cost);
+      const id = issue(kind === "tank" ? "t" : "u");
+      pay(cost);
+      if (kind === "tank")
+        s.tanks[id] = {
+          id,
+          x: cmd.x,
+          y: cmd.y,
+          direction: cmd.direction,
+          materialId: null,
+          quantity: 0,
+        };
+      else
+        s.pumps[id] = {
+          id,
+          x: cmd.x,
+          y: cmd.y,
+          direction: cmd.direction,
+          enabled: true,
+        };
+      return ok("Liquid structure placed", cost, id);
+    }
+    case "setPumpEnabled": {
+      const pump = Object.hasOwn(s.pumps, cmd.id) ? s.pumps[cmd.id] : undefined;
+      if (!pump) return fail("Unknown pump");
+      if (apply) pump.enabled = cmd.enabled;
+      return ok("Pump updated");
+    }
+    case "configurePipe": {
+      const pipe = Object.values(s.pipes).find((p) => p.id === cmd.id);
+      if (!pipe) return fail("Unknown pipe");
+      if (pipe.quantity) return fail("Drain the pipe before rerouting");
+      if (cmd.inlet === cmd.outlet)
+        return fail("Pipe inlet and outlet must differ");
+      const stage = structuredClone(s);
+      delete stage.pipes[key(pipe)];
+      const error = liquidPlacementError(
+        c,
+        stage,
+        { ...pipe, inlet: cmd.inlet, outlet: cmd.outlet },
+        "pipe",
+      );
+      if (error) return fail(error);
+      if (apply) {
+        pipe.inlet = cmd.inlet;
+        pipe.outlet = cmd.outlet;
+      }
+      return ok("Pipe updated");
+    }
     case "placeFactory": {
       const cost = cmd.width * cmd.height * c.site.factoryCellCost,
         error = factoryError(c, s, cmd);
@@ -359,6 +505,23 @@ export function applyCommand(
       };
     }
     case "dismantle": {
+      const pipe = Object.values(s.pipes).find((p) => p.id === cmd.id),
+        tank = Object.hasOwn(s.tanks, cmd.id) ? s.tanks[cmd.id] : undefined,
+        pump = Object.hasOwn(s.pumps, cmd.id) ? s.pumps[cmd.id] : undefined;
+      if (pipe || tank || pump) {
+        if (pipe?.quantity || tank?.quantity)
+          return fail("Drain liquid contents before dismantling");
+        const kind = pipe ? "pipe" : tank ? "tank" : "pump",
+          cost = c.liquidLogistics![kind].cost;
+        if (apply) {
+          if (pipe) delete s.pipes[key(pipe)];
+          else if (tank) delete s.tanks[cmd.id];
+          else delete s.pumps[cmd.id];
+          change(s.stock, c.site.buildMaterial, cost);
+        }
+        return ok("Liquid structure reclaimed");
+      }
+
       if (Object.hasOwn(s.machines, cmd.id)) {
         const m = s.machines[cmd.id],
           def = c.machines.find((d) => d.id === m.definitionId)!;
@@ -379,6 +542,7 @@ export function applyCommand(
       if (Object.hasOwn(s.factories, cmd.id)) {
         const f = s.factories[cmd.id];
         if (
+          liquidRects(c, s).some((r) => overlaps(f, r)) ||
           f.ports.length ||
           Object.values(s.machines).some((m) => m.factoryId === f.id) ||
           Object.values(s.belts).some((b) => contains(f, b))
@@ -434,6 +598,11 @@ export function applyCommand(
       for (const f of Object.values(s.factories)) {
         const p = f.ports.find((p) => p.id === cmd.id);
         if (p) {
+          if (
+            s.pipes[key(p)] ||
+            Object.values(s.pumps).some((a) => key(a) === key(p))
+          )
+            return fail("Remove liquid infrastructure on this port first");
           if (Object.hasOwn(s.belts, key(p)))
             return fail("Remove the belt on this port first");
           if (apply) {

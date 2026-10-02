@@ -2,6 +2,7 @@ import type { Content } from "@site/content";
 import { contains, next } from "./geometry";
 import { status } from "./production";
 import {
+  change,
   MACHINE_STATUSES,
   type Factory,
   type FactoryView,
@@ -35,6 +36,13 @@ export function factoryView(
   for (const machine of machines)
     statusCounts[status(content, state, machine)]++;
 
+  const liquidInventory: Record<string, number> = {};
+  for (const p of [
+    ...Object.values(state.pipes),
+    ...Object.values(state.tanks),
+  ])
+    if (contains(factory, p) && p.materialId && p.quantity)
+      change(liquidInventory, p.materialId, p.quantity);
   return {
     ...factory,
     ports: factory.ports.map((port) => ({
@@ -44,6 +52,7 @@ export function factoryView(
         : ("output" as const),
     })),
     contract: {
+      liquidInventory,
       machineCount: machines.length,
       statusCounts,
       throughput,

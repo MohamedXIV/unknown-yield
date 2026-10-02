@@ -92,7 +92,10 @@ describe("Content Studio authoring core", () => {
 
     expect(parsed.content.version).toBe("world-01-v6-draft");
     expect(parsed.content.materials).toContainEqual(
-      expect.objectContaining({ id: "powder", nameKey: "material.powder.name" }),
+      expect.objectContaining({
+        id: "powder",
+        nameKey: "material.powder.name",
+      }),
     );
     expect(parsed.content.operations).toContainEqual({
       id: "polish",
@@ -189,6 +192,13 @@ describe("Content Studio authoring core", () => {
         targetId: "raw",
         sourceType: "reaction",
         sourceId: "heat-raw-sealed",
+        field: "input",
+      },
+      {
+        targetType: "material",
+        targetId: "raw",
+        sourceType: "reaction",
+        sourceId: "liquefy-raw",
         field: "input",
       },
     ]);

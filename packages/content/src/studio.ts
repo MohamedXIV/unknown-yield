@@ -1,9 +1,5 @@
 import { createStore, type Store } from "tinybase";
-import {
-  enCatalog,
-  localeCatalogSchema,
-  type LocaleCatalog,
-} from "./locale";
+import { enCatalog, localeCatalogSchema, type LocaleCatalog } from "./locale";
 import { validateContent, type Content } from "./schema";
 
 export const STUDIO_BUNDLE_SCHEMA_VERSION = 1 as const;
@@ -15,10 +11,7 @@ export type StudioBundle = {
 };
 
 export type StudioEntityKind =
-  | "material"
-  | "operation"
-  | "machine"
-  | "reaction";
+  "material" | "operation" | "machine" | "reaction";
 
 export type StudioReference = {
   targetType: StudioEntityKind;
@@ -49,6 +42,8 @@ const machineRow = (machine: Content["machines"][number]) => ({
   unlockReactionId: empty(machine.unlock?.reactionId),
   unlockHintKey: empty(machine.unlock?.hintKey),
   operationsJson: JSON.stringify(machine.operations),
+  inputStatesJson: JSON.stringify(machine.inputStates),
+  outputStatesJson: JSON.stringify(machine.outputStates),
   capacity: machine.capacity,
   fuel: machine.fuel,
   durationTicks: machine.durationTicks,
@@ -84,19 +79,17 @@ export function createContentStore(
     })
     .setTable(
       "materials",
-      Object.fromEntries(
-        content.materials.map(({ id, ...row }) => [id, row]),
-      ),
+      Object.fromEntries(content.materials.map(({ id, ...row }) => [id, row])),
     )
     .setTable(
       "operations",
-      Object.fromEntries(
-        content.operations.map(({ id, ...row }) => [id, row]),
-      ),
+      Object.fromEntries(content.operations.map(({ id, ...row }) => [id, row])),
     )
     .setTable(
       "machines",
-      Object.fromEntries(content.machines.map((row) => [row.id, machineRow(row)])),
+      Object.fromEntries(
+        content.machines.map((row) => [row.id, machineRow(row)]),
+      ),
     )
     .setTable(
       "reactions",
@@ -124,23 +117,30 @@ function required(row: Record<string, unknown>, key: string, label: string) {
 
 function stringCell(row: Record<string, unknown>, key: string, label: string) {
   const value = required(row, key, label);
-  if (typeof value !== "string") throw new Error(label + " " + key + " must be text");
+  if (typeof value !== "string")
+    throw new Error(label + " " + key + " must be text");
   return value;
 }
 
 function numberCell(row: Record<string, unknown>, key: string, label: string) {
   const value = required(row, key, label);
-  if (typeof value !== "number") throw new Error(label + " " + key + " must be a number");
+  if (typeof value !== "number")
+    throw new Error(label + " " + key + " must be a number");
   return value;
 }
 
 function booleanCell(row: Record<string, unknown>, key: string, label: string) {
   const value = required(row, key, label);
-  if (typeof value !== "boolean") throw new Error(label + " " + key + " must be true/false");
+  if (typeof value !== "boolean")
+    throw new Error(label + " " + key + " must be true/false");
   return value;
 }
 
-function optionalText(row: Record<string, unknown>, key: string, label: string) {
+function optionalText(
+  row: Record<string, unknown>,
+  key: string,
+  label: string,
+) {
   const value = stringCell(row, key, label).trim();
   return value || undefined;
 }
@@ -172,7 +172,9 @@ function orderedIds(
     known = new Set(base);
   return [
     ...base,
-    ...current.filter((id) => !known.has(id)).sort((a, b) => a.localeCompare(b)),
+    ...current
+      .filter((id) => !known.has(id))
+      .sort((a, b) => a.localeCompare(b)),
   ];
 }
 
@@ -191,6 +193,7 @@ function candidateFromStore(store: Store, base: Content): unknown {
       nameKey: stringCell(row, "nameKey", label),
       color: stringCell(row, "color", label),
       known: booleanCell(row, "known", label),
+      handlingState: row.handlingState ?? "solid",
     };
   });
 
@@ -232,6 +235,14 @@ function candidateFromStore(store: Store, base: Content): unknown {
           }
         : {}),
       operations: parseOperations(row, label),
+      inputStates: parseOperations(
+        { operationsJson: row.inputStatesJson ?? '["solid"]' },
+        label + " inputStates",
+      ),
+      outputStates: parseOperations(
+        { operationsJson: row.outputStatesJson ?? '["solid"]' },
+        label + " outputStates",
+      ),
       capacity: numberCell(row, "capacity", label),
       fuel: numberCell(row, "fuel", label),
       durationTicks: numberCell(row, "durationTicks", label),

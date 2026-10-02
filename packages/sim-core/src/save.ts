@@ -19,6 +19,7 @@ import {
   storageError,
   wall,
   key,
+  liquidPlacementError,
 } from "./geometry";
 const count = z.number().int().nonnegative().max(1000000000),
   positive = count.positive();
@@ -85,6 +86,21 @@ const belt = z.object({
   alternate: z.number().int().min(0).max(3).nullable().default(null),
   switched: z.boolean().default(false),
 });
+const liquidContents = { materialId: safeId.nullable(), quantity: count };
+const pipe = z.object({
+  ...point,
+  ...liquidContents,
+  id: safeId,
+  inlet: direction,
+  outlet: direction,
+});
+const tank = z.object({ ...point, ...liquidContents, id: safeId, direction });
+const pump = z.object({
+  ...point,
+  id: safeId,
+  direction,
+  enabled: z.boolean(),
+});
 const storage = z.object({
   ...point,
   id: safeId,
@@ -110,6 +126,7 @@ const schema = z.object({
     z.literal(11),
     z.literal(12),
     z.literal(13),
+    z.literal(14),
   ]),
   contentVersion: z.string(),
   tick: count,
@@ -127,6 +144,9 @@ const schema = z.object({
   factories: z.record(safeId, factory),
   belts: z.record(z.string().regex(/^\d+,\d+$/), belt),
   storages: z.record(safeId, storage),
+  pipes: z.record(z.string().regex(/^\d+,\d+$/), pipe).default({}),
+  tanks: z.record(safeId, tank).default({}),
+  pumps: z.record(safeId, pump).default({}),
   staging: inventory,
   policies: z.record(safeId, z.enum(["keep", "export"])),
   market: z
@@ -176,7 +196,7 @@ const schema = z.object({
 });
 export function initialState(c: Content): Save {
   const state: Save = {
-    schemaVersion: 13,
+    schemaVersion: 14,
     contentVersion: c.version,
     tick: 0,
     remainder: 0,
@@ -211,6 +231,9 @@ export function initialState(c: Content): Save {
     machines: {},
     factories: {},
     belts: {},
+    pipes: {},
+    tanks: {},
+    pumps: {},
     storages: {},
     staging: {},
     policies: Object.fromEntries(
@@ -232,6 +255,11 @@ export function initialState(c: Content): Save {
 }
 export function parseSave(input: unknown, c: Content): Save {
   const s = schema.parse(input);
+  if (
+    s.schemaVersion < 14 &&
+    [s.pipes, s.tanks, s.pumps].some((r) => Object.keys(r).length)
+  )
+    throw new Error("Legacy schema cannot contain liquid locations");
   if (s.schemaVersion < 12 && Object.values(s.belts).some((b) => b.junction))
     throw new Error("Legacy save contains junction state");
   if (
@@ -329,6 +357,7 @@ export function parseSave(input: unknown, c: Content): Save {
   }
   if (s.schemaVersion === 11) s.schemaVersion = 12;
   if (s.schemaVersion === 12) s.schemaVersion = 13;
+  if (s.schemaVersion === 13) s.schemaVersion = 14;
   if (s.contentVersion !== c.version || s.remainder >= c.tickMs)
     throw new Error("Incompatible content or timing");
   if (
@@ -505,6 +534,20 @@ export function parseSave(input: unknown, c: Content): Save {
         : m.operation !== null
     )
       throw new Error("Invalid operation");
+    for (const [inv, states] of [
+      [m.input, d.inputStates],
+      [m.output, d.outputStates],
+    ] as const)
+      if (
+        Object.entries(inv).some(
+          ([id, n]) =>
+            n > 0 &&
+            !states.includes(
+              c.materials.find((a) => a.id === id)?.handlingState ?? "solid",
+            ),
+        )
+      )
+        throw new Error("Machine handling state mismatch");
     if (total(m.input) > d.capacity || total(m.output) > d.capacity)
       throw new Error("Capacity exceeded");
     if (d.role === "extractor" && total(m.input))
@@ -576,6 +619,11 @@ export function parseSave(input: unknown, c: Content): Save {
     const error = beltError(c, stage, b, b.direction);
     if (error) throw new Error(error);
     if (b.cargo && !known.has(b.cargo)) throw new Error("Unknown cargo");
+    if (
+      b.cargo &&
+      c.materials.find((m) => m.id === b.cargo)?.handlingState !== "solid"
+    )
+      throw new Error("Belt handling state mismatch");
     if (b.switched && b.alternate === null)
       throw new Error("Belt switched with no alternate exit");
     if (b.alternate !== null && b.alternate === b.direction)
@@ -625,6 +673,56 @@ export function parseSave(input: unknown, c: Content): Save {
       throw new Error("Storage capacity exceeded");
     stage.storages[id] = t;
   }
+  for (const [kind, records] of [
+    ["pipe", s.pipes],
+    ["tank", s.tanks],
+    ["pump", s.pumps],
+  ] as const) {
+    for (const [location, entity] of Object.entries(records)) {
+      if (!c.liquidLogistics)
+        throw new Error("Liquid infrastructure is not authored");
+      takeId(entity.id, kind === "pipe" ? "l" : kind === "tank" ? "t" : "u");
+      if ((kind === "pipe" ? key(entity) : entity.id) !== location)
+        throw new Error("Invalid liquid location or ID");
+      const error = liquidPlacementError(c, stage, entity, kind);
+      if (error) throw new Error(error);
+      if (kind === "pipe") {
+        const item = s.pipes[location];
+        if (item.inlet === item.outlet)
+          throw new Error("Pipe inlet and outlet coincide");
+        stage.pipes[location] = item;
+      } else if (kind === "tank") stage.tanks[location] = s.tanks[location];
+      else stage.pumps[location] = s.pumps[location];
+      if ("quantity" in entity) {
+        const cap =
+          kind === "pipe"
+            ? c.liquidLogistics.pipe.capacity
+            : c.liquidLogistics.tank.capacity;
+        if (
+          entity.quantity > cap ||
+          (entity.quantity === 0) !== (entity.materialId === null) ||
+          (entity.materialId !== null &&
+            (!known.has(entity.materialId) ||
+              c.materials.find((m) => m.id === entity.materialId)
+                ?.handlingState !== "liquid"))
+        )
+          throw new Error("Invalid liquid quantity or identity");
+      }
+    }
+  }
+  for (const inv of [
+    s.stock,
+    s.staging,
+    ...Object.values(s.storages).map((t) => t.inventory),
+  ])
+    if (
+      Object.entries(inv).some(
+        ([id, n]) =>
+          n > 0 &&
+          c.materials.find((m) => m.id === id)?.handlingState !== "solid",
+      )
+    )
+      throw new Error("Dry inventory handling state mismatch");
   if (total(s.staging) > c.site.stagingCapacity)
     throw new Error("Terminal staging capacity exceeded");
   for (const inv of [

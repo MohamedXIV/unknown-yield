@@ -252,3 +252,34 @@ it("invalidates belt topology when loading different positions with reused IDs",
     structureKey(second.snapshot()),
   );
 });
+
+it("builds directed pipe turns and respects the rotation of a single pipe", () => {
+  const s = new Simulation(fixture).snapshot();
+  expect(
+    buildCommand(
+      { ...DEFAULT_MODE, tool: "pipe", direction: 3 },
+      s,
+      { x: 10, y: 10 },
+      null,
+    ),
+  ).toEqual({
+    type: "placePipes",
+    points: [{ x: 10, y: 10, inlet: 1, outlet: 3 }],
+  });
+  expect(
+    buildCommand(
+      { ...DEFAULT_MODE, tool: "pipe" },
+      s,
+      { x: 12, y: 11 },
+      { x: 10, y: 10 },
+    ),
+  ).toEqual({
+    type: "placePipes",
+    points: [
+      { x: 10, y: 10, inlet: 2, outlet: 0 },
+      { x: 11, y: 10, inlet: 2, outlet: 0 },
+      { x: 12, y: 10, inlet: 2, outlet: 1 },
+      { x: 12, y: 11, inlet: 3, outlet: 1 },
+    ],
+  });
+});
