@@ -6,7 +6,7 @@ The project should move by **proof**, not by feature accumulation.
 
 Each phase must answer a design or architecture question. Do not build a large engine foundation that is only theoretically useful.
 
-The roadmap below is intentionally implementation-focused. Live execution is mirrored in GitHub Issue #2; `docs/EXECUTION.md` defines how humans and agents advance it.
+The roadmap below is intentionally implementation-focused. Historical execution is preserved in closed GitHub Issue #2; `docs/EXECUTION.md` defines how humans and agents advance it.
 
 ## Phase 0 — Foundation (implemented)
 
@@ -224,7 +224,7 @@ In one persistent playable world, a player can read actual L/diverter routes, fa
 
 ## Phase 7 — Scale and performance
 
-**Phase 7 ACTIVE; baseline COMPLETE:** #90 through PR #91 — single-world simulation/snapshot baseline. [Approved measurement contract](PHASE7_BASELINE.md). #92 profiling COMPLETE through PR #93: [step-tail profiling and approved reference budget](PHASE7_PROFILING.md); the 32-factory budget FAILS and remains fixed. Browser/representative-device budgets and any optimization follow measured evidence.
+**Phase 7 DEFERRED, not complete; baseline COMPLETE:** #90 through PR #91 — single-world simulation/snapshot baseline. [Approved measurement contract](PHASE7_BASELINE.md). #92 profiling COMPLETE through PR #93: [step-tail profiling and approved reference budget](PHASE7_PROFILING.md); the 32-factory budget FAILS and remains fixed. Browser/representative-device budgets and any optimization follow measured evidence.
 
 ### Work
 
@@ -297,3 +297,11 @@ Phase 1.5 is complete through Issue #8 / PR #29, Phase 2 through Issue #34 / PR 
 Completed optimization: #94 through PR #95, shared per-observation topology indexing. See [measurement and verification](PHASE7_TOPOLOGY_OPTIMIZATION.md). 32-factory joint p95: 31.0466ms flowing / 24.4467ms backpressured, both above the fixed 10ms budget. Follow-up #96 is complete through PR #97; the current measurement below supersedes these #94 results.
 
 Completed optimization: #96 through PR #97, fresh local membership reused within observation. See [measurement and verification](PHASE7_MEMBERSHIP_OPTIMIZATION.md). 32-factory joint p95: 24.5777ms flowing / 19.6748ms backpressured, both above fixed 10ms. Fresh parent control: 33.0945 / 27.9175ms. Phase 7 remains open; assess remaining membership/signature and snapshot cloning costs under a separate approved scope.
+
+## Execution reset — 2026-10-02
+
+User chose to return to gameplay after #96 / PR #97 rather than continue snapshot optimization now. #2 is closed as a retired execution index, not evidence that every roadmap gate passed. #75 is closed as not planned: Vercel repair/deployment is outside the current scope, not fixed. Completed gameplay phases 1.5–6 and accepted Phase 7 measurements/optimizations remain documented.
+
+Phase 7 performance work is deferred. The fixed 32-factory joint p95 <=10ms gate remains unmet (24.5777ms flowing / 19.6748ms backpressured); browser/device gates remain unverified. Keep existing evidence and correctness boundaries. Revisit when an actual browser-playability problem or an agreed feature scale requirement justifies it. Old NEXT recommendations in profiling docs are historical candidates, not active assignments.
+
+Next: agree one substantial gameplay milestone, document its intent and acceptance, then open its canonical issue. No new gameplay feature, Phase 8 work, underground transport or optimization is implicitly selected by this reset.
