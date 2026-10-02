@@ -97,3 +97,7 @@ Run focused checks while working; at the integrated gate run `npm test`, `npm ru
 ## Handoff rule
 
 Read this contract, D-033, Issue #2, the active issue and any existing canonical PR before editing code. Treat absent scheduling, misleading visuals, missing migrations or conservation failures as incomplete implementation. Do not invent a fallback, reinterpret `+` as free routing, expand to underground transport, or claim tests ran because an earlier phase passed. If the contract genuinely conflicts with new evidence, document the conflict and amend the decision explicitly before changing semantics.
+
+## Integrated acceptance (2026-10-02)
+
+#81–#84 accepted through PR #86–#89. [PHASE6_EXIT_REVIEW.md](PHASE6_EXIT_REVIEW.md) records the integrated domain/browser gate, exact verification SHA, evidence and limitations. The intended routing and handoff contract above remains unchanged. Phase 7 requires measured scenarios and budgets before any performance implementation.
