@@ -4,9 +4,9 @@ import { parseSave } from "../src/save";
 import { Simulation, auditLedger } from "../src/index";
 
 describe("liquid persistence foundation", () => {
-  it("starts with explicit empty physical liquid locations in schema 14", () => {
+  it("starts with explicit empty physical liquid locations in schema 15", () => {
     const sim = new Simulation(fixture);
-    expect(sim.serialize().schemaVersion).toBe(14);
+    expect(sim.serialize().schemaVersion).toBe(15);
     expect(sim.serialize().pipes).toEqual({});
     expect(sim.serialize().tanks).toEqual({});
     expect(sim.serialize().pumps).toEqual({});
@@ -38,8 +38,8 @@ describe("handling-state save boundaries", () => {
     const draft = structuredClone(fixture);
     draft.materials.find((m) => m.id === "raw")!.handlingState = "liquid";
     for (const m of draft.machines) {
-      m.inputStates = ["solid", "liquid"];
-      m.outputStates = ["solid", "liquid"];
+      m.inputStates = ["solid", "liquid", "gas"];
+      m.outputStates = ["solid", "liquid", "gas"];
     }
     return validateContent(draft);
   }

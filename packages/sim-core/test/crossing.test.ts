@@ -149,7 +149,7 @@ it("migrates schema 12 T fairness without inventing crossing state", () => {
   s.schemaVersion = 12;
   s.belts["20,20"].junction!.cursor = 1;
   const expected = structuredClone(s);
-  expected.schemaVersion = 14;
+  expected.schemaVersion = 15;
   expect(sim.load(s).ok).toBe(true);
   expect(sim.serialize()).toEqual(expected);
 });

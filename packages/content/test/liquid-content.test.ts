@@ -5,12 +5,20 @@ describe("liquid handling content", () => {
   it("classifies existing materials and machine interfaces as solid", () => {
     expect(
       fixture.materials
-        .filter((m) => m.id !== "liquid-0")
+        .filter((m) => !["liquid-0", "gas-0"].includes(m.id))
         .every((m) => m.handlingState === "solid"),
     ).toBe(true);
     expect(
       fixture.machines
-        .filter((m) => !["liquefier", "precipitator"].includes(m.id))
+        .filter(
+          (m) =>
+            ![
+              "liquefier",
+              "precipitator",
+              "vaporizer",
+              "gas-collector",
+            ].includes(m.id),
+        )
         .every(
           (m) =>
             m.inputStates.includes("solid") && m.outputStates.includes("solid"),

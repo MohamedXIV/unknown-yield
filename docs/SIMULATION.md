@@ -490,3 +490,11 @@ Issue #71 evaluates a small authored milestone graph against authoritative save 
 Exchange listings may require one authored terminal handling capability. The capability is derived from completed milestone unlocks. A policy set to export does not bypass this gate: locked cargo stays in bounded terminal staging, earns no compensation, advances no order and writes no export-ledger entry. If staging fills, the existing transport rules leave approaching belt cargo in place, producing normal physical backpressure.
 
 The current fixture unlocks sealed outbound handling from confirmed `heat-raw-sealed` reaction knowledge. That durable evidence is written by the real experiment whether or not the time-limited Sealed thermal study was offered or completed, so Directive expiry or a pre-offer experiment cannot permanently block terminal progression. Content validation rejects cycles and same-material export/order prerequisites that would soft-lock a required handling capability.
+
+## Phase 9 gas containment
+
+Schema 15 tracks separate coordinate-keyed pressure lines and ID-keyed pressure vessels/compressors. Gas transport reserves pre-step source quantity, destination identity/capacity and compressor fuel before committing. A compressor admits from a gas machine/vessel output into a directed pressure line; each unit crosses at most one edge per gas logistics step. Ordinary liquid and solid infrastructure never admits gas. Blockage retains material and unsuccessful admissions spend no fuel.
+
+Loaded infrastructure refuses editing/reclaim. Recovery drains to a real compatible location before empty-line reconfiguration. The ledger separately reconciles pressure lines/vessels and embodied construction costs; machine escrow and transformations retain their existing accounting. Schema 14 gains exact empty gas records when content still matches; incompatible older content is rejected atomically.
+
+Detached player snapshots expose current quantities and discovered knowledge. Factory contracts separate gas infrastructure inventory, recurrence includes connected gas backlog, and blueprint schema 4 contains relative gas layout/settings without quantities. Roof state remains presentation-only. See [gas contract and evidence](PHASE9_GAS_LOGISTICS.md).

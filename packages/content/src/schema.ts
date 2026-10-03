@@ -16,7 +16,7 @@ export const contentSchema = z.object({
         id,
         nameKey: localeKeySchema,
         color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
-        handlingState: z.enum(["solid", "liquid"]).default("solid"),
+        handlingState: z.enum(["solid", "liquid", "gas"]).default("solid"),
         known: z.boolean(),
       }),
     )
@@ -36,11 +36,11 @@ export const contentSchema = z.object({
           })
           .optional(),
         inputStates: z
-          .array(z.enum(["solid", "liquid"]))
+          .array(z.enum(["solid", "liquid", "gas"]))
           .min(1)
           .default(["solid"]),
         outputStates: z
-          .array(z.enum(["solid", "liquid"]))
+          .array(z.enum(["solid", "liquid", "gas"]))
           .min(1)
           .default(["solid"]),
         operations: z.array(id),
@@ -53,6 +53,26 @@ export const contentSchema = z.object({
       }),
     )
     .min(1),
+  gasLogistics: z
+    .object({
+      line: z.object({
+        capacity: positive,
+        transfer: positive,
+        cost: positive,
+      }),
+      vessel: z.object({
+        capacity: positive,
+        width: positive,
+        height: positive,
+        cost: positive,
+      }),
+      compressor: z.object({
+        transfer: positive,
+        fuel: positive,
+        cost: positive,
+      }),
+    })
+    .optional(),
   liquidLogistics: z
     .object({
       pipe: z.object({

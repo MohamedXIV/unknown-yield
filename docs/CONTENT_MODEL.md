@@ -512,3 +512,9 @@ Phase 4 v1 proves:
 TinyBase may contain temporarily invalid draft combinations during editing; invalid bundles cannot export or preview.
 
 Site/economy/storage editors, knowledge-graph breadth, market/company authoring, asset management and runtime mod loading remain later work driven by their gameplay phases.
+
+## Phase 9 gas content
+
+Materials and machine interfaces support `solid`, `liquid` and `gas`. Optional `gasLogistics` authors pressure-line capacity/transfer/cost, vessel capacity/footprint/cost and compressor transfer/fuel/cost independently of ordinary liquid infrastructure. Studio bundle roundtrips preserve this configuration and gas interfaces; no new editor is introduced.
+
+`world-01-v8` adds an initially unknown `gas-0` and two hidden reactions extending the existing liquid branch. Stable IDs identify content; names and observations resolve through locale resources outside sim-core. These fixture quantities and names are examples, not global chemistry rules. See [PHASE9_GAS_LOGISTICS.md](PHASE9_GAS_LOGISTICS.md).

@@ -85,7 +85,7 @@ describe("authoritative Materials Exchange", () => {
 
     const restored = new Simulation(content);
     expect(restored.load(JSON.parse(JSON.stringify(save))).ok).toBe(true);
-    expect(restored.serialize().schemaVersion).toBe(14);
+    expect(restored.serialize().schemaVersion).toBe(15);
     expect(restored.serialize().market).toEqual(save.market);
     expect(restored.snapshot().exchange).toEqual([
       {

@@ -98,7 +98,9 @@ export function factoryError(c: Content, s: Save, r: Rect): string | null {
       ),
     ) ||
     Object.values(s.belts).some((b) => contains(r, b)) ||
-    liquidRects(c, s).some((other) => overlaps(r, other))
+    [...liquidRects(c, s), ...gasRects(c, s)].some((other) =>
+      overlaps(r, other),
+    )
   )
     return "Space is already occupied";
   return null;
@@ -137,7 +139,9 @@ export function storageError(
       ),
     ) ||
     Object.values(s.belts).some((b) => contains(r, b)) ||
-    liquidRects(c, s).some((other) => overlaps(r, other))
+    [...liquidRects(c, s), ...gasRects(c, s)].some((other) =>
+      overlaps(r, other),
+    )
   )
     return "Space is already occupied";
   return null;
@@ -173,7 +177,9 @@ export function machinePlacement(
       ),
     ) ||
     Object.values(s.belts).some((b) => contains(r, b)) ||
-    liquidRects(c, s).some((other) => overlaps(r, other))
+    [...liquidRects(c, s), ...gasRects(c, s)].some((other) =>
+      overlaps(r, other),
+    )
   )
     return fail("Space is already occupied");
   if (d.role === "extractor") {
@@ -241,8 +247,8 @@ export function beltError(
     )
   )
     return "A structure occupies this cell";
-  if (liquidRects(c, s).some((r) => contains(r, p)))
-    return "Liquid infrastructure occupies this cell";
+  if ([...liquidRects(c, s), ...gasRects(c, s)].some((r) => contains(r, p)))
+    return "A structure occupies this cell";
   if (Object.hasOwn(s.belts, key(p)))
     return "A belt already occupies this cell";
   const f = Object.values(s.factories).find((f) => wall(f, p));
@@ -292,7 +298,9 @@ export function liquidPlacementError(
       ),
     ) ||
     Object.values(s.belts).some((b) => contains(r, b)) ||
-    liquidRects(c, s).some((other) => overlaps(r, other))
+    [...liquidRects(c, s), ...gasRects(c, s)].some((other) =>
+      overlaps(r, other),
+    )
   )
     return "Space is already occupied";
   for (const f of Object.values(s.factories)) {
@@ -303,6 +311,74 @@ export function liquidPlacementError(
       const d = p.outlet ?? p.direction!;
       if (
         (kind === "pipe" && p.inlet !== (d + 2) % 4) ||
+        !f.ports.some((port) => key(port) === key(p) && port.direction === d)
+      )
+        return "Cross factory walls through a matching directional port";
+    }
+  }
+  return null;
+}
+
+export function gasRects(c: Content, s: Save): Rect[] {
+  return [
+    ...Object.values(s.pressureLines).map((p) => ({
+      ...p,
+      width: 1,
+      height: 1,
+    })),
+    ...Object.values(s.compressors).map((p) => ({ ...p, width: 1, height: 1 })),
+    ...Object.values(s.pressureVessels).map((t) =>
+      footprint(t, c.gasLogistics!.vessel),
+    ),
+  ];
+}
+export function gasPlacementError(
+  c: Content,
+  s: Save,
+  p: Point & { direction?: number; outlet?: number; inlet?: number },
+  kind: "line" | "vessel" | "compressor",
+): string | null {
+  if (!c.gasLogistics) return "Gas infrastructure is not authored";
+  const r =
+    kind === "vessel"
+      ? footprint({ ...p, direction: p.direction! }, c.gasLogistics.vessel)
+      : { ...p, width: 1, height: 1 };
+  if (!bounds(c, r)) return "Outside the site boundary";
+  if (
+    overlaps(r, c.site.terminal) ||
+    c.site.deposits.some((d) => overlaps(r, d)) ||
+    Object.values(s.machines).some((m) =>
+      overlaps(
+        r,
+        footprint(
+          m,
+          c.machines.find((d) => d.id === m.definitionId)!,
+        ),
+      ),
+    ) ||
+    Object.values(s.storages).some((t) =>
+      overlaps(
+        r,
+        footprint(
+          t,
+          c.storages.find((d) => d.id === t.definitionId)!,
+        ),
+      ),
+    ) ||
+    Object.values(s.belts).some((b) => contains(r, b)) ||
+    [...liquidRects(c, s), ...gasRects(c, s)].some((other) =>
+      overlaps(r, other),
+    )
+  )
+    return "Space is already occupied";
+  for (const f of Object.values(s.factories)) {
+    if (!overlaps(r, f)) continue;
+    if (kind === "vessel") {
+      if (!inside(f, r)) return "Keep tanks inside or outside factory walls";
+    } else if (wall(f, p)) {
+      const d = p.outlet ?? p.direction!;
+      if (
+        (kind === "line" && p.inlet !== (d + 2) % 4) ||
         !f.ports.some((port) => key(port) === key(p) && port.direction === d)
       )
         return "Cross factory walls through a matching directional port";

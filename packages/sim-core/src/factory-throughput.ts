@@ -66,6 +66,9 @@ function deltaInventory(current: Inventory, previous: Inventory): Inventory {
 type FactoryMembers = {
   machines: Save["machines"][string][];
   belts: Save["belts"][string][];
+  pressureLines: Save["pressureLines"][string][];
+  pressureVessels: Save["pressureVessels"][string][];
+  compressors: Save["compressors"][string][];
   pipes: Save["pipes"][string][];
   tanks: Save["tanks"][string][];
   pumps: Save["pumps"][string][];
@@ -87,6 +90,15 @@ function factoryMembers(
       if (belt) belts.push(belt);
     }
   return {
+    pressureLines: Object.values(state.pressureLines)
+      .filter((p) => contains(factory, p))
+      .sort((a, b) => key(a).localeCompare(key(b))),
+    pressureVessels: Object.values(state.pressureVessels)
+      .filter((p) => contains(factory, p))
+      .sort((a, b) => a.id.localeCompare(b.id)),
+    compressors: Object.values(state.compressors)
+      .filter((p) => contains(factory, p))
+      .sort((a, b) => a.id.localeCompare(b.id)),
     pipes: Object.values(state.pipes)
       .filter((p) => contains(factory, p))
       .sort((a, b) => key(a).localeCompare(key(b))),
@@ -151,6 +163,20 @@ function topologySignature(factory: Factory, members: FactoryMembers) {
     ports,
     machines,
     belts,
+    pressureLines: members.pressureLines.map(({ id, x, y, inlet, outlet }) => ({
+      id,
+      x,
+      y,
+      inlet,
+      outlet,
+    })),
+    pressureVessels: members.pressureVessels.map(({ id, x, y, direction }) => ({
+      id,
+      x,
+      y,
+      direction,
+    })),
+    compressors: members.compressors,
     pipes: members.pipes.map(({ id, x, y, inlet, outlet }) => ({
       id,
       x,
@@ -188,6 +214,7 @@ type ConnectedOwner = { kind: "machine" | "storage"; id: string };
 type ConnectedTopology = {
   incoming: ReadonlyMap<string, readonly string[]>;
   owners: ReadonlyMap<string, readonly ConnectedOwner[]>;
+  gases: ReadonlyMap<string, readonly string[]>;
   liquids: ReadonlyMap<string, readonly string[]>;
 };
 
@@ -247,7 +274,114 @@ function connectedTopology(content: Content, state: Save): ConnectedTopology {
     });
   }
 
-  return { incoming, owners, liquids: liquidTopology(content, state) };
+  return {
+    incoming,
+    owners,
+    gases: gasTopology(content, state),
+    liquids: liquidTopology(content, state),
+  };
+}
+
+function gasTopology(content: Content, state: Save) {
+  const graph = new Map<string, string[]>(),
+    cfg = content.gasLogistics;
+  if (
+    !cfg ||
+    (!Object.keys(state.pressureLines).length &&
+      !Object.keys(state.compressors).length &&
+      !Object.keys(state.pressureVessels).length)
+  )
+    return graph;
+  const link = (a: string, b: string) => {
+    for (const [from, to] of [
+      [a, b],
+      [b, a],
+    ]) {
+      const list = graph.get(from) ?? [];
+      list.push(to);
+      graph.set(from, list);
+    }
+  };
+  const endpoint = (p: { x: number; y: number }, direction: number) => {
+    for (const t of Object.values(state.pressureVessels))
+      if (
+        t.direction === direction &&
+        key(socket(t, cfg.vessel, false)) === key(p)
+      )
+        return "vessel:" + t.id;
+    for (const m of Object.values(state.machines)) {
+      const d = content.machines.find((d) => d.id === m.definitionId)!;
+      if (
+        d.inputStates.includes("gas") &&
+        m.direction === direction &&
+        key(socket(m, d, false)) === key(p)
+      )
+        return "machine:" + m.id;
+    }
+    return null;
+  };
+  for (const p of Object.values(state.pressureLines)) {
+    const target = state.pressureLines[key(next(p, p.outlet))];
+    if (target && target.inlet === (p.outlet + 2) % 4)
+      link("line:" + key(p), "line:" + key(target));
+    const owner = endpoint(p, p.outlet);
+    if (owner) link("line:" + key(p), owner);
+  }
+  for (const p of Object.values(state.compressors)) {
+    const node = "compressor:" + p.id,
+      target = state.pressureLines[key(next(p, p.direction))];
+    if (target && target.inlet === (p.direction + 2) % 4)
+      link(node, "line:" + key(target));
+    for (const t of Object.values(state.pressureVessels))
+      if (
+        t.direction === p.direction &&
+        key(socket(t, cfg.vessel, true)) === key(p)
+      )
+        link(node, "vessel:" + t.id);
+    for (const m of Object.values(state.machines)) {
+      const d = content.machines.find((d) => d.id === m.definitionId)!;
+      if (
+        d.outputStates.includes("gas") &&
+        m.direction === p.direction &&
+        key(socket(m, d, true)) === key(p)
+      )
+        link(node, "machine:" + m.id);
+    }
+  }
+  return graph;
+}
+function gasRuntime(
+  content: Content,
+  state: Save,
+  members: FactoryMembers,
+  graph: ConnectedTopology["gases"],
+) {
+  const queue = [
+      ...members.pressureLines.map((p) => "line:" + key(p)),
+      ...members.pressureVessels.map((p) => "vessel:" + p.id),
+      ...members.compressors.map((p) => "compressor:" + p.id),
+      ...members.machines.map((m) => "machine:" + m.id),
+    ],
+    seen = new Set<string>();
+  for (let i = 0; i < queue.length; i++) {
+    const node = queue[i];
+    if (seen.has(node)) continue;
+    seen.add(node);
+    for (const neighbour of graph.get(node) ?? [])
+      if (!seen.has(neighbour)) queue.push(neighbour);
+  }
+  return [...seen]
+    .sort()
+    .filter((node) => !node.startsWith("machine:") || graph.has(node))
+    .map((node) => {
+      const split = node.indexOf(":"),
+        kind = node.slice(0, split),
+        id = node.slice(split + 1);
+      if (kind === "line") return { node, ...state.pressureLines[id] };
+      if (kind === "vessel") return { node, ...state.pressureVessels[id] };
+      if (kind === "compressor") return { node, ...state.compressors[id] };
+      return { node, ...machineRuntime(content, state, id) };
+    });
 }
 
 function liquidTopology(content: Content, state: Save) {
@@ -474,6 +608,7 @@ function stateSignature(
     machines,
     belts,
     connected: connectedRuntime(content, state, factory, topology),
+    gases: gasRuntime(content, state, members, topology.gases),
     liquids: liquidRuntime(content, state, members, topology.liquids),
   });
 }

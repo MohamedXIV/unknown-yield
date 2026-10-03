@@ -1,13 +1,25 @@
 import { validateContent } from "./schema";
 export const fixture = validateContent({
-  version: "world-01-v7",
+  version: "world-01-v8",
   tickMs: 100,
+  gasLogistics: {
+    line: { capacity: 4, transfer: 1, cost: 3 },
+    vessel: { capacity: 48, width: 2, height: 2, cost: 28 },
+    compressor: { transfer: 1, fuel: 1, cost: 16 },
+  },
   liquidLogistics: {
     pipe: { capacity: 4, transfer: 1, cost: 2 },
     tank: { capacity: 64, width: 2, height: 2, cost: 24 },
     pump: { transfer: 1, fuel: 1, cost: 12 },
   },
   materials: [
+    {
+      id: "gas-0",
+      nameKey: "material.gas-0.name",
+      color: "#dbbf7f",
+      known: false,
+      handlingState: "gas",
+    },
     {
       id: "liquid-0",
       nameKey: "material.liquid-0.name",
@@ -47,12 +59,42 @@ export const fixture = validateContent({
     },
   ],
   operations: [
+    { id: "vaporize", nameKey: "operation.vaporize.name" },
+    { id: "collect-gas", nameKey: "operation.collect-gas.name" },
     { id: "liquefy", nameKey: "operation.liquefy.name" },
     { id: "precipitate", nameKey: "operation.precipitate.name" },
     { id: "crush", nameKey: "operation.crush.name" },
     { id: "heat", nameKey: "operation.heat.name" },
   ],
   machines: [
+    {
+      id: "vaporizer",
+      nameKey: "machine.vaporizer.name",
+      role: "processor",
+      operations: ["vaporize"],
+      inputStates: ["liquid"],
+      outputStates: ["gas"],
+      capacity: 12,
+      fuel: 2,
+      durationTicks: 30,
+      width: 2,
+      height: 2,
+      cost: 32,
+    },
+    {
+      id: "gas-collector",
+      nameKey: "machine.gas-collector.name",
+      role: "processor",
+      operations: ["collect-gas"],
+      inputStates: ["gas"],
+      outputStates: ["solid"],
+      capacity: 12,
+      fuel: 2,
+      durationTicks: 30,
+      width: 2,
+      height: 2,
+      cost: 32,
+    },
     {
       id: "liquefier",
       nameKey: "machine.liquefier.name",
@@ -176,6 +218,26 @@ export const fixture = validateContent({
     },
   ],
   reactions: [
+    {
+      id: "vaporize-liquid-0",
+      operation: "vaporize",
+      input: "liquid-0",
+      inputAmount: 1,
+      output: "gas-0",
+      outputAmount: 1,
+      observationKey: "reaction.vaporize-liquid-0.observation",
+      known: false,
+    },
+    {
+      id: "collect-gas-0",
+      operation: "collect-gas",
+      input: "gas-0",
+      inputAmount: 1,
+      output: "granules",
+      outputAmount: 1,
+      observationKey: "reaction.collect-gas-0.observation",
+      known: false,
+    },
     {
       id: "liquefy-raw",
       operation: "liquefy",

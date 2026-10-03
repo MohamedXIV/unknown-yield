@@ -22,6 +22,10 @@ import {
 import GameHost from "./GameHost";
 function Glyph({ type, size = 20 }: { type: string; size?: number }) {
   const paths: Record<string, string> = {
+    "pressure-line": "M3 8h18 M3 16h18 M8 5v14 M16 5v14",
+    "pressure-vessel":
+      "M8 3h8v2c5 1 5 17 0 18H8C3 22 3 6 8 5z M6 9h12 M6 17h12",
+    compressor: "M3 12h4 M17 12h4 M7 5h10v14H7z M10 9h4 M10 15h4",
     pipe: "M3 6h9v12h9 M3 10h5v12h13",
     tank: "M5 5c0-4 14-4 14 0v14c0 4-14 4-14 0z M5 5c0 4 14 4 14 0",
     pump: "M3 12h5 M16 12h5 M8 8h8v8H8z M10 10l4 2-4 2",
@@ -176,6 +180,11 @@ function GameClientInner() {
   const machine = snapshot.machines.find((m) => m.id === mode.selected),
     factory = snapshot.factories.find((f) => f.id === mode.selected),
     belt = snapshot.belts.find((b) => b.id === mode.selected),
+    pressureLine = snapshot.pressureLines.find((p) => p.id === mode.selected),
+    pressureVessel = snapshot.pressureVessels.find(
+      (p) => p.id === mode.selected,
+    ),
+    compressor = snapshot.compressors.find((p) => p.id === mode.selected),
     pipe = snapshot.pipes.find((p) => p.id === mode.selected),
     tank = snapshot.tanks.find((p) => p.id === mode.selected),
     pump = snapshot.pumps.find((p) => p.id === mode.selected),
@@ -197,6 +206,8 @@ function GameClientInner() {
   // Machine-tool labels resolve from content definitions so a catalog rename
   // updates the toolbar and inspector together. Generic tools stay English.
   const toolName = (tool: Tool) => {
+    if (["pressure-line", "pressure-vessel", "compressor"].includes(tool))
+      return t("ui.gas." + tool + ".name");
     if (["pipe", "tank", "pump"].includes(tool))
       return t("ui.liquid." + tool + ".name");
     const key =
@@ -206,6 +217,16 @@ function GameClientInner() {
   };
   // Furnace descriptions name their operation, which is content data.
   const toolDescription = (tool: Tool) => {
+    if (
+      [
+        "pressure-line",
+        "pressure-vessel",
+        "compressor",
+        "vaporizer",
+        "gas-collector",
+      ].includes(tool)
+    )
+      return t("ui.gas." + tool + ".description");
     if (["pipe", "tank", "pump", "liquefier", "precipitator"].includes(tool))
       return t("ui.liquid." + tool + ".description");
     const unlock = unlockFor(tool);
@@ -248,16 +269,23 @@ function GameClientInner() {
     (entry) => !entry.initial,
   ).length;
   const toolCost = (tool: Tool) =>
-    tool === "pipe" || tool === "tank" || tool === "pump"
-      ? snapshot.liquidLogistics?.[tool].cost
-      : tool === "factory"
-        ? snapshot.map.factoryCellCost
-        : tool === "belt"
-          ? snapshot.map.beltCost
-          : tool === "port"
-            ? snapshot.map.portCost
-            : (snapshot.definitions.find((d) => d.id === tool)?.cost ??
-              snapshot.storageDefinitions.find((d) => d.id === tool)?.cost);
+    tool === "pressure-line"
+      ? snapshot.gasLogistics?.line.cost
+      : tool === "pressure-vessel"
+        ? snapshot.gasLogistics?.vessel.cost
+        : tool === "compressor"
+          ? snapshot.gasLogistics?.compressor.cost
+          : tool === "pipe" || tool === "tank" || tool === "pump"
+            ? snapshot.liquidLogistics?.[tool].cost
+            : tool === "factory"
+              ? snapshot.map.factoryCellCost
+              : tool === "belt"
+                ? snapshot.map.beltCost
+                : tool === "port"
+                  ? snapshot.map.portCost
+                  : (snapshot.definitions.find((d) => d.id === tool)?.cost ??
+                    snapshot.storageDefinitions.find((d) => d.id === tool)
+                      ?.cost);
   const close = () => {
     setPanel(null);
     setMode((m) => ({ ...m, selected: null }));
@@ -535,6 +563,127 @@ function GameClientInner() {
                     )}
                   </>
                 )}
+                {(pressureLine || pressureVessel || compressor) && (
+                  <>
+                    <h2>
+                      {t(
+                        "ui.gas." +
+                          (pressureLine
+                            ? "pressure-line"
+                            : pressureVessel
+                              ? "pressure-vessel"
+                              : "compressor") +
+                          ".name",
+                      )}
+                    </h2>
+                    {(pressureLine || pressureVessel) && (
+                      <p>
+                        {(pressureLine ?? pressureVessel)!.materialId
+                          ? materialName(
+                              (pressureLine ?? pressureVessel)!.materialId!,
+                            )
+                          : t("ui.gas.empty")}{" "}
+                        · {(pressureLine ?? pressureVessel)!.quantity} /{" "}
+                        {pressureVessel?.capacity ??
+                          snapshot.gasLogistics!.line.capacity}
+                      </p>
+                    )}
+                    {compressor && (
+                      <>
+                        <p>{t("ui.gas.status." + compressor.status)}</p>
+                        <button
+                          onClick={() =>
+                            act({
+                              type: "setCompressorEnabled",
+                              id: compressor.id,
+                              enabled: !compressor.enabled,
+                            })
+                          }
+                        >
+                          {t(
+                            compressor.enabled
+                              ? "ui.gas.disable"
+                              : "ui.gas.enable",
+                          )}
+                        </button>
+                      </>
+                    )}
+                    {pressureLine && (
+                      <>
+                        <p>
+                          {t("ui.gas.inlet")}:{" "}
+                          {t(
+                            "ui.direction." +
+                              ["east", "south", "west", "north"][
+                                pressureLine.inlet
+                              ],
+                          )}{" "}
+                          · {t("ui.gas.outlet")}:{" "}
+                          {t(
+                            "ui.direction." +
+                              ["east", "south", "west", "north"][
+                                pressureLine.outlet
+                              ],
+                          )}
+                        </p>
+                        <button
+                          disabled={pressureLine.quantity > 0}
+                          onClick={() =>
+                            act({
+                              type: "configurePressureLine",
+                              id: pressureLine.id,
+                              inlet: (pressureLine.inlet + 1) % 4,
+                              outlet: (pressureLine.outlet + 1) % 4,
+                            })
+                          }
+                        >
+                          {t("ui.gas.rotate")}
+                        </button>
+                        {[0, 1, 2, 3]
+                          .filter(
+                            (d) =>
+                              d !== pressureLine.inlet &&
+                              d !== pressureLine.outlet,
+                          )
+                          .map((d) => (
+                            <button
+                              key={d}
+                              disabled={pressureLine.quantity > 0}
+                              onClick={() =>
+                                act({
+                                  type: "configurePressureLine",
+                                  id: pressureLine.id,
+                                  inlet: pressureLine.inlet,
+                                  outlet: d,
+                                })
+                              }
+                            >
+                              {t("ui.gas.outlet")}:{" "}
+                              {t(
+                                "ui.direction." +
+                                  ["east", "south", "west", "north"][d],
+                              )}
+                            </button>
+                          ))}
+                      </>
+                    )}
+                    {pressureLine?.quantity || pressureVessel?.quantity ? (
+                      <p>{t("ui.gas.drain-first")}</p>
+                    ) : (
+                      <button
+                        onClick={() =>
+                          act({
+                            type: "dismantle",
+                            id: (pressureLine ?? pressureVessel ?? compressor)!
+                              .id,
+                          })
+                        }
+                      >
+                        {t("ui.gas.reclaim")}
+                      </button>
+                    )}
+                  </>
+                )}
                 {machine && (
                   <>
                     <small className="eyebrow">
@@ -640,13 +789,21 @@ function GameClientInner() {
                     <p className="hint">
                       {snapshot.definitions
                         .find((d) => d.id === machine.definitionId)
-                        ?.inputStates.includes("liquid")
-                        ? t("ui.liquid.processor-input-help")
+                        ?.inputStates.includes("gas")
+                        ? t("ui.gas.processor-input-help")
                         : snapshot.definitions
                               .find((d) => d.id === machine.definitionId)
-                              ?.outputStates.includes("liquid")
-                          ? t("ui.liquid.processor-output-help")
-                          : "Cyan arrow: incoming belt. Gold arrow: outgoing belt. Unfamiliar outcomes are recorded after processing. Buffers survive disable and save/load. Dismantling needs empty buffers: drain output through belts first."}
+                              ?.outputStates.includes("gas")
+                          ? t("ui.gas.processor-output-help")
+                          : snapshot.definitions
+                                .find((d) => d.id === machine.definitionId)
+                                ?.inputStates.includes("liquid")
+                            ? t("ui.liquid.processor-input-help")
+                            : snapshot.definitions
+                                  .find((d) => d.id === machine.definitionId)
+                                  ?.outputStates.includes("liquid")
+                              ? t("ui.liquid.processor-output-help")
+                              : "Cyan arrow: incoming belt. Gold arrow: outgoing belt. Unfamiliar outcomes are recorded after processing. Buffers survive disable and save/load. Dismantling needs empty buffers: drain output through belts first."}
                     </p>
                     <button
                       className="danger"
@@ -733,6 +890,13 @@ function GameClientInner() {
                         <span className="muted">No internal equipment</span>
                       )}
                     </div>
+                    {!!Object.keys(factory.contract.gasInventory ?? {})
+                      .length && (
+                      <>
+                        <h3>{t("ui.gas.factory-buffer")}</h3>
+                        {buffer(factory.contract.gasInventory ?? {})}
+                      </>
+                    )}
                     {!!Object.keys(factory.contract.liquidInventory ?? {})
                       .length && (
                       <>
@@ -1475,6 +1639,11 @@ function GameClientInner() {
               "depot",
               "liquefier",
               "precipitator",
+              "pressure-line",
+              "pressure-vessel",
+              "compressor",
+              "vaporizer",
+              "gas-collector",
               "pipe",
               "tank",
               "pump",

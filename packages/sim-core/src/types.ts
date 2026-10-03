@@ -42,6 +42,7 @@ export type FactoryThroughputView = {
 };
 export type FactoryContractView = {
   liquidInventory?: Inventory;
+  gasInventory?: Inventory;
   machineCount: number;
   statusCounts: Record<MachineStatus, number>;
   throughput: FactoryThroughputView;
@@ -113,6 +114,16 @@ export type Pipe = Point &
   LiquidContents & { id: string; inlet: number; outlet: number };
 export type Tank = Point & LiquidContents & { id: string; direction: number };
 export type Pump = Point & { id: string; direction: number; enabled: boolean };
+export type GasContents = { materialId: string | null; quantity: number };
+export type PressureLine = Point &
+  GasContents & { id: string; inlet: number; outlet: number };
+export type PressureVessel = Point &
+  GasContents & { id: string; direction: number };
+export type Compressor = Point & {
+  id: string;
+  direction: number;
+  enabled: boolean;
+};
 export type MarketState = {
   demandBps: number;
   saturationBps: number;
@@ -214,6 +225,9 @@ export type Save = {
   machines: Record<string, Machine>;
   factories: Record<string, Factory>;
   belts: Record<string, Belt>;
+  pressureLines: Record<string, PressureLine>;
+  pressureVessels: Record<string, PressureVessel>;
+  compressors: Record<string, Compressor>;
   pipes: Record<string, Pipe>;
   tanks: Record<string, Tank>;
   pumps: Record<string, Pump>;
@@ -233,6 +247,14 @@ export type CommandResult = {
   cost?: number;
 };
 export type GameCommand =
+  | {
+      type: "placePressureLines";
+      points: (Point & { inlet: number; outlet: number })[];
+    }
+  | ({ type: "placePressureVessel"; direction: number } & Point)
+  | ({ type: "placeCompressor"; direction: number } & Point)
+  | { type: "setCompressorEnabled"; id: string; enabled: boolean }
+  | { type: "configurePressureLine"; id: string; inlet: number; outlet: number }
   | {
       type: "placePipes";
       points: (Point & { inlet: number; outlet: number })[];
@@ -319,6 +341,22 @@ export type PlayerSnapshot = {
   machines: MachineView[];
   factories: FactoryView[];
   belts: Belt[];
+  pressureLines: PressureLine[];
+  pressureVessels: (PressureVessel & {
+    width: number;
+    height: number;
+    capacity: number;
+  })[];
+  compressors: (Compressor & {
+    status:
+      | "disabled"
+      | "needs-fuel"
+      | "needs-input"
+      | "incompatible"
+      | "output-full"
+      | "ready";
+  })[];
+  gasLogistics: Content["gasLogistics"];
   pipes: Pipe[];
   tanks: (Tank & { width: number; height: number; capacity: number })[];
   pumps: (Pump & {
