@@ -26,7 +26,11 @@ export type FactoryBlueprintBelt = {
 };
 
 export type FactoryBlueprint = {
-  schemaVersion: 1 | 2 | 3;
+  schemaVersion: 1 | 2 | 3 | 4;
+  pressureLines?: { x: number; y: number; inlet: number; outlet: number }[];
+  pressureVessels?: { x: number; y: number; direction: number }[];
+  compressors?: { x: number; y: number; direction: number; enabled: boolean }[];
+
   pipes?: { x: number; y: number; inlet: number; outlet: number }[];
   tanks?: { x: number; y: number; direction: number }[];
   pumps?: { x: number; y: number; direction: number; enabled: boolean }[];
@@ -115,11 +119,18 @@ const canonical = (blueprint: FactoryBlueprint): FactoryBlueprint => ({
   ports: [...blueprint.ports].sort(portOrder),
   machines: [...blueprint.machines].sort(machineOrder),
   belts: [...blueprint.belts].sort(beltOrder),
-  ...(blueprint.schemaVersion === 3
+  ...(blueprint.schemaVersion >= 3
     ? {
         pipes: [...blueprint.pipes!].sort(pointOrder),
         tanks: [...blueprint.tanks!].sort(pointOrder),
         pumps: [...blueprint.pumps!].sort(pointOrder),
+      }
+    : {}),
+  ...(blueprint.schemaVersion === 4
+    ? {
+        pressureLines: [...blueprint.pressureLines!].sort(pointOrder),
+        pressureVessels: [...blueprint.pressureVessels!].sort(pointOrder),
+        compressors: [...blueprint.compressors!].sort(pointOrder),
       }
     : {}),
 });
@@ -154,14 +165,26 @@ export function validateFactoryBlueprint(
       "ports",
       "machines",
       "belts",
-      ...(root.schemaVersion === 3 ? ["pipes", "tanks", "pumps"] : []),
+      ...(root.schemaVersion === 4
+        ? [
+            "pipes",
+            "tanks",
+            "pumps",
+            "pressureLines",
+            "pressureVessels",
+            "compressors",
+          ]
+        : root.schemaVersion === 3
+          ? ["pipes", "tanks", "pumps"]
+          : []),
     ],
     "Factory blueprint",
   );
   if (
     root.schemaVersion !== 1 &&
     root.schemaVersion !== 2 &&
-    root.schemaVersion !== 3
+    root.schemaVersion !== 3 &&
+    root.schemaVersion !== 4
   )
     throw new Error("Unsupported factory blueprint schema");
 
@@ -336,7 +359,7 @@ export function validateFactoryBlueprint(
     return belt;
   });
 
-  const liquid = root.schemaVersion === 3;
+  const liquid = root.schemaVersion === 3 || root.schemaVersion === 4;
   const pipes = liquid
     ? array(root.pipes, "Blueprint pipes").map((value) => {
         const r = record(value, "Blueprint pipe");
@@ -413,8 +436,82 @@ export function validateFactoryBlueprint(
       occupied.push(r);
     }
 
+  const gas = root.schemaVersion === 4;
+  const pressureLines = gas
+    ? array(root.pressureLines, "Blueprint pressureLines").map((value) => {
+        const r = record(value, "Blueprint pipe");
+        exactKeys(r, ["x", "y", "inlet", "outlet"], "Blueprint pipe");
+        const p = {
+          x: integer(r.x, "Pipe x", 0, width - 1),
+          y: integer(r.y, "Pipe y", 0, height - 1),
+          inlet: direction(r.inlet, "Pipe inlet"),
+          outlet: direction(r.outlet, "Pipe outlet"),
+        };
+        if (p.inlet === p.outlet)
+          throw new Error("Pipe inlet and outlet coincide");
+        return p;
+      })
+    : [];
+  const pressureVessels = gas
+    ? array(root.pressureVessels, "Blueprint pressureVessels").map((value) => {
+        const r = record(value, "Blueprint tank");
+        exactKeys(r, ["x", "y", "direction"], "Blueprint tank");
+        return {
+          x: integer(r.x, "Tank x", 0, width - 1),
+          y: integer(r.y, "Tank y", 0, height - 1),
+          direction: direction(r.direction, "Tank direction"),
+        };
+      })
+    : [];
+  const compressors = gas
+    ? array(root.compressors, "Blueprint compressors").map((value) => {
+        const r = record(value, "Blueprint pump");
+        exactKeys(r, ["x", "y", "direction", "enabled"], "Blueprint pump");
+        return {
+          x: integer(r.x, "Pump x", 0, width - 1),
+          y: integer(r.y, "Pump y", 0, height - 1),
+          direction: direction(r.direction, "Pump direction"),
+          enabled: boolean(r.enabled, "Pump enabled"),
+        };
+      })
+    : [];
+  if (gas && !content.gasLogistics)
+    throw new Error("Gas infrastructure is not authored");
+  for (const [kind, rows] of [
+    ["vessel", pressureVessels],
+    ["line", pressureLines],
+    ["compressor", compressors],
+  ] as const)
+    for (const p of rows) {
+      const r =
+        kind === "vessel"
+          ? footprint(
+              p as { x: number; y: number; direction: number },
+              content.gasLogistics!.vessel,
+            )
+          : { ...p, width: 1, height: 1 };
+      if (kind === "vessel" && !inside(factory, r))
+        throw new Error("Blueprint tank must fit inside walls");
+      if (occupied.some((o) => overlaps(o, r)))
+        throw new Error("Blueprint gas infrastructure overlaps");
+      if (wall(factory, p)) {
+        const d = "outlet" in p ? p.outlet : p.direction;
+        if (
+          !ports.some(
+            (port) => port.x === p.x && port.y === p.y && port.direction === d,
+          ) ||
+          ("inlet" in p && p.inlet !== (d + 2) % 4)
+        )
+          throw new Error(
+            "Blueprint gas wall requires a matching straight port",
+          );
+      }
+      occupied.push(r);
+    }
+
   return canonical({
     schemaVersion: root.schemaVersion,
+    ...(gas ? { pressureLines, pressureVessels, compressors } : {}),
     ...(liquid ? { pipes, tanks, pumps } : {}),
     width,
     height,
@@ -432,6 +529,32 @@ export function factoryBlueprint(
   const factory = state.factories[factoryId];
   if (!factory) throw new Error("Unknown factory");
 
+  const gasRows = {
+    pressureLines: Object.values(state.pressureLines)
+      .filter((p) => contains(factory, p))
+      .map((p) => ({
+        x: p.x - factory.x,
+        y: p.y - factory.y,
+        inlet: p.inlet,
+        outlet: p.outlet,
+      })),
+    pressureVessels: Object.values(state.pressureVessels)
+      .filter((p) => contains(factory, p))
+      .map((p) => ({
+        x: p.x - factory.x,
+        y: p.y - factory.y,
+        direction: p.direction,
+      })),
+    compressors: Object.values(state.compressors)
+      .filter((p) => contains(factory, p))
+      .map((p) => ({
+        x: p.x - factory.x,
+        y: p.y - factory.y,
+        direction: p.direction,
+        enabled: p.enabled,
+      })),
+  };
+  const hasGas = Object.values(gasRows).some((rows) => rows.length);
   const liquidRows = {
     pipes: Object.values(state.pipes)
       .filter((p) => contains(factory, p))
@@ -462,8 +585,9 @@ export function factoryBlueprint(
     (b) => contains(factory, b) && b.junction,
   );
   return validateFactoryBlueprint(content, {
-    schemaVersion: hasLiquid ? 3 : hasJunction ? 2 : 1,
-    ...(hasLiquid ? liquidRows : {}),
+    schemaVersion: hasGas ? 4 : hasLiquid ? 3 : hasJunction ? 2 : 1,
+    ...(hasGas || hasLiquid ? liquidRows : {}),
+    ...(hasGas ? gasRows : {}),
     width: factory.width,
     height: factory.height,
     ports: factory.ports.map((port) => ({
@@ -488,7 +612,7 @@ export function factoryBlueprint(
         direction: belt.direction,
         alternate: belt.alternate,
         switched: belt.switched,
-        ...(hasJunction || hasLiquid
+        ...(hasJunction || hasLiquid || hasGas
           ? {
               junction: belt.junction
                 ? {

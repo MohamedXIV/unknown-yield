@@ -283,3 +283,22 @@ it("builds directed pipe turns and respects the rotation of a single pipe", () =
     ],
   });
 });
+it("builds and selects a distinct pressure path with stable geometry invalidation", () => {
+  const sim = new Simulation(fixture),
+    before = sim.snapshot();
+  const command = buildCommand(
+    { ...DEFAULT_MODE, tool: "pressure-line", direction: 3 },
+    before,
+    { x: 10, y: 10 },
+    null,
+  );
+  expect(command).toEqual({
+    type: "placePressureLines",
+    points: [{ x: 10, y: 10, inlet: 1, outlet: 3 }],
+  });
+  expect(sim.command(command!).ok).toBe(true);
+  expect(structureKey(sim.snapshot())).not.toBe(structureKey(before));
+  expect(hitTest(sim.snapshot(), { x: 10, y: 10 }, [])).toBe(
+    sim.snapshot().pressureLines[0].id,
+  );
+});

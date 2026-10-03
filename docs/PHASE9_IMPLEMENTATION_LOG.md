@@ -1,4 +1,4 @@
-# #108 implementation ledger
+# Phase 9 implementation ledger
 
 Ruling: user deprioritized pre-release compatibility. Keep cheap exact empty-liquid migration from schema 13, but do not guarantee old fixture content compatibility after the demo content changes. Atomic save rejection remains mandatory.
 
@@ -17,3 +17,15 @@ Ruling: pipe delivery at machine/tank input uses the existing solid socket conve
 Review ruling: changing a previously certified connected backlog withdraws the certificate immediately. Regression observed RED, then liquid/throughput 2 files / 20 tests GREEN.
 
 Final integration gate (2026-10-02): 41 files / 281 tests PASS, 2 skipped. Typecheck, lint, build and git diff --check PASS. Production static export excludes Studio. Normal-controls browser acceptance and save/restore PASS; console error/warn []. Runtime source: 609c9fd93d5a41f4fb5e646c8903df5374a88dca. Evidence: PHASE9_LIQUID_ACCEPTANCE.md and docs/evidence/phase9-liquid-{closed,restored}.jpg.
+
+## #109 pressurized gas — 2026-10-03
+
+Design and six-task implementation plan approved by user. Native execution in the same checkout, no worktree or agents. The runtime/content/persistence/UI changes form one coherent delivery commit after verification; temporary implementation scripts were removed.
+
+Content/runtime tests first failed for missing gas support. Dedicated gas records, gas-only reservation/commit transport, commands, geometry, ledger and save schema 15 then passed. Gas blueprint and connected-backlog tests were observed RED before extending schema 4 and certification. The normal-command hidden discovery chain passed with exact ledger reconciliation and restore equality. Interaction initially returned no gas command; gas tools/selection then passed.
+
+Review finding: incompatible ordinary sources/outlets retained material but displayed Needs input/Output full. Two status regressions were observed RED, corrected and passed. Final containment tests: 14 PASS. Strengthened persistence capacity test to use valid gas identity; matching-content schema-14 migration and old-content atomic rejection: 5 PASS.
+
+Initial full run had 12 stale schema/content expectation failures; updated only the expected version assertions. Repeat: 45 files / 307 PASS, 2 skipped. Typecheck/lint/build/diff check PASS. Browser normal-controls acceptance: discovery, ordinary-pipe refusal, 4/4 loaded-line blockage, stopped-feed drain into physical vessel, empty reroute, closed/open factory and save/restore. Console warnings/errors []. Fuel depleted normally; final post-reroute production was blocked by fuel, with domain recovery/resume tests providing the deterministic gate. See PHASE9_GAS_ACCEPTANCE.md.
+
+Final repeat after status/wording review and schema-14 regression: 45 files / **308 PASS, 2 skipped**; typecheck/lint/build/diff check PASS. Existing version-only tests retain their original formatting to keep review scoped. No remote CI is claimed.

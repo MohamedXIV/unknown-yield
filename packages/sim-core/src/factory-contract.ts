@@ -36,6 +36,13 @@ export function factoryView(
   for (const machine of machines)
     statusCounts[status(content, state, machine)]++;
 
+  const gasInventory: Record<string, number> = {};
+  for (const p of [
+    ...Object.values(state.pressureLines),
+    ...Object.values(state.pressureVessels),
+  ])
+    if (contains(factory, p) && p.materialId && p.quantity)
+      change(gasInventory, p.materialId, p.quantity);
   const liquidInventory: Record<string, number> = {};
   for (const p of [
     ...Object.values(state.pipes),
@@ -53,6 +60,7 @@ export function factoryView(
     })),
     contract: {
       liquidInventory,
+      gasInventory,
       machineCount: machines.length,
       statusCounts,
       throughput,

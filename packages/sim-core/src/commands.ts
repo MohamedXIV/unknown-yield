@@ -13,6 +13,8 @@ import {
   wall,
   key,
   contains,
+  gasPlacementError,
+  gasRects,
   liquidPlacementError,
   liquidRects,
   overlaps,
@@ -22,6 +24,27 @@ const coordinate = z.number().int().min(0).max(10000),
   direction = z.number().int().min(0).max(3),
   point = { x: coordinate, y: coordinate };
 const schema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("placePressureLines"),
+    points: z
+      .array(z.object({ ...point, inlet: direction, outlet: direction }))
+      .min(1)
+      .max(4800),
+  }),
+  z.object({ type: z.literal("placePressureVessel"), ...point, direction }),
+  z.object({ type: z.literal("placeCompressor"), ...point, direction }),
+  z.object({
+    type: z.literal("setCompressorEnabled"),
+    id: z.string(),
+    enabled: z.boolean(),
+  }),
+  z.object({
+    type: z.literal("configurePressureLine"),
+    id: z.string(),
+    inlet: direction,
+    outlet: direction,
+  }),
+
   z.object({
     type: z.literal("placePipes"),
     points: z
@@ -118,15 +141,37 @@ const liquidMessages: Record<string, string> = {
   "Remove liquid infrastructure on this port first":
     "ui.liquid.command.remove-port",
 };
+const gasMessages: Record<string, string> = {
+  "Gas infrastructure is not authored": "ui.gas.command.unavailable",
+  "Invalid directed pressure line path": "ui.gas.command.invalid-path",
+  "Pressure line endpoints must connect": "ui.gas.command.disconnected",
+  "Place pressure lines": "ui.gas.command.place-pipes",
+  "Pressure lines placed": "ui.gas.command.lines-placed",
+  "Place gas structure": "ui.gas.command.place-structure",
+  "Gas structure placed": "ui.gas.command.placed",
+  "Unknown compressor": "ui.gas.command.unknown-pump",
+  "Compressor updated": "ui.gas.command.compressor-updated",
+  "Unknown pressure line": "ui.gas.command.unknown-pipe",
+  "Drain the pressure line before rerouting": "ui.gas.command.drain-pipe",
+  "Pressure line inlet and outlet must differ": "ui.gas.command.different-ends",
+  "Pressure line updated": "ui.gas.command.line-updated",
+  "Drain gas contents before dismantling": "ui.gas.command.drain-first",
+  "Gas structure reclaimed": "ui.gas.command.reclaimed",
+  "Remove gas infrastructure on this port first": "ui.gas.command.remove-port",
+};
 const fail = (message: string): CommandResult => ({
   ok: false,
   message,
-  ...(liquidMessages[message] ? { messageKey: liquidMessages[message] } : {}),
+  ...((liquidMessages[message] ?? gasMessages[message])
+    ? { messageKey: liquidMessages[message] ?? gasMessages[message] }
+    : {}),
 });
 const ok = (message: string, cost = 0, id?: string): CommandResult => ({
   ok: true,
   message,
-  ...(liquidMessages[message] ? { messageKey: liquidMessages[message] } : {}),
+  ...((liquidMessages[message] ?? gasMessages[message])
+    ? { messageKey: liquidMessages[message] ?? gasMessages[message] }
+    : {}),
   cost,
   id,
 });
@@ -146,6 +191,107 @@ export function applyCommand(
   if ("machineId" in cmd && !Object.hasOwn(s.machines, cmd.machineId))
     return fail("Unknown machine");
   switch (cmd.type) {
+    case "placePressureLines": {
+      const cfg = c.gasLogistics;
+      if (!cfg) return fail("Gas infrastructure is not authored");
+      const stage = structuredClone(s),
+        seen = new Set<string>();
+      for (let i = 0; i < cmd.points.length; i++) {
+        const point = cmd.points[i],
+          prev = cmd.points[i - 1];
+        if (seen.has(key(point)) || point.inlet === point.outlet)
+          return fail("Invalid directed pressure line path");
+        if (
+          prev &&
+          (key(next(prev, prev.outlet)) !== key(point) ||
+            point.inlet !== (prev.outlet + 2) % 4)
+        )
+          return fail("Pressure line endpoints must connect");
+        const error = gasPlacementError(c, stage, point, "line");
+        if (error) return fail(error);
+        seen.add(key(point));
+        stage.pressureLines[key(point)] = {
+          ...point,
+          id: "preview",
+          materialId: null,
+          quantity: 0,
+        };
+      }
+      const cost = cmd.points.length * cfg.line.cost;
+      if (!affordable(cost)) return fail("Not enough structural plates");
+      if (!apply) return ok("Place pressure lines", cost);
+      pay(cost);
+      for (const point of cmd.points)
+        s.pressureLines[key(point)] = {
+          ...point,
+          id: issue("g"),
+          materialId: null,
+          quantity: 0,
+        };
+      return ok("Pressure lines placed", cost);
+    }
+    case "placePressureVessel":
+    case "placeCompressor": {
+      const cfg = c.gasLogistics;
+      if (!cfg) return fail("Gas infrastructure is not authored");
+      const kind = cmd.type === "placePressureVessel" ? "vessel" : "compressor",
+        error = gasPlacementError(c, s, cmd, kind);
+      if (error) return fail(error);
+      const cost = cfg[kind].cost;
+      if (!affordable(cost)) return fail("Not enough structural plates");
+      if (!apply) return ok("Place gas structure", cost);
+      const id = issue(kind === "vessel" ? "v" : "c");
+      pay(cost);
+      if (kind === "vessel")
+        s.pressureVessels[id] = {
+          id,
+          x: cmd.x,
+          y: cmd.y,
+          direction: cmd.direction,
+          materialId: null,
+          quantity: 0,
+        };
+      else
+        s.compressors[id] = {
+          id,
+          x: cmd.x,
+          y: cmd.y,
+          direction: cmd.direction,
+          enabled: true,
+        };
+      return ok("Gas structure placed", cost, id);
+    }
+    case "setCompressorEnabled": {
+      const pump = Object.hasOwn(s.compressors, cmd.id)
+        ? s.compressors[cmd.id]
+        : undefined;
+      if (!pump) return fail("Unknown compressor");
+      if (apply) pump.enabled = cmd.enabled;
+      return ok("Compressor updated");
+    }
+    case "configurePressureLine": {
+      const pipe = Object.values(s.pressureLines).find((p) => p.id === cmd.id);
+      if (!pipe) return fail("Unknown pressure line");
+      if (pipe.quantity)
+        return fail("Drain the pressure line before rerouting");
+      if (cmd.inlet === cmd.outlet)
+        return fail("Pressure line inlet and outlet must differ");
+      const stage = structuredClone(s);
+      delete stage.pressureLines[key(pipe)];
+      const error = gasPlacementError(
+        c,
+        stage,
+        { ...pipe, inlet: cmd.inlet, outlet: cmd.outlet },
+        "line",
+      );
+      if (error) return fail(error);
+      if (apply) {
+        pipe.inlet = cmd.inlet;
+        pipe.outlet = cmd.outlet;
+      }
+      return ok("Pressure line updated");
+    }
+
     case "placePipes": {
       const cfg = c.liquidLogistics;
       if (!cfg) return fail("Liquid infrastructure is not authored");
@@ -505,6 +651,31 @@ export function applyCommand(
       };
     }
     case "dismantle": {
+      {
+        const pipe = Object.values(s.pressureLines).find(
+            (p) => p.id === cmd.id,
+          ),
+          tank = Object.hasOwn(s.pressureVessels, cmd.id)
+            ? s.pressureVessels[cmd.id]
+            : undefined,
+          pump = Object.hasOwn(s.compressors, cmd.id)
+            ? s.compressors[cmd.id]
+            : undefined;
+        if (pipe || tank || pump) {
+          if (pipe?.quantity || tank?.quantity)
+            return fail("Drain gas contents before dismantling");
+          const kind = pipe ? "line" : tank ? "vessel" : "compressor",
+            cost = c.gasLogistics![kind].cost;
+          if (apply) {
+            if (pipe) delete s.pressureLines[key(pipe)];
+            else if (tank) delete s.pressureVessels[cmd.id];
+            else delete s.compressors[cmd.id];
+            change(s.stock, c.site.buildMaterial, cost);
+          }
+          return ok("Gas structure reclaimed");
+        }
+      }
+
       const pipe = Object.values(s.pipes).find((p) => p.id === cmd.id),
         tank = Object.hasOwn(s.tanks, cmd.id) ? s.tanks[cmd.id] : undefined,
         pump = Object.hasOwn(s.pumps, cmd.id) ? s.pumps[cmd.id] : undefined;
@@ -532,7 +703,9 @@ export function applyCommand(
         // so a buffered machine cannot be reclaimed until its contents leave
         // through belts (output drains; incompatible input needs rerouting).
         if (total(m.input) + total(m.output) > 0)
-          return fail("Empty the machine buffers through belts first");
+          return fail(
+            "Empty the machine buffers through compatible transport first",
+          );
         if (apply) {
           change(s.stock, c.site.buildMaterial, def.cost);
           delete s.machines[cmd.id];
@@ -542,7 +715,9 @@ export function applyCommand(
       if (Object.hasOwn(s.factories, cmd.id)) {
         const f = s.factories[cmd.id];
         if (
-          liquidRects(c, s).some((r) => overlaps(f, r)) ||
+          [...liquidRects(c, s), ...gasRects(c, s)].some((r) =>
+            overlaps(f, r),
+          ) ||
           f.ports.length ||
           Object.values(s.machines).some((m) => m.factoryId === f.id) ||
           Object.values(s.belts).some((b) => contains(f, b))
@@ -599,6 +774,8 @@ export function applyCommand(
         const p = f.ports.find((p) => p.id === cmd.id);
         if (p) {
           if (
+            s.pressureLines[key(p)] ||
+            Object.values(s.compressors).some((a) => key(a) === key(p)) ||
             s.pipes[key(p)] ||
             Object.values(s.pumps).some((a) => key(a) === key(p))
           )

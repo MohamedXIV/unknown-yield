@@ -1,20 +1,20 @@
 import { describe, expect, it } from "vitest";
 import { fixture, validateContent } from "@site/content";
 import { Simulation, auditLedger } from "../src/index";
-import { transportLiquids } from "../src/liquids";
+import { transportGases, gasCompressorStatus } from "../src/gases";
 
 function seed() {
   const draft = structuredClone(fixture);
-  draft.materials.find((m) => m.id === "raw")!.handlingState = "liquid";
+  draft.materials.find((m) => m.id === "raw")!.handlingState = "gas";
   for (const m of draft.machines) {
     m.inputStates = ["solid", "liquid", "gas"];
     m.outputStates = ["solid", "liquid", "gas"];
   }
   const content = validateContent(draft),
     state = new Simulation(content).serialize();
-  state.pipes = {
+  state.pressureLines = {
     "19,11": {
-      id: "l1",
+      id: "g1",
       x: 19,
       y: 11,
       inlet: 2,
@@ -23,7 +23,7 @@ function seed() {
       quantity: 3,
     },
     "20,11": {
-      id: "l2",
+      id: "g2",
       x: 20,
       y: 11,
       inlet: 2,
@@ -34,36 +34,36 @@ function seed() {
   };
   return { content, state };
 }
-describe("directed liquid quantity transport", () => {
+describe("directed gas quantity transport", () => {
   it("moves at most one edge using pre-step quantities", () => {
     const { content, state } = seed();
-    transportLiquids(content, state);
-    expect(state.pipes["19,11"].quantity).toBe(2);
-    expect(state.pipes["20,11"].quantity).toBe(1);
-    transportLiquids(content, state);
-    expect(state.pipes["20,11"].quantity).toBe(2);
+    transportGases(content, state);
+    expect(state.pressureLines["19,11"].quantity).toBe(2);
+    expect(state.pressureLines["20,11"].quantity).toBe(1);
+    transportGases(content, state);
+    expect(state.pressureLines["20,11"].quantity).toBe(2);
   });
   it("retains quantity when a full outlet blocks", () => {
     const { content, state } = seed();
-    state.pipes["20,11"].materialId = "raw";
-    state.pipes["20,11"].quantity = 4;
+    state.pressureLines["20,11"].materialId = "raw";
+    state.pressureLines["20,11"].quantity = 4;
     const before = structuredClone(state);
-    transportLiquids(content, state);
+    transportGases(content, state);
     expect(state).toEqual(before);
   });
-  it("drains admitted liquid with a disabled source pump and spends no fuel", () => {
+  it("drains admitted gas with a disabled source pump and spends no fuel", () => {
     const { content, state } = seed();
-    state.tanks = {
-      t3: {
-        id: "t3",
+    state.pressureVessels = {
+      v3: {
+        id: "v3",
         x: 16,
         y: 10,
         direction: 0,
         materialId: "raw",
         quantity: 8,
       },
-      t4: {
-        id: "t4",
+      v4: {
+        id: "v4",
         x: 21,
         y: 10,
         direction: 0,
@@ -71,22 +71,22 @@ describe("directed liquid quantity transport", () => {
         quantity: 0,
       },
     };
-    state.pumps = {
-      u5: { id: "u5", x: 18, y: 11, direction: 0, enabled: false },
+    state.compressors = {
+      c5: { id: "c5", x: 18, y: 11, direction: 0, enabled: false },
     };
-    state.pipes["20,11"].materialId = "raw";
-    state.pipes["20,11"].quantity = 1;
+    state.pressureLines["20,11"].materialId = "raw";
+    state.pressureLines["20,11"].quantity = 1;
     const fuel = state.fuel;
-    transportLiquids(content, state);
-    expect(state.tanks.t3.quantity).toBe(8);
-    expect(state.tanks.t4.quantity).toBe(1);
+    transportGases(content, state);
+    expect(state.pressureVessels.v3.quantity).toBe(8);
+    expect(state.pressureVessels.v4.quantity).toBe(1);
     expect(state.fuel).toBe(fuel);
   });
   it("charges fuel only for successful source admission", () => {
     const { content, state } = seed();
-    state.tanks = {
-      t3: {
-        id: "t3",
+    state.pressureVessels = {
+      v3: {
+        id: "v3",
         x: 16,
         y: 10,
         direction: 0,
@@ -94,38 +94,38 @@ describe("directed liquid quantity transport", () => {
         quantity: 8,
       },
     };
-    state.pumps = {
-      u5: { id: "u5", x: 18, y: 11, direction: 0, enabled: true },
+    state.compressors = {
+      c5: { id: "c5", x: 18, y: 11, direction: 0, enabled: true },
     };
     const fuel = state.fuel;
-    transportLiquids(content, state);
-    expect(state.tanks.t3.quantity).toBe(7);
-    expect(state.pipes["19,11"].quantity).toBe(3);
+    transportGases(content, state);
+    expect(state.pressureVessels.v3.quantity).toBe(7);
+    expect(state.pressureLines["19,11"].quantity).toBe(3);
     expect(state.fuel).toBe(fuel - 1);
-    state.pipes["19,11"].quantity = 4;
-    transportLiquids(content, state);
-    expect(state.tanks.t3.quantity).toBe(7);
+    state.pressureLines["19,11"].quantity = 4;
+    transportGases(content, state);
+    expect(state.pressureVessels.v3.quantity).toBe(7);
     expect(state.fuel).toBe(fuel - 1);
   });
   it("is independent of record insertion order", () => {
     const { content, state } = seed(),
       reversed = structuredClone(state);
-    reversed.pipes = Object.fromEntries(
-      Object.entries(reversed.pipes).reverse(),
+    reversed.pressureLines = Object.fromEntries(
+      Object.entries(reversed.pressureLines).reverse(),
     );
-    transportLiquids(content, state);
-    transportLiquids(content, reversed);
+    transportGases(content, state);
+    transportGases(content, reversed);
     expect(reversed).toEqual(state);
   });
 });
 
-describe("liquid construction", () => {
+describe("gas construction", () => {
   it("places atomically, refuses overlaps and reconciles construction refunds", () => {
     const sim = new Simulation(fixture);
     const before = sim.serialize();
     expect(
       sim.command({
-        type: "placePipes",
+        type: "placePressureLines",
         points: [
           { x: 10, y: 10, inlet: 2, outlet: 0 },
           { x: 10, y: 10, inlet: 2, outlet: 0 },
@@ -134,7 +134,7 @@ describe("liquid construction", () => {
     ).toBe(false);
     expect(sim.serialize()).toEqual(before);
     const result = sim.command({
-      type: "placePipes",
+      type: "placePressureLines",
       points: [
         { x: 10, y: 10, inlet: 2, outlet: 0 },
         { x: 11, y: 10, inlet: 2, outlet: 0 },
@@ -149,22 +149,31 @@ describe("liquid construction", () => {
       }).ok,
     ).toBe(false);
     expect(
-      sim.command({ type: "dismantle", id: sim.serialize().pipes["10,10"].id })
-        .ok,
+      sim.command({
+        type: "dismantle",
+        id: sim.serialize().pressureLines["10,10"].id,
+      }).ok,
     ).toBe(true);
     expect(sim.serialize().stock.plates).toBe(
-      before.stock.plates - fixture.liquidLogistics!.pipe.cost,
+      before.stock.plates - fixture.gasLogistics!.line.cost,
     );
   });
   it("places tank/pump, toggles source feed and saves exact infrastructure", () => {
     const sim = new Simulation(fixture);
     expect(
-      sim.command({ type: "placeTank", x: 10, y: 10, direction: 0 }).ok,
+      sim.command({ type: "placePressureVessel", x: 10, y: 10, direction: 0 })
+        .ok,
     ).toBe(true);
-    const pump = sim.command({ type: "placePump", x: 12, y: 11, direction: 0 });
+    const pump = sim.command({
+      type: "placeCompressor",
+      x: 12,
+      y: 11,
+      direction: 0,
+    });
     expect(pump.ok).toBe(true);
     expect(
-      sim.command({ type: "setPumpEnabled", id: pump.id, enabled: false }).ok,
+      sim.command({ type: "setCompressorEnabled", id: pump.id, enabled: false })
+        .ok,
     ).toBe(true);
     const save = sim.serialize(),
       restored = new Simulation(fixture);
@@ -173,11 +182,11 @@ describe("liquid construction", () => {
   });
 });
 
-describe("conservative liquid expedition state", () => {
+describe("conservative gas expedition state", () => {
   function expedition() {
     const draft = structuredClone(fixture);
     for (const id of ["raw", "ferrite"])
-      draft.materials.find((m) => m.id === id)!.handlingState = "liquid";
+      draft.materials.find((m) => m.id === id)!.handlingState = "gas";
     for (const m of draft.machines) {
       m.inputStates = ["solid", "liquid", "gas"];
       m.outputStates = ["solid", "liquid", "gas"];
@@ -185,16 +194,21 @@ describe("conservative liquid expedition state", () => {
     const content = validateContent(draft),
       sim = new Simulation(content);
     const source = sim.command({
-      type: "placeTank",
+      type: "placePressureVessel",
       x: 10,
       y: 10,
       direction: 0,
     });
-    const pump = sim.command({ type: "placePump", x: 12, y: 11, direction: 0 });
+    const pump = sim.command({
+      type: "placeCompressor",
+      x: 12,
+      y: 11,
+      direction: 0,
+    });
     expect(source.ok && pump.ok).toBe(true);
     expect(
       sim.command({
-        type: "placePipes",
+        type: "placePressureLines",
         points: [
           { x: 13, y: 11, inlet: 2, outlet: 0 },
           { x: 14, y: 11, inlet: 2, outlet: 0 },
@@ -202,7 +216,7 @@ describe("conservative liquid expedition state", () => {
       }).ok,
     ).toBe(true);
     const target = sim.command({
-      type: "placeTank",
+      type: "placePressureVessel",
       x: 15,
       y: 10,
       direction: 0,
@@ -211,8 +225,8 @@ describe("conservative liquid expedition state", () => {
     const state = sim.serialize(),
       deposit = content.site.deposits.find((d) => d.material === "raw")!;
     state.deposits[deposit.id] -= 8;
-    state.tanks[source.id!].materialId = "raw";
-    state.tanks[source.id!].quantity = 8;
+    state.pressureVessels[source.id!].materialId = "raw";
+    state.pressureVessels[source.id!].quantity = 8;
     expect(auditLedger(content, state).ok).toBe(true);
     expect(sim.load(state).ok).toBe(true);
     return {
@@ -229,9 +243,10 @@ describe("conservative liquid expedition state", () => {
       sim.step(content.tickMs);
       expect(auditLedger(content, sim.serialize()).ok).toBe(true);
     }
-    expect(sim.serialize().tanks[target].quantity).toBeGreaterThan(0);
+    expect(sim.serialize().pressureVessels[target].quantity).toBeGreaterThan(0);
     expect(
-      sim.command({ type: "setPumpEnabled", id: pump, enabled: false }).ok,
+      sim.command({ type: "setCompressorEnabled", id: pump, enabled: false })
+        .ok,
     ).toBe(true);
     const restored = new Simulation(content);
     expect(restored.load(sim.serialize()).ok).toBe(true);
@@ -249,11 +264,15 @@ describe("conservative liquid expedition state", () => {
     expect(sim.serialize()).toEqual(before);
     sim.step(content.tickMs * content.site.transportEveryTicks);
     const loaded = sim.serialize(),
-      pipe = loaded.pipes["13,11"];
+      pipe = loaded.pressureLines["13,11"];
     expect(pipe.quantity).toBeGreaterThan(0);
     expect(
-      sim.command({ type: "configurePipe", id: pipe.id, inlet: 2, outlet: 1 })
-        .ok,
+      sim.command({
+        type: "configurePressureLine",
+        id: pipe.id,
+        inlet: 2,
+        outlet: 1,
+      }).ok,
     ).toBe(false);
     expect(sim.command({ type: "dismantle", id: pipe.id }).ok).toBe(false);
     expect(sim.serialize()).toEqual(loaded);
@@ -264,41 +283,131 @@ describe("conservative liquid expedition state", () => {
     state.fuel = 0;
     expect(sim.load(state).ok).toBe(true);
     sim.step(content.tickMs * content.site.transportEveryTicks);
-    expect(sim.serialize().tanks[source].quantity).toBe(8);
+    expect(sim.serialize().pressureVessels[source].quantity).toBe(8);
     const nextState = sim.serialize();
     nextState.fuel = 20;
     const ferrite = content.site.deposits.find(
       (d) => d.material === "ferrite",
     )!;
     nextState.deposits[ferrite.id] -= 1;
-    nextState.tanks[target].materialId = "ferrite";
-    nextState.tanks[target].quantity = 1;
+    nextState.pressureVessels[target].materialId = "ferrite";
+    nextState.pressureVessels[target].quantity = 1;
     expect(sim.load(nextState).ok).toBe(true);
     for (let n = 0; n < 30; n++) sim.step(content.tickMs);
     const after = sim.serialize();
-    expect(after.tanks[target].materialId).toBe("ferrite");
-    expect(after.tanks[target].quantity).toBe(1);
+    expect(after.pressureVessels[target].materialId).toBe("ferrite");
+    expect(after.pressureVessels[target].quantity).toBe(1);
     expect(auditLedger(content, after).ok).toBe(true);
   });
-  it("keeps a liquid batch upstream of the dry terminal without loss or export", () => {
+  it("keeps a gas batch upstream of the dry terminal without loss or export", () => {
     const { sim, content } = expedition();
     expect(
       sim.command({
-        type: "placePipes",
+        type: "placePressureLines",
         points: [{ x: 37, y: 27, inlet: 2, outlet: 0 }],
       }).ok,
     ).toBe(true);
     const state = sim.serialize(),
       deposit = content.site.deposits.find((d) => d.material === "raw")!;
     state.deposits[deposit.id]--;
-    state.pipes["37,27"].materialId = "raw";
-    state.pipes["37,27"].quantity = 1;
+    state.pressureLines["37,27"].materialId = "raw";
+    state.pressureLines["37,27"].quantity = 1;
     expect(sim.load(state).ok).toBe(true);
     for (let i = 0; i < 12; i++) sim.step(content.tickMs);
     const after = sim.serialize();
-    expect(after.pipes["37,27"].quantity).toBe(1);
+    expect(after.pressureLines["37,27"].quantity).toBe(1);
     expect(after.staging.raw ?? 0).toBe(0);
     expect(after.flows.exported.raw ?? 0).toBe(0);
     expect(auditLedger(content, after).ok).toBe(true);
+  });
+});
+
+describe("gas containment compatibility", () => {
+  it("retains gas against liquid pipes/tanks and ordinary solid storage", () => {
+    const { content, state } = seed();
+    delete state.pressureLines["20,11"];
+    for (const destination of ["liquid-pipe", "liquid-tank", "depot"]) {
+      const s = structuredClone(state);
+      if (destination === "liquid-pipe")
+        s.pipes["20,11"] = {
+          id: "l7",
+          x: 20,
+          y: 11,
+          inlet: 2,
+          outlet: 0,
+          materialId: null,
+          quantity: 0,
+        };
+      if (destination === "liquid-tank")
+        s.tanks.t7 = {
+          id: "t7",
+          x: 20,
+          y: 10,
+          direction: 0,
+          materialId: null,
+          quantity: 0,
+        };
+      if (destination === "depot")
+        s.storages.s7 = {
+          id: "s7",
+          x: 20,
+          y: 10,
+          direction: 0,
+          definitionId: "depot",
+          inventory: {},
+        };
+      const before = structuredClone(s);
+      transportGases(content, s);
+      expect(s).toEqual(before);
+    }
+  });
+  it("reports liquid sources as incompatible and never compresses them", () => {
+    const { content, state } = seed();
+    state.tanks.t3 = {
+      id: "t3",
+      x: 16,
+      y: 10,
+      direction: 0,
+      materialId: "liquid-0",
+      quantity: 8,
+    };
+    const compressor = { id: "c5", x: 18, y: 11, direction: 0, enabled: true };
+    state.compressors.c5 = compressor;
+    expect(gasCompressorStatus(content, state, compressor)).toBe(
+      "incompatible",
+    );
+    const before = structuredClone(state);
+    transportGases(content, state);
+    expect(state.tanks.t3).toEqual(before.tanks.t3);
+    expect(state.fuel).toBe(before.fuel);
+  });
+  it("reports an ordinary pipe outlet as incompatible while preserving upstream gas", () => {
+    const { content, state } = seed();
+    delete state.pressureLines["19,11"];
+    state.pressureVessels.v3 = {
+      id: "v3",
+      x: 16,
+      y: 10,
+      direction: 0,
+      materialId: "raw",
+      quantity: 8,
+    };
+    const compressor = { id: "c5", x: 18, y: 11, direction: 0, enabled: true };
+    state.compressors.c5 = compressor;
+    state.pipes["19,11"] = {
+      id: "l7",
+      x: 19,
+      y: 11,
+      inlet: 2,
+      outlet: 0,
+      materialId: null,
+      quantity: 0,
+    };
+    expect(gasCompressorStatus(content, state, compressor)).toBe(
+      "incompatible",
+    );
+    const before = structuredClone(state);
+    transportGases(content, state);
+    expect(state).toEqual(before);
   });
 });

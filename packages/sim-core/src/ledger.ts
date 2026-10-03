@@ -37,6 +37,8 @@ export type LedgerRow = {
   machineInput: number;
   machineOutput: number;
   belts: number;
+  pressureLines: number;
+  pressureVessels: number;
   pipes: number;
   tanks: number;
   storage: number;
@@ -67,6 +69,8 @@ function blank(material: string): LedgerRow {
     machineInput: 0,
     machineOutput: 0,
     belts: 0,
+    pressureLines: 0,
+    pressureVessels: 0,
     pipes: 0,
     tanks: 0,
     storage: 0,
@@ -132,6 +136,10 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
   for (const t of Object.values(s.tanks ?? {}))
     if (t.materialId) row(t.materialId).tanks += t.quantity;
 
+  for (const p of Object.values(s.pressureLines ?? {}))
+    if (p.materialId) row(p.materialId).pressureLines += p.quantity;
+  for (const v of Object.values(s.pressureVessels ?? {}))
+    if (v.materialId) row(v.materialId).pressureVessels += v.quantity;
   // In-flight batches: reserved material not yet in any buffer.
   for (const m of Object.values(s.machines ?? {})) {
     if (!m.job) continue;
@@ -146,6 +154,11 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
 
   // Construction plates sunk into placed structures.
   let embodied = 0;
+  if (c.gasLogistics)
+    embodied +=
+      Object.keys(s.pressureLines ?? {}).length * c.gasLogistics.line.cost +
+      Object.keys(s.pressureVessels ?? {}).length * c.gasLogistics.vessel.cost +
+      Object.keys(s.compressors ?? {}).length * c.gasLogistics.compressor.cost;
   if (c.liquidLogistics)
     embodied +=
       Object.keys(s.pipes ?? {}).length * c.liquidLogistics.pipe.cost +
@@ -191,6 +204,8 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
       r.machineInput +
       r.machineOutput +
       r.belts +
+      r.pressureLines +
+      r.pressureVessels +
       r.pipes +
       r.tanks +
       r.storage +

@@ -471,6 +471,12 @@ Material conservation, backpressure, migration of existing worlds, blueprint com
 
 ---
 
+## D-034 — Gas uses distinct sealed physical infrastructure
+
+Accepted for #109 on 2026-10-03: use directed pressure lines, stationary pressure vessels and source compressors with gas-only admission. Ordinary liquid pipes/tanks and solid paths cannot carry gas. Capacity, footprint, throughput and fuel cost are content-authored; sim-core reserves and commits exact integer quantities without pressure physics or venting.
+
+The selected slice extends the hidden liquid → gas → solid discovery chain. Movable cylinders, leaks, hazards and terminal gas handling are deferred. Save schema 15 / world-01-v8 explicitly reject incompatible older content; blueprint schema 4 exports layout/settings without contents. See [design](PHASE9_GAS_LOGISTICS.md) and [verification](PHASE9_GAS_ACCEPTANCE.md).
+
 ## How to change a decision
 
 When evidence requires a change:

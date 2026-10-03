@@ -19,6 +19,7 @@ import {
   storageError,
   wall,
   key,
+  gasPlacementError,
   liquidPlacementError,
 } from "./geometry";
 const count = z.number().int().nonnegative().max(1000000000),
@@ -127,6 +128,7 @@ const schema = z.object({
     z.literal(12),
     z.literal(13),
     z.literal(14),
+    z.literal(15),
   ]),
   contentVersion: z.string(),
   tick: count,
@@ -144,6 +146,9 @@ const schema = z.object({
   factories: z.record(safeId, factory),
   belts: z.record(z.string().regex(/^\d+,\d+$/), belt),
   storages: z.record(safeId, storage),
+  pressureLines: z.record(z.string().regex(/^\d+,\d+$/), pipe).default({}),
+  pressureVessels: z.record(safeId, tank).default({}),
+  compressors: z.record(safeId, pump).default({}),
   pipes: z.record(z.string().regex(/^\d+,\d+$/), pipe).default({}),
   tanks: z.record(safeId, tank).default({}),
   pumps: z.record(safeId, pump).default({}),
@@ -196,7 +201,7 @@ const schema = z.object({
 });
 export function initialState(c: Content): Save {
   const state: Save = {
-    schemaVersion: 14,
+    schemaVersion: 15,
     contentVersion: c.version,
     tick: 0,
     remainder: 0,
@@ -231,6 +236,9 @@ export function initialState(c: Content): Save {
     machines: {},
     factories: {},
     belts: {},
+    pressureLines: {},
+    pressureVessels: {},
+    compressors: {},
     pipes: {},
     tanks: {},
     pumps: {},
@@ -255,6 +263,13 @@ export function initialState(c: Content): Save {
 }
 export function parseSave(input: unknown, c: Content): Save {
   const s = schema.parse(input);
+  if (
+    s.schemaVersion < 15 &&
+    [s.pressureLines, s.pressureVessels, s.compressors].some(
+      (r) => Object.keys(r).length,
+    )
+  )
+    throw new Error("Legacy schema cannot contain gas locations");
   if (
     s.schemaVersion < 14 &&
     [s.pipes, s.tanks, s.pumps].some((r) => Object.keys(r).length)
@@ -358,6 +373,7 @@ export function parseSave(input: unknown, c: Content): Save {
   if (s.schemaVersion === 11) s.schemaVersion = 12;
   if (s.schemaVersion === 12) s.schemaVersion = 13;
   if (s.schemaVersion === 13) s.schemaVersion = 14;
+  if (s.schemaVersion === 14) s.schemaVersion = 15;
   if (s.contentVersion !== c.version || s.remainder >= c.tickMs)
     throw new Error("Incompatible content or timing");
   if (
@@ -707,6 +723,44 @@ export function parseSave(input: unknown, c: Content): Save {
                 ?.handlingState !== "liquid"))
         )
           throw new Error("Invalid liquid quantity or identity");
+      }
+    }
+  }
+  for (const [kind, records] of [
+    ["line", s.pressureLines],
+    ["vessel", s.pressureVessels],
+    ["compressor", s.compressors],
+  ] as const) {
+    for (const [location, entity] of Object.entries(records)) {
+      if (!c.gasLogistics)
+        throw new Error("Gas infrastructure is not authored");
+      takeId(entity.id, kind === "line" ? "g" : kind === "vessel" ? "v" : "c");
+      if ((kind === "line" ? key(entity) : entity.id) !== location)
+        throw new Error("Invalid gas location or ID");
+      const error = gasPlacementError(c, stage, entity, kind);
+      if (error) throw new Error(error);
+      if (kind === "line") {
+        const item = s.pressureLines[location];
+        if (item.inlet === item.outlet)
+          throw new Error("Pressure line inlet and outlet coincide");
+        stage.pressureLines[location] = item;
+      } else if (kind === "vessel")
+        stage.pressureVessels[location] = s.pressureVessels[location];
+      else stage.compressors[location] = s.compressors[location];
+      if ("quantity" in entity) {
+        const cap =
+          kind === "line"
+            ? c.gasLogistics.line.capacity
+            : c.gasLogistics.vessel.capacity;
+        if (
+          entity.quantity > cap ||
+          (entity.quantity === 0) !== (entity.materialId === null) ||
+          (entity.materialId !== null &&
+            (!known.has(entity.materialId) ||
+              c.materials.find((m) => m.id === entity.materialId)
+                ?.handlingState !== "gas"))
+        )
+          throw new Error("Invalid gas quantity or identity");
       }
     }
   }

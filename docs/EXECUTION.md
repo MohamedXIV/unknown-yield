@@ -243,3 +243,7 @@ Phase 7 remains deferred with its accepted unmet performance budget preserved. P
 ## Phase 9 liquid gate — #108
 
 Directed pipes, source pumps, single-material tanks and the normal solid → liquid → solid chain are accepted. Evidence: [PHASE9_LIQUID_ACCEPTANCE.md](PHASE9_LIQUID_ACCEPTANCE.md). Save schema 14 / world-01-v7 explicitly reject incompatible earlier content; pre-release compatibility is not a scope constraint. #100 remains open for #109–#113. Next agreed gameplay scope is #109, preserving its dependency on #108.
+
+## Phase 9 gas implementation — #109
+
+#108 merged through PR #162 / main `7f88eb3c326194836e3f360755daf2c87b4287fb`. #109 is implemented on `codex/109-pressurized-gas`, with separate sealed pressure transport/storage and the hidden liquid → gas → solid branch. Local evidence: [PHASE9_GAS_ACCEPTANCE.md](PHASE9_GAS_ACCEPTANCE.md); contract: [PHASE9_GAS_LOGISTICS.md](PHASE9_GAS_LOGISTICS.md). Save schema 15 / world-01-v8; gas blueprint schema 4. The local acceptance gate passed (308 tests PASS, 2 skipped; typecheck/lint/build/browser acceptance PASS). Delivery and merge state are tracked in PR #163. Keep #100 open; #110 is the next dependency after #109 closes, and requires its own agreed scope.

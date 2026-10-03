@@ -8,6 +8,7 @@ import { marketListings, recoverMarkets } from "./market";
 import { opportunityViews, refreshOpportunities } from "./opportunities";
 import { milestoneViews, refreshMilestones } from "./milestones";
 import { assistanceViews, companyView } from "./assistance";
+import { transportGases, gasCompressorStatus } from "./gases";
 import { transportLiquids, liquidPumpStatus } from "./liquids";
 import { footprint } from "./geometry";
 import { factoryView } from "./factory-contract";
@@ -49,6 +50,9 @@ export class Simulation {
       );
       refreshMilestones(c, s);
       if (s.tick % c.site.transportEveryTicks === 0) {
+        transportGases(c, s, (event) =>
+          this.factoryThroughput.recordMove(s, event),
+        );
         transportLiquids(c, s, (event) =>
           this.factoryThroughput.recordMove(s, event),
         );
@@ -183,6 +187,17 @@ export class Simulation {
           progress: m.job ? 1 - m.job.remaining / d.durationTicks : 0,
         };
       }),
+      pressureLines: Object.values(s.pressureLines),
+      pressureVessels: Object.values(s.pressureVessels).map((v) => ({
+        ...v,
+        ...footprint(v, c.gasLogistics!.vessel),
+        capacity: c.gasLogistics!.vessel.capacity,
+      })),
+      compressors: Object.values(s.compressors).map((p) => ({
+        ...p,
+        status: gasCompressorStatus(c, s, p),
+      })),
+      gasLogistics: c.gasLogistics,
       pipes: Object.values(s.pipes),
       tanks: Object.values(s.tanks).map((t) => ({
         ...t,
@@ -228,7 +243,7 @@ export class Simulation {
       return {
         ok: false,
         message:
-          "Save rejected (requires schema 14): " +
+          "Save rejected (requires schema 15): " +
           (error instanceof Error ? error.message : "Invalid data"),
       };
     }

@@ -6,6 +6,11 @@ import {
   type GameCommand,
 } from "@site/sim-core";
 export type Tool =
+  | "pressure-line"
+  | "pressure-vessel"
+  | "compressor"
+  | "vaporizer"
+  | "gas-collector"
   | "pipe"
   | "tank"
   | "pump"
@@ -23,6 +28,11 @@ export type Tool =
   | "port"
   | "demolish";
 export const TOOL_HOTKEYS: Record<Tool, string> = {
+  "pressure-line": "G",
+  "pressure-vessel": "V",
+  compressor: "B",
+  vaporizer: "O",
+  "gas-collector": "J",
   pipe: "P",
   tank: "T",
   pump: "U",
@@ -81,6 +91,9 @@ export function structureKey(s: PlayerSnapshot): string {
     s.belts
       .filter((b) => adjacent.has(b.x + "," + b.y))
       .map((b) => [b.id, !!b.cargo]),
+    s.pressureLines.map((p) => [p.id, p.x, p.y, p.inlet, p.outlet]),
+    s.pressureVessels.map((p) => [p.id, p.x, p.y, p.direction]),
+    s.compressors.map((p) => [p.id, p.x, p.y, p.direction]),
     s.pipes.map((p) => [p.id, p.x, p.y, p.inlet, p.outlet]),
     s.tanks.map((t) => [t.id, t.x, t.y, t.direction]),
     s.pumps.map((p) => [p.id, p.x, p.y, p.direction]),
@@ -132,6 +145,12 @@ export function hitTest(
   if (m) return m.id;
   const t = s.storages.find((t) => contains(t, p));
   if (t) return t.id;
+  const vessel = s.pressureVessels.find((t) => contains(t, p));
+  if (vessel) return vessel.id;
+  const gas = [...s.pressureLines, ...s.compressors].find(
+    (t) => t.x === p.x && t.y === p.y,
+  );
+  if (gas) return gas.id;
   const tank = s.tanks.find((t) => contains(t, p));
   if (tank) return tank.id;
   const liquid = [...s.pipes, ...s.pumps].find(
@@ -163,6 +182,8 @@ export function buildCommand(
   }
   if (
     [
+      "vaporizer",
+      "gas-collector",
       "liquefier",
       "precipitator",
       "extractor",
@@ -185,18 +206,27 @@ export function buildCommand(
       ...p,
       direction: mode.direction,
     };
+  if (mode.tool === "pressure-vessel" || mode.tool === "compressor")
+    return {
+      type:
+        mode.tool === "pressure-vessel"
+          ? "placePressureVessel"
+          : "placeCompressor",
+      ...p,
+      direction: mode.direction,
+    };
   if (mode.tool === "tank" || mode.tool === "pump")
     return {
       type: mode.tool === "tank" ? "placeTank" : "placePump",
       ...p,
       direction: mode.direction,
     };
-  if (mode.tool === "pipe") {
+  if (mode.tool === "pipe" || mode.tool === "pressure-line") {
     const path = beltPath(anchor ?? p, p);
     const facing = (a: Point, b: Point) =>
       b.x > a.x ? 0 : b.y > a.y ? 1 : b.x < a.x ? 2 : 3;
     return {
-      type: "placePipes",
+      type: mode.tool === "pipe" ? "placePipes" : "placePressureLines",
       points: path.map((point, i) => {
         const inlet = i
           ? (facing(path[i - 1], point) + 2) % 4

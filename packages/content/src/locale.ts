@@ -56,6 +56,75 @@ export function validateLocaleCoverage(
 }
 
 export const enCatalog: LocaleCatalog = {
+  "ui.gas.command.unavailable": "Gas infrastructure is not authored",
+  "ui.gas.command.invalid-path": "Invalid directed pressure line path",
+  "ui.gas.command.disconnected": "Pressure line endpoints must connect",
+  "ui.gas.command.place-pipes": "Place pressure lines",
+  "ui.gas.command.lines-placed": "Pressure lines placed",
+  "ui.gas.command.place-structure": "Place gas structure",
+  "ui.gas.command.placed": "Gas structure placed",
+  "ui.gas.command.unknown-pump": "Unknown compressor",
+  "ui.gas.command.compressor-updated": "Compressor updated",
+  "ui.gas.command.unknown-pipe": "Unknown pressure line",
+  "ui.gas.command.drain-pipe": "Drain the pressure line before rerouting",
+  "ui.gas.command.different-ends": "Pressure line inlet and outlet must differ",
+  "ui.gas.command.line-updated": "Pressure line updated",
+  "ui.gas.command.drain-first": "Drain gas contents before dismantling",
+  "ui.gas.command.reclaimed": "Gas structure reclaimed",
+  "ui.gas.command.remove-port": "Remove gas infrastructure on this port first",
+  "ui.gas.short.disabled": "Feed off",
+  "ui.gas.short.needs-fuel": "No fuel",
+  "ui.gas.short.needs-input": "No gas",
+  "ui.gas.short.incompatible": "Mismatch",
+  "ui.gas.short.output-full": "Blocked",
+  "ui.gas.short.ready": "Ready",
+  "ui.gas.empty": "Empty",
+  "ui.gas.enable": "Enable source feed",
+  "ui.gas.disable": "Stop source feed",
+  "ui.gas.inlet": "Inlet",
+  "ui.gas.outlet": "Outlet",
+  "ui.gas.rotate": "Rotate empty pressure line",
+  "ui.gas.drain-first":
+    "Drain gas through a compatible route before editing or reclaiming.",
+  "ui.gas.reclaim": "Reclaim empty structure",
+  "ui.gas.status.disabled":
+    "Source feed disabled; admitted gas can still drain.",
+  "ui.gas.status.needs-fuel": "Needs fuel",
+  "ui.gas.status.needs-input": "Needs a compatible gas source",
+  "ui.gas.status.incompatible":
+    "Source or outlet is incompatible with this gas route",
+  "ui.gas.status.output-full": "Outlet missing, reversed or full",
+  "ui.gas.status.ready": "Ready",
+
+  "ui.gas.pressure-line.name": "Pressure line",
+  "ui.gas.pressure-vessel.name": "Pressure vessel",
+  "ui.gas.compressor.name": "Compressor",
+  "ui.gas.pressure-line.description":
+    "Drag a sealed directed gas route. Ordinary pipes cannot carry gas. R rotates a single cell.",
+  "ui.gas.pressure-vessel.description":
+    "Physical sealed gas storage. One material at a time; a compressor withdraws through its output socket.",
+  "ui.gas.compressor.description":
+    "Admits gas from a compatible machine or vessel into a pressure line. Fuel is charged only on successful admission.",
+  "ui.gas.vaporizer.description":
+    "Liquid input and sealed output. Outcomes require observation.",
+  "ui.gas.gas-collector.description":
+    "Sealed input and solid output. Outcomes require observation.",
+  "ui.gas.processor-input-help":
+    "Feed the input socket with a matching pressure line. Ordinary belts and liquid pipes cannot feed gas.",
+  "ui.gas.processor-output-help":
+    "Liquid pipes feed this input. Place a compressor on its sealed output and a pressure line after it.",
+  "ui.gas.factory-buffer": "Gas in physical pressure infrastructure",
+
+  "material.gas-0.name": "Process vapor",
+  "operation.vaporize.name": "Vaporize",
+  "operation.collect-gas.name": "Collect",
+  "machine.vaporizer.name": "Vaporizer",
+  "machine.gas-collector.name": "Gas collector",
+  "reaction.vaporize-liquid-0.observation":
+    "The liquid yielded a vapor that requires sealed pressure transport.",
+  "reaction.collect-gas-0.observation":
+    "The contained vapor yielded conductive granules.",
+
   "ui.liquid.processor-input-help":
     "Cyan is the liquid pipe input socket; gold is the solid output belt socket. Observe outputs to discover them. Drain buffers through compatible routes before dismantling.",
   "ui.liquid.processor-output-help":

@@ -619,6 +619,74 @@ export function createWorld(
         snapshot.factories.some(
           (f) => contains(f, p) && !mode.openFactories.includes(f.id),
         );
+      for (const p of snapshot.pressureLines) {
+        if (hiddenLiquid(p)) continue;
+        const cx = (p.x + 0.5) * X,
+          cy = (p.y + 0.5) * Y,
+          vectors = [
+            [1, 0],
+            [0, 1],
+            [-1, 0],
+            [0, -1],
+          ];
+        for (const side of [p.inlet, p.outlet]) {
+          const [dx, dy] = vectors[side];
+          g.lineStyle(10, 0xbda875).lineBetween(
+            cx,
+            cy,
+            cx + (dx * X) / 2,
+            cy + (dy * Y) / 2,
+          );
+          g.lineStyle(5, 0x453923).lineBetween(
+            cx,
+            cy,
+            cx + (dx * X) / 2,
+            cy + (dy * Y) / 2,
+          );
+        }
+        g.lineStyle(2, 0xe7d49b).strokeCircle(cx, cy, 6);
+        this.arrow(g, cx, cy, p.outlet, 0xe7d49b, 4);
+      }
+      for (const t of snapshot.pressureVessels) {
+        if (hiddenLiquid(t)) continue;
+        this.box(g, t, 0xab9667, 0x574a32, 12);
+        g.lineStyle(3, 0xe7d49b).strokeEllipse(
+          (t.x + t.width / 2) * X,
+          (t.y + t.height / 2) * Y - 10,
+          t.width * X - 12,
+          t.height * Y - 12,
+        );
+        const input = socket(t, t, false),
+          output = socket(t, t, true);
+        for (const [p, tint] of [
+          [input, 0x9bd0c4],
+          [output, 0xe5c481],
+        ] as const)
+          this.arrow(g, (p.x + 0.5) * X, (p.y + 0.5) * Y, t.direction, tint, 5);
+        const label = this.text(
+          (t.x + t.width / 2) * X,
+          (t.y + t.height) * Y + 12,
+          "",
+          9,
+        );
+        this.labels.set(t.id, label);
+        this.structures.add(label);
+      }
+      for (const p of snapshot.compressors) {
+        if (hiddenLiquid(p)) continue;
+        this.box(g, { ...p, width: 1, height: 1 }, 0xc3ad79, 0x574a32, 7);
+        this.arrow(
+          g,
+          (p.x + 0.5) * X,
+          (p.y + 0.5) * Y,
+          p.direction,
+          0xe5c481,
+          5,
+        );
+        const label = this.text((p.x + 0.5) * X, (p.y + 1) * Y + 12, "", 8);
+        this.labels.set(p.id, label);
+        this.structures.add(label);
+      }
       for (const p of snapshot.pipes) {
         if (hiddenLiquid(p)) continue;
         const cx = (p.x + 0.5) * X,
@@ -749,6 +817,10 @@ export function createWorld(
           ?.setText(n + " / " + t.capacity)
           .setColor(n >= t.capacity ? "#e5ad75" : "#c0c6a9");
       }
+      for (const t of snapshot.pressureVessels)
+        this.labels.get(t.id)?.setText(t.quantity + " / " + t.capacity);
+      for (const p of snapshot.compressors)
+        this.labels.get(p.id)?.setText(translate("ui.gas.short." + p.status));
       for (const t of snapshot.tanks)
         this.labels.get(t.id)?.setText(t.quantity + " / " + t.capacity);
       for (const p of snapshot.pumps)
@@ -857,6 +929,22 @@ export function createWorld(
           );
         }
       }
+      for (const p of snapshot.pressureLines) {
+        if (
+          !p.quantity ||
+          snapshot.factories.some(
+            (f) => contains(f, p) && !mode.openFactories.includes(f.id),
+          )
+        )
+          continue;
+        const mat = snapshot.materials.find((m) => m.id === p.materialId);
+        g.fillStyle(color(mat?.color ?? "#dbbf7f")).fillRect(
+          p.x * X + 3,
+          p.y * Y + Y - 4,
+          ((X - 6) * p.quantity) / snapshot.gasLogistics!.line.capacity,
+          3,
+        );
+      }
       for (const p of snapshot.pipes) {
         if (
           !p.quantity ||
@@ -877,8 +965,14 @@ export function createWorld(
         snapshot.machines.find((m) => m.id === mode.selected) ??
         snapshot.factories.find((f) => f.id === mode.selected) ??
         snapshot.storages.find((t) => t.id === mode.selected) ??
+        snapshot.pressureVessels.find((t) => t.id === mode.selected) ??
         snapshot.tanks.find((t) => t.id === mode.selected) ??
-        [...snapshot.pipes, ...snapshot.pumps]
+        [
+          ...snapshot.pipes,
+          ...snapshot.pumps,
+          ...snapshot.pressureLines,
+          ...snapshot.compressors,
+        ]
           .filter((p) => p.id === mode.selected)
           .map((p) => ({ ...p, width: 1, height: 1 }))[0] ??
         (mode.selected === "terminal" ? snapshot.map.terminal : null);
@@ -915,16 +1009,19 @@ export function createWorld(
       } else if (
         command.type === "placeMachine" ||
         command.type === "placeStorage" ||
-        command.type === "placeTank"
+        command.type === "placeTank" ||
+        command.type === "placePressureVessel"
       ) {
         const d =
           command.type === "placeMachine"
             ? snapshot.definitions.find((d) => d.id === command.definitionId)!
-            : command.type === "placeTank"
-              ? snapshot.liquidLogistics!.tank
-              : snapshot.storageDefinitions.find(
-                  (d) => d.id === command.definitionId,
-                )!;
+            : command.type === "placePressureVessel"
+              ? snapshot.gasLogistics!.vessel
+              : command.type === "placeTank"
+                ? snapshot.liquidLogistics!.tank
+                : snapshot.storageDefinitions.find(
+                    (d) => d.id === command.definitionId,
+                  )!;
         const w = command.direction % 2 ? d.height : d.width,
           h = command.direction % 2 ? d.width : d.height;
         ghost
@@ -939,7 +1036,10 @@ export function createWorld(
           tint,
           7,
         );
-      } else if (command.type === "placePipes") {
+      } else if (
+        command.type === "placePipes" ||
+        command.type === "placePressureLines"
+      ) {
         for (const p of command.points) {
           ghost
             .fillRect(p.x * X, p.y * Y, X, Y)
