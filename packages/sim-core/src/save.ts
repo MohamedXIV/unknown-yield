@@ -339,7 +339,7 @@ export function parseSave(input: unknown, c: Content): Save {
     Object.values(parsed.pumps).some((p) => p.incident)
   )
     throw Error("Legacy schema cannot contain pump incidents");
-  if (parsed.schemaVersion === 18) {
+  if (parsed.schemaVersion >= 18) {
     const raw = input as { pumps?: Record<string, unknown> };
     if (
       Object.values(raw.pumps ?? {}).some(
