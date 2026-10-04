@@ -264,6 +264,7 @@ it("builds directed pipe turns and respects the rotation of a single pipe", () =
     ),
   ).toEqual({
     type: "placePipes",
+    containmentProfileId: "standard",
     points: [{ x: 10, y: 10, inlet: 1, outlet: 3 }],
   });
   expect(
@@ -275,6 +276,7 @@ it("builds directed pipe turns and respects the rotation of a single pipe", () =
     ),
   ).toEqual({
     type: "placePipes",
+    containmentProfileId: "standard",
     points: [
       { x: 10, y: 10, inlet: 2, outlet: 0 },
       { x: 11, y: 10, inlet: 2, outlet: 0 },
@@ -301,4 +303,27 @@ it("builds and selects a distinct pressure path with stable geometry invalidatio
   expect(hitTest(sim.snapshot(), { x: 10, y: 10 }, [])).toBe(
     sim.snapshot().pressureLines[0].id,
   );
+});
+
+it("passes the selected profile across a liquid drag and rotation", () => {
+  const s = new Simulation(fixture).snapshot();
+  for (const tool of ["pipe", "tank", "pump"] as const) {
+    const mode = {
+      ...DEFAULT_MODE,
+      tool,
+      containmentProfileId: "lined",
+      direction: 1,
+    };
+    expect(
+      buildCommand(
+        mode,
+        s,
+        { x: 12, y: 12 },
+        tool === "pipe" ? { x: 10, y: 12 } : null,
+      ),
+    ).toMatchObject({ containmentProfileId: "lined" });
+    expect(
+      buildCommand({ ...mode, direction: 2 }, s, { x: 12, y: 12 }, null),
+    ).toMatchObject({ containmentProfileId: "lined" });
+  }
 });

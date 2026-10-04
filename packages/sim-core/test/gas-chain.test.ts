@@ -6,7 +6,13 @@ it("discovers a normal-command liquid-gas-solid chain and conserves every step a
   const sim = new Simulation(fixture);
   expect(sim.snapshot().materials.some((m) => m.id === "gas-0")).toBe(false);
   const build = (cmd: GameCommand) => {
-    const r = sim.command(cmd);
+    const r = sim.command(
+      cmd.type === "placePipes" ||
+        cmd.type === "placeTank" ||
+        cmd.type === "placePump"
+        ? { ...cmd, containmentProfileId: "lined" }
+        : cmd,
+    );
     expect(r.ok, JSON.stringify(cmd) + ": " + r.message).toBe(true);
     return r.id!;
   };

@@ -1,15 +1,25 @@
 import { validateSimulationContent, type Content } from "@site/content";
 import { initialState, parseSave } from "./save";
 import { applyCommand } from "./commands";
-import { completeAndStart, transport, status } from "./production";
+import {
+  completeAndStart,
+  transport,
+  status,
+  solidDiagnostics,
+} from "./production";
 import { auditLedger } from "./ledger";
 import { machineUnlocked } from "./progression";
 import { marketListings, recoverMarkets } from "./market";
 import { opportunityViews, refreshOpportunities } from "./opportunities";
 import { milestoneViews, refreshMilestones } from "./milestones";
 import { assistanceViews, companyView } from "./assistance";
-import { transportGases, gasCompressorStatus } from "./gases";
-import { transportLiquids, liquidPumpStatus } from "./liquids";
+import { transportGases, gasCompressorStatus, gasDiagnostics } from "./gases";
+import {
+  transportLiquids,
+  liquidPumpStatus,
+  liquidDiagnostics,
+} from "./liquids";
+import { publicTransportDiagnostic } from "./containment";
 import { footprint } from "./geometry";
 import { factoryView } from "./factory-contract";
 import { FactoryThroughputMonitor } from "./factory-throughput";
@@ -30,7 +40,16 @@ export class Simulation {
   }
   command(input: unknown): CommandResult {
     const result = applyCommand(this.content, this.state, input, true);
-    if (result.ok) this.factoryThroughput.reset();
+    if (result.ok) {
+      if (
+        typeof input === "object" &&
+        input !== null &&
+        "type" in input &&
+        input.type === "setLiquidContainmentProfile"
+      )
+        this.factoryThroughput.observe(this.content, this.state);
+      else this.factoryThroughput.reset();
+    }
     return result;
   }
   preview(input: unknown): CommandResult {
@@ -133,6 +152,14 @@ export class Simulation {
         };
       }),
       storageDefinitions: c.storages,
+      containmentCapabilities: c.containmentCapabilities,
+      transportDiagnostics: Object.fromEntries(
+        Object.entries({
+          ...solidDiagnostics(c, s),
+          ...liquidDiagnostics(c, s),
+          ...gasDiagnostics(c, s),
+        }).map(([id, d]) => [id, publicTransportDiagnostic(d, known)]),
+      ),
       junctionDefinitions: c.junctions,
       operations: c.operations,
       materials: c.materials.filter((m) => known.has(m.id)),
@@ -243,7 +270,7 @@ export class Simulation {
       return {
         ok: false,
         message:
-          "Save rejected (requires schema 15): " +
+          "Save rejected (requires schema 16): " +
           (error instanceof Error ? error.message : "Invalid data"),
       };
     }

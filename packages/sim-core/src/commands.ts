@@ -1,3 +1,4 @@
+import { liquidConstructionCost } from "./containment";
 import { z } from "zod";
 import type { Content } from "@site/content";
 import { amount, change, total, type Save, type CommandResult } from "./types";
@@ -25,6 +26,11 @@ const coordinate = z.number().int().min(0).max(10000),
   point = { x: coordinate, y: coordinate };
 const schema = z.discriminatedUnion("type", [
   z.object({
+    type: z.literal("setLiquidContainmentProfile"),
+    id: z.string(),
+    containmentProfileId: z.string(),
+  }),
+  z.object({
     type: z.literal("placePressureLines"),
     points: z
       .array(z.object({ ...point, inlet: direction, outlet: direction }))
@@ -47,13 +53,24 @@ const schema = z.discriminatedUnion("type", [
 
   z.object({
     type: z.literal("placePipes"),
+    containmentProfileId: z.string().default("standard"),
     points: z
       .array(z.object({ ...point, inlet: direction, outlet: direction }))
       .min(1)
       .max(4800),
   }),
-  z.object({ type: z.literal("placeTank"), ...point, direction }),
-  z.object({ type: z.literal("placePump"), ...point, direction }),
+  z.object({
+    type: z.literal("placeTank"),
+    containmentProfileId: z.string().default("standard"),
+    ...point,
+    direction,
+  }),
+  z.object({
+    type: z.literal("placePump"),
+    containmentProfileId: z.string().default("standard"),
+    ...point,
+    direction,
+  }),
   z.object({
     type: z.literal("setPumpEnabled"),
     id: z.string(),
@@ -123,6 +140,14 @@ const schema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("assistance"), packageId: z.string().optional() }),
 ]);
 const liquidMessages: Record<string, string> = {
+  "Unknown liquid containment profile":
+    "ui.containment.command.unknown-profile",
+  "Unknown liquid structure": "ui.containment.command.unknown-structure",
+  "Drain liquid contents before changing containment":
+    "ui.containment.command.drain-first",
+  "Disable the pump before changing containment":
+    "ui.containment.command.disable-first",
+  "Liquid containment updated": "ui.containment.command.updated",
   "Liquid infrastructure is not authored": "ui.liquid.command.unavailable",
   "Invalid directed pipe path": "ui.liquid.command.invalid-path",
   "Pipe endpoints must connect": "ui.liquid.command.disconnected",
@@ -295,6 +320,10 @@ export function applyCommand(
     case "placePipes": {
       const cfg = c.liquidLogistics;
       if (!cfg) return fail("Liquid infrastructure is not authored");
+      if (
+        !cfg.containmentProfiles.some((p) => p.id === cmd.containmentProfileId)
+      )
+        return fail("Unknown liquid containment profile");
       const stage = structuredClone(s),
         seen = new Set<string>();
       for (let i = 0; i < cmd.points.length; i++) {
@@ -314,11 +343,14 @@ export function applyCommand(
         stage.pipes[key(point)] = {
           ...point,
           id: "preview",
+          containmentProfileId: cmd.containmentProfileId,
           materialId: null,
           quantity: 0,
         };
       }
-      const cost = cmd.points.length * cfg.pipe.cost;
+      const cost =
+        cmd.points.length *
+        liquidConstructionCost(c, "pipe", cmd.containmentProfileId);
       if (!affordable(cost)) return fail("Not enough structural plates");
       if (!apply) return ok("Place pipes", cost);
       pay(cost);
@@ -326,6 +358,7 @@ export function applyCommand(
         s.pipes[key(point)] = {
           ...point,
           id: issue("l"),
+          containmentProfileId: cmd.containmentProfileId,
           materialId: null,
           quantity: 0,
         };
@@ -335,10 +368,14 @@ export function applyCommand(
     case "placePump": {
       const cfg = c.liquidLogistics;
       if (!cfg) return fail("Liquid infrastructure is not authored");
+      if (
+        !cfg.containmentProfiles.some((p) => p.id === cmd.containmentProfileId)
+      )
+        return fail("Unknown liquid containment profile");
       const kind = cmd.type === "placeTank" ? "tank" : "pump",
         error = liquidPlacementError(c, s, cmd, kind);
       if (error) return fail(error);
-      const cost = cfg[kind].cost;
+      const cost = liquidConstructionCost(c, kind, cmd.containmentProfileId);
       if (!affordable(cost)) return fail("Not enough structural plates");
       if (!apply) return ok("Place liquid structure", cost);
       const id = issue(kind === "tank" ? "t" : "u");
@@ -349,6 +386,7 @@ export function applyCommand(
           x: cmd.x,
           y: cmd.y,
           direction: cmd.direction,
+          containmentProfileId: cmd.containmentProfileId,
           materialId: null,
           quantity: 0,
         };
@@ -358,9 +396,38 @@ export function applyCommand(
           x: cmd.x,
           y: cmd.y,
           direction: cmd.direction,
+          containmentProfileId: cmd.containmentProfileId,
           enabled: true,
         };
       return ok("Liquid structure placed", cost, id);
+    }
+    case "setLiquidContainmentProfile": {
+      const pipe = Object.values(s.pipes).find((p) => p.id === cmd.id),
+        tank = Object.hasOwn(s.tanks, cmd.id) ? s.tanks[cmd.id] : undefined,
+        pump = Object.hasOwn(s.pumps, cmd.id) ? s.pumps[cmd.id] : undefined;
+      const item = pipe ?? tank ?? pump;
+      if (!item) return fail("Unknown liquid structure");
+      if (
+        !c.liquidLogistics?.containmentProfiles.some(
+          (p) => p.id === cmd.containmentProfileId,
+        )
+      )
+        return fail("Unknown liquid containment profile");
+      if (pipe?.quantity || tank?.quantity)
+        return fail("Drain liquid contents before changing containment");
+      if (pump?.enabled)
+        return fail("Disable the pump before changing containment");
+      const kind = pipe ? "pipe" : tank ? "tank" : "pump",
+        delta =
+          liquidConstructionCost(c, kind, cmd.containmentProfileId) -
+          liquidConstructionCost(c, kind, item.containmentProfileId);
+      if (delta > 0 && !affordable(delta))
+        return fail("Not enough structural plates");
+      if (apply) {
+        pay(delta);
+        item.containmentProfileId = cmd.containmentProfileId;
+      }
+      return ok("Liquid containment updated", delta);
     }
     case "setPumpEnabled": {
       const pump = Object.hasOwn(s.pumps, cmd.id) ? s.pumps[cmd.id] : undefined;
@@ -683,7 +750,11 @@ export function applyCommand(
         if (pipe?.quantity || tank?.quantity)
           return fail("Drain liquid contents before dismantling");
         const kind = pipe ? "pipe" : tank ? "tank" : "pump",
-          cost = c.liquidLogistics![kind].cost;
+          cost = liquidConstructionCost(
+            c,
+            kind,
+            (pipe ?? tank ?? pump)!.containmentProfileId,
+          );
         if (apply) {
           if (pipe) delete s.pipes[key(pipe)];
           else if (tank) delete s.tanks[cmd.id];

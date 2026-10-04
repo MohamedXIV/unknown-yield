@@ -1,3 +1,5 @@
+import { checkContainment } from "@site/content";
+import { receivingDiagnostic, type TransportDiagnostic } from "./containment";
 import type { TransportMoveEvent } from "./production";
 import type { Content } from "@site/content";
 import { key, next, socket, contains, footprint } from "./geometry";
@@ -20,6 +22,7 @@ type Source = {
   take: (n: number) => void;
 };
 type Target = {
+  capabilities: string[];
   id: string;
   material: string | null;
   quantity: number;
@@ -30,8 +33,10 @@ function contentsTarget(
   id: string,
   item: GasContents,
   capacity: number,
+  capabilities: string[],
 ): Target {
   return {
+    capabilities,
     id,
     material: item.materialId,
     quantity: item.quantity,
@@ -99,7 +104,12 @@ function targetAt(
   const pipe = s.pressureLines[key(point)];
   if (pipe)
     return pipe.inlet === (direction + 2) % 4
-      ? contentsTarget("pipe:" + pipe.id, pipe, c.gasLogistics!.line.capacity)
+      ? contentsTarget(
+          "pipe:" + pipe.id,
+          pipe,
+          c.gasLogistics!.line.capacity,
+          c.gasLogistics!.line.containmentCapabilities,
+        )
       : null;
   if (pipeOnly) return null;
   for (const tank of Object.values(s.pressureVessels).sort((a, b) =>
@@ -115,6 +125,7 @@ function targetAt(
         "tank:" + tank.id,
         tank,
         c.gasLogistics!.vessel.capacity,
+        c.gasLogistics!.vessel.containmentCapabilities,
       );
   }
   for (const m of Object.values(s.machines).sort((a, b) =>
@@ -131,6 +142,7 @@ function targetAt(
       const ids = Object.keys(m.input).filter((id) => m.input[id] > 0);
       // One material identity in this gas interface; incompatible contents retain backpressure.
       return {
+        capabilities: d.inputContainment,
         id: "machine:" + m.id,
         material:
           ids.length === 1 ? ids[0] : ids.length ? "incompatible" : null,
@@ -183,9 +195,71 @@ export function gasCompressorStatus(
     return s.pipes[key(outlet)] || s.belts[key(outlet)]
       ? "incompatible"
       : "output-full";
+  if (
+    !checkContainment(
+      c,
+      source.material,
+      ["gas"],
+      c.gasLogistics!.compressor.containmentCapabilities,
+    ).ok ||
+    !checkContainment(c, source.material, ["gas"], target.capabilities).ok
+  )
+    return "incompatible";
   if (target.material !== null && target.material !== source.material)
     return "incompatible";
   return target.quantity >= target.capacity ? "output-full" : "ready";
+}
+export function gasDiagnostics(
+  c: Content,
+  s: Save,
+): Record<string, TransportDiagnostic> {
+  const result: Record<string, TransportDiagnostic> = {};
+  if (!c.gasLogistics) return result;
+  for (const p of Object.values(s.pressureLines))
+    if (p.materialId) {
+      const t = targetAt(c, s, next(p, p.outlet), p.outlet);
+      result[p.id] = receivingDiagnostic(
+        c,
+        p.materialId,
+        "gas",
+        t?.capabilities ?? [],
+        t,
+      );
+    }
+  for (const p of Object.values(s.compressors)) {
+    if (!p.enabled) {
+      result[p.id] = { reason: "disabled" };
+      continue;
+    }
+    if (s.fuel < c.gasLogistics.compressor.fuel) {
+      result[p.id] = { reason: "needs-fuel" };
+      continue;
+    }
+    const source = compressorSource(c, s, p);
+    if (!source) {
+      result[p.id] = { reason: "needs-input" };
+      continue;
+    }
+    const t = targetAt(c, s, next(p, p.direction), p.direction, true);
+    const own = receivingDiagnostic(
+      c,
+      source.material,
+      "gas",
+      c.gasLogistics.compressor.containmentCapabilities,
+      { material: null, quantity: 0, capacity: Infinity },
+    );
+    result[p.id] =
+      own.reason === "missing-containment" || own.reason === "handling-state"
+        ? own
+        : receivingDiagnostic(
+            c,
+            source.material,
+            "gas",
+            t?.capabilities ?? [],
+            t,
+          );
+  }
+  return result;
 }
 export function transportGases(
   c: Content,
@@ -206,7 +280,13 @@ export function transportGases(
     from?: Point,
     direction?: number,
   ) => {
-    if (!target || !gasMaterial(c, source.material) || fuel < cost) return;
+    if (
+      !target ||
+      !gasMaterial(c, source.material) ||
+      fuel < cost ||
+      !checkContainment(c, source.material, ["gas"], target.capabilities).ok
+    )
+      return;
     const reserved = targets.get(target.id) ?? {
       quantity: target.quantity,
       material: target.material,
@@ -255,7 +335,15 @@ export function transportGases(
   )) {
     if (!pump.enabled) continue;
     const source = compressorSource(c, s, pump);
-    if (source)
+    if (
+      source &&
+      checkContainment(
+        c,
+        source.material,
+        ["gas"],
+        c.gasLogistics!.compressor.containmentCapabilities,
+      ).ok
+    )
       admit(
         source,
         targetAt(c, s, next(pump, pump.direction), pump.direction, true),

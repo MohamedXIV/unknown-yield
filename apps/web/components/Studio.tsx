@@ -1,11 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  enCatalog,
-  fixture,
-  type Content,
-} from "@site/content";
+import { enCatalog, fixture, type Content } from "@site/content";
 import {
   createContentStore,
   parseStudioBundle,
@@ -95,7 +91,7 @@ export default function Studio() {
   const selected =
     selectedId && store.hasRow(tableFor[kind], selectedId)
       ? selectedId
-      : ids[0] ?? "";
+      : (ids[0] ?? "");
   const row = selected ? studioRow(store, kind, selected) : null;
   const refs =
     selected && !validationError
@@ -120,11 +116,7 @@ export default function Studio() {
     setSearch("");
     setPreview(null);
   };
-  const localeEditor = (
-    key: string,
-    label: string,
-    multiline = false,
-  ) => (
+  const localeEditor = (key: string, label: string, multiline = false) => (
     <label className="studio-field">
       <span>{label}</span>
       {multiline ? (
@@ -216,12 +208,7 @@ export default function Studio() {
                     event.target.value,
                   );
                   if (event.target.value === "extractor") {
-                    store.setCell(
-                      "machines",
-                      selected,
-                      "operationsJson",
-                      "[]",
-                    );
+                    store.setCell("machines", selected, "operationsJson", "[]");
                     store.setCell(
                       "machines",
                       selected,
@@ -310,9 +297,7 @@ export default function Studio() {
           <select
             value={String(row.unlockReactionId ?? "")}
             onChange={(event) =>
-              touch(() =>
-                setMachineUnlock(store, selected, event.target.value),
-              )
+              touch(() => setMachineUnlock(store, selected, event.target.value))
             }
           >
             <option value="">Always available</option>
@@ -323,8 +308,7 @@ export default function Studio() {
             ))}
           </select>
         </label>
-        {unlockHintKey &&
-          localeEditor(unlockHintKey, "Unlock hint", true)}
+        {unlockHintKey && localeEditor(unlockHintKey, "Unlock hint", true)}
       </>
     );
   };
@@ -504,7 +488,9 @@ export default function Studio() {
             }
             placeholder="blank = no hazard"
           />
-          <small>Blur the field to derive stable hazard localization keys.</small>
+          <small>
+            Blur the field to derive stable hazard localization keys.
+          </small>
         </label>
         {hazardNameKey && localeEditor(hazardNameKey, "Hazard name")}
         {hazardObservationKey &&
@@ -639,6 +625,47 @@ export default function Studio() {
                 </button>
               </div>
               <div className="studio-form">
+                {row &&
+                  (kind === "material" || kind === "machine") &&
+                  (kind === "material"
+                    ? [
+                        [
+                          "requiredContainmentJson",
+                          "Required containment (JSON array)",
+                        ],
+                      ]
+                    : [
+                        [
+                          "inputContainmentJson",
+                          "Input containment (JSON array)",
+                        ],
+                        [
+                          "outputContainmentJson",
+                          "Output containment (JSON array)",
+                        ],
+                      ]
+                  ).map(([cell, label]) => (
+                    <label key={cell} className="studio-field">
+                      <span>{label}</span>
+                      <input
+                        value={String(row[cell] ?? "[]")}
+                        onChange={(e) =>
+                          touch(() =>
+                            store.setCell(
+                              tableFor[kind],
+                              selected,
+                              cell,
+                              e.target.value,
+                            ),
+                          )
+                        }
+                      />
+                      <small>
+                        Use stable capability IDs from the bundle catalogue.
+                        Invalid references block export and preview.
+                      </small>
+                    </label>
+                  ))}
                 {kind === "material" && editMaterial()}
                 {kind === "operation" && editOperation()}
                 {kind === "machine" && editMachine()}
@@ -772,7 +799,11 @@ export default function Studio() {
                   perform(() => {
                     const serialized = serializeStudioBundle(store, base);
                     setJson(
-                      JSON.stringify(JSON.parse(serialized) as unknown, null, 2),
+                      JSON.stringify(
+                        JSON.parse(serialized) as unknown,
+                        null,
+                        2,
+                      ),
                     );
                     setMessage("Validated versioned Studio bundle exported.");
                   })

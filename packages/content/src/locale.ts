@@ -17,6 +17,8 @@ export type LocaleCatalog = z.infer<typeof localeCatalogSchema>;
 
 export function contentKeys(c: Content): string[] {
   return [
+    ...c.containmentCapabilities.map((d) => d.nameKey),
+    ...(c.liquidLogistics?.containmentProfiles.map((p) => p.nameKey) ?? []),
     ...c.materials.map((m) => m.nameKey),
     ...c.operations.map((o) => o.nameKey),
     ...c.machines.map((m) => m.nameKey),
@@ -56,6 +58,9 @@ export function validateLocaleCoverage(
 }
 
 export const enCatalog: LocaleCatalog = {
+  "containment.corrosion-resistant.name": "Corrosion-resistant containment",
+  "containment.profile.standard.name": "Standard",
+  "containment.profile.lined.name": "Lined",
   "ui.gas.command.unavailable": "Gas infrastructure is not authored",
   "ui.gas.command.invalid-path": "Invalid directed pressure line path",
   "ui.gas.command.disconnected": "Pressure line endpoints must connect",
@@ -181,7 +186,8 @@ export const enCatalog: LocaleCatalog = {
     "Source feed disabled; admitted liquid can drain",
   "ui.liquid.status.needs-fuel": "Needs fuel",
   "ui.liquid.status.needs-input": "Needs a compatible liquid source",
-  "ui.liquid.status.incompatible": "Outlet contains a different liquid",
+  "ui.liquid.status.incompatible":
+    "Source or destination containment is incompatible",
   "ui.liquid.status.output-full": "Outlet missing, reversed or full",
   "ui.liquid.status.ready": "Ready",
 
@@ -307,5 +313,31 @@ export const enCatalog: LocaleCatalog = {
   "ui.terminal.milestone.completed": "COMPLETED",
   "ui.terminal.milestone.pending": "PENDING",
   "ui.terminal.handling.ready": "{{capability}} ready",
+  "ui.containment.requires": "Requires",
+  "ui.containment.cost": "{{count}} structural plates",
+  "ui.containment.command.unknown-profile":
+    "Unknown liquid containment profile",
+  "ui.containment.command.unknown-structure": "Unknown liquid structure",
+  "ui.containment.command.drain-first":
+    "Drain liquid contents before changing containment",
+  "ui.containment.command.disable-first":
+    "Disable the pump before changing containment",
+  "ui.containment.command.updated": "Liquid containment updated",
+  "ui.containment.input": "Input containment",
+  "ui.containment.output": "Output containment",
+  "ui.containment.profile": "Containment profile",
+  "ui.containment.build-profile": "Build containment profile",
+  "ui.containment.capabilities": "Capabilities",
+  "ui.containment.none": "No added protection",
+  "ui.containment.reason.ready": "Route ready",
+  "ui.containment.reason.disabled": "Feed disabled",
+  "ui.containment.reason.needs-fuel": "Needs fuel",
+  "ui.containment.reason.needs-input": "Needs input",
+  "ui.containment.reason.handling-state": "Wrong handling state",
+  "ui.containment.reason.missing-containment": "Missing containment: ",
+  "ui.containment.reason.identity-mismatch": "Different material already held",
+  "ui.containment.reason.capacity": "Destination full",
+  "ui.containment.reason.route": "No connected destination",
+  "ui.containment.reason.incompatible": "Incompatible containment",
   "ui.terminal.handling.locked": "Waiting for {{capability}}",
 };

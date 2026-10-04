@@ -42,6 +42,8 @@ const machineRow = (machine: Content["machines"][number]) => ({
   unlockReactionId: empty(machine.unlock?.reactionId),
   unlockHintKey: empty(machine.unlock?.hintKey),
   operationsJson: JSON.stringify(machine.operations),
+  inputContainmentJson: JSON.stringify(machine.inputContainment),
+  outputContainmentJson: JSON.stringify(machine.outputContainment),
   inputStatesJson: JSON.stringify(machine.inputStates),
   outputStatesJson: JSON.stringify(machine.outputStates),
   capacity: machine.capacity,
@@ -79,7 +81,15 @@ export function createContentStore(
     })
     .setTable(
       "materials",
-      Object.fromEntries(content.materials.map(({ id, ...row }) => [id, row])),
+      Object.fromEntries(
+        content.materials.map(({ id, requiredContainment, ...row }) => [
+          id,
+          {
+            ...row,
+            requiredContainmentJson: JSON.stringify(requiredContainment),
+          },
+        ]),
+      ),
     )
     .setTable(
       "operations",
@@ -194,6 +204,10 @@ function candidateFromStore(store: Store, base: Content): unknown {
       color: stringCell(row, "color", label),
       known: booleanCell(row, "known", label),
       handlingState: row.handlingState ?? "solid",
+      requiredContainment: parseOperations(
+        { operationsJson: row.requiredContainmentJson ?? "[]" },
+        label + " containment",
+      ),
     };
   });
 
@@ -235,6 +249,14 @@ function candidateFromStore(store: Store, base: Content): unknown {
           }
         : {}),
       operations: parseOperations(row, label),
+      inputContainment: parseOperations(
+        { operationsJson: row.inputContainmentJson ?? "[]" },
+        label + " input containment",
+      ),
+      outputContainment: parseOperations(
+        { operationsJson: row.outputContainmentJson ?? "[]" },
+        label + " output containment",
+      ),
       inputStates: parseOperations(
         { operationsJson: row.inputStatesJson ?? '["solid"]' },
         label + " inputStates",

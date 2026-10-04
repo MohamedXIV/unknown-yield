@@ -24,11 +24,12 @@ describe("Studio workbench helpers", () => {
     expect(studioRow(store, "material", "polished-powder")).toEqual({
       nameKey: "material.polished-powder.name",
       color: "#888888",
+      requiredContainmentJson: "[]",
       known: false,
     });
-    expect(
-      studioLocaleText(store, "material.polished-powder.name"),
-    ).toBe("Polished Powder");
+    expect(studioLocaleText(store, "material.polished-powder.name")).toBe(
+      "Polished Powder",
+    );
 
     createStudioEntity(store, "operation", "polish");
     createStudioEntity(store, "machine", "polisher");
@@ -59,9 +60,9 @@ describe("Studio workbench helpers", () => {
       unlockReactionId: "heat-raw-sealed",
       unlockHintKey: "machine.polisher.unlock-hint",
     });
-    expect(
-      studioLocaleText(store, "machine.polisher.unlock-hint"),
-    ).toContain("confirmed knowledge");
+    expect(studioLocaleText(store, "machine.polisher.unlock-hint")).toContain(
+      "confirmed knowledge",
+    );
     setMachineUnlock(store, "polisher", "");
     expect(studioRow(store, "machine", "polisher")).toMatchObject({
       unlockReactionId: "",
@@ -85,9 +86,9 @@ describe("Studio workbench helpers", () => {
       "A tuned custom hazard observation.",
     );
     setReactionHazard(store, "polish-raw", "powder-burst");
-    expect(
-      studioLocaleText(store, "hazard.powder-burst.observation"),
-    ).toBe("A tuned custom hazard observation.");
+    expect(studioLocaleText(store, "hazard.powder-burst.observation")).toBe(
+      "A tuned custom hazard observation.",
+    );
 
     setReactionHazard(store, "polish-raw", "");
     expect(studioRow(store, "reaction", "polish-raw")).toMatchObject({
@@ -118,8 +119,6 @@ describe("Studio workbench helpers", () => {
     expect(() => createStudioEntity(store, "material", "raw")).toThrow(
       /already exists/,
     );
-    expect(humanizeStudioId("oversealed-furnace")).toBe(
-      "Oversealed Furnace",
-    );
+    expect(humanizeStudioId("oversealed-furnace")).toBe("Oversealed Furnace");
   });
 });

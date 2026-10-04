@@ -1,15 +1,26 @@
+import { checkContainment } from "./containment";
 import { z } from "zod";
 import { enCatalog, localeKeySchema, validateLocaleCoverage } from "./locale";
 const id = z
   .string()
   .regex(/^[a-z][a-z0-9-]*$/)
   .refine((v) => !["constructor", "prototype", "tostring"].includes(v));
+const capabilities = z.array(id).default([]);
 const positive = z.number().int().positive().max(1000000);
 const count = z.number().int().nonnegative().max(1000000);
 const pos = z.number().int().nonnegative();
+export const standardContainmentProfile = {
+  id: "standard",
+  nameKey: "containment.profile.standard.name",
+  capabilities: [],
+  additionalCost: { pipe: 0, tank: 0, pump: 0 },
+};
 export const contentSchema = z.object({
   version: z.string().min(1),
   tickMs: z.number().int().min(20).max(1000),
+  containmentCapabilities: z
+    .array(z.object({ id, nameKey: localeKeySchema }))
+    .default([]),
   materials: z
     .array(
       z.object({
@@ -17,6 +28,7 @@ export const contentSchema = z.object({
         nameKey: localeKeySchema,
         color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
         handlingState: z.enum(["solid", "liquid", "gas"]).default("solid"),
+        requiredContainment: capabilities,
         known: z.boolean(),
       }),
     )
@@ -35,6 +47,8 @@ export const contentSchema = z.object({
             hintKey: localeKeySchema,
           })
           .optional(),
+        inputContainment: capabilities,
+        outputContainment: capabilities,
         inputStates: z
           .array(z.enum(["solid", "liquid", "gas"]))
           .min(1)
@@ -56,17 +70,20 @@ export const contentSchema = z.object({
   gasLogistics: z
     .object({
       line: z.object({
+        containmentCapabilities: capabilities,
         capacity: positive,
         transfer: positive,
         cost: positive,
       }),
       vessel: z.object({
+        containmentCapabilities: capabilities,
         capacity: positive,
         width: positive,
         height: positive,
         cost: positive,
       }),
       compressor: z.object({
+        containmentCapabilities: capabilities,
         transfer: positive,
         fuel: positive,
         cost: positive,
@@ -76,17 +93,34 @@ export const contentSchema = z.object({
   liquidLogistics: z
     .object({
       pipe: z.object({
+        containmentCapabilities: capabilities,
         capacity: positive,
         transfer: positive,
         cost: positive,
       }),
       tank: z.object({
+        containmentCapabilities: capabilities,
         capacity: positive,
         width: positive,
         height: positive,
         cost: positive,
       }),
-      pump: z.object({ transfer: positive, fuel: positive, cost: positive }),
+      pump: z.object({
+        containmentCapabilities: capabilities,
+        transfer: positive,
+        fuel: positive,
+        cost: positive,
+      }),
+      containmentProfiles: z
+        .array(
+          z.object({
+            id,
+            nameKey: localeKeySchema,
+            capabilities,
+            additionalCost: z.object({ pipe: count, tank: count, pump: count }),
+          }),
+        )
+        .default([standardContainmentProfile]),
     })
     .optional(),
   storages: z
@@ -94,6 +128,7 @@ export const contentSchema = z.object({
       z.object({
         id,
         nameKey: localeKeySchema,
+        containmentCapabilities: capabilities,
         capacity: positive,
         width: positive,
         height: positive,
@@ -143,6 +178,8 @@ export const contentSchema = z.object({
     )
     .min(1),
   site: z.object({
+    beltContainment: capabilities,
+    dryContainment: capabilities,
     width: positive,
     height: positive,
     buildMaterial: id,
@@ -291,6 +328,7 @@ function validateContentInternal(
 ): Content {
   const c = contentSchema.parse(input);
   for (const table of [
+    c.containmentCapabilities,
     c.materials,
     c.operations,
     c.machines,
@@ -301,6 +339,7 @@ function validateContentInternal(
   ])
     if (new Set(table.map((r) => r.id)).size !== table.length)
       throw new Error("Duplicate content ID");
+  validateContainmentDefinitions(c);
   const materials = new Set(c.materials.map((m) => m.id)),
     operations = new Set(c.operations.map((o) => o.id));
   if (!c.materials.find((m) => m.id === c.site.buildMaterial)?.known)
@@ -349,6 +388,15 @@ function validateContentInternal(
       )
     )
       throw new Error("Reaction handling state mismatches machine interface");
+    if (
+      capable.some(
+        (m) =>
+          !checkContainment(c, r.input, m.inputStates, m.inputContainment).ok ||
+          !checkContainment(c, r.output, m.outputStates, m.outputContainment)
+            .ok,
+      )
+    )
+      throw new Error("Reaction containment mismatches machine interface");
     if (!capable.length)
       throw new Error("Missing process condition capability");
     if (
@@ -405,6 +453,22 @@ function validateContentInternal(
       )
         throw new Error("Overlapping site regions");
     }
+  for (const d of c.site.deposits) {
+    if (
+      c.machines
+        .filter((m) => m.role === "extractor")
+        .some(
+          (m) =>
+            !checkContainment(
+              c,
+              d.material,
+              m.outputStates,
+              m.outputContainment,
+            ).ok,
+        )
+    )
+      throw new Error("Extractor containment mismatches material");
+  }
   for (const d of c.site.deposits)
     if (!c.materials.find((m) => m.id === d.material)?.known)
       throw new Error("Deposit material must be known");
@@ -686,4 +750,43 @@ export function validateContent(
  */
 export function validateSimulationContent(input: unknown): Content {
   return validateContentInternal(input, null);
+}
+
+function validateContainmentDefinitions(c: Content) {
+  const ids = new Set(c.containmentCapabilities.map((d) => d.id));
+  const lists = [
+    ...c.materials.map((m) => m.requiredContainment),
+    ...c.machines.flatMap((m) => [m.inputContainment, m.outputContainment]),
+    ...c.storages.map((d) => d.containmentCapabilities),
+    c.site.beltContainment,
+    c.site.dryContainment,
+  ];
+  if (c.gasLogistics)
+    lists.push(
+      ...Object.values(c.gasLogistics).map((d) => d.containmentCapabilities),
+    );
+  if (c.liquidLogistics) {
+    const cfg = c.liquidLogistics;
+    lists.push(
+      cfg.pipe.containmentCapabilities,
+      cfg.tank.containmentCapabilities,
+      cfg.pump.containmentCapabilities,
+      ...cfg.containmentProfiles.map((p) => p.capabilities),
+    );
+    if (
+      new Set(cfg.containmentProfiles.map((p) => p.id)).size !==
+      cfg.containmentProfiles.length
+    )
+      throw Error("Duplicate containment profile");
+    const standard = cfg.containmentProfiles.find((p) => p.id === "standard");
+    if (
+      !standard ||
+      standard.capabilities.length ||
+      Object.values(standard.additionalCost).some((n) => n !== 0)
+    )
+      throw Error("Invalid standard containment profile");
+  }
+  for (const list of lists)
+    if (new Set(list).size !== list.length || list.some((id) => !ids.has(id)))
+      throw Error("Invalid containment capability reference");
 }

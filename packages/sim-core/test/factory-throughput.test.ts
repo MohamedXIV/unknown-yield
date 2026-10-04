@@ -168,6 +168,41 @@ function makeBackloggedTerminalLine() {
 
   return { sim, factoryId, processorId };
 }
+it("preserves a live certificate when an unrelated empty tank changes profile", () => {
+  const { sim, factoryId } = makeLine();
+  const tank = build(sim, { type: "placeTank", x: 5, y: 5, direction: 0 });
+  build(sim, {
+    type: "placePipes",
+    points: [{ x: 30, y: 29, inlet: 2, outlet: 0 }],
+  });
+  for (let i = 0; i < 600; i++) sim.step(fixture.tickMs);
+  const before = sim.snapshot().factories.find((f) => f.id === factoryId)!
+    .contract.throughput;
+  expect(before.state).toBe("stable");
+  expect(
+    sim.command({
+      type: "setLiquidContainmentProfile",
+      id: tank,
+      containmentProfileId: "lined",
+    }).ok,
+  ).toBe(true);
+  expect(
+    sim.snapshot().factories.find((f) => f.id === factoryId)!.contract
+      .throughput,
+  ).toEqual(before);
+  const pipe = sim.serialize().pipes["30,29"];
+  expect(
+    sim.command({
+      type: "setLiquidContainmentProfile",
+      id: pipe.id,
+      containmentProfileId: "lined",
+    }).ok,
+  ).toBe(true);
+  expect(
+    sim.snapshot().factories.find((f) => f.id === factoryId)!.contract
+      .throughput.state,
+  ).toBe("measuring");
+});
 
 function throughput(sim: Simulation, factoryId: string) {
   return sim.snapshot().factories.find((factory) => factory.id === factoryId)!
@@ -680,6 +715,7 @@ describe("liquid recurrence boundary", () => {
     expect(monitor.view(factoryId).state).toBe("measuring");
     state.tanks.t99 = {
       id: "t99",
+      containmentProfileId: "standard",
       x: 5,
       y: 5,
       direction: 0,
@@ -710,6 +746,36 @@ describe("liquid recurrence boundary", () => {
     monitor.observe(fixture, state);
     expect(monitor.view(factoryId).state).toBe("measuring");
   });
+  it.each(["internal", "connected", "unrelated"] as const)(
+    "tracks %s empty containment profile settings",
+    (kind) => {
+      const { state, monitor, factoryId } = monitorLine();
+      for (let i = 1; i < 8; i++) {
+        state.tick = i;
+        pulse(state, monitor);
+      }
+      expect(monitor.view(factoryId).state).toBe("stable");
+      if (kind === "internal")
+        state.pipes["30,15"].containmentProfileId = "lined";
+      else if (kind === "connected")
+        Object.values(state.tanks)[0].containmentProfileId = "lined";
+      else
+        state.tanks.t99 = {
+          id: "t99",
+          x: 5,
+          y: 5,
+          direction: 0,
+          materialId: null,
+          quantity: 0,
+          containmentProfileId: "lined",
+        };
+      state.tick++;
+      monitor.observe(fixture, state);
+      expect(monitor.view(factoryId).state).toBe(
+        kind === "unrelated" ? "stable" : "measuring",
+      );
+    },
+  );
 });
 
 describe("gas recurrence boundary", () => {

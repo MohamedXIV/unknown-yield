@@ -477,6 +477,12 @@ Accepted for #109 on 2026-10-03: use directed pressure lines, stationary pressur
 
 The selected slice extends the hidden liquid → gas → solid discovery chain. Movable cylinders, leaks, hazards and terminal gas handling are deferred. Save schema 15 / world-01-v8 explicitly reject incompatible older content; blueprint schema 4 exports layout/settings without contents. See [design](PHASE9_GAS_LOGISTICS.md) and [verification](PHASE9_GAS_ACCEPTANCE.md).
 
+## D-035 — Containment is authored compatibility, with physical liquid profiles
+
+Accepted for #110 on 2026-10-04: use stable all-of capability requirements independent of handling state. Pure sim-core owns protected admission and exact conservation; content validates executable machine interfaces. Only liquid infrastructure has selectable physical profiles in this slice, with exact added embodied cost and empty/disabled change guards. The existing liquid branch demonstrates corrosion; no new chemistry chain or pressure/temperature physics is implied.
+
+Requirements become inspectable through discovered material metadata and sanitized current-route diagnostics. Equipment capabilities are public without undiscovered material associations or predicted outcomes. Save schema 16 / world-01-v9 explicitly reject incompatible older content; profiled liquid blueprint v5 excludes live state. See [approved design](superpowers/specs/2026-10-04-containment-compatibility-design.md) and [local verification](PHASE9_CONTAINMENT_ACCEPTANCE.md).
+
 ## How to change a decision
 
 When evidence requires a change:

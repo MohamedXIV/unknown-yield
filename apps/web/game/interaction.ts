@@ -94,19 +94,28 @@ export function structureKey(s: PlayerSnapshot): string {
     s.pressureLines.map((p) => [p.id, p.x, p.y, p.inlet, p.outlet]),
     s.pressureVessels.map((p) => [p.id, p.x, p.y, p.direction]),
     s.compressors.map((p) => [p.id, p.x, p.y, p.direction]),
-    s.pipes.map((p) => [p.id, p.x, p.y, p.inlet, p.outlet]),
-    s.tanks.map((t) => [t.id, t.x, t.y, t.direction]),
-    s.pumps.map((p) => [p.id, p.x, p.y, p.direction]),
+    s.pipes.map((p) => [
+      p.id,
+      p.x,
+      p.y,
+      p.inlet,
+      p.outlet,
+      p.containmentProfileId,
+    ]),
+    s.tanks.map((t) => [t.id, t.x, t.y, t.direction, t.containmentProfileId]),
+    s.pumps.map((p) => [p.id, p.x, p.y, p.direction, p.containmentProfileId]),
     s.storages.map((t) => [t.id, t.definitionId, t.x, t.y, t.direction]),
   ]);
 }
 export type WorldMode = {
+  containmentProfileId: string;
   tool: Tool;
   direction: number;
   selected: string | null;
   openFactories: string[];
 };
 export const DEFAULT_MODE: WorldMode = {
+  containmentProfileId: "standard",
   tool: "select",
   direction: 0,
   selected: null,
@@ -218,6 +227,7 @@ export function buildCommand(
   if (mode.tool === "tank" || mode.tool === "pump")
     return {
       type: mode.tool === "tank" ? "placeTank" : "placePump",
+      containmentProfileId: mode.containmentProfileId,
       ...p,
       direction: mode.direction,
     };
@@ -227,6 +237,9 @@ export function buildCommand(
       b.x > a.x ? 0 : b.y > a.y ? 1 : b.x < a.x ? 2 : 3;
     return {
       type: mode.tool === "pipe" ? "placePipes" : "placePressureLines",
+      ...(mode.tool === "pipe"
+        ? { containmentProfileId: mode.containmentProfileId }
+        : {}),
       points: path.map((point, i) => {
         const inlet = i
           ? (facing(path[i - 1], point) + 2) % 4

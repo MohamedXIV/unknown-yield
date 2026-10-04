@@ -1,3 +1,4 @@
+import { liquidConstructionCost } from "./containment";
 import type { Content } from "@site/content";
 import type { Save } from "./types";
 
@@ -161,9 +162,21 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
       Object.keys(s.compressors ?? {}).length * c.gasLogistics.compressor.cost;
   if (c.liquidLogistics)
     embodied +=
-      Object.keys(s.pipes ?? {}).length * c.liquidLogistics.pipe.cost +
-      Object.keys(s.tanks ?? {}).length * c.liquidLogistics.tank.cost +
-      Object.keys(s.pumps ?? {}).length * c.liquidLogistics.pump.cost;
+      Object.values(s.pipes ?? {}).reduce(
+        (sum, p) =>
+          sum + liquidConstructionCost(c, "pipe", p.containmentProfileId),
+        0,
+      ) +
+      Object.values(s.tanks ?? {}).reduce(
+        (sum, p) =>
+          sum + liquidConstructionCost(c, "tank", p.containmentProfileId),
+        0,
+      ) +
+      Object.values(s.pumps ?? {}).reduce(
+        (sum, p) =>
+          sum + liquidConstructionCost(c, "pump", p.containmentProfileId),
+        0,
+      );
   for (const m of Object.values(s.machines ?? {})) {
     const d = c.machines.find((a) => a.id === m.definitionId);
     if (d) embodied += d.cost;

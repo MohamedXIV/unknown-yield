@@ -236,7 +236,7 @@ The roadmap now records Phases 9–16 for the major gameplay directions that wer
 - Phase 15 — content scale and expedition arc;
 - Phase 16 — production vertical slice.
 
-Canonical GitHub epics and children are now created: Phase 9 #100 (#108–#113), Phase 10 #101 (#114–#119), Phase 11 #102 (#120–#125), Phase 12 #103 (#126–#131), Phase 13 #104 (#132–#138), Phase 14 #105 (#139–#144), Phase 15 #106 (#145–#152), and Phase 16 #107 (#153–#161). They are not eight simultaneously active implementation phases: Phase 9 / #100 is active. #108 liquid logistics has passed its acceptance gate; #109 gases and pressurized transport is next after #108 merge; later phases remain dependency-ordered planning/execution queues.
+Canonical GitHub epics and children are now created: Phase 9 #100 (#108–#113), Phase 10 #101 (#114–#119), Phase 11 #102 (#120–#125), Phase 12 #103 (#126–#131), Phase 13 #104 (#132–#138), Phase 14 #105 (#139–#144), Phase 15 #106 (#145–#152), and Phase 16 #107 (#153–#161). They are not eight simultaneously active implementation phases: Phase 9 / #100 is active. #108 and #109 are merged; #110 containment compatibility is the explicitly approved active delivery scope. Later phases remain dependency-ordered planning/execution queues.
 
 Phase 7 remains deferred with its accepted unmet performance budget preserved. Phase 8 remains a parallel art-pipeline track and does not block Phase 9 gameplay work. Do not reopen completed Phase 2/5/6 foundations merely because later phases deepen discovery, company systems or logistics; extend the accepted contracts.
 
@@ -247,3 +247,7 @@ Directed pipes, source pumps, single-material tanks and the normal solid → liq
 ## Phase 9 gas implementation — #109
 
 #108 merged through PR #162 / main `7f88eb3c326194836e3f360755daf2c87b4287fb`. #109 is implemented on `codex/109-pressurized-gas`, with separate sealed pressure transport/storage and the hidden liquid → gas → solid branch. Local evidence: [PHASE9_GAS_ACCEPTANCE.md](PHASE9_GAS_ACCEPTANCE.md); contract: [PHASE9_GAS_LOGISTICS.md](PHASE9_GAS_LOGISTICS.md). Save schema 15 / world-01-v8; gas blueprint schema 4. The local acceptance gate passed (308 tests PASS, 2 skipped; typecheck/lint/build/browser acceptance PASS). Delivery and merge state are tracked in PR #163. Keep #100 open; #110 is the next dependency after #109 closes, and requires its own agreed scope.
+
+## Phase 9 containment implementation — #110
+
+#109 merged through PR #163 / main `dd67f42f5e391c425cbbc2188618a4366b4e6821`. #110's design, spec and implementation plan are approved. Native implementation in this same checkout adds authored all-of containment, selectable physical liquid profiles, exact construction/refund conservation, protected save validation and knowledge-safe diagnostics. Current versions: save 16 / world-01-v9 / liquid blueprint 5 / browser slot v10. Final local gate: **332 tests PASS, 2 skipped; typecheck/lint/build/browser acceptance PASS**. Evidence: [PHASE9_CONTAINMENT_ACCEPTANCE.md](PHASE9_CONTAINMENT_ACCEPTANCE.md); execution details: [containment ledger](PHASE9_CONTAINMENT_IMPLEMENTATION_LOG.md). Scoped PR delivery follows local verification; merge requires the user's final approval. #100 remains open; #111 and later scope have not been started.

@@ -91,7 +91,9 @@ export function createStudioEntity(
 ) {
   const cleanId = id.trim();
   if (!idPattern.test(cleanId))
-    throw new Error("ID must be lowercase letters/numbers with optional hyphens");
+    throw new Error(
+      "ID must be lowercase letters/numbers with optional hyphens",
+    );
   if (store.hasRow(tables[kind], cleanId))
     throw new Error(kind + " ID already exists: " + cleanId);
 
@@ -101,6 +103,7 @@ export function createStudioEntity(
     store.setRow("materials", cleanId, {
       nameKey,
       color: "#888888",
+      requiredContainmentJson: "[]",
       known: false,
     });
     store.setRow("locale", nameKey, { text: label });
@@ -119,6 +122,8 @@ export function createStudioEntity(
       unlockReactionId: "",
       unlockHintKey: "",
       operationsJson: "[]",
+      inputContainmentJson: "[]",
+      outputContainmentJson: "[]",
       capacity: 8,
       fuel: 1,
       durationTicks: 20,
