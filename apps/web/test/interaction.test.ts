@@ -181,6 +181,23 @@ it("invalidates world geometry on storage-only topology edits", () => {
   sim.step(5000);
   expect(structureKey(sim.snapshot())).toBe(one);
 });
+it("invalidates atmospheric source presentation when material identity becomes known", () => {
+  const snapshot = new Simulation(fixture).snapshot();
+  const {
+    surveySignalId: _surveySignalId,
+    requiredSensingCapabilityId: _requiredSensingCapabilityId,
+    material: _material,
+    ...source
+  } = fixture.site.atmosphericSources[0];
+  snapshot.atmosphericSources = [
+    { ...source, material: null, remaining: source.units },
+  ];
+  const unidentified = structureKey(snapshot);
+  const identified = structuredClone(snapshot);
+  identified.atmosphericSources[0].material = "gas-0";
+  expect(structureKey(identified)).not.toBe(unidentified);
+});
+
 it("invalidates world geometry on diverter switch/rotate", () => {
   const sim = new Simulation(fixture);
   expect(

@@ -87,6 +87,7 @@ export function structureKey(s: PlayerSnapshot): string {
       source.y,
       source.width,
       source.height,
+      source.material,
     ]),
     s.factories.map((f) => [
       f.id,
