@@ -17,6 +17,7 @@ export type LocaleCatalog = z.infer<typeof localeCatalogSchema>;
 
 export function contentKeys(c: Content): string[] {
   return [
+    ...(c.liquidLogistics?.pump.containmentFailure ? [c.liquidLogistics.pump.containmentFailure.nameKey,c.liquidLogistics.pump.containmentFailure.descriptionKey] : []),
     ...c.site.terminalModules.map((d) => d.nameKey),
     ...c.containmentCapabilities.map((d) => d.nameKey),
     ...(c.liquidLogistics?.containmentProfiles.map((p) => p.nameKey) ?? []),
@@ -227,6 +228,8 @@ export const enCatalog: LocaleCatalog = {
   "ui.liquid.status.output-full": "Outlet missing, reversed or full",
   "ui.liquid.status.ready": "Ready",
 
+  "handling.failure.pump-corrosion.name": "Contained pump failure",
+  "handling.failure.pump-corrosion.description": "An unprotected feed attempt trapped a charge and stopped the pump. Drain through a protected route, upgrade the empty pump, then repair and restart.",
   "material.liquid-0.name": "Vein liquor",
   "operation.liquefy.name": "Liquefy",
   "operation.precipitate.name": "Precipitate",
