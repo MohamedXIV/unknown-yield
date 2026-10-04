@@ -183,14 +183,19 @@ it("invalidates world geometry on storage-only topology edits", () => {
 });
 it("invalidates atmospheric source presentation when material identity becomes known", () => {
   const snapshot = new Simulation(fixture).snapshot();
-  const {
-    surveySignalId: _surveySignalId,
-    requiredSensingCapabilityId: _requiredSensingCapabilityId,
-    material: _material,
-    ...source
-  } = fixture.site.atmosphericSources[0];
+  const source = fixture.site.atmosphericSources[0];
   snapshot.atmosphericSources = [
-    { ...source, material: null, remaining: source.units },
+    {
+      id: source.id,
+      nameKey: source.nameKey,
+      x: source.x,
+      y: source.y,
+      width: source.width,
+      height: source.height,
+      units: source.units,
+      material: null,
+      remaining: source.units,
+    },
   ];
   const unidentified = structureKey(snapshot);
   const identified = structuredClone(snapshot);
