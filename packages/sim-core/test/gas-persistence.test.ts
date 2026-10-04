@@ -1,3 +1,4 @@
+import { historicalFixture } from "./historical-content";
 import { describe, expect, it } from "vitest";
 import { fixture, validateContent } from "@site/content";
 import { parseSave } from "../src/save";
@@ -48,7 +49,7 @@ describe("gas persistence foundation", () => {
   });
   it("starts with explicit empty physical gas locations in schema 15", () => {
     const sim = new Simulation(fixture);
-    expect(sim.serialize().schemaVersion).toBe(16);
+    expect(sim.serialize().schemaVersion).toBe(17);
     expect(sim.serialize().pressureLines).toEqual({});
     expect(sim.serialize().pressureVessels).toEqual({});
     expect(sim.serialize().compressors).toEqual({});
@@ -75,14 +76,14 @@ describe("gas persistence foundation", () => {
     expect(sim.serialize()).toEqual(before);
   });
   it("migrates schema 14 with empty gas records and rejects old content atomically", () => {
-    const sim = new Simulation(fixture);
+    const sim = new Simulation(historicalFixture);
     const legacy = structuredClone(sim.serialize()) as Record<string, unknown>;
     legacy.schemaVersion = 14;
     delete legacy.pressureLines;
     delete legacy.pressureVessels;
     delete legacy.compressors;
     expect(sim.load(legacy).ok).toBe(true);
-    expect(sim.serialize().schemaVersion).toBe(16);
+    expect(sim.serialize().schemaVersion).toBe(17);
     expect(sim.serialize().pressureLines).toEqual({});
     const before = sim.serialize();
     legacy.contentVersion = "world-01-v7";

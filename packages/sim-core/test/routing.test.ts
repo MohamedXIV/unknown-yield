@@ -1,10 +1,7 @@
+import { historicalFixture } from "./historical-content";
 import { describe, it, expect } from "vitest";
 import { fixture } from "@site/content";
-import {
-  Simulation,
-  auditLedger,
-  type GameCommand,
-} from "../src/index";
+import { Simulation, auditLedger, type GameCommand } from "../src/index";
 
 const make = () => new Simulation(fixture);
 function build(s: Simulation, c: GameCommand) {
@@ -110,7 +107,9 @@ describe("belt diverter", () => {
       Object.values(s.serialize().storages).find(
         (t) => t.x === 16 && t.y === 31,
       )!.inventory;
-    expect(Object.values(depotA()).reduce((a, b) => a + b, 0)).toBeGreaterThan(0);
+    expect(Object.values(depotA()).reduce((a, b) => a + b, 0)).toBeGreaterThan(
+      0,
+    );
     expect(Object.values(depotB()).reduce((a, b) => a + b, 0)).toBe(0);
     auditOk(s);
     // Cargo already past the diverter on line A still arrives there.
@@ -122,7 +121,9 @@ describe("belt diverter", () => {
     expect(s.command({ type: "switchDivert", beltId: id }).ok).toBe(true);
     const aBefore = Object.values(depotA()).reduce((a, b) => a + b, 0);
     s.step(30000);
-    expect(Object.values(depotB()).reduce((a, b) => a + b, 0)).toBeGreaterThan(0);
+    expect(Object.values(depotB()).reduce((a, b) => a + b, 0)).toBeGreaterThan(
+      0,
+    );
     expect(Object.values(depotA()).reduce((a, b) => a + b, 0)).toBe(
       aBefore + residual,
     );
@@ -193,18 +194,21 @@ describe("belt diverter", () => {
     const s = fork();
     s.step(10000);
     const old = JSON.parse(JSON.stringify(s.serialize()));
-    expect(old.schemaVersion).toBe(16);
+    expect(old.schemaVersion).toBe(17);
     old.schemaVersion = 4;
+    old.contentVersion = historicalFixture.version;
     delete old.evidence;
-    for (const machine of Object.values(old.machines) as Array<Record<string, unknown>>)
+    for (const machine of Object.values(old.machines) as Array<
+      Record<string, unknown>
+    >)
       delete machine.incident;
     for (const belt of Object.values(old.belts)) {
       delete (belt as Record<string, unknown>).alternate;
       delete (belt as Record<string, unknown>).switched;
     }
-    const b = make();
+    const b = new Simulation(historicalFixture);
     expect(b.load(old).ok).toBe(true);
-    expect(b.serialize().schemaVersion).toBe(16);
+    expect(b.serialize().schemaVersion).toBe(17);
     for (const belt of Object.values(b.serialize().belts)) {
       expect(belt.alternate).toBeNull();
       expect(belt.switched).toBe(false);
@@ -258,8 +262,7 @@ describe("belt diverter", () => {
     s.step(20000);
     expect(physical(s)).toEqual(frozen);
     expect(
-      Object.values(frozen.storages)
-        .find((t) => t.x === 16 && t.y === 31)!
+      Object.values(frozen.storages).find((t) => t.x === 16 && t.y === 31)!
         .inventory,
     ).toEqual({ ferrite: 40 });
     auditOk(s);
@@ -290,7 +293,13 @@ describe("belt diverter", () => {
       width: 10,
       height: 10,
     });
-    build(s, { type: "placePort", factoryId: factory, x: 24, y: 37, direction: 0 });
+    build(s, {
+      type: "placePort",
+      factoryId: factory,
+      x: 24,
+      y: 37,
+      direction: 0,
+    });
     build(s, path(22, 37, 26, 37));
     // Interior belts keep working; the wall/port cell refuses.
     const inside = beltAt(s, 26, 37);

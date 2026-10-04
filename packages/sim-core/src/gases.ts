@@ -1,4 +1,5 @@
 import { checkContainment } from "@site/content";
+import { terminalReceiver, terminalInletDiagnostic } from "./terminal";
 import { receivingDiagnostic, type TransportDiagnostic } from "./containment";
 import type { TransportMoveEvent } from "./production";
 import type { Content } from "@site/content";
@@ -152,8 +153,7 @@ function targetAt(
       };
     }
   }
-  // #111 owns compatible gas terminal staging; dry terminal never admits it here.
-  return null;
+  return terminalReceiver(c, s, point, direction, "gas");
 }
 export type GasCompressorStatus =
   | "disabled"
@@ -218,13 +218,16 @@ export function gasDiagnostics(
   for (const p of Object.values(s.pressureLines))
     if (p.materialId) {
       const t = targetAt(c, s, next(p, p.outlet), p.outlet);
-      result[p.id] = receivingDiagnostic(
-        c,
-        p.materialId,
-        "gas",
-        t?.capabilities ?? [],
-        t,
-      );
+      result[p.id] =
+        terminalInletDiagnostic(
+          c,
+          s,
+          next(p, p.outlet),
+          p.outlet,
+          "gas",
+          p.materialId,
+        ) ??
+        receivingDiagnostic(c, p.materialId, "gas", t?.capabilities ?? [], t);
     }
   for (const p of Object.values(s.compressors)) {
     if (!p.enabled) {

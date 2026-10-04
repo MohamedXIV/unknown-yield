@@ -70,6 +70,12 @@ export function structureKey(s: PlayerSnapshot): string {
       ),
   );
   return JSON.stringify([
+    s.terminalModules.map((d) => [
+      d.id,
+      d.installed,
+      d.unlocked,
+      d.contents.quantity >= d.capacity,
+    ]),
     s.machines.map((m) => [m.id, m.x, m.y, m.direction]),
     s.factories.map((f) => [
       f.id,

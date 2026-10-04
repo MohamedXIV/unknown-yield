@@ -1,4 +1,5 @@
 import { liquidConstructionCost } from "./containment";
+import { moduleCommand } from "./terminal";
 import { z } from "zod";
 import type { Content } from "@site/content";
 import { amount, change, total, type Save, type CommandResult } from "./types";
@@ -25,6 +26,14 @@ const coordinate = z.number().int().min(0).max(10000),
   direction = z.number().int().min(0).max(3),
   point = { x: coordinate, y: coordinate };
 const schema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("installTerminalModule"),
+    definitionId: z.string(),
+  }),
+  z.object({
+    type: z.literal("removeTerminalModule"),
+    definitionId: z.string(),
+  }),
   z.object({
     type: z.literal("setLiquidContainmentProfile"),
     id: z.string(),
@@ -216,6 +225,15 @@ export function applyCommand(
   if ("machineId" in cmd && !Object.hasOwn(s.machines, cmd.machineId))
     return fail("Unknown machine");
   switch (cmd.type) {
+    case "installTerminalModule":
+    case "removeTerminalModule":
+      return moduleCommand(
+        c,
+        s,
+        cmd.definitionId,
+        cmd.type === "installTerminalModule",
+        apply,
+      );
     case "placePressureLines": {
       const cfg = c.gasLogistics;
       if (!cfg) return fail("Gas infrastructure is not authored");

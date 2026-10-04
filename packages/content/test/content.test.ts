@@ -196,8 +196,6 @@ describe("content boundary", () => {
       economy: Record<string, unknown>;
     };
     legacy.version = "world-01-v6";
-    (legacy as unknown as { site: { terminalModules?: unknown } }).site.terminalModules = [];
-    legacy.economy.exchange = legacy.economy.exchange.slice(0, 1);
     delete legacy.economy.assistancePackages;
     delete legacy.economy.defaultAssistancePackageId;
     const parsed = validateContent(legacy);
@@ -274,7 +272,9 @@ describe("content boundary", () => {
     delete legacy.economy.directives;
     delete legacy.economy.terminalCapabilities;
     delete legacy.economy.milestones;
-    (legacy as unknown as { site: { terminalModules?: unknown } }).site.terminalModules = [];
+    (
+      legacy as unknown as { site: { terminalModules?: unknown } }
+    ).site.terminalModules = [];
     legacy.economy.exchange = legacy.economy.exchange.slice(0, 1);
     delete legacy.economy.exchange[0].requiredTerminalCapabilityId;
     const parsed = validateContent(legacy);

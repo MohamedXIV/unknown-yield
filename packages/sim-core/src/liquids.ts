@@ -1,4 +1,5 @@
 import { checkContainment } from "@site/content";
+import { terminalReceiver, terminalInletDiagnostic } from "./terminal";
 import {
   liquidContainment,
   receivingDiagnostic,
@@ -156,8 +157,7 @@ function targetAt(
       };
     }
   }
-  // #111 owns compatible liquid terminal staging; dry terminal never admits it here.
-  return null;
+  return terminalReceiver(c, s, point, direction, "liquid");
 }
 export type LiquidPumpStatus =
   | "disabled"
@@ -201,13 +201,22 @@ export function liquidDiagnostics(
   for (const p of Object.values(s.pipes)) {
     if (!p.materialId) continue;
     const target = targetAt(c, s, next(p, p.outlet), p.outlet);
-    result[p.id] = receivingDiagnostic(
-      c,
-      p.materialId,
-      "liquid",
-      target?.capabilities ?? [],
-      target,
-    );
+    result[p.id] =
+      terminalInletDiagnostic(
+        c,
+        s,
+        next(p, p.outlet),
+        p.outlet,
+        "liquid",
+        p.materialId,
+      ) ??
+      receivingDiagnostic(
+        c,
+        p.materialId,
+        "liquid",
+        target?.capabilities ?? [],
+        target,
+      );
   }
   for (const p of Object.values(s.pumps)) {
     if (!p.enabled) {

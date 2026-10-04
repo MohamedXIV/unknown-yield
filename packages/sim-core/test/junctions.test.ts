@@ -1,3 +1,4 @@
+import { historicalFixture } from "./historical-content";
 import { describe, expect, it } from "vitest";
 import { fixture } from "@site/content";
 import { Simulation, auditLedger, beltArms } from "../src/index";
@@ -115,11 +116,12 @@ describe("directed T junctions", () => {
       b.step(200);
       expect(b.serialize()).toEqual(a.serialize());
     }
-    const legacy = new Simulation(fixture).serialize();
+    const legacy = new Simulation(historicalFixture).serialize();
     legacy.schemaVersion = 11;
-    const old = new Simulation(fixture);
+    legacy.contentVersion = historicalFixture.version;
+    const old = new Simulation(historicalFixture);
     expect(old.load(legacy).ok).toBe(true);
-    expect(old.serialize().schemaVersion).toBe(16);
+    expect(old.serialize().schemaVersion).toBe(17);
     const bad = structuredClone(s);
     bad.belts["20,20"].junction!.cursor = 2 as 0;
     const before = b.serialize();

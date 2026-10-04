@@ -6,7 +6,7 @@ import { Simulation, auditLedger } from "../src/index";
 describe("liquid persistence foundation", () => {
   it("starts with explicit empty physical liquid locations in schema 15", () => {
     const sim = new Simulation(fixture);
-    expect(sim.serialize().schemaVersion).toBe(16);
+    expect(sim.serialize().schemaVersion).toBe(17);
     expect(sim.serialize().pipes).toEqual({});
     expect(sim.serialize().tanks).toEqual({});
     expect(sim.serialize().pumps).toEqual({});
@@ -18,7 +18,8 @@ describe("liquid persistence foundation", () => {
       bad = structuredClone(before);
     bad.pipes = {
       "10,10": {
-        id: "l1", containmentProfileId: "standard",
+        id: "l1",
+        containmentProfileId: "standard",
         x: 10,
         y: 10,
         inlet: 2,

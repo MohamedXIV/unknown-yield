@@ -217,7 +217,21 @@ export type OpportunityView =
       inputMaterialId: string;
       setupNameKey?: string;
     };
+export type TerminalModuleContents = {
+  materialId: string | null;
+  quantity: number;
+};
+export type TerminalModuleView = Content["site"]["terminalModules"][number] & {
+  installed: boolean;
+  unlocked: boolean;
+  contents: TerminalModuleContents;
+  canInstall: boolean;
+  canRemove: boolean;
+  blockedReason:
+    "locked" | "installed" | "needs-stock" | "not-installed" | "loaded" | null;
+};
 export type Save = {
+  terminalModules: Record<string, TerminalModuleContents>;
   schemaVersion: number;
   contentVersion: string;
   tick: number;
@@ -256,6 +270,10 @@ export type CommandResult = {
   cost?: number;
 };
 export type GameCommand =
+  | {
+      type: "installTerminalModule" | "removeTerminalModule";
+      definitionId: string;
+    }
   | {
       type: "placePressureLines";
       points: (Point & { inlet: number; outlet: number })[];
@@ -348,6 +366,7 @@ export type KnowledgeEntry = {
   observedAt?: Point;
 };
 export type PlayerSnapshot = {
+  terminalModules: TerminalModuleView[];
   containmentCapabilities: Content["containmentCapabilities"];
   transportDiagnostics: Record<
     string,

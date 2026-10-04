@@ -1,3 +1,8 @@
+import {
+  terminalModuleAt,
+  terminalModuleDefinition,
+  terminalModuleUnlocked,
+} from "./terminal";
 import { beltArms } from "./junctions";
 import type { Content } from "@site/content";
 import { contains, key, next, socket } from "./geometry";
@@ -324,7 +329,13 @@ function gasTopology(content: Content, state: Save) {
       )
         return "machine:" + m.id;
     }
-    return null;
+    const module = terminalModuleAt(
+      content,
+      next(p, direction),
+      direction,
+      "gas",
+    );
+    return module ? "terminal:" + module.id : null;
   };
   for (const p of Object.values(state.pressureLines)) {
     const target = state.pressureLines[key(next(p, p.outlet))];
@@ -386,6 +397,21 @@ function gasRuntime(
       if (kind === "line") return { node, ...state.pressureLines[id] };
       if (kind === "vessel") return { node, ...state.pressureVessels[id] };
       if (kind === "compressor") return { node, ...state.compressors[id] };
+      if (kind === "terminal") {
+        const d = terminalModuleDefinition(content, id)!;
+        return {
+          node,
+          definition: d,
+          installed: !!state.terminalModules[id],
+          unlocked: terminalModuleUnlocked(content, state, id),
+          contents: state.terminalModules[id] ?? null,
+          policies: Object.fromEntries(
+            content.materials
+              .filter((m) => m.handlingState === d.handlingState)
+              .map((m) => [m.id, state.policies[m.id] ?? "keep"]),
+          ),
+        };
+      }
       return { node, ...machineRuntime(content, state, id) };
     });
 }
@@ -426,7 +452,13 @@ function liquidTopology(content: Content, state: Save) {
       )
         return "machine:" + m.id;
     }
-    return null;
+    const module = terminalModuleAt(
+      content,
+      next(p, direction),
+      direction,
+      "liquid",
+    );
+    return module ? "terminal:" + module.id : null;
   };
   for (const p of Object.values(state.pipes)) {
     const target = state.pipes[key(next(p, p.outlet))];
@@ -488,6 +520,21 @@ function liquidRuntime(
       if (kind === "pipe") return { node, ...state.pipes[id] };
       if (kind === "tank") return { node, ...state.tanks[id] };
       if (kind === "pump") return { node, ...state.pumps[id] };
+      if (kind === "terminal") {
+        const d = terminalModuleDefinition(content, id)!;
+        return {
+          node,
+          definition: d,
+          installed: !!state.terminalModules[id],
+          unlocked: terminalModuleUnlocked(content, state, id),
+          contents: state.terminalModules[id] ?? null,
+          policies: Object.fromEntries(
+            content.materials
+              .filter((m) => m.handlingState === d.handlingState)
+              .map((m) => [m.id, state.policies[m.id] ?? "keep"]),
+          ),
+        };
+      }
       return { node, ...machineRuntime(content, state, id) };
     });
 }

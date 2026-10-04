@@ -39,6 +39,8 @@ export function receivingDiagnostic(
 export type TransportDiagnostic = {
   reason:
     | "ready"
+    | "terminal-module-missing"
+    | "terminal-module-locked"
     | "disabled"
     | "needs-fuel"
     | "needs-input"
@@ -49,6 +51,7 @@ export type TransportDiagnostic = {
     | "route"
     | "incompatible";
   materialId?: string;
+  terminalModuleId?: string;
   missingContainment?: string[];
   containmentProfileId?: string;
 };

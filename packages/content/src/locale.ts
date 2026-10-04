@@ -17,7 +17,7 @@ export type LocaleCatalog = z.infer<typeof localeCatalogSchema>;
 
 export function contentKeys(c: Content): string[] {
   return [
-    ...c.site.terminalModules.map(d => d.nameKey),
+    ...c.site.terminalModules.map((d) => d.nameKey),
     ...c.containmentCapabilities.map((d) => d.nameKey),
     ...(c.liquidLogistics?.containmentProfiles.map((p) => p.nameKey) ?? []),
     ...c.materials.map((m) => m.nameKey),
@@ -59,14 +59,41 @@ export function validateLocaleCoverage(
 }
 
 export const enCatalog: LocaleCatalog = {
+  "ui.terminal.module.heading": "Physical handling docks",
+  "ui.terminal.module.inlet": "Inlet ({{x}}, {{y}}), approach from {{side}}",
+  "ui.terminal.module.meta":
+    "{{quantity}} / {{capacity}} units · {{cost}} construction plates",
+  "ui.terminal.module.empty": "Empty",
+  "ui.terminal.module.install": "Install {{module}}",
+  "ui.terminal.module.remove": "Remove {{module}}",
+  "ui.terminal.module.result.unknown": "Unknown terminal module",
+  "ui.terminal.module.result.locked":
+    "Confirm the handling trial before installation",
+  "ui.terminal.module.result.installed": "Module installed",
+  "ui.terminal.module.result.success": "Terminal module installed",
+  "ui.terminal.module.result.needs-stock": "More construction plates required",
+  "ui.terminal.module.result.not-installed": "Module not installed",
+  "ui.terminal.module.result.loaded": "Export the dock cargo before removal",
+  "ui.terminal.module.result.removed": "Empty terminal module reclaimed",
+  "ui.containment.reason.terminal-module-missing":
+    "Install the compatible terminal dock",
+  "ui.containment.reason.terminal-module-locked":
+    "Terminal handling trial not yet confirmed",
+  "ui.terminal.module.staged": "held at dock",
+  "ui.direction.0": "east",
+  "ui.direction.1": "south",
+  "ui.direction.2": "west",
+  "ui.direction.3": "north",
   "terminal.module.liquid-dock.name": "Lined liquid dock",
   "terminal.module.gas-dock.name": "Sealed gas dock",
   "terminal.capability.liquid-outbound.name": "Liquid outbound handling",
   "terminal.capability.gas-outbound.name": "Gas outbound handling",
   "milestone.liquid-study-certified.name": "Liquid handling authorization",
-  "milestone.liquid-study-certified.hint": "Confirm a liquid-processing trial to authorize liquid handling.",
+  "milestone.liquid-study-certified.hint":
+    "Confirm a liquid-processing trial to authorize liquid handling.",
   "milestone.gas-study-certified.name": "Gas handling authorization",
-  "milestone.gas-study-certified.hint": "Confirm a gas-producing trial to authorize sealed gas handling.",
+  "milestone.gas-study-certified.hint":
+    "Confirm a gas-producing trial to authorize sealed gas handling.",
   "containment.corrosion-resistant.name": "Corrosion-resistant containment",
   "containment.profile.standard.name": "Standard",
   "containment.profile.lined.name": "Lined",
