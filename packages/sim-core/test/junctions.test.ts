@@ -119,7 +119,7 @@ describe("directed T junctions", () => {
     legacy.schemaVersion = 11;
     const old = new Simulation(fixture);
     expect(old.load(legacy).ok).toBe(true);
-    expect(old.serialize().schemaVersion).toBe(15);
+    expect(old.serialize().schemaVersion).toBe(16);
     const bad = structuredClone(s);
     bad.belts["20,20"].junction!.cursor = 2 as 0;
     const before = b.serialize();

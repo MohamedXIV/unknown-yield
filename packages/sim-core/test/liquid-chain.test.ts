@@ -9,7 +9,13 @@ describe("authored liquid discovery chain", () => {
       false,
     );
     const build = (command: GameCommand) => {
-      const r = sim.command(command);
+      const r = sim.command(
+        command.type === "placePipes" ||
+          command.type === "placeTank" ||
+          command.type === "placePump"
+          ? { ...command, containmentProfileId: "lined" }
+          : command,
+      );
       expect(r.ok, JSON.stringify(command) + ": " + r.message).toBe(true);
       return r;
     };
@@ -46,7 +52,7 @@ describe("authored liquid discovery chain", () => {
       points: Array.from({ length: 8 }, (_, i) => ({ x: 17 + i, y: 36 })),
       direction: 0,
     });
-    build({ type: "placePump", x: 27, y: 36, direction: 0 });
+    const feed = build({ type: "placePump", x: 27, y: 36, direction: 0 });
     build({
       type: "placePipes",
       points: [28, 29, 30].map((x) => ({ x, y: 36, inlet: 2, outlet: 0 })),
@@ -86,5 +92,34 @@ describe("authored liquid discovery chain", () => {
       expect(restored.serialize()).toEqual(sim.serialize());
       expect(auditLedger(fixture, sim.serialize()).ok).toBe(true);
     }
+    expect(
+      sim.command({ type: "setPumpEnabled", id: feed.id!, enabled: false }).ok,
+    ).toBe(true);
+    for (let n = 0; n < 30; n++) {
+      sim.step(fixture.tickMs);
+      expect(auditLedger(fixture, sim.serialize()).ok).toBe(true);
+    }
+    const pipe = sim.serialize().pipes["28,36"];
+    expect(pipe.quantity).toBe(0);
+    const plates = sim.serialize().stock.plates;
+    expect(
+      sim.command({
+        type: "setLiquidContainmentProfile",
+        id: pipe.id,
+        containmentProfileId: "standard",
+      }).ok,
+    ).toBe(true);
+    expect(sim.serialize().stock.plates).toBe(plates + 2);
+    expect(
+      sim.command({
+        type: "setLiquidContainmentProfile",
+        id: pipe.id,
+        containmentProfileId: "lined",
+      }).ok,
+    ).toBe(true);
+    expect(
+      sim.command({ type: "setPumpEnabled", id: feed.id!, enabled: true }).ok,
+    ).toBe(true);
+    expect(auditLedger(fixture, sim.serialize()).ok).toBe(true);
   });
 });

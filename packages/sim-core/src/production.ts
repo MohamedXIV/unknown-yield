@@ -1,3 +1,5 @@
+import { checkContainment } from "@site/content";
+import { receivingDiagnostic, type TransportDiagnostic } from "./containment";
 import { beltArms } from "./junctions";
 import type { Content } from "@site/content";
 import {
@@ -123,6 +125,131 @@ export type TransportMoveEvent = {
   material: string;
 };
 
+function dryReceiver(
+  c: Content,
+  s: Save,
+  from: Point,
+  point: Point,
+  material: string,
+  direction: number,
+) {
+  if (contains(c.site.terminal, point))
+    return {
+      capabilities: c.site.dryContainment,
+      quantity:
+        material === c.site.buildMaterial ? total(s.stock) : total(s.staging),
+      capacity:
+        material === c.site.buildMaterial ? Infinity : c.site.stagingCapacity,
+      material: null,
+    };
+  const b = s.belts[key(point)];
+  if (b) {
+    const inlet = (direction + 2) % 4,
+      arms = beltArms(c, b);
+    if (
+      !arms.inlets.includes(inlet) ||
+      (b.junction?.crossing &&
+        (b.junction.crossing.pending !== null ||
+          inlet !== arms.inlets[b.junction.crossing.axis]))
+    )
+      return null;
+    return {
+      capabilities: c.site.beltContainment,
+      quantity: b.cargo ? 1 : 0,
+      capacity: 1,
+      material: b.cargo,
+    };
+  }
+  for (const m of Object.values(s.machines)) {
+    const d = c.machines.find((d) => d.id === m.definitionId)!;
+    if (
+      d.role === "processor" &&
+      d.inputStates.includes("solid") &&
+      contains(footprint(m, d), point) &&
+      key(socket(m, d, false)) === key(from)
+    )
+      return {
+        capabilities: d.inputContainment,
+        quantity: total(m.input),
+        capacity: d.capacity,
+        material: null,
+      };
+  }
+  for (const t of Object.values(s.storages)) {
+    const d = c.storages.find((d) => d.id === t.definitionId)!;
+    if (
+      contains(footprint(t, d), point) &&
+      key(socket(t, d, false)) === key(from)
+    )
+      return {
+        capabilities: d.containmentCapabilities,
+        quantity: total(t.inventory),
+        capacity: d.capacity,
+        material: null,
+      };
+  }
+  return null;
+}
+export function solidDiagnostics(
+  c: Content,
+  s: Save,
+): Record<string, TransportDiagnostic> {
+  const result: Record<string, TransportDiagnostic> = {};
+  for (const b of Object.values(s.belts))
+    if (b.cargo) {
+      const arms = beltArms(c, b),
+        directions =
+          arms.kind === "crossing"
+            ? [arms.outlets[b.junction!.crossing!.held!]]
+            : arms.outlets;
+      const routes = directions.map((d) => {
+        const target = dryReceiver(c, s, b, next(b, d), b.cargo!, d);
+        return receivingDiagnostic(
+          c,
+          b.cargo!,
+          "solid",
+          target?.capabilities ?? [],
+          target,
+        );
+      });
+      result[b.id] = routes.find((d) => d.reason === "ready") ?? routes[0];
+    }
+  for (const [records, definitions, field] of [
+    [s.machines, c.machines, "output"],
+    [s.storages, c.storages, "inventory"],
+  ] as const)
+    for (const entity of Object.values(records)) {
+      const inv =
+        field === "output"
+          ? "output" in entity
+            ? entity.output
+            : {}
+          : "inventory" in entity
+            ? entity.inventory
+            : {};
+      const material = Object.keys(inv)
+        .sort()
+        .find(
+          (id) =>
+            inv[id] > 0 &&
+            c.materials.find((m) => m.id === id)?.handlingState === "solid",
+        );
+      if (!material) continue;
+      const def = definitions.find((d) => d.id === entity.definitionId)!;
+      const p = socket(entity, def, true);
+      const target = s.belts[key(p)]
+        ? dryReceiver(c, s, entity, p, material, entity.direction)
+        : null;
+      result[entity.id] = receivingDiagnostic(
+        c,
+        material,
+        "solid",
+        target?.capabilities ?? [],
+        target,
+      );
+    }
+  return result;
+}
 export function transport(
   c: Content,
   s: Save,
@@ -211,7 +338,26 @@ export function transport(
     const inlet = (direction + 2) % 4;
     const p = source.emission ? null : next(source.point, direction);
     const loc = source.emission ?? key(p!);
+    const receiver = dryReceiver(
+      c,
+      s,
+      source.point,
+      p ?? Object.values(s.belts).find((b) => key(b) === loc) ?? source.point,
+      source.material,
+      direction,
+    );
+    if (
+      receiver &&
+      !checkContainment(c, source.material, ["solid"], receiver.capabilities).ok
+    )
+      return null;
     // Terminal is checked before belts, preserving ordinary settlement order.
+    if (
+      p &&
+      contains(c.site.terminal, p) &&
+      !checkContainment(c, source.material, ["solid"], c.site.dryContainment).ok
+    )
+      return null;
     if (p && contains(c.site.terminal, p))
       return source.material === c.site.buildMaterial
         ? { id: "stock", capacity: Infinity, inventory: s.stock, inlet }
@@ -222,6 +368,12 @@ export function transport(
             inlet,
           };
     const b = s.belts[loc];
+    if (
+      b &&
+      !checkContainment(c, source.material, ["solid"], c.site.beltContainment)
+        .ok
+    )
+      return null;
     if (b)
       return !occupied.has(loc) &&
         beltArms(c, b).inlets.includes(inlet) &&
@@ -236,6 +388,8 @@ export function transport(
       return (
         d.role === "processor" &&
         d.inputStates.includes("solid") &&
+        checkContainment(c, source.material, d.inputStates, d.inputContainment)
+          .ok &&
         contains(footprint(m, d), p!) &&
         key(socket(m, d, false)) === key(source.point)
       );
@@ -252,6 +406,12 @@ export function transport(
     const t = Object.values(s.storages).find((t) => {
       const d = c.storages.find((d) => d.id === t.definitionId)!;
       return (
+        checkContainment(
+          c,
+          source.material,
+          ["solid"],
+          d.containmentCapabilities,
+        ).ok &&
         contains(footprint(t, d), p!) &&
         key(socket(t, d, false)) === key(source.point)
       );
@@ -368,7 +528,10 @@ export function transport(
     const material = Object.keys(t.inventory)
       .sort()
       .find((id) => t.inventory[id] > 0);
-    if (material) {
+    if (
+      material &&
+      checkContainment(c, material, ["solid"], c.site.beltContainment).ok
+    ) {
       b.cargo = material;
       change(t.inventory, material, -1);
     }

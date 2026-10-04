@@ -11,9 +11,7 @@ it("resolves catalog entries to readable English", () => {
 });
 
 it("resolves assistance package and command feedback keys", () => {
-  expect(t("assistance.emergency-fuel.name")).toBe(
-    "Emergency fuel allocation",
-  );
+  expect(t("assistance.emergency-fuel.name")).toBe("Emergency fuel allocation");
   expect(t("ui.terminal.assistance.result.approved")).toContain(
     "Assistance approved",
   );
@@ -41,4 +39,16 @@ it("swaps presentation without changing simulation state", async () => {
   await i18n.changeLanguage("pseudo");
   expect(t("material.raw.name")).toBe("Ore (pseudo)");
   expect(JSON.stringify(s.serialize())).toBe(before);
+});
+
+it("resolves authored containment profiles, requirements, reasons and feedback", () => {
+  for (const key of [
+    "containment.profile.lined.name",
+    "containment.corrosion-resistant.name",
+    "ui.containment.requires",
+    "ui.containment.reason.missing-containment",
+    "ui.containment.command.updated",
+  ])
+    expect(t(key)).not.toBe(key);
+  expect(t("ui.containment.cost", { count: 34 })).toBe("34 structural plates");
 });

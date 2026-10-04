@@ -330,7 +330,7 @@ describe("gas containment compatibility", () => {
       const s = structuredClone(state);
       if (destination === "liquid-pipe")
         s.pipes["20,11"] = {
-          id: "l7",
+          id: "l7", containmentProfileId: "standard",
           x: 20,
           y: 11,
           inlet: 2,
@@ -340,7 +340,7 @@ describe("gas containment compatibility", () => {
         };
       if (destination === "liquid-tank")
         s.tanks.t7 = {
-          id: "t7",
+          id: "t7", containmentProfileId: "standard",
           x: 20,
           y: 10,
           direction: 0,
@@ -364,7 +364,7 @@ describe("gas containment compatibility", () => {
   it("reports liquid sources as incompatible and never compresses them", () => {
     const { content, state } = seed();
     state.tanks.t3 = {
-      id: "t3",
+      id: "t3", containmentProfileId: "standard",
       x: 16,
       y: 10,
       direction: 0,
@@ -395,7 +395,7 @@ describe("gas containment compatibility", () => {
     const compressor = { id: "c5", x: 18, y: 11, direction: 0, enabled: true };
     state.compressors.c5 = compressor;
     state.pipes["19,11"] = {
-      id: "l7",
+      id: "l7", containmentProfileId: "standard",
       x: 19,
       y: 11,
       inlet: 2,

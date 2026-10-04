@@ -317,10 +317,22 @@ describe("liquid factory blueprints", () => {
     state.pumps[pump].enabled = false;
     const encoded = serializeFactoryBlueprint(fixture, state, id),
       bp = parseFactoryBlueprint(fixture, encoded);
-    expect(bp.schemaVersion).toBe(3);
-    expect(bp.tanks).toEqual([{ x: 2, y: 2, direction: 0 }]);
-    expect(bp.pumps).toEqual([{ x: 4, y: 3, direction: 0, enabled: false }]);
-    expect(bp.pipes).toEqual([{ x: 5, y: 3, inlet: 2, outlet: 0 }]);
+    expect(bp.schemaVersion).toBe(5);
+    expect(bp.tanks).toEqual([
+      { x: 2, y: 2, direction: 0, containmentProfileId: "standard" },
+    ]);
+    expect(bp.pumps).toEqual([
+      {
+        x: 4,
+        y: 3,
+        direction: 0,
+        enabled: false,
+        containmentProfileId: "standard",
+      },
+    ]);
+    expect(bp.pipes).toEqual([
+      { x: 5, y: 3, inlet: 2, outlet: 0, containmentProfileId: "standard" },
+    ]);
     expect(encoded).not.toContain("liquid-0");
     expect(encoded).not.toContain("quantity");
     const bad = structuredClone(bp);

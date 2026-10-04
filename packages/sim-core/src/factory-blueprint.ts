@@ -26,14 +26,31 @@ export type FactoryBlueprintBelt = {
 };
 
 export type FactoryBlueprint = {
-  schemaVersion: 1 | 2 | 3 | 4;
+  schemaVersion: 1 | 2 | 3 | 4 | 5;
   pressureLines?: { x: number; y: number; inlet: number; outlet: number }[];
   pressureVessels?: { x: number; y: number; direction: number }[];
   compressors?: { x: number; y: number; direction: number; enabled: boolean }[];
 
-  pipes?: { x: number; y: number; inlet: number; outlet: number }[];
-  tanks?: { x: number; y: number; direction: number }[];
-  pumps?: { x: number; y: number; direction: number; enabled: boolean }[];
+  pipes?: {
+    containmentProfileId?: string;
+    x: number;
+    y: number;
+    inlet: number;
+    outlet: number;
+  }[];
+  tanks?: {
+    containmentProfileId?: string;
+    x: number;
+    y: number;
+    direction: number;
+  }[];
+  pumps?: {
+    containmentProfileId?: string;
+    x: number;
+    y: number;
+    direction: number;
+    enabled: boolean;
+  }[];
   width: number;
   height: number;
   ports: FactoryBlueprintPort[];
@@ -126,7 +143,7 @@ const canonical = (blueprint: FactoryBlueprint): FactoryBlueprint => ({
         pumps: [...blueprint.pumps!].sort(pointOrder),
       }
     : {}),
-  ...(blueprint.schemaVersion === 4
+  ...(blueprint.schemaVersion >= 4
     ? {
         pressureLines: [...blueprint.pressureLines!].sort(pointOrder),
         pressureVessels: [...blueprint.pressureVessels!].sort(pointOrder),
@@ -165,7 +182,7 @@ export function validateFactoryBlueprint(
       "ports",
       "machines",
       "belts",
-      ...(root.schemaVersion === 4
+      ...(root.schemaVersion === 4 || root.schemaVersion === 5
         ? [
             "pipes",
             "tanks",
@@ -184,7 +201,8 @@ export function validateFactoryBlueprint(
     root.schemaVersion !== 1 &&
     root.schemaVersion !== 2 &&
     root.schemaVersion !== 3 &&
-    root.schemaVersion !== 4
+    root.schemaVersion !== 4 &&
+    root.schemaVersion !== 5
   )
     throw new Error("Unsupported factory blueprint schema");
 
@@ -359,12 +377,28 @@ export function validateFactoryBlueprint(
     return belt;
   });
 
-  const liquid = root.schemaVersion === 3 || root.schemaVersion === 4;
+  const liquid =
+    root.schemaVersion === 3 ||
+    root.schemaVersion === 4 ||
+    root.schemaVersion === 5;
+  const profileFields = (r: RecordValue) => {
+    if (root.schemaVersion !== 5) return {};
+    const id = string(r.containmentProfileId, "Containment profile");
+    if (!content.liquidLogistics?.containmentProfiles.some((p) => p.id === id))
+      throw Error("Unknown containment profile");
+    return { containmentProfileId: id };
+  };
+  const profileKeys = root.schemaVersion === 5 ? ["containmentProfileId"] : [];
   const pipes = liquid
     ? array(root.pipes, "Blueprint pipes").map((value) => {
         const r = record(value, "Blueprint pipe");
-        exactKeys(r, ["x", "y", "inlet", "outlet"], "Blueprint pipe");
+        exactKeys(
+          r,
+          ["x", "y", "inlet", "outlet", ...profileKeys],
+          "Blueprint pipe",
+        );
         const p = {
+          ...profileFields(r),
           x: integer(r.x, "Pipe x", 0, width - 1),
           y: integer(r.y, "Pipe y", 0, height - 1),
           inlet: direction(r.inlet, "Pipe inlet"),
@@ -378,8 +412,9 @@ export function validateFactoryBlueprint(
   const tanks = liquid
     ? array(root.tanks, "Blueprint tanks").map((value) => {
         const r = record(value, "Blueprint tank");
-        exactKeys(r, ["x", "y", "direction"], "Blueprint tank");
+        exactKeys(r, ["x", "y", "direction", ...profileKeys], "Blueprint tank");
         return {
+          ...profileFields(r),
           x: integer(r.x, "Tank x", 0, width - 1),
           y: integer(r.y, "Tank y", 0, height - 1),
           direction: direction(r.direction, "Tank direction"),
@@ -389,8 +424,13 @@ export function validateFactoryBlueprint(
   const pumps = liquid
     ? array(root.pumps, "Blueprint pumps").map((value) => {
         const r = record(value, "Blueprint pump");
-        exactKeys(r, ["x", "y", "direction", "enabled"], "Blueprint pump");
+        exactKeys(
+          r,
+          ["x", "y", "direction", "enabled", ...profileKeys],
+          "Blueprint pump",
+        );
         return {
+          ...profileFields(r),
           x: integer(r.x, "Pump x", 0, width - 1),
           y: integer(r.y, "Pump y", 0, height - 1),
           direction: direction(r.direction, "Pump direction"),
@@ -436,7 +476,7 @@ export function validateFactoryBlueprint(
       occupied.push(r);
     }
 
-  const gas = root.schemaVersion === 4;
+  const gas = root.schemaVersion === 4 || root.schemaVersion === 5;
   const pressureLines = gas
     ? array(root.pressureLines, "Blueprint pressureLines").map((value) => {
         const r = record(value, "Blueprint pipe");
@@ -475,7 +515,11 @@ export function validateFactoryBlueprint(
         };
       })
     : [];
-  if (gas && !content.gasLogistics)
+  if (
+    gas &&
+    !content.gasLogistics &&
+    (pressureLines.length || pressureVessels.length || compressors.length)
+  )
     throw new Error("Gas infrastructure is not authored");
   for (const [kind, rows] of [
     ["vessel", pressureVessels],
@@ -559,6 +603,7 @@ export function factoryBlueprint(
     pipes: Object.values(state.pipes)
       .filter((p) => contains(factory, p))
       .map((p) => ({
+        containmentProfileId: p.containmentProfileId,
         x: p.x - factory.x,
         y: p.y - factory.y,
         inlet: p.inlet,
@@ -567,6 +612,7 @@ export function factoryBlueprint(
     tanks: Object.values(state.tanks)
       .filter((p) => contains(factory, p))
       .map((p) => ({
+        containmentProfileId: p.containmentProfileId,
         x: p.x - factory.x,
         y: p.y - factory.y,
         direction: p.direction,
@@ -574,6 +620,7 @@ export function factoryBlueprint(
     pumps: Object.values(state.pumps)
       .filter((p) => contains(factory, p))
       .map((p) => ({
+        containmentProfileId: p.containmentProfileId,
         x: p.x - factory.x,
         y: p.y - factory.y,
         direction: p.direction,
@@ -585,9 +632,9 @@ export function factoryBlueprint(
     (b) => contains(factory, b) && b.junction,
   );
   return validateFactoryBlueprint(content, {
-    schemaVersion: hasGas ? 4 : hasLiquid ? 3 : hasJunction ? 2 : 1,
+    schemaVersion: hasLiquid ? 5 : hasGas ? 4 : hasJunction ? 2 : 1,
     ...(hasGas || hasLiquid ? liquidRows : {}),
-    ...(hasGas ? gasRows : {}),
+    ...(hasGas || hasLiquid ? gasRows : {}),
     width: factory.width,
     height: factory.height,
     ports: factory.ports.map((port) => ({

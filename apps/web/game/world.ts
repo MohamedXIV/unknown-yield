@@ -656,6 +656,16 @@ export function createWorld(
           t.width * X - 12,
           t.height * Y - 12,
         );
+        if (
+          "containmentProfileId" in t &&
+          t.containmentProfileId !== "standard"
+        )
+          g.lineStyle(2, 0xe5c481).strokeRect(
+            t.x * X + 5,
+            t.y * Y + 5,
+            t.width * X - 10,
+            t.height * Y - 10,
+          );
         const input = socket(t, t, false),
           output = socket(t, t, true);
         for (const [p, tint] of [
@@ -712,6 +722,8 @@ export function createWorld(
             cy + (dy * Y) / 2,
           );
         }
+        if (p.containmentProfileId !== "standard")
+          g.lineStyle(2, 0xe5c481).strokeCircle(cx, cy, 8);
         this.arrow(g, cx, cy, p.outlet, 0xa9dce3, 4);
       }
       for (const t of snapshot.tanks) {
@@ -736,6 +748,12 @@ export function createWorld(
       for (const p of snapshot.pumps) {
         if (hiddenLiquid(p)) continue;
         this.box(g, { ...p, width: 1, height: 1 }, 0x88b1b6, 0x36535b, 7);
+        if (p.containmentProfileId !== "standard")
+          g.lineStyle(2, 0xe5c481).strokeCircle(
+            (p.x + 0.5) * X,
+            (p.y + 0.5) * Y,
+            10,
+          );
         this.arrow(
           g,
           (p.x + 0.5) * X,

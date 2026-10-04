@@ -1,5 +1,7 @@
 import { z } from "zod";
 import type { Content } from "@site/content";
+import { checkContainment } from "@site/content";
+import { liquidContainment } from "./containment";
 import {
   emptyFlows,
   experimentEvidenceKey,
@@ -129,6 +131,7 @@ const schema = z.object({
     z.literal(13),
     z.literal(14),
     z.literal(15),
+    z.literal(16),
   ]),
   contentVersion: z.string(),
   tick: count,
@@ -149,9 +152,24 @@ const schema = z.object({
   pressureLines: z.record(z.string().regex(/^\d+,\d+$/), pipe).default({}),
   pressureVessels: z.record(safeId, tank).default({}),
   compressors: z.record(safeId, pump).default({}),
-  pipes: z.record(z.string().regex(/^\d+,\d+$/), pipe).default({}),
-  tanks: z.record(safeId, tank).default({}),
-  pumps: z.record(safeId, pump).default({}),
+  pipes: z
+    .record(
+      z.string().regex(/^\d+,\d+$/),
+      pipe.extend({ containmentProfileId: safeId.default("standard") }),
+    )
+    .default({}),
+  tanks: z
+    .record(
+      safeId,
+      tank.extend({ containmentProfileId: safeId.default("standard") }),
+    )
+    .default({}),
+  pumps: z
+    .record(
+      safeId,
+      pump.extend({ containmentProfileId: safeId.default("standard") }),
+    )
+    .default({}),
   staging: inventory,
   policies: z.record(safeId, z.enum(["keep", "export"])),
   market: z
@@ -201,7 +219,7 @@ const schema = z.object({
 });
 export function initialState(c: Content): Save {
   const state: Save = {
-    schemaVersion: 15,
+    schemaVersion: 16,
     contentVersion: c.version,
     tick: 0,
     remainder: 0,
@@ -374,6 +392,7 @@ export function parseSave(input: unknown, c: Content): Save {
   if (s.schemaVersion === 12) s.schemaVersion = 13;
   if (s.schemaVersion === 13) s.schemaVersion = 14;
   if (s.schemaVersion === 14) s.schemaVersion = 15;
+  if (s.schemaVersion === 15) s.schemaVersion = 16;
   if (s.contentVersion !== c.version || s.remainder >= c.tickMs)
     throw new Error("Incompatible content or timing");
   if (
@@ -700,6 +719,12 @@ export function parseSave(input: unknown, c: Content): Save {
       takeId(entity.id, kind === "pipe" ? "l" : kind === "tank" ? "t" : "u");
       if ((kind === "pipe" ? key(entity) : entity.id) !== location)
         throw new Error("Invalid liquid location or ID");
+      if (
+        !c.liquidLogistics.containmentProfiles.some(
+          (p) => p.id === entity.containmentProfileId,
+        )
+      )
+        throw Error("Unknown liquid containment profile");
       const error = liquidPlacementError(c, stage, entity, kind);
       if (error) throw new Error(error);
       if (kind === "pipe") {
@@ -777,6 +802,61 @@ export function parseSave(input: unknown, c: Content): Save {
       )
     )
       throw new Error("Dry inventory handling state mismatch");
+  const protect = (
+    inv: Record<string, number>,
+    states: ("solid" | "liquid" | "gas")[],
+    caps: string[],
+  ) => {
+    for (const [id, n] of Object.entries(inv))
+      if (n > 0 && !checkContainment(c, id, states, caps).ok)
+        throw Error("Inventory containment mismatch");
+  };
+  protect(s.stock, ["solid"], c.site.dryContainment);
+  protect(s.staging, ["solid"], c.site.dryContainment);
+  for (const t of Object.values(s.storages))
+    protect(
+      t.inventory,
+      ["solid"],
+      c.storages.find((d) => d.id === t.definitionId)!.containmentCapabilities,
+    );
+  for (const b of Object.values(s.belts))
+    if (b.cargo) protect({ [b.cargo]: 1 }, ["solid"], c.site.beltContainment);
+  for (const m of Object.values(s.machines)) {
+    const d = c.machines.find((d) => d.id === m.definitionId)!;
+    protect(m.input, d.inputStates, d.inputContainment);
+    protect(m.output, d.outputStates, d.outputContainment);
+    const r = c.reactions.find((r) => r.id === m.job?.reaction);
+    if (r) {
+      protect({ [r.input]: r.inputAmount }, d.inputStates, d.inputContainment);
+      protect(
+        { [r.output]: r.outputAmount },
+        d.outputStates,
+        d.outputContainment,
+      );
+    }
+  }
+  for (const [kind, records] of [
+    ["pipe", s.pipes],
+    ["tank", s.tanks],
+  ] as const)
+    for (const t of Object.values(records))
+      if (t.materialId)
+        protect(
+          { [t.materialId]: t.quantity },
+          ["liquid"],
+          liquidContainment(c, kind, t.containmentProfileId),
+        );
+  for (const [kind, records] of [
+    ["line", s.pressureLines],
+    ["vessel", s.pressureVessels],
+  ] as const)
+    for (const t of Object.values(records))
+      if (t.materialId)
+        protect(
+          { [t.materialId]: t.quantity },
+          ["gas"],
+          c.gasLogistics![kind].containmentCapabilities,
+        );
   if (total(s.staging) > c.site.stagingCapacity)
     throw new Error("Terminal staging capacity exceeded");
   for (const inv of [

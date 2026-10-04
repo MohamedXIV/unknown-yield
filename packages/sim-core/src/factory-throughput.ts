@@ -177,19 +177,25 @@ function topologySignature(factory: Factory, members: FactoryMembers) {
       direction,
     })),
     compressors: members.compressors,
-    pipes: members.pipes.map(({ id, x, y, inlet, outlet }) => ({
-      id,
-      x,
-      y,
-      inlet,
-      outlet,
-    })),
-    tanks: members.tanks.map(({ id, x, y, direction }) => ({
-      id,
-      x,
-      y,
-      direction,
-    })),
+    pipes: members.pipes.map(
+      ({ id, x, y, inlet, outlet, containmentProfileId }) => ({
+        containmentProfileId,
+        id,
+        x,
+        y,
+        inlet,
+        outlet,
+      }),
+    ),
+    tanks: members.tanks.map(
+      ({ id, x, y, direction, containmentProfileId }) => ({
+        containmentProfileId,
+        id,
+        x,
+        y,
+        direction,
+      }),
+    ),
     pumps: members.pumps,
   });
 }

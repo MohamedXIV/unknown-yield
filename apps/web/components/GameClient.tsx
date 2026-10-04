@@ -193,6 +193,28 @@ function GameClientInner() {
       f.ports.some((p) => p.id === mode.selected),
     ),
     deposit = snapshot.deposits.find((d) => d.id === mode.selected);
+  const selectedDefinition = machine
+    ? snapshot.definitions.find((d) => d.id === machine.definitionId)
+    : undefined;
+  const selectedCapabilities = pressureLine
+    ? snapshot.gasLogistics!.line.containmentCapabilities
+    : pressureVessel
+      ? snapshot.gasLogistics!.vessel.containmentCapabilities
+      : compressor
+        ? snapshot.gasLogistics!.compressor.containmentCapabilities
+        : storage
+          ? snapshot.storageDefinitions.find(
+              (d) => d.id === storage.definitionId,
+            )!.containmentCapabilities
+          : belt
+            ? snapshot.map.beltContainment
+            : undefined;
+  const capabilityNames = (ids: string[]) =>
+    ids
+      .map((id) =>
+        t(snapshot.containmentCapabilities.find((c) => c.id === id)!.nameKey),
+      )
+      .join(", ") || t("ui.containment.none");
   const materialName = (id: string) => {
     const key = snapshot.materials.find((m) => m.id === id)?.nameKey;
     return key ? t(key) : "Unidentified material";
@@ -256,7 +278,20 @@ function GameClientInner() {
                 background: snapshot.materials.find((m) => m.id === id)?.color,
               }}
             />
-            <span>{materialName(id)}</span>
+            <span>
+              {materialName(id)}
+              {snapshot.materials.find((m) => m.id === id)?.requiredContainment
+                .length ? (
+                <small>
+                  {" "}
+                  · {t("ui.containment.requires")}:{" "}
+                  {capabilityNames(
+                    snapshot.materials.find((m) => m.id === id)!
+                      .requiredContainment,
+                  )}
+                </small>
+              ) : null}
+            </span>
             <b>{n}</b>
           </div>
         ))
@@ -276,7 +311,10 @@ function GameClientInner() {
         : tool === "compressor"
           ? snapshot.gasLogistics?.compressor.cost
           : tool === "pipe" || tool === "tank" || tool === "pump"
-            ? snapshot.liquidLogistics?.[tool].cost
+            ? (snapshot.liquidLogistics?.[tool].cost ?? 0) +
+              (snapshot.liquidLogistics?.containmentProfiles.find(
+                (p) => p.id === mode.containmentProfileId,
+              )?.additionalCost[tool] ?? 0)
             : tool === "factory"
               ? snapshot.map.factoryCellCost
               : tool === "belt"
@@ -457,6 +495,41 @@ function GameClientInner() {
           <div className="context-body">
             {panel === "selection" && (
               <>
+                {selectedDefinition && (
+                  <>
+                    <p>
+                      {t("ui.containment.input")}:{" "}
+                      {capabilityNames(selectedDefinition.inputContainment)}
+                    </p>
+                    <p>
+                      {t("ui.containment.output")}:{" "}
+                      {capabilityNames(selectedDefinition.outputContainment)}
+                    </p>
+                  </>
+                )}
+                {selectedCapabilities && (
+                  <p>
+                    {t("ui.containment.capabilities")}:{" "}
+                    {capabilityNames(selectedCapabilities)}
+                  </p>
+                )}
+                {!(pipe || tank || pump) &&
+                  mode.selected &&
+                  snapshot.transportDiagnostics[mode.selected] && (
+                    <p>
+                      {t(
+                        "ui.containment.reason." +
+                          snapshot.transportDiagnostics[mode.selected].reason,
+                      )}
+                      {snapshot.transportDiagnostics[mode.selected]
+                        .missingContainment?.length
+                        ? capabilityNames(
+                            snapshot.transportDiagnostics[mode.selected]
+                              .missingContainment!,
+                          )
+                        : null}
+                    </p>
+                  )}
                 {(pipe || tank || pump) && (
                   <>
                     <h2>
@@ -466,6 +539,91 @@ function GameClientInner() {
                           ".name",
                       )}
                     </h2>
+                    <label>
+                      {t("ui.containment.profile")}
+                      <select
+                        aria-label={t("ui.containment.profile")}
+                        value={(pipe ?? tank ?? pump)!.containmentProfileId}
+                        disabled={
+                          !!(pipe?.quantity || tank?.quantity || pump?.enabled)
+                        }
+                        onChange={(e) =>
+                          act({
+                            type: "setLiquidContainmentProfile",
+                            id: (pipe ?? tank ?? pump)!.id,
+                            containmentProfileId: e.target.value,
+                          })
+                        }
+                      >
+                        {snapshot.liquidLogistics!.containmentProfiles.map(
+                          (p) => (
+                            <option key={p.id} value={p.id}>
+                              {t(p.nameKey)} ·{" "}
+                              {t("ui.containment.cost", {
+                                count:
+                                  snapshot.liquidLogistics![
+                                    pipe ? "pipe" : tank ? "tank" : "pump"
+                                  ].cost +
+                                  p.additionalCost[
+                                    pipe ? "pipe" : tank ? "tank" : "pump"
+                                  ],
+                              })}
+                            </option>
+                          ),
+                        )}
+                      </select>
+                    </label>
+                    <p>
+                      {t("ui.containment.capabilities")}:{" "}
+                      {capabilityNames([
+                        ...new Set([
+                          ...snapshot.liquidLogistics![
+                            pipe ? "pipe" : tank ? "tank" : "pump"
+                          ].containmentCapabilities,
+                          ...snapshot.liquidLogistics!.containmentProfiles.find(
+                            (p) =>
+                              p.id ===
+                              (pipe ?? tank ?? pump)!.containmentProfileId,
+                          )!.capabilities,
+                        ]),
+                      ])}
+                    </p>
+                    {snapshot.transportDiagnostics[
+                      (pipe ?? tank ?? pump)!.id
+                    ] && (
+                      <p>
+                        {t(
+                          "ui.containment.reason." +
+                            snapshot.transportDiagnostics[
+                              (pipe ?? tank ?? pump)!.id
+                            ].reason,
+                        )}
+                        {snapshot.transportDiagnostics[
+                          (pipe ?? tank ?? pump)!.id
+                        ].missingContainment
+                          ?.map((id) =>
+                            t(
+                              snapshot.containmentCapabilities.find(
+                                (c) => c.id === id,
+                              )!.nameKey,
+                            ),
+                          )
+                          .join(", ")}
+                      </p>
+                    )}
+                    {(pipe ?? tank)?.materialId &&
+                      snapshot.materials.some(
+                        (m) => m.id === (pipe ?? tank)!.materialId,
+                      ) && (
+                        <p>
+                          {t("ui.containment.requires")}:{" "}
+                          {capabilityNames(
+                            snapshot.materials.find(
+                              (m) => m.id === (pipe ?? tank)!.materialId,
+                            )?.requiredContainment ?? [],
+                          )}
+                        </p>
+                      )}
                     {(pipe || tank) && (
                       <p>
                         {(pipe ?? tank)!.materialId
@@ -1685,6 +1843,33 @@ function GameClientInner() {
             </button>
           ))}
         </nav>
+        {["pipe", "tank", "pump"].includes(mode.tool) && (
+          <label>
+            {t("ui.containment.profile")}
+            <select
+              aria-label={t("ui.containment.build-profile")}
+              value={mode.containmentProfileId}
+              onChange={(e) =>
+                setMode((m) => ({ ...m, containmentProfileId: e.target.value }))
+              }
+            >
+              {snapshot.liquidLogistics!.containmentProfiles.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {t(p.nameKey)} ·{" "}
+                  {p.capabilities
+                    .map((id) =>
+                      t(
+                        snapshot.containmentCapabilities.find(
+                          (c) => c.id === id,
+                        )!.nameKey,
+                      ),
+                    )
+                    .join(", ") || t("ui.containment.none")}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <div className="bottom-caption">
           <span>NO CREW. JUST MACHINES.</span>
           <span>R rotate · Esc cancel · Home center</span>

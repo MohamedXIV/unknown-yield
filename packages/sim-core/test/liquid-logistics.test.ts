@@ -14,7 +14,7 @@ function seed() {
     state = new Simulation(content).serialize();
   state.pipes = {
     "19,11": {
-      id: "l1",
+      id: "l1", containmentProfileId: "standard",
       x: 19,
       y: 11,
       inlet: 2,
@@ -23,7 +23,7 @@ function seed() {
       quantity: 3,
     },
     "20,11": {
-      id: "l2",
+      id: "l2", containmentProfileId: "standard",
       x: 20,
       y: 11,
       inlet: 2,
@@ -55,7 +55,7 @@ describe("directed liquid quantity transport", () => {
     const { content, state } = seed();
     state.tanks = {
       t3: {
-        id: "t3",
+        id: "t3", containmentProfileId: "standard",
         x: 16,
         y: 10,
         direction: 0,
@@ -63,7 +63,7 @@ describe("directed liquid quantity transport", () => {
         quantity: 8,
       },
       t4: {
-        id: "t4",
+        id: "t4", containmentProfileId: "standard",
         x: 21,
         y: 10,
         direction: 0,
@@ -72,7 +72,7 @@ describe("directed liquid quantity transport", () => {
       },
     };
     state.pumps = {
-      u5: { id: "u5", x: 18, y: 11, direction: 0, enabled: false },
+      u5: { id: "u5", containmentProfileId: "standard", x: 18, y: 11, direction: 0, enabled: false },
     };
     state.pipes["20,11"].materialId = "raw";
     state.pipes["20,11"].quantity = 1;
@@ -86,7 +86,7 @@ describe("directed liquid quantity transport", () => {
     const { content, state } = seed();
     state.tanks = {
       t3: {
-        id: "t3",
+        id: "t3", containmentProfileId: "standard",
         x: 16,
         y: 10,
         direction: 0,
@@ -95,7 +95,7 @@ describe("directed liquid quantity transport", () => {
       },
     };
     state.pumps = {
-      u5: { id: "u5", x: 18, y: 11, direction: 0, enabled: true },
+      u5: { id: "u5", containmentProfileId: "standard", x: 18, y: 11, direction: 0, enabled: true },
     };
     const fuel = state.fuel;
     transportLiquids(content, state);

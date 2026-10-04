@@ -109,11 +109,20 @@ export type Storage = Point & {
   direction: number;
   inventory: Inventory;
 };
-export type LiquidContents = { materialId: string | null; quantity: number };
+export type LiquidContents = {
+  materialId: string | null;
+  quantity: number;
+  containmentProfileId: string;
+};
 export type Pipe = Point &
   LiquidContents & { id: string; inlet: number; outlet: number };
 export type Tank = Point & LiquidContents & { id: string; direction: number };
-export type Pump = Point & { id: string; direction: number; enabled: boolean };
+export type Pump = Point & {
+  id: string;
+  direction: number;
+  enabled: boolean;
+  containmentProfileId: string;
+};
 export type GasContents = { materialId: string | null; quantity: number };
 export type PressureLine = Point &
   GasContents & { id: string; inlet: number; outlet: number };
@@ -257,10 +266,24 @@ export type GameCommand =
   | { type: "configurePressureLine"; id: string; inlet: number; outlet: number }
   | {
       type: "placePipes";
+      containmentProfileId?: string;
       points: (Point & { inlet: number; outlet: number })[];
     }
-  | ({ type: "placeTank"; direction: number } & Point)
-  | ({ type: "placePump"; direction: number } & Point)
+  | ({
+      type: "placeTank";
+      containmentProfileId?: string;
+      direction: number;
+    } & Point)
+  | ({
+      type: "placePump";
+      containmentProfileId?: string;
+      direction: number;
+    } & Point)
+  | {
+      type: "setLiquidContainmentProfile";
+      id: string;
+      containmentProfileId: string;
+    }
   | { type: "setPumpEnabled"; id: string; enabled: boolean }
   | { type: "configurePipe"; id: string; inlet: number; outlet: number }
   | ({ type: "placeMachine"; definitionId: string; direction: number } & Point)
@@ -325,6 +348,11 @@ export type KnowledgeEntry = {
   observedAt?: Point;
 };
 export type PlayerSnapshot = {
+  containmentCapabilities: Content["containmentCapabilities"];
+  transportDiagnostics: Record<
+    string,
+    import("./containment").TransportDiagnostic
+  >;
   tick: number;
   fuel: number;
   debt: number;
