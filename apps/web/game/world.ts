@@ -349,6 +349,35 @@ export function createWorld(
         for (let y = f.y + 1; y < f.y + f.height; y++)
           g.lineBetween(f.x * X, y * Y, (f.x + f.width) * X, y * Y);
       }
+      for (const source of snapshot.atmosphericSources) {
+        const material = source.material
+          ? snapshot.materials.find((entry) => entry.id === source.material)
+          : undefined;
+        const tint = color(material?.color ?? "#9fb8b0");
+        g.fillStyle(tint, 0.09).fillRoundedRect(
+          source.x * X,
+          source.y * Y,
+          source.width * X,
+          source.height * Y,
+          18,
+        );
+        g.lineStyle(2, tint, 0.55).strokeRoundedRect(
+          source.x * X + 2,
+          source.y * Y + 2,
+          source.width * X - 4,
+          source.height * Y - 4,
+          18,
+        );
+        this.structures.add(
+          this.text(
+            (source.x + source.width / 2) * X,
+            source.y * Y - 11,
+            translate(source.nameKey).toUpperCase(),
+            9,
+            "#bfd0c7",
+          ),
+        );
+      }
       const beltViews = beltPresentations(snapshot);
       for (const b of snapshot.belts) {
         if (
@@ -544,7 +573,19 @@ export function createWorld(
         );
         const x = (m.x + m.width / 2) * X,
           y = (m.y + m.height / 2) * Y;
-        if (m.role === "extractor") {
+        if (m.definitionId === "atmospheric-intake") {
+          g.lineStyle(5, 0x66786f).strokeCircle(x, y - 24, 17);
+          for (let i = 0; i < 4; i++) {
+            const angle = (Math.PI / 2) * i;
+            g.lineStyle(4, 0xb8c8bd).lineBetween(
+              x,
+              y - 24,
+              x + Math.cos(angle) * 14,
+              y - 24 + Math.sin(angle) * 14,
+            );
+          }
+          g.lineStyle(5, 0x59695e).lineBetween(x, y - 7, x, y + 7);
+        } else if (m.role === "extractor") {
           g.lineStyle(6, 0x485642).lineBetween(x - 16, y - 5, x - 16, y - 47);
           g.lineStyle(5, 0xb7b28a).lineBetween(x - 16, y - 47, x + 14, y - 47);
           g.lineStyle(4, 0xc3b379).lineBetween(x + 14, y - 47, x + 14, y + 3);

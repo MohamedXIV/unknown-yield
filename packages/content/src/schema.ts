@@ -41,6 +41,7 @@ export const contentSchema = z.object({
         nameKey: localeKeySchema,
         role: z.enum(["extractor", "processor"]),
         maxExtractionDepth: count.default(0),
+        sourceKind: z.enum(["atmosphere"]).optional(),
         processConditionId: id.optional(),
         unlock: z
           .object({
@@ -220,6 +221,22 @@ export const contentSchema = z.object({
         }),
       )
       .default([]),
+    atmosphericSources: z
+      .array(
+        z.object({
+          id,
+          nameKey: localeKeySchema,
+          material: id,
+          x: pos,
+          y: pos,
+          width: positive,
+          height: positive,
+          units: positive,
+          surveySignalId: id,
+          requiredSensingCapabilityId: id,
+        }),
+      )
+      .default([]),
     terminalModules: z.array(z.object({
       id, nameKey: localeKeySchema,
       handlingState: z.enum(["liquid", "gas"]),
@@ -387,6 +404,7 @@ function validateContentInternal(
     c.reactions,
     c.site.deposits,
     c.site.hiddenDeposits,
+    c.site.atmosphericSources,
   ])
     if (new Set(table.map((r) => r.id)).size !== table.length)
       throw new Error("Duplicate content ID");
@@ -477,6 +495,10 @@ function validateContentInternal(
     }
     if (m.role === "processor" && m.maxExtractionDepth !== 0)
       throw new Error("Processor cannot have extraction depth");
+    if (m.role === "processor" && m.sourceKind)
+      throw new Error("Processor cannot have an extraction source kind");
+    if (m.sourceKind === "atmosphere" && m.maxExtractionDepth !== 0)
+      throw new Error("Atmospheric intake cannot have extraction depth");
     if (
       m.role === "processor" &&
       (!m.operations.length ||
@@ -498,7 +520,11 @@ function validateContentInternal(
       throw new Error("Extractor has no processing operation");
   }
   const regions = [c.site.terminal, ...c.site.deposits];
-  for (const r of [...regions, ...c.site.hiddenDeposits])
+  for (const r of [
+    ...regions,
+    ...c.site.hiddenDeposits,
+    ...c.site.atmosphericSources,
+  ])
     if (r.x + r.width > c.site.width || r.y + r.height > c.site.height)
       throw new Error("Site entity outside map");
   for (let a = 0; a < regions.length; a++)
@@ -516,7 +542,7 @@ function validateContentInternal(
   for (const d of c.site.deposits) {
     if (
       c.machines
-        .filter((m) => m.role === "extractor")
+        .filter((m) => m.role === "extractor" && m.sourceKind !== "atmosphere")
         .some(
           (m) =>
             !checkContainment(
@@ -542,7 +568,7 @@ function validateContentInternal(
     );
     if (!signal) throw new Error("Missing hidden deposit survey signal");
     if (hiddenSignalIds.has(signal.id))
-      throw new Error("Survey signal maps to multiple hidden deposits");
+      throw new Error("Survey signal maps to multiple hidden sources");
     hiddenSignalIds.add(signal.id);
     if (
       signal.x < deposit.x ||
@@ -556,6 +582,50 @@ function validateContentInternal(
     );
     if (!capability || capability.mode !== "probe")
       throw new Error("Hidden deposit requires a probe capability");
+  }
+  for (const source of c.site.atmosphericSources) {
+    const material = c.materials.find((entry) => entry.id === source.material);
+    if (!material || material.handlingState !== "gas")
+      throw new Error("Atmospheric source requires a gas material");
+    const signal = c.site.surveySignals.find(
+      (entry) => entry.id === source.surveySignalId,
+    );
+    if (!signal) throw new Error("Missing atmospheric source survey signal");
+    if (hiddenSignalIds.has(signal.id))
+      throw new Error("Survey signal maps to multiple hidden sources");
+    hiddenSignalIds.add(signal.id);
+    if (
+      signal.x < source.x ||
+      signal.y < source.y ||
+      signal.x >= source.x + source.width ||
+      signal.y >= source.y + source.height
+    )
+      throw new Error("Atmospheric source survey signal must lie inside source");
+    const capability = c.site.sensingCapabilities.find(
+      (entry) => entry.id === source.requiredSensingCapabilityId,
+    );
+    if (!capability || capability.mode !== "probe")
+      throw new Error("Atmospheric source requires a probe capability");
+    if (source.nameKey !== "source." + source.id + ".name")
+      throw new Error("Localization key must match atmospheric source");
+    if (
+      c.machines
+        .filter(
+          (machine) =>
+            machine.role === "extractor" &&
+            machine.sourceKind === "atmosphere",
+        )
+        .some(
+          (machine) =>
+            !checkContainment(
+              c,
+              source.material,
+              machine.outputStates,
+              machine.outputContainment,
+            ).ok,
+        )
+    )
+      throw new Error("Atmospheric intake containment mismatches material");
   }
   const exchangeMaterials = new Set<string>();
   for (const listing of c.economy.exchange) {

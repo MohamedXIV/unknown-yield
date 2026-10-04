@@ -29,8 +29,18 @@ describe("Content Studio authoring core", () => {
     expect(
       store.getCell("machines", "deep-extractor", "maxExtractionDepth"),
     ).toBe(20);
+    expect(
+      store.getCell("machines", "atmospheric-intake", "sourceKind"),
+    ).toBe("atmosphere");
 
     expect(hasStudioEntity(store, "material", "raw")).toBe(true);
+    expect(referencesTo(fixture, "material", "gas-0")).toContainEqual({
+      targetType: "material",
+      targetId: "gas-0",
+      sourceType: "atmospheric-source",
+      sourceId: "atmospheric-plume-a",
+      field: "material",
+    });
     expect(hasStudioEntity(store, "operation", "heat")).toBe(true);
     expect(hasStudioEntity(store, "machine", "sealed-furnace")).toBe(true);
     expect(hasStudioEntity(store, "reaction", "heat-raw-sealed")).toBe(true);

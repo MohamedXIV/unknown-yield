@@ -49,6 +49,7 @@ describe("industrial sensing observations", () => {
     ]);
     expect(snapshot.map).not.toHaveProperty("surveySignals");
     expect(snapshot.map).not.toHaveProperty("sensingCapabilities");
+    expect(snapshot.map).not.toHaveProperty("atmosphericSources");
     const publicJson = JSON.stringify(snapshot);
     expect(publicJson).not.toContain("anomaly-a");
     expect(publicJson).not.toContain('"strength":8');
@@ -122,6 +123,44 @@ describe("industrial sensing observations", () => {
       depthBand: "deep",
     });
     expect(JSON.stringify(sim.snapshot())).not.toContain("anomaly-a");
+  });
+
+  it("keeps atmospheric source truth hidden until an exact qualifying probe", () => {
+    const sim = new Simulation(fixture);
+    expect(JSON.stringify(sim.snapshot())).not.toContain("atmospheric-plume-a");
+    expect(JSON.stringify(sim.serialize())).not.toContain("atmospheric-plume-a");
+
+    expect(
+      sim.command({
+        type: "sense",
+        capabilityId: "survey-scanner",
+        x: 70,
+        y: 26,
+      }).ok,
+    ).toBe(true);
+    expect(JSON.stringify(sim.snapshot())).not.toContain("atmospheric-plume-a");
+    expect(JSON.stringify(sim.serialize())).not.toContain("atmospheric-plume-a");
+
+    unlockProbe(sim);
+    expect(
+      sim.command({
+        type: "sense",
+        capabilityId: "core-probe",
+        x: 70,
+        y: 26,
+      }).ok,
+    ).toBe(true);
+    expect(sim.snapshot().atmosphericSources).toEqual([
+      expect.objectContaining({
+        id: "atmospheric-plume-a",
+        material: null,
+        remaining: 600,
+      }),
+    ]);
+    expect(sim.serialize().atmosphericSources).toEqual({
+      "atmospheric-plume-a": 600,
+    });
+    expect(JSON.stringify(sim.snapshot())).not.toContain("anomaly-c");
   });
 
   it("reports none deterministically outside authored signal range", () => {

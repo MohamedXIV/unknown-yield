@@ -145,11 +145,13 @@ export class Simulation {
       sensingCapabilities: hiddenSensingCapabilities,
       surveySignals: hiddenSurveySignals,
       hiddenDeposits: hiddenDepositDefinitions,
+      atmosphericSources: hiddenAtmosphericSources,
       ...publicMap
     } = c.site;
     void hiddenSensingCapabilities;
     void hiddenSurveySignals;
     void hiddenDepositDefinitions;
+    void hiddenAtmosphericSources;
     return structuredClone({
       tick: s.tick,
       fuel: s.fuel,
@@ -186,6 +188,20 @@ export class Simulation {
             }),
           ),
       ],
+      atmosphericSources: c.site.atmosphericSources
+        .filter((source) => Object.hasOwn(s.atmosphericSources, source.id))
+        .map(
+          ({
+            surveySignalId: _surveySignalId,
+            requiredSensingCapabilityId: _requiredSensingCapabilityId,
+            material,
+            ...source
+          }) => ({
+            ...source,
+            material: known.has(material) ? material : null,
+            remaining: s.atmosphericSources[source.id],
+          }),
+        ),
       definitions: c.machines.map((definition) => {
         const { unlock, ...view } = definition;
         return {

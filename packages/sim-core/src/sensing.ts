@@ -119,6 +119,14 @@ export function applySensingObservation(
         }
         state.deposits[deposit.id] ??= deposit.units;
       }
+      for (const source of content.site.atmosphericSources) {
+        if (source.requiredSensingCapabilityId !== capability.id) continue;
+        const signal = content.site.surveySignals.find(
+          (entry) => entry.id === source.surveySignalId,
+        );
+        if (!signal || signal.x !== x || signal.y !== y) continue;
+        state.atmosphericSources[source.id] ??= source.units;
+      }
     }
   }
   return {

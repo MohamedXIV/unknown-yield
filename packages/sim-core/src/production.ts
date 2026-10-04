@@ -17,6 +17,7 @@ import { ensureMarket, exchangeDefinition } from "./market";
 import { recordDirectiveExperiment } from "./opportunities";
 import { settleTerminalExports } from "./terminal";
 import { depositDefinition } from "./deposits";
+import { atmosphericSourceForRect } from "./atmosphere";
 export function recipe(c: Content, m: Machine) {
   const definition = c.machines.find((d) => d.id === m.definitionId);
   return c.reactions.find(
@@ -32,7 +33,14 @@ export function status(c: Content, s: Save, m: Machine): MachineStatus {
   if (!m.enabled) return "disabled";
   const d = c.machines.find((d) => d.id === m.definitionId)!;
   const r = recipe(c, m);
-  if (d.role === "extractor" && (!m.depositId || s.deposits[m.depositId] === 0))
+  if (d.role === "extractor" && d.sourceKind === "atmosphere") {
+    const source = atmosphericSourceForRect(c, s, footprint(m, d));
+    if (!source || s.atmosphericSources[source.id] === 0)
+      return "source-exhausted";
+  } else if (
+    d.role === "extractor" &&
+    (!m.depositId || s.deposits[m.depositId] === 0)
+  )
     return "deposit-exhausted";
   if (d.role === "processor" && !r)
     return total(m.input) ? "needs-compatible-input" : "needs-input";
@@ -52,9 +60,11 @@ export function completeAndStart(
     if (complete) {
       if (m.job && --m.job.remaining === 0) {
         const r = c.reactions.find((r) => r.id === m.job!.reaction);
-        const material =
-          r?.output ??
-          depositDefinition(c, m.depositId)!.material;
+        const source =
+          d.sourceKind === "atmosphere"
+            ? atmosphericSourceForRect(c, s, footprint(m, d))
+            : depositDefinition(c, m.depositId);
+        const material = r?.output ?? source!.material;
         if (r) {
           // A defined transformation: record the consumed inputs and the
           // created outputs so the ledger can reconcile the identity change.
@@ -112,6 +122,9 @@ export function completeAndStart(
           processConditionId: r.processConditionId ?? null,
           state: "hinted",
         };
+      } else if (d.sourceKind === "atmosphere") {
+        const source = atmosphericSourceForRect(c, s, footprint(m, d))!;
+        s.atmosphericSources[source.id]--;
       } else s.deposits[m.depositId!]--;
       m.job = { remaining: d.durationTicks, reaction: r?.id ?? null };
     }
