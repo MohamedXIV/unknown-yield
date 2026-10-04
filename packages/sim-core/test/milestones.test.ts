@@ -194,7 +194,7 @@ describe("evidence milestones and terminal handling", () => {
 
     const restored = new Simulation(historicalFixture);
     expect(restored.load(input).ok).toBe(true);
-    expect(restored.serialize().schemaVersion).toBe(18);
+    expect(restored.serialize().schemaVersion).toBe(19);
     expect(
       restored.serialize().opportunities["sealed-thermal-study"],
     ).toBeUndefined();

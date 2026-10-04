@@ -10,7 +10,17 @@ export {
   vectors,
   type FootprintDef,
 } from "./geometry";
-export { MACHINE_STATUSES, experimentEvidenceKey } from "./types";
+export {
+  MACHINE_STATUSES,
+  SENSING_DEPTH_BANDS,
+  SENSING_SIGNAL_BANDS,
+  experimentEvidenceKey,
+} from "./types";
+export {
+  createSensingObservation,
+  sensingCapabilityUnlocked,
+  sensingObservationKey,
+} from "./sensing";
 export { factoryView } from "./factory-contract";
 export {
   factoryBlueprint,
@@ -37,6 +47,10 @@ export type {
   FlowTotals,
   ExperimentEvidence,
   KnowledgeEntry,
+  SensingCapabilityView,
+  SensingDepthBand,
+  SensingObservation,
+  SensingSignalBand,
   OpportunityState,
   OpportunityStatus,
   OpportunityView,

@@ -194,7 +194,7 @@ describe("belt diverter", () => {
     const s = fork();
     s.step(10000);
     const old = JSON.parse(JSON.stringify(s.serialize()));
-    expect(old.schemaVersion).toBe(18);
+    expect(old.schemaVersion).toBe(19);
     old.schemaVersion = 4;
     old.contentVersion = historicalFixture.version;
     delete old.evidence;
@@ -208,7 +208,7 @@ describe("belt diverter", () => {
     }
     const b = new Simulation(historicalFixture);
     expect(b.load(old).ok).toBe(true);
-    expect(b.serialize().schemaVersion).toBe(18);
+    expect(b.serialize().schemaVersion).toBe(19);
     for (const belt of Object.values(b.serialize().belts)) {
       expect(belt.alternate).toBeNull();
       expect(belt.switched).toBe(false);

@@ -65,6 +65,9 @@ function scenario(cells: number, blocked: boolean) {
     })),
     site: {
       ...fixture.site,
+      // This benchmark authors its own synthetic world dimensions/resources.
+      sensingCapabilities: [],
+      surveySignals: [],
       width: 80,
       height: cells * 16 + 20,
       startStock: 1000000,

@@ -21,10 +21,36 @@ describe("content boundary", () => {
   it("accepts the complete tiny scenario", () => {
     const c = validateContent(fixture);
     expect(c.machines).toHaveLength(9);
-    expect(c.version).toBe("world-01-v11");
+    expect(c.version).toBe("world-01-v12");
     expect(c.storages).toHaveLength(1);
     expect(c.storages[0]).toMatchObject({ id: "depot", capacity: 40 });
     expect(c.site.stagingCapacity).toBe(24);
+    expect(c.site.sensingCapabilities.map((entry) => entry.id)).toEqual([
+      "survey-scanner",
+      "core-probe",
+    ]);
+    expect(c.site.surveySignals).toHaveLength(2);
+  });
+
+  it("validates sensing capability identity, unlocks and hidden signal bounds", () => {
+    const duplicate = structuredClone(fixture);
+    duplicate.site.sensingCapabilities.push({
+      ...duplicate.site.sensingCapabilities[0],
+    });
+    expect(() => validateContent(duplicate)).toThrow(
+      /Duplicate sensing capability ID/,
+    );
+
+    const missingMilestone = structuredClone(fixture);
+    missingMilestone.site.sensingCapabilities[1].requiredMilestoneId =
+      "missing-milestone";
+    expect(() => validateContent(missingMilestone)).toThrow(
+      /Missing sensing capability milestone/,
+    );
+
+    const outside = structuredClone(fixture);
+    outside.site.surveySignals[0].x = outside.site.width;
+    expect(() => validateContent(outside)).toThrow(/outside site bounds/i);
   });
   it("matches authored reactions by an exact process condition", () => {
     const c = validateContent(fixture);
@@ -272,9 +298,21 @@ describe("content boundary", () => {
     delete legacy.economy.directives;
     delete legacy.economy.terminalCapabilities;
     delete legacy.economy.milestones;
-    (
-      legacy as unknown as { site: { terminalModules?: unknown } }
-    ).site.terminalModules = [];
+    const legacySite = (
+      legacy as unknown as {
+        site: {
+          terminalModules?: unknown;
+          sensingCapabilities?: unknown;
+          surveySignals?: unknown;
+        };
+      }
+    ).site;
+    legacySite.terminalModules = [];
+    // These Phase 10 fields did not exist in the pre-#70 format; deleting
+    // them proves the additive schema defaults rather than retaining modern
+    // milestone references in a historical fixture.
+    delete legacySite.sensingCapabilities;
+    delete legacySite.surveySignals;
     legacy.economy.exchange = legacy.economy.exchange.slice(0, 1);
     delete legacy.economy.exchange[0].requiredTerminalCapabilityId;
     const parsed = validateContent(legacy);

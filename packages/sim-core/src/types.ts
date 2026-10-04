@@ -7,6 +7,34 @@ import type { TransportDiagnostic } from "./containment";
 export type Point = { x: number; y: number };
 export type Rect = Point & { width: number; height: number };
 export type Inventory = Record<string, number>;
+export const SENSING_SIGNAL_BANDS = [
+  "none",
+  "weak",
+  "moderate",
+  "strong",
+] as const;
+export const SENSING_DEPTH_BANDS = [
+  "unknown",
+  "shallow",
+  "intermediate",
+  "deep",
+] as const;
+export type SensingSignalBand = (typeof SENSING_SIGNAL_BANDS)[number];
+export type SensingDepthBand = (typeof SENSING_DEPTH_BANDS)[number];
+export type SensingObservation = Point & {
+  capabilityId: string;
+  mode: "scan" | "probe";
+  observedAtTick: number;
+  signalBand: SensingSignalBand;
+  depthBand: SensingDepthBand;
+};
+export type SensingCapabilityView = {
+  id: string;
+  nameKey: string;
+  mode: "scan" | "probe";
+  range: number;
+  unlocked: boolean;
+};
 export type FlowTotals = {
   consumed: Inventory;
   produced: Inventory;
@@ -253,6 +281,7 @@ export type Save = {
   stock: Inventory;
   knowledge: string[];
   evidence: Record<string, ExperimentEvidence>;
+  sensingObservations: Record<string, SensingObservation>;
   deposits: Inventory;
   machines: Record<string, Machine>;
   factories: Record<string, Factory>;
@@ -333,6 +362,7 @@ export type GameCommand =
   | { type: "setEnabled"; machineId: string; enabled: boolean }
   | { type: "setOperation"; machineId: string; operation: string }
   | { type: "setPolicy"; materialId: string; policy: "keep" | "export" }
+  | { type: "sense"; capabilityId: string; x: number; y: number }
   | { type: "assistance"; packageId?: string };
 export type MachineView = Omit<Machine, "job" | "incident"> & {
   job: { remaining: number } | null;
@@ -389,7 +419,9 @@ export type PlayerSnapshot = {
   stock: Inventory;
   exported: number;
   milestone: boolean;
-  map: Content["site"];
+  map: Omit<Content["site"], "sensingCapabilities" | "surveySignals">;
+  sensingCapabilities: SensingCapabilityView[];
+  sensingObservations: SensingObservation[];
   deposits: (Content["site"]["deposits"][number] & { remaining: number })[];
   definitions: MachineDefinitionView[];
   storageDefinitions: StorageDefinition[];

@@ -4,7 +4,7 @@ import {
   type GameCommand,
   type CommandResult,
 } from "@site/sim-core";
-const SAVE_KEY = "industrial-site-save-v12";
+const SAVE_KEY = "industrial-site-save-v13";
 type StorageReader = { getItem(key: string): string | null };
 type StorageWriter = { setItem(key: string, value: string): void };
 export class Session {
@@ -62,6 +62,7 @@ export class Session {
       // Older browser records remain readable for explicit compatibility diagnostics.
       const raw =
         storage.getItem(SAVE_KEY) ??
+        storage.getItem("industrial-site-save-v12") ??
         storage.getItem("industrial-site-save-v11") ??
         storage.getItem("industrial-site-save-v10") ??
         storage.getItem("industrial-site-save-v9") ??

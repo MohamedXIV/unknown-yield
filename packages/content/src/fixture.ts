@@ -1,6 +1,6 @@
 import { validateContent } from "./schema";
 export const fixture = validateContent({
-  version: "world-01-v11",
+  version: "world-01-v12",
   tickMs: 100,
   containmentCapabilities: [
     {
@@ -346,6 +346,25 @@ export const fixture = validateContent({
     },
   ],
   site: {
+    sensingCapabilities: [
+      {
+        id: "survey-scanner",
+        nameKey: "sensing.capability.survey-scanner.name",
+        mode: "scan",
+        range: 8,
+      },
+      {
+        id: "core-probe",
+        nameKey: "sensing.capability.core-probe.name",
+        mode: "probe",
+        range: 1,
+        requiredMilestoneId: "sealed-study-certified",
+      },
+    ],
+    surveySignals: [
+      { id: "anomaly-a", x: 46, y: 18, strength: 8, depth: 14 },
+      { id: "anomaly-b", x: 62, y: 42, strength: 5, depth: 4 },
+    ],
     terminalModules: [
       { id: "liquid-dock", nameKey: "terminal.module.liquid-dock.name", handlingState: "liquid", containmentCapabilities: ["corrosion-resistant"], capacity: 24, cost: 30, requiredTerminalCapabilityId: "liquid-outbound", inlet: { x: 1, y: 3, side: 1 } },
       { id: "gas-dock", nameKey: "terminal.module.gas-dock.name", handlingState: "gas", containmentCapabilities: [], capacity: 16, cost: 36, requiredTerminalCapabilityId: "gas-outbound", inlet: { x: 3, y: 1, side: 0 } },

@@ -7,10 +7,17 @@ import { validateTerminalModules } from "./terminal";
 import {
   emptyFlows,
   experimentEvidenceKey,
+  SENSING_DEPTH_BANDS,
+  SENSING_SIGNAL_BANDS,
   total,
   type ExperimentEvidence,
   type Save,
 } from "./types";
+import {
+  createSensingObservation,
+  sensingCapabilityUnlocked,
+  sensingObservationKey,
+} from "./sensing";
 import { initializeKnownMarkets, exchangeDefinition } from "./market";
 import { machineUnlocked } from "./progression";
 import { milestoneSatisfied, refreshMilestones } from "./milestones";
@@ -136,6 +143,7 @@ const schema = z.object({
     z.literal(16),
     z.literal(17),
     z.literal(18),
+    z.literal(19),
   ]),
   contentVersion: z.string(),
   terminalModules: z
@@ -154,6 +162,22 @@ const schema = z.object({
   stock: inventory,
   knowledge: z.array(safeId),
   evidence: z.record(z.string().min(1), evidence).default({}),
+  sensingObservations: z
+    .record(
+      z.string().min(1),
+      z
+        .object({
+          capabilityId: safeId,
+          mode: z.enum(["scan", "probe"]),
+          x: count,
+          y: count,
+          observedAtTick: count,
+          signalBand: z.enum(SENSING_SIGNAL_BANDS),
+          depthBand: z.enum(SENSING_DEPTH_BANDS),
+        })
+        .strict(),
+    )
+    .default({}),
   deposits: inventory,
   machines: z.record(safeId, machine),
   factories: z.record(safeId, factory),
@@ -244,7 +268,7 @@ const schema = z.object({
 });
 export function initialState(c: Content): Save {
   const state: Save = {
-    schemaVersion: 18,
+    schemaVersion: 19,
     terminalModules: {},
     contentVersion: c.version,
     tick: 0,
@@ -276,6 +300,7 @@ export function initialState(c: Content): Save {
           ];
         }),
     ),
+    sensingObservations: {},
     deposits: Object.fromEntries(c.site.deposits.map((d) => [d.id, d.units])),
     machines: {},
     factories: {},
@@ -314,7 +339,7 @@ export function parseSave(input: unknown, c: Content): Save {
     Object.values(parsed.pumps).some((p) => p.incident)
   )
     throw Error("Legacy schema cannot contain pump incidents");
-  if (parsed.schemaVersion === 18) {
+  if (parsed.schemaVersion >= 18) {
     const raw = input as { pumps?: Record<string, unknown> };
     if (
       Object.values(raw.pumps ?? {}).some(
@@ -454,6 +479,9 @@ export function parseSave(input: unknown, c: Content): Save {
   if (s.schemaVersion === 15) s.schemaVersion = 16;
   if (s.schemaVersion === 16) s.schemaVersion = 17;
   if (s.schemaVersion === 17) s.schemaVersion = 18;
+  // Schema 18 predates persisted sensing observations. No sensing knowledge
+  // existed, so the exact migration is an empty observation record.
+  if (s.schemaVersion === 18) s.schemaVersion = 19;
   if (s.contentVersion !== c.version || s.remainder >= c.tickMs)
     throw new Error("Incompatible content or timing");
   if (
@@ -569,6 +597,38 @@ export function parseSave(input: unknown, c: Content): Save {
       throw new Error("Invalid milestone state");
   }
   refreshMilestones(c, s);
+
+  for (const [key, observation] of Object.entries(s.sensingObservations)) {
+    const capability = c.site.sensingCapabilities.find(
+      (entry) => entry.id === observation.capabilityId,
+    );
+    if (
+      !capability ||
+      capability.mode !== observation.mode ||
+      !sensingCapabilityUnlocked(s, capability) ||
+      observation.observedAtTick > s.tick ||
+      sensingObservationKey(observation.capabilityId, observation.x, observation.y) !==
+        key
+    )
+      throw new Error("Invalid sensing observation");
+    const expected = createSensingObservation(
+      c,
+      capability,
+      observation.x,
+      observation.y,
+      observation.observedAtTick,
+    );
+    if (
+      expected.capabilityId !== observation.capabilityId ||
+      expected.mode !== observation.mode ||
+      expected.x !== observation.x ||
+      expected.y !== observation.y ||
+      expected.observedAtTick !== observation.observedAtTick ||
+      expected.signalBand !== observation.signalBand ||
+      expected.depthBand !== observation.depthBand
+    )
+      throw new Error("Invalid sensing observation");
+  }
 
   validateTerminalModules(c, s, known);
 

@@ -125,6 +125,10 @@ function previewLayout(
   });
   preview.site = {
     ...preview.site,
+    // The reaction preview is an isolated synthetic world. Phase 10 survey
+    // truth from the production fixture must not constrain this tiny layout.
+    sensingCapabilities: [],
+    surveySignals: [],
     width: siteWidth,
     height: siteHeight,
     startStock: 1_000_000,
