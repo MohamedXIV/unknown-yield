@@ -259,3 +259,5 @@ Approved design and plan are implemented natively on `codex/111-terminal-handlin
 ## Phase 9 recoverable handling — #112
 
 Approved contained pump failure is implemented on codex/112-recoverable-handling in this checkout. Save 18 / world-01-v11 / browser slot v12; conditional blueprint 1–5 unchanged. Contract: docs/superpowers/specs/2026-10-04-recoverable-handling-design.md; implementation ledger: PHASE9_RECOVERY_IMPLEMENTATION_LOG.md. Final gate: 380 PASS / 2 skipped; typecheck/lint/build/static-export/browser/diff PASS. Evidence and delivery: PHASE9_RECOVERY_ACCEPTANCE.md. #100 remains open; #113 untouched; final PR merge approval is separate.
+
+#112 delivery: [PR #166](https://github.com/MohamedXIV/unknown-yield/pull/166) OPEN; local acceptance complete. Final squash merge awaits user approval. #100 stays OPEN and #113 is not started.
