@@ -68,6 +68,7 @@ function scenario(cells: number, blocked: boolean) {
       // This benchmark authors its own synthetic world dimensions/resources.
       sensingCapabilities: [],
       surveySignals: [],
+      hiddenDeposits: [],
       width: 80,
       height: cells * 16 + 20,
       startStock: 1000000,

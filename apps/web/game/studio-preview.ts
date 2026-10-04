@@ -129,6 +129,7 @@ function previewLayout(
     // truth from the production fixture must not constrain this tiny layout.
     sensingCapabilities: [],
     surveySignals: [],
+    hiddenDeposits: [],
     width: siteWidth,
     height: siteHeight,
     startStock: 1_000_000,
