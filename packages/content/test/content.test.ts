@@ -49,7 +49,7 @@ describe("content boundary", () => {
     );
 
     const outside = structuredClone(fixture);
-    outside.site.surveySignals[0].x = outside.site.width;
+    outside.site.surveySignals[1].x = outside.site.width;
     expect(() => validateContent(outside)).toThrow(/outside site bounds/i);
   });
 
