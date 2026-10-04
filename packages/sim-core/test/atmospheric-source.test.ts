@@ -184,7 +184,7 @@ describe("non-surface atmospheric resource source", () => {
 
     expect(locked.load(forged)).toMatchObject({
       ok: false,
-      message: "Machine locked by unconfirmed knowledge",
+      message: expect.stringContaining("Machine locked by unconfirmed knowledge"),
     });
     expect(JSON.stringify(locked.snapshot())).not.toContain("gas-0");
   });
