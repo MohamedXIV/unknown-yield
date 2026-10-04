@@ -618,7 +618,15 @@ export function parseSave(input: unknown, c: Content): Save {
       observation.y,
       observation.observedAtTick,
     );
-    if (JSON.stringify(expected) !== JSON.stringify(observation))
+    if (
+      expected.capabilityId !== observation.capabilityId ||
+      expected.mode !== observation.mode ||
+      expected.x !== observation.x ||
+      expected.y !== observation.y ||
+      expected.observedAtTick !== observation.observedAtTick ||
+      expected.signalBand !== observation.signalBand ||
+      expected.depthBand !== observation.depthBand
+    )
       throw new Error("Invalid sensing observation");
   }
 

@@ -45,17 +45,21 @@ export class Simulation {
   command(input: unknown): CommandResult {
     const result = applyCommand(this.content, this.state, input, true);
     if (result.ok) {
-      if (
-        typeof input === "object" &&
-        input !== null &&
-        "type" in input &&
+      const commandType =
+        typeof input === "object" && input !== null && "type" in input
+          ? String(input.type)
+          : "";
+      if (commandType === "sense") {
+        // Sensing changes knowledge only; it must not disturb production
+        // throughput measurement state.
+      } else if (
         [
           "setLiquidContainmentProfile",
           "setPumpRecoveryDrain",
           "repairPump",
           "installTerminalModule",
           "removeTerminalModule",
-        ].includes(String(input.type))
+        ].includes(commandType)
       )
         this.factoryThroughput.observe(this.content, this.state);
       else this.factoryThroughput.reset();
