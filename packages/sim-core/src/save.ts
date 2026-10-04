@@ -750,6 +750,8 @@ export function parseSave(input: unknown, c: Content): Save {
     )
       throw new Error(placement.error ?? "Invalid machine ownership");
     const d = c.machines.find((d) => d.id === m.definitionId)!;
+    if (!machineUnlocked(s, d))
+      throw new Error("Machine locked by unconfirmed knowledge");
     if (m.incident) {
       const hazard = c.reactions.find(
         (r) =>

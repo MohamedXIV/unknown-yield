@@ -161,6 +161,34 @@ describe("non-surface atmospheric resource source", () => {
     expect(auditLedger(fixture, restored.serialize()).ok).toBe(true);
   });
 
+  it("rejects a forged atmospheric intake before its knowledge unlock", () => {
+    const locked = new Simulation(fixture);
+    discoverAtmosphere(locked);
+    const lockedSave = locked.serialize();
+
+    const unlocked = new Simulation(fixture);
+    expect(unlocked.load(JSON.parse(JSON.stringify(lockedSave))).ok).toBe(true);
+    confirm(unlocked, "vaporize-liquid-0");
+    build(unlocked, {
+      type: "placeMachine",
+      definitionId: "atmospheric-intake",
+      x: 69,
+      y: 25,
+      direction: 2,
+    });
+    const built = unlocked.serialize();
+    const forged = JSON.parse(JSON.stringify(lockedSave));
+    forged.machines = built.machines;
+    forged.stock = built.stock;
+    forged.nextId = built.nextId;
+
+    expect(locked.load(forged)).toMatchObject({
+      ok: false,
+      message: "Machine locked by unconfirmed knowledge",
+    });
+    expect(JSON.stringify(locked.snapshot())).not.toContain("gas-0");
+  });
+
   it("rejects forged atmospheric inventory without probe evidence", () => {
     const sim = new Simulation(fixture);
     const forged = sim.serialize();
