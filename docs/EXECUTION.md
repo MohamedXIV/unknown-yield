@@ -46,6 +46,11 @@ This document is intentionally procedural. Game/design truth lives in the domain
 - Phase 6 integrated gate accepted through #84 / PR #89.
 - Completed Phase 6 gate: **#84 — end-to-end junction exit review**, through PR #89; evidence in `PHASE6_EXIT_REVIEW.md`.
   - Design contract: `docs/PHASE6_JUNCTIONS.md` + D-033. Partial implementation does not redefine intent.
+- Phase 7 — scale/performance — is **DEFERRED**, not complete. The accepted 32-factory joint-p95 budget miss remains recorded; do not optimize further without renewed evidence/scope.
+- Phase 8 — art production pipeline — remains a **parallel planned track** and does not block gameplay execution.
+- Completed phase: **Phase 9 — material-state logistics and containment** (closed by #113 / PR #167, main `f8d3ac03aba006a0320b51c840441d2564f8a8b2`).
+  - #108 liquid logistics ✓; #109 pressurized gas ✓; #110 authored containment ✓; #111 physical terminal handling ✓; #112 recoverable handling ✓; #113 integrated exit review ✓.
+- Current gameplay phase: **Phase 10 — industrial exploration and deep extraction (#101)**. **#114 is FIRST UNBLOCKED**; #115–#119 remain dependency-ordered behind it.
 
 ## Phase 1.5 dependency graph
 
@@ -184,7 +189,7 @@ npm run build
 
 Run focused package/tests before the full baseline. Browser acceptance is required when world interaction, Phaser presentation/input, React gameplay UI, save/load UX, or an issue's explicit gate needs it.
 
-There is currently no remote CI workflow. Do not represent absent checks as green CI; record local/domain/browser evidence precisely.
+GitHub Actions CI runs `npm test`, `npm run typecheck`, `npm run lint`, and `npm run build` on pull requests and pushes to `main`. Treat the exact workflow result as remote automated evidence. Browser acceptance remains a separate gate when world interaction, presentation/input, save/load UX, or an issue explicitly requires it.
 
 ## Scope rules
 
@@ -195,9 +200,9 @@ There is currently no remote CI workflow. Do not represent absent checks as gree
 - Stable content IDs are simulation/save identity; localized/player-facing wording is presentation data.
 - React stays out of per-frame world transforms.
 - Do not add Rust/WASM without benchmark/profiler evidence.
-- Do not expand Content Studio, advanced logistics, market depth, or broad content volume as a prerequisite to Phase 2.
-- Phase 2 experimentation must preserve hidden authored truth vs player knowledge and remain deterministic from authoritative simulation conditions.
-- Phase 6 is limited to #80 / #81–#84. Do not create speculative issue trees for its deferred technologies or Phases 7–8.
+- Completed phases are foundations, not active scope: extend their accepted contracts rather than reopening them casually.
+- Phase 7 performance work remains deferred until measured browser/scale evidence justifies reopening it; Phase 8 art work is parallel and explicitly selected only when needed.
+- Phase 10 is the active gameplay queue. Preserve #114 → #115 → #116 → #117 → #118 → #119 dependency order and do not pull Phase 11+ systems forward.
 
 ## Active/later phase epics
 
@@ -206,7 +211,11 @@ There is currently no remote CI workflow. Do not represent absent checks as gree
 - #11 — Content Studio v1 — COMPLETE via children #60–#63
 - #12 — Materials Exchange and corporate progression — COMPLETE via #69–#73; exit gate #73 merged through PR #79 / `dcbe1a567cc26ab150f13e159d35bf50030ee570`
 - #80 — readable belts and controlled ground junctions — COMPLETE through #84 / PR #89.
-- Completed Phase 7 baseline: **#90 — single-world simulation/snapshot baseline**, through PR #91. Evidence: PHASE7_BASELINE.md. Phase 7 remains open; #92 profiling completed through PR #93; 32-factory / 10ms joint-p95 budget FAILS. Evidence: PHASE7_PROFILING.md. Optimization #94 is complete through PR #95: shared connected topology indexing within each throughput observation; all dynamic recurrence checks retained. Browser costs remain a separate gate.
+- #100 — Phase 9 material-state logistics and containment — COMPLETE through #113 / PR #167.
+- #101 — Phase 10 industrial exploration and deep extraction — ACTIVE; #114 FIRST UNBLOCKED, then #115–#119.
+- #102–#107 — Phases 11–16 — dependency-ordered later queues; none is implicitly active.
+- Phase 8 — art production pipeline — parallel planned track, selected explicitly when useful.
+- Completed Phase 7 baseline: **#90 — single-world simulation/snapshot baseline**, through PR #91. Evidence: PHASE7_BASELINE.md. Phase 7 remains deferred; #92 profiling completed through PR #93; 32-factory / 10ms joint-p95 budget FAILS. Evidence: PHASE7_PROFILING.md. Optimization #94 is complete through PR #95: shared connected topology indexing within each throughput observation; all dynamic recurrence checks retained. Browser costs remain a separate gate.
 
 Preserve the active issue dependency order. Archived Issue #2 NEXT entries and deferred roadmap possibilities do not authorize new work.
 
@@ -236,9 +245,9 @@ The roadmap now records Phases 9–16 for the major gameplay directions that wer
 - Phase 15 — content scale and expedition arc;
 - Phase 16 — production vertical slice.
 
-Canonical GitHub epics and children are now created: Phase 9 #100 (#108–#113), Phase 10 #101 (#114–#119), Phase 11 #102 (#120–#125), Phase 12 #103 (#126–#131), Phase 13 #104 (#132–#138), Phase 14 #105 (#139–#144), Phase 15 #106 (#145–#152), and Phase 16 #107 (#153–#161). They are not eight simultaneously active implementation phases: Phase 9 / #100 is active. #108–#110 are merged; #111 physical terminal handling is merged; #112 recoverable handling is merged; #113 integrated exit review is the explicitly approved active scope. Later phases remain dependency-ordered planning/execution queues.
+Canonical GitHub epics and children exist for Phase 9 #100 (#108–#113), Phase 10 #101 (#114–#119), Phase 11 #102 (#120–#125), Phase 12 #103 (#126–#131), Phase 13 #104 (#132–#138), Phase 14 #105 (#139–#144), Phase 15 #106 (#145–#152), and Phase 16 #107 (#153–#161). Phase 9 is complete through #113 / PR #167. Phase 10 / #101 is the active gameplay phase; #114 is FIRST UNBLOCKED. Later phases remain dependency-ordered planning/execution queues.
 
-Phase 7 remains deferred with its accepted unmet performance budget preserved. Phase 8 remains a parallel art-pipeline track and does not block Phase 9 gameplay work. Do not reopen completed Phase 2/5/6 foundations merely because later phases deepen discovery, company systems or logistics; extend the accepted contracts.
+Phase 7 remains deferred with its accepted unmet performance budget preserved. Phase 8 remains a parallel art-pipeline track and does not block Phase 10 gameplay work. Do not reopen completed foundations merely because later phases deepen discovery, company systems or logistics; extend the accepted contracts.
 
 ## Phase 9 liquid gate — #108
 
@@ -264,4 +273,4 @@ Approved contained pump failure is implemented on codex/112-recoverable-handling
 
 ## Phase 9 integrated exit review — #113
 
-Approved 2026-10-04 after #112 merge. Native review on `codex/113-material-state-exit` from main `539f3f37dc2d317423748493c7c65383009e0a27`. No production defect or schema change: adds one fresh-world integrated regression, browser continuation and evidence. Local gate: **381 PASS / 2 skipped; typecheck/lint/build/static-export/browser PASS**. [Exit review](PHASE9_EXIT_REVIEW.md) records exact commands, retries, attribution and limits. #100/#113 remain OPEN pending scoped PR acceptance and merge; later-phase implementation is not selected.
+Approved 2026-10-04 after #112 merge. Native review on `codex/113-material-state-exit` from main `539f3f37dc2d317423748493c7c65383009e0a27`. No production defect or schema change: adds one fresh-world integrated regression, browser continuation and evidence. Local gate: **381 PASS / 2 skipped; typecheck/lint/build/static-export/browser PASS**. [Exit review](PHASE9_EXIT_REVIEW.md) records exact commands, retries, attribution and limits. #113 merged via PR #167 to main `f8d3ac03aba006a0320b51c840441d2564f8a8b2`; #100 and #113 are closed. Phase 10 / #101 is now active, beginning with #114.

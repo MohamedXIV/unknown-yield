@@ -14,15 +14,18 @@ This directory is the project design and engineering source of truth. Documents 
 8. [PHASE3_EXIT_REVIEW.md](PHASE3_EXIT_REVIEW.md) — accepted Phase 3 factory-as-function contract and evidence.
 9. [PHASE4_EXIT_REVIEW.md](PHASE4_EXIT_REVIEW.md) — accepted Content Studio v1 authoring/preview contract and Phase 4 evidence.
 10. [PHASE5_EXIT_REVIEW.md](PHASE5_EXIT_REVIEW.md) — accepted integrated Materials Exchange/company-progression exit gate and Phase 5 evidence.
-11. [ART_PIPELINE.md](ART_PIPELINE.md) — 2D presentation and the 3D-blockout-to-2D AI-assisted asset workflow.
-12. [ROADMAP.md](ROADMAP.md) — proof-driven implementation phases and acceptance gates.
-13. [EXECUTION.md](EXECUTION.md) — live issue order and execution workflow for humans/agents.
-14. [DECISIONS.md](DECISIONS.md) — accepted decisions that should not be casually reopened.
-15. [../AGENTS.md](../AGENTS.md) — implementation rules for humans and coding agents.
+11. [PHASE6_EXIT_REVIEW.md](PHASE6_EXIT_REVIEW.md) — accepted readable-belt and controlled-junction Phase 6 gate.
+12. [PHASE7_PROFILING.md](PHASE7_PROFILING.md) — measured scale/performance evidence and the intentionally deferred budget gap.
+13. [PHASE9_EXIT_REVIEW.md](PHASE9_EXIT_REVIEW.md) — accepted material-state logistics, containment and terminal-handling Phase 9 gate.
+14. [ART_PIPELINE.md](ART_PIPELINE.md) — 2D presentation and the 3D-blockout-to-2D AI-assisted asset workflow.
+15. [ROADMAP.md](ROADMAP.md) — proof-driven implementation phases and acceptance gates.
+16. [EXECUTION.md](EXECUTION.md) — live issue order and execution workflow for humans/agents.
+17. [DECISIONS.md](DECISIONS.md) — accepted decisions that should not be casually reopened.
+18. [../AGENTS.md](../AGENTS.md) — implementation rules for humans and coding agents.
 
 ## Documentation principles
 
-Phase 6's contract is [PHASE6_JUNCTIONS.md](PHASE6_JUNCTIONS.md): readable L/manual-diverter routes, T splitting/merging, controlled `+` crossing, blocked-flow policies, persistence and acceptance. Read it alongside D-033 and live Issue #2 before implementation. [PHASE6_BELT_ACCEPTANCE.md](PHASE6_BELT_ACCEPTANCE.md) records accepted #81 visuals; #82–#84 remain pending.
+Phase 6 is complete through #84 / PR #89; [PHASE6_JUNCTIONS.md](PHASE6_JUNCTIONS.md) and [PHASE6_EXIT_REVIEW.md](PHASE6_EXIT_REVIEW.md) record its accepted routing contract and evidence. Phase 9 is complete through #113 / PR #167; [PHASE9_EXIT_REVIEW.md](PHASE9_EXIT_REVIEW.md) is the current integrated material-state logistics acceptance record. Issue #2 is archived execution history, not live direction.
 
 ### Current design beats implementation accidents
 

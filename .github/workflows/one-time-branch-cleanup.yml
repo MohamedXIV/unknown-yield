@@ -1,0 +1,68 @@
+name: One-time stale branch cleanup
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run build
+
+  cleanup:
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Delete audited stale branches
+        shell: bash
+        env:
+          STALE_BRANCHES: |
+            codex/first-playable
+            codex/issue-30-condition-aware-reactions
+            docs/activate-4
+            docs/activate-5
+            docs/activate-6
+            docs/activate-7
+            docs/activate-8
+            docs/activate-14
+            docs/activate-30
+            docs/activate-31
+            docs/localization-contract
+            docs/reaffirm-content-stack
+            docs/roadmap-execution
+            feat/3-material-ledger
+            feat/4-storage-staging
+            feat/5-remove-discard
+            feat/6-belt-routing
+            feat/7-factory-persistence
+            feat/14-localization-identity
+            review/8-phase15-exit
+        run: |
+          set -euo pipefail
+          while IFS= read -r branch; do
+            [ -z "$branch" ] && continue
+            if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
+              echo "Deleting $branch"
+              git push origin --delete "$branch"
+            else
+              echo "Already absent: $branch"
+            fi
+          done <<< "$STALE_BRANCHES"

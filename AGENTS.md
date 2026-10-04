@@ -158,6 +158,8 @@ Content changes should pass:
 
 For bugs, add a regression test when the behavior can be expressed deterministically.
 
+GitHub Actions CI mirrors the repository baseline (`npm test`, typecheck, lint, build) on pull requests and `main`. CI is automated evidence, not a substitute for issue-required browser/device acceptance.
+
 ## 9. Performance work
 
 Do not optimize by intuition alone.

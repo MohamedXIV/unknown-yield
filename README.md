@@ -30,7 +30,7 @@ The most important gameplay space is the transition from **Experiment** to **Ind
 - **Simulation:** pure TypeScript package with no Phaser, React, DOM, or Canvas dependency
 - **Content database / studio:** TinyBase
 - **Content validation:** Zod
-- **Persistence:** save schema 2 in localStorage; content version is independent
+- **Persistence:** explicit versioned browser saves; save schema and content version evolve independently
 - **Performance path:** Web Worker first when justified; Rust/WASM only after profiling proves a real need
 - **Art:** 2D fixed-view game assets, with simple 3D blockouts/renders used as structural guides for consistent AI-assisted asset generation
 
@@ -66,7 +66,7 @@ Open http://127.0.0.1:3000. The world is the primary play surface. There are no 
 - Select a factory and press F (or use its panel) to reveal/close its roof.
 - X: dismantle with refunds. Disable a running machine and wait for its batch to finish first.
 - Knowledge, terminal policies and save/load are available from the compact top-right controls.
-- Saves are manual and local to this browser. Schema 1 prototype saves are intentionally incompatible. A rejected load leaves the running world unchanged.
+- Saves are manual and local to this browser. Unsupported save/content versions reject atomically and leave the running world unchanged.
 
 `npm run dev:studio` opens the separate development content editor. It is excluded from player production exports. No Studio expansion is part of this change.
 
@@ -81,6 +81,6 @@ npm run build
 
 ## Project status
 
-The accepted game foundation is the spatial first playable described in [First Playable](docs/FIRST_PLAYABLE.md). It proves the world-first UI, pure simulation boundary, construction/automation loop, hidden discovery, export/fuel loop, and save/load path. Art, balance, market depth, physical storage, flexible routing, and large-scale performance remain follow-up work.
+The project has completed the first playable plus Phases 1.5–6 and Phase 9. The current game includes physical inventory/storage and conservation, flexible ground routing, hidden experimentation and hazards, factory-as-function contracts, Content Studio v1, Materials Exchange/company progression, and solid/liquid/gas logistics with containment and terminal handling. Phase 7 performance work remains explicitly deferred with its measured budget miss preserved; Phase 8 is the parallel art-production track. The next gameplay phase is Phase 10 — industrial exploration and deep extraction — beginning with Issue #114.
 
 The working title may change. Package naming remains independent of it.

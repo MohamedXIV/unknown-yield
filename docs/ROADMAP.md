@@ -261,7 +261,9 @@ Multiple assets created by the pipeline read as one coherent game and can be reg
 
 ## Phase 9 — Material-state logistics and containment
 
-**Epic:** GitHub Issue #100. **ACTIVE GAMEPLAY PHASE.** #108 liquid logistics acceptance passed; #109 gases and pressurized transport is next after merge. Evidence: [PHASE9_LIQUID_ACCEPTANCE.md](PHASE9_LIQUID_ACCEPTANCE.md).
+**Epic:** GitHub Issue #100. **COMPLETE** through #113 / PR #167, merged to `main` at `f8d3ac03aba006a0320b51c840441d2564f8a8b2`. Integrated evidence: [PHASE9_EXIT_REVIEW.md](PHASE9_EXIT_REVIEW.md).
+
+**Completed execution:** #108 ✓ → #109 ✓ → #110 ✓ → #111 ✓ → #112 ✓ → #113 ✓.
 
 ### Question
 
@@ -285,7 +287,7 @@ One persistent playable chain crosses at least two materially different handling
 
 ## Phase 10 — Industrial exploration and deep extraction
 
-**Epic:** GitHub Issue #101. Planned after Phase 9. Children #114–#119.
+**Epic:** GitHub Issue #101. **ACTIVE GAMEPLAY PHASE.** Children #114–#119; #114 is the first unblocked implementation issue.
 
 ### Question
 
