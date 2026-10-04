@@ -236,7 +236,7 @@ The roadmap now records Phases 9–16 for the major gameplay directions that wer
 - Phase 15 — content scale and expedition arc;
 - Phase 16 — production vertical slice.
 
-Canonical GitHub epics and children are now created: Phase 9 #100 (#108–#113), Phase 10 #101 (#114–#119), Phase 11 #102 (#120–#125), Phase 12 #103 (#126–#131), Phase 13 #104 (#132–#138), Phase 14 #105 (#139–#144), Phase 15 #106 (#145–#152), and Phase 16 #107 (#153–#161). They are not eight simultaneously active implementation phases: Phase 9 / #100 is active. #108–#110 are merged; #111 physical terminal handling is merged; #112 recoverable handling is the explicitly approved active scope. Later phases remain dependency-ordered planning/execution queues.
+Canonical GitHub epics and children are now created: Phase 9 #100 (#108–#113), Phase 10 #101 (#114–#119), Phase 11 #102 (#120–#125), Phase 12 #103 (#126–#131), Phase 13 #104 (#132–#138), Phase 14 #105 (#139–#144), Phase 15 #106 (#145–#152), and Phase 16 #107 (#153–#161). They are not eight simultaneously active implementation phases: Phase 9 / #100 is active. #108–#110 are merged; #111 physical terminal handling is merged; #112 recoverable handling is merged; #113 integrated exit review is the explicitly approved active scope. Later phases remain dependency-ordered planning/execution queues.
 
 Phase 7 remains deferred with its accepted unmet performance budget preserved. Phase 8 remains a parallel art-pipeline track and does not block Phase 9 gameplay work. Do not reopen completed Phase 2/5/6 foundations merely because later phases deepen discovery, company systems or logistics; extend the accepted contracts.
 
@@ -258,6 +258,10 @@ Approved design and plan are implemented natively on `codex/111-terminal-handlin
 
 ## Phase 9 recoverable handling — #112
 
-Approved contained pump failure is implemented on codex/112-recoverable-handling in this checkout. Save 18 / world-01-v11 / browser slot v12; conditional blueprint 1–5 unchanged. Contract: docs/superpowers/specs/2026-10-04-recoverable-handling-design.md; implementation ledger: PHASE9_RECOVERY_IMPLEMENTATION_LOG.md. Final gate: 380 PASS / 2 skipped; typecheck/lint/build/static-export/browser/diff PASS. Evidence and delivery: PHASE9_RECOVERY_ACCEPTANCE.md. #100 remains open; #113 untouched; final PR merge approval is separate.
+Approved contained pump failure is implemented on codex/112-recoverable-handling in this checkout. Save 18 / world-01-v11 / browser slot v12; conditional blueprint 1–5 unchanged. Contract: docs/superpowers/specs/2026-10-04-recoverable-handling-design.md; implementation ledger: PHASE9_RECOVERY_IMPLEMENTATION_LOG.md. Final gate: 380 PASS / 2 skipped; typecheck/lint/build/static-export/browser/diff PASS. Evidence and delivery: PHASE9_RECOVERY_ACCEPTANCE.md. #112 merged via PR #166. #100 remains open; #113 is now the approved integrated exit review.
 
-#112 delivery: [PR #166](https://github.com/MohamedXIV/unknown-yield/pull/166) OPEN; local acceptance complete. Final squash merge awaits user approval. #100 stays OPEN and #113 is not started.
+#112 merged via [PR #166](https://github.com/MohamedXIV/unknown-yield/pull/166), main `539f3f37dc2d317423748493c7c65383009e0a27`; live #112 CLOSED. #100 remains OPEN. The user approved #113 integrated exit review on 2026-10-04; active evidence is [PHASE9_EXIT_REVIEW.md](PHASE9_EXIT_REVIEW.md). Review only the accepted Phase 9 contract; later phases remain deferred.
+
+## Phase 9 integrated exit review — #113
+
+Approved 2026-10-04 after #112 merge. Native review on `codex/113-material-state-exit` from main `539f3f37dc2d317423748493c7c65383009e0a27`. No production defect or schema change: adds one fresh-world integrated regression, browser continuation and evidence. Local gate: **381 PASS / 2 skipped; typecheck/lint/build/static-export/browser PASS**. [Exit review](PHASE9_EXIT_REVIEW.md) records exact commands, retries, attribution and limits. #100/#113 remain OPEN pending scoped PR acceptance and merge; later-phase implementation is not selected.
