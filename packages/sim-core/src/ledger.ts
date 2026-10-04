@@ -1,6 +1,7 @@
 import { liquidConstructionCost } from "./containment";
 import type { Content } from "@site/content";
 import type { Save } from "./types";
+import { allDeposits, depositDefinition } from "./deposits";
 
 /**
  * Material ledger (Issues #3–#4).
@@ -105,13 +106,16 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
   // Sources present at genesis: starter stock + authored deposit units.
   if (c.site.startStock > 0)
     row(c.site.buildMaterial).initial += c.site.startStock;
-  for (const d of c.site.deposits) row(d.material).initial += d.units;
+  for (const d of allDeposits(c)) row(d.material).initial += d.units;
 
   // Remaining source material still in the ground.
   for (const [id, n] of Object.entries(s.deposits ?? {})) {
-    const d = c.site.deposits.find((a) => a.id === id);
+    const d = depositDefinition(c, id);
     if (d) row(d.material).deposits += n;
   }
+  for (const d of c.site.hiddenDeposits)
+    if (!s.discoveredDeposits.includes(d.id))
+      row(d.material).deposits += d.units;
 
   // Terminal/site holdings: construction reserve plus tracked staging.
   for (const [id, n] of Object.entries(s.stock ?? {})) row(id).stock += n;
@@ -157,7 +161,7 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
       const r = c.reactions.find((a) => a.id === m.job!.reaction);
       if (r) row(r.input).escrow += r.inputAmount;
     } else if (m.depositId) {
-      const d = c.site.deposits.find((a) => a.id === m.depositId);
+      const d = depositDefinition(c, m.depositId);
       if (d) row(d.material).escrow += 1;
     }
   }

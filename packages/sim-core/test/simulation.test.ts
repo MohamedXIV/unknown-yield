@@ -377,8 +377,8 @@ describe("automatic industry", () => {
       expect(save.machines[processor].definitionId).toBe(definitionId);
       expect(save.machines[processor].job?.reaction).toBe(reactionId);
       expect(save.knowledge).not.toContain(reactionId);
-      expect(save.schemaVersion).toBe(19);
-      expect(save.contentVersion).toBe("world-01-v12");
+      expect(save.schemaVersion).toBe(20);
+      expect(save.contentVersion).toBe("world-01-v13");
 
       const restored = make(),
         repeated = make();
@@ -432,7 +432,7 @@ describe("automatic industry", () => {
     expect(JSON.stringify(hinted)).not.toContain("reaction.heat-raw");
 
     const saved = s.serialize();
-    expect(saved.schemaVersion).toBe(19);
+    expect(saved.schemaVersion).toBe(20);
     expect(saved.evidence[hinted!.id].state).toBe("hinted");
 
     const restored = make();
@@ -508,7 +508,7 @@ describe("automatic industry", () => {
 
     const restored = new Simulation(historicalFixture);
     expect(restored.load(legacy).ok).toBe(true);
-    expect(restored.serialize().schemaVersion).toBe(19);
+    expect(restored.serialize().schemaVersion).toBe(20);
     const hinted = restored
       .snapshot()
       .knowledgeEntries.find(
@@ -734,7 +734,7 @@ describe("automatic industry", () => {
 
     const restored = new Simulation(historicalFixture);
     expect(restored.load(legacy).ok).toBe(true);
-    expect(restored.serialize().schemaVersion).toBe(19);
+    expect(restored.serialize().schemaVersion).toBe(20);
     expect(restored.serialize().machines[machineId].incident).toBeNull();
   });
 

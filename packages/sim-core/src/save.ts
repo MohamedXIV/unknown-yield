@@ -22,6 +22,7 @@ import { initializeKnownMarkets, exchangeDefinition } from "./market";
 import { machineUnlocked } from "./progression";
 import { milestoneSatisfied, refreshMilestones } from "./milestones";
 import { assistanceDefinition } from "./assistance";
+import { depositDefinition, hiddenDepositDefinition } from "./deposits";
 import {
   factoryError,
   machinePlacement,
@@ -144,6 +145,7 @@ const schema = z.object({
     z.literal(17),
     z.literal(18),
     z.literal(19),
+    z.literal(20),
   ]),
   contentVersion: z.string(),
   terminalModules: z
@@ -178,6 +180,7 @@ const schema = z.object({
         .strict(),
     )
     .default({}),
+  discoveredDeposits: z.array(safeId).default([]),
   deposits: inventory,
   machines: z.record(safeId, machine),
   factories: z.record(safeId, factory),
@@ -268,7 +271,7 @@ const schema = z.object({
 });
 export function initialState(c: Content): Save {
   const state: Save = {
-    schemaVersion: 19,
+    schemaVersion: 20,
     terminalModules: {},
     contentVersion: c.version,
     tick: 0,
@@ -301,6 +304,9 @@ export function initialState(c: Content): Save {
         }),
     ),
     sensingObservations: {},
+    discoveredDeposits: [],
+    // Hidden deposits are deliberately absent until discovery so raw saves do
+    // not leak source identity before the player earns that knowledge.
     deposits: Object.fromEntries(c.site.deposits.map((d) => [d.id, d.units])),
     machines: {},
     factories: {},
@@ -482,6 +488,7 @@ export function parseSave(input: unknown, c: Content): Save {
   // Schema 18 predates persisted sensing observations. No sensing knowledge
   // existed, so the exact migration is an empty observation record.
   if (s.schemaVersion === 18) s.schemaVersion = 19;
+  if (s.schemaVersion === 19) s.schemaVersion = 20;
   if (s.contentVersion !== c.version || s.remainder >= c.tickMs)
     throw new Error("Incompatible content or timing");
   if (
@@ -630,15 +637,43 @@ export function parseSave(input: unknown, c: Content): Save {
       throw new Error("Invalid sensing observation");
   }
 
+  const discovered = new Set<string>();
+  for (const id of s.discoveredDeposits) {
+    if (discovered.has(id)) throw new Error("Duplicate discovered deposit");
+    discovered.add(id);
+    const deposit = hiddenDepositDefinition(c, id);
+    if (!deposit) throw new Error("Unknown discovered deposit");
+    const signal = c.site.surveySignals.find(
+      (entry) => entry.id === deposit.surveySignalId,
+    )!;
+    const observation =
+      s.sensingObservations[
+        sensingObservationKey(
+          deposit.requiredSensingCapabilityId,
+          signal.x,
+          signal.y,
+        )
+      ];
+    if (
+      !observation ||
+      observation.mode !== "probe" ||
+      observation.signalBand === "none"
+    )
+      throw new Error("Discovered deposit lacks probe evidence");
+  }
+
   validateTerminalModules(c, s, known);
 
+  const expectedDepositIds = [
+    ...c.site.deposits.map((deposit) => deposit.id),
+    ...s.discoveredDeposits,
+  ].sort();
   if (
-    Object.keys(s.deposits).sort().join() !==
-      c.site.deposits
-        .map((d) => d.id)
-        .sort()
-        .join() ||
-    c.site.deposits.some((d) => s.deposits[d.id] > d.units)
+    Object.keys(s.deposits).sort().join() !== expectedDepositIds.join() ||
+    Object.entries(s.deposits).some(([id, units]) => {
+      const definition = depositDefinition(c, id);
+      return !definition || units > definition.units;
+    })
   )
     throw new Error("Invalid deposit state");
   const ids = new Set<string>();
@@ -652,6 +687,9 @@ export function parseSave(input: unknown, c: Content): Save {
     ids.add(id);
   };
   const stage = initialState(c);
+  stage.discoveredDeposits = [...s.discoveredDeposits];
+  for (const depositId of s.discoveredDeposits)
+    stage.deposits[depositId] = s.deposits[depositId];
   for (const [id, f] of Object.entries(s.factories)) {
     takeId(id, "f");
     if (f.id !== id) throw new Error("Mismatched factory ID");
@@ -713,8 +751,7 @@ export function parseSave(input: unknown, c: Content): Save {
     for (const material of Object.keys(m.output)) {
       const valid =
         d.role === "extractor"
-          ? c.site.deposits.find((a) => a.id === m.depositId)?.material ===
-            material
+          ? depositDefinition(c, m.depositId)?.material === material
           : c.reactions.some(
               (r) =>
                 d.operations.includes(r.operation) &&

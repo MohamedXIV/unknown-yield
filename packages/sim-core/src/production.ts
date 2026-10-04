@@ -16,6 +16,7 @@ import { key, next, socket, contains, footprint } from "./geometry";
 import { ensureMarket, exchangeDefinition } from "./market";
 import { recordDirectiveExperiment } from "./opportunities";
 import { settleTerminalExports } from "./terminal";
+import { depositDefinition } from "./deposits";
 export function recipe(c: Content, m: Machine) {
   const definition = c.machines.find((d) => d.id === m.definitionId);
   return c.reactions.find(
@@ -53,7 +54,7 @@ export function completeAndStart(
         const r = c.reactions.find((r) => r.id === m.job!.reaction);
         const material =
           r?.output ??
-          c.site.deposits.find((a) => a.id === m.depositId)!.material;
+          depositDefinition(c, m.depositId)!.material;
         if (r) {
           // A defined transformation: record the consumed inputs and the
           // created outputs so the ledger can reconcile the identity change.

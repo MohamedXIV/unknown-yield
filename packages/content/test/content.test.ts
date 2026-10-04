@@ -21,7 +21,7 @@ describe("content boundary", () => {
   it("accepts the complete tiny scenario", () => {
     const c = validateContent(fixture);
     expect(c.machines).toHaveLength(9);
-    expect(c.version).toBe("world-01-v12");
+    expect(c.version).toBe("world-01-v13");
     expect(c.storages).toHaveLength(1);
     expect(c.storages[0]).toMatchObject({ id: "depot", capacity: 40 });
     expect(c.site.stagingCapacity).toBe(24);
@@ -49,8 +49,27 @@ describe("content boundary", () => {
     );
 
     const outside = structuredClone(fixture);
-    outside.site.surveySignals[0].x = outside.site.width;
+    outside.site.surveySignals[1].x = outside.site.width;
     expect(() => validateContent(outside)).toThrow(/outside site bounds/i);
+  });
+
+  it("validates hidden deposit signal and probe references without making them public deposits", () => {
+    const duplicate = structuredClone(fixture);
+    duplicate.site.hiddenDeposits[0].id = duplicate.site.deposits[0].id;
+    expect(() => validateContent(duplicate)).toThrow(/Duplicate deposit ID/);
+
+    const missingSignal = structuredClone(fixture);
+    missingSignal.site.hiddenDeposits[0].surveySignalId = "missing-signal";
+    expect(() => validateContent(missingSignal)).toThrow(
+      /Missing hidden deposit survey signal/,
+    );
+
+    const scanOnly = structuredClone(fixture);
+    scanOnly.site.hiddenDeposits[0].requiredSensingCapabilityId =
+      "survey-scanner";
+    expect(() => validateContent(scanOnly)).toThrow(
+      /requires a probe capability/,
+    );
   });
   it("matches authored reactions by an exact process condition", () => {
     const c = validateContent(fixture);
@@ -304,6 +323,7 @@ describe("content boundary", () => {
           terminalModules?: unknown;
           sensingCapabilities?: unknown;
           surveySignals?: unknown;
+          hiddenDeposits?: unknown;
         };
       }
     ).site;
@@ -313,6 +333,7 @@ describe("content boundary", () => {
     // milestone references in a historical fixture.
     delete legacySite.sensingCapabilities;
     delete legacySite.surveySignals;
+    delete legacySite.hiddenDeposits;
     legacy.economy.exchange = legacy.economy.exchange.slice(0, 1);
     delete legacy.economy.exchange[0].requiredTerminalCapabilityId;
     const parsed = validateContent(legacy);
