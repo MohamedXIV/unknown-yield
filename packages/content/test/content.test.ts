@@ -21,7 +21,7 @@ describe("content boundary", () => {
   it("accepts the complete tiny scenario", () => {
     const c = validateContent(fixture);
     expect(c.machines).toHaveLength(9);
-    expect(c.version).toBe("world-01-v9");
+    expect(c.version).toBe("world-01-v10");
     expect(c.storages).toHaveLength(1);
     expect(c.storages[0]).toMatchObject({ id: "depot", capacity: 40 });
     expect(c.site.stagingCapacity).toBe(24);
@@ -196,6 +196,8 @@ describe("content boundary", () => {
       economy: Record<string, unknown>;
     };
     legacy.version = "world-01-v6";
+    (legacy as unknown as { site: { terminalModules?: unknown } }).site.terminalModules = [];
+    legacy.economy.exchange = legacy.economy.exchange.slice(0, 1);
     delete legacy.economy.assistancePackages;
     delete legacy.economy.defaultAssistancePackageId;
     const parsed = validateContent(legacy);
@@ -272,6 +274,8 @@ describe("content boundary", () => {
     delete legacy.economy.directives;
     delete legacy.economy.terminalCapabilities;
     delete legacy.economy.milestones;
+    (legacy as unknown as { site: { terminalModules?: unknown } }).site.terminalModules = [];
+    legacy.economy.exchange = legacy.economy.exchange.slice(0, 1);
     delete legacy.economy.exchange[0].requiredTerminalCapabilityId;
     const parsed = validateContent(legacy);
     expect(parsed.version).toBe("world-01-v6");

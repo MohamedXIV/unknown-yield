@@ -158,7 +158,7 @@ describe("Phase 4 Content Studio v1 exit gate", () => {
 
     // Studio authoring and preview operate on clones/new simulations.
     expect(fixture).toEqual(originalFixture);
-    expect(fixture.version).toBe("world-01-v9");
+    expect(fixture.version).toBe("world-01-v10");
     expect(fixture.materials.some((material) => material.id === "powder")).toBe(
       false,
     );

@@ -17,6 +17,7 @@ export type LocaleCatalog = z.infer<typeof localeCatalogSchema>;
 
 export function contentKeys(c: Content): string[] {
   return [
+    ...c.site.terminalModules.map(d => d.nameKey),
     ...c.containmentCapabilities.map((d) => d.nameKey),
     ...(c.liquidLogistics?.containmentProfiles.map((p) => p.nameKey) ?? []),
     ...c.materials.map((m) => m.nameKey),
@@ -58,6 +59,14 @@ export function validateLocaleCoverage(
 }
 
 export const enCatalog: LocaleCatalog = {
+  "terminal.module.liquid-dock.name": "Lined liquid dock",
+  "terminal.module.gas-dock.name": "Sealed gas dock",
+  "terminal.capability.liquid-outbound.name": "Liquid outbound handling",
+  "terminal.capability.gas-outbound.name": "Gas outbound handling",
+  "milestone.liquid-study-certified.name": "Liquid handling authorization",
+  "milestone.liquid-study-certified.hint": "Confirm a liquid-processing trial to authorize liquid handling.",
+  "milestone.gas-study-certified.name": "Gas handling authorization",
+  "milestone.gas-study-certified.hint": "Confirm a gas-producing trial to authorize sealed gas handling.",
   "containment.corrosion-resistant.name": "Corrosion-resistant containment",
   "containment.profile.standard.name": "Standard",
   "containment.profile.lined.name": "Lined",

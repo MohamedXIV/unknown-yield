@@ -1,6 +1,6 @@
 import { validateContent } from "./schema";
 export const fixture = validateContent({
-  version: "world-01-v9",
+  version: "world-01-v10",
   tickMs: 100,
   containmentCapabilities: [
     {
@@ -342,6 +342,10 @@ export const fixture = validateContent({
     },
   ],
   site: {
+    terminalModules: [
+      { id: "liquid-dock", nameKey: "terminal.module.liquid-dock.name", handlingState: "liquid", containmentCapabilities: ["corrosion-resistant"], capacity: 24, cost: 30, requiredTerminalCapabilityId: "liquid-outbound", inlet: { x: 1, y: 3, side: 1 } },
+      { id: "gas-dock", nameKey: "terminal.module.gas-dock.name", handlingState: "gas", containmentCapabilities: [], capacity: 16, cost: 36, requiredTerminalCapabilityId: "gas-outbound", inlet: { x: 3, y: 1, side: 0 } },
+    ],
     width: 80,
     height: 60,
     buildMaterial: "plates",
@@ -423,6 +427,8 @@ export const fixture = validateContent({
         recoveryPerMarketTickBps: 250,
         requiredTerminalCapabilityId: "sealed-sample-outbound",
       },
+      { materialId: "liquid-0", baseCompensation: 6, floorCompensation: 2, baseDemandBps: 10000, saturationPerUnitBps: 1000, recoveryPerMarketTickBps: 250, requiredTerminalCapabilityId: "liquid-outbound" },
+      { materialId: "gas-0", baseCompensation: 8, floorCompensation: 3, baseDemandBps: 10000, saturationPerUnitBps: 1000, recoveryPerMarketTickBps: 250, requiredTerminalCapabilityId: "gas-outbound" },
     ],
     orders: [
       {
@@ -452,6 +458,8 @@ export const fixture = validateContent({
         id: "sealed-sample-outbound",
         nameKey: "terminal.capability.sealed-sample-outbound.name",
       },
+      { id: "liquid-outbound", nameKey: "terminal.capability.liquid-outbound.name" },
+      { id: "gas-outbound", nameKey: "terminal.capability.gas-outbound.name" },
     ],
     milestones: [
       {
@@ -466,6 +474,8 @@ export const fixture = validateContent({
         ],
         unlockTerminalCapabilityIds: ["sealed-sample-outbound"],
       },
+      { id: "liquid-study-certified", nameKey: "milestone.liquid-study-certified.name", hintKey: "milestone.liquid-study-certified.hint", requires: [{ type: "reaction-confirmed", reactionId: "liquefy-raw" }], unlockTerminalCapabilityIds: ["liquid-outbound"] },
+      { id: "gas-study-certified", nameKey: "milestone.gas-study-certified.name", hintKey: "milestone.gas-study-certified.hint", requires: [{ type: "reaction-confirmed", reactionId: "vaporize-liquid-0" }], unlockTerminalCapabilityIds: ["gas-outbound"] },
     ],
   },
 });
