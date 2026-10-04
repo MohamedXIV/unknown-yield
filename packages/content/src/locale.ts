@@ -90,6 +90,8 @@ export const enCatalog: LocaleCatalog = {
   "ui.direction.1": "south",
   "ui.direction.2": "west",
   "ui.direction.3": "north",
+  "sensing.capability.survey-scanner.name": "Survey scanner",
+  "sensing.capability.core-probe.name": "Core probe",
   "terminal.module.liquid-dock.name": "Lined liquid dock",
   "terminal.module.gas-dock.name": "Sealed gas dock",
   "terminal.capability.liquid-outbound.name": "Liquid outbound handling",

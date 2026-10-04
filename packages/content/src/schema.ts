@@ -182,6 +182,28 @@ export const contentSchema = z.object({
     )
     .min(1),
   site: z.object({
+    sensingCapabilities: z
+      .array(
+        z.object({
+          id,
+          nameKey: localeKeySchema,
+          mode: z.enum(["scan", "probe"]),
+          range: positive,
+          requiredMilestoneId: id.optional(),
+        }),
+      )
+      .default([]),
+    surveySignals: z
+      .array(
+        z.object({
+          id,
+          x: pos,
+          y: pos,
+          strength: positive,
+          depth: positive,
+        }),
+      )
+      .default([]),
     terminalModules: z.array(z.object({
       id, nameKey: localeKeySchema,
       handlingState: z.enum(["liquid", "gas"]),
@@ -594,6 +616,29 @@ function validateContentInternal(
   const milestoneIds = new Set(c.economy.milestones.map((m) => m.id));
   if (milestoneIds.size !== c.economy.milestones.length)
     throw new Error("Duplicate milestone ID");
+
+  const sensingCapabilityIds = new Set<string>();
+  for (const capability of c.site.sensingCapabilities) {
+    if (sensingCapabilityIds.has(capability.id))
+      throw new Error("Duplicate sensing capability ID");
+    sensingCapabilityIds.add(capability.id);
+    if (capability.nameKey !== "sensing.capability." + capability.id + ".name")
+      throw new Error("Localization key must match sensing capability");
+    if (
+      capability.requiredMilestoneId &&
+      !milestoneIds.has(capability.requiredMilestoneId)
+    )
+      throw new Error("Missing sensing capability milestone");
+  }
+  const surveySignalIds = new Set<string>();
+  for (const signal of c.site.surveySignals) {
+    if (surveySignalIds.has(signal.id))
+      throw new Error("Duplicate survey signal ID");
+    surveySignalIds.add(signal.id);
+    if (signal.x >= c.site.width || signal.y >= c.site.height)
+      throw new Error("Survey signal outside site bounds");
+  }
+
   const capabilityUnlocker = new Map<string, string>();
   for (const milestone of c.economy.milestones) {
     if (

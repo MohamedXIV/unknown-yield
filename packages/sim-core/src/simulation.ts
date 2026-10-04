@@ -26,6 +26,7 @@ import { terminalModuleViews } from "./terminal";
 import { footprint } from "./geometry";
 import { factoryView } from "./factory-contract";
 import { FactoryThroughputMonitor } from "./factory-throughput";
+import { sensingCapabilityUnlocked } from "./sensing";
 import {
   total,
   type Save,
@@ -136,6 +137,13 @@ export class Simulation {
       known.add(r.input);
       known.add(r.output);
     });
+    const {
+      sensingCapabilities: hiddenSensingCapabilities,
+      surveySignals: hiddenSurveySignals,
+      ...publicMap
+    } = c.site;
+    void hiddenSensingCapabilities;
+    void hiddenSurveySignals;
     return structuredClone({
       tick: s.tick,
       fuel: s.fuel,
@@ -143,7 +151,17 @@ export class Simulation {
       stock: s.stock,
       exported: s.exported,
       milestone: s.exported >= c.economy.milestoneExports,
-      map: c.site,
+      map: publicMap,
+      sensingCapabilities: c.site.sensingCapabilities.map((capability) => ({
+        id: capability.id,
+        nameKey: capability.nameKey,
+        mode: capability.mode,
+        range: capability.range,
+        unlocked: sensingCapabilityUnlocked(s, capability),
+      })),
+      sensingObservations: Object.entries(s.sensingObservations)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([, observation]) => observation),
       deposits: c.site.deposits.map((d) => ({
         ...d,
         remaining: s.deposits[d.id],

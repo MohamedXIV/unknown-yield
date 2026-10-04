@@ -7,6 +7,7 @@ import { amount, change, total, type Save, type CommandResult } from "./types";
 import { machineUnlocked } from "./progression";
 import { exchangeDefinition } from "./market";
 import { applyAssistance, assistanceEligibility } from "./assistance";
+import { applySensingObservation } from "./sensing";
 import {
   factoryError,
   machinePlacement,
@@ -153,6 +154,11 @@ const schema = z.discriminatedUnion("type", [
     materialId: z.string(),
     policy: z.enum(["keep", "export"]),
   }),
+  z.object({
+    type: z.literal("sense"),
+    capabilityId: z.string(),
+    ...point,
+  }),
   z.object({ type: z.literal("assistance"), packageId: z.string().optional() }),
 ]);
 const liquidMessages: Record<string, string> = {
@@ -232,6 +238,15 @@ export function applyCommand(
   if ("machineId" in cmd && !Object.hasOwn(s.machines, cmd.machineId))
     return fail("Unknown machine");
   switch (cmd.type) {
+    case "sense":
+      return applySensingObservation(
+        c,
+        s,
+        cmd.capabilityId,
+        cmd.x,
+        cmd.y,
+        apply,
+      );
     case "installTerminalModule":
     case "removeTerminalModule":
       return moduleCommand(

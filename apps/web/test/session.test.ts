@@ -51,14 +51,14 @@ it("writes the current save key and reads the previous compatible key", () => {
       },
     }).ok,
   ).toBe(true);
-  expect(records.has("industrial-site-save-v12")).toBe(true);
+  expect(records.has("industrial-site-save-v13")).toBe(true);
 
   const restored = new Session();
-  const previous = records.get("industrial-site-save-v12")!;
+  const previous = records.get("industrial-site-save-v13")!;
   expect(
     restored.restore({
       getItem(key) {
-        return key === "industrial-site-save-v9" ? previous : null;
+        return key === "industrial-site-save-v12" ? previous : null;
       },
     }).ok,
   ).toBe(true);
@@ -68,10 +68,10 @@ it("preserves older content records and rejects them without replacing the exped
   const s = new Session(),
     records = new Map<string, string>();
   s.save({ setItem: (key, value) => records.set(key, value) });
-  const old = JSON.parse(records.get("industrial-site-save-v12")!);
+  const old = JSON.parse(records.get("industrial-site-save-v13")!);
   old.contentVersion = "world-01-v6";
   records.set("industrial-site-save-v7", JSON.stringify(old));
-  records.delete("industrial-site-save-v12");
+  records.delete("industrial-site-save-v13");
   const before = s.snapshot();
   expect(s.restore({ getItem: (key) => records.get(key) ?? null }).ok).toBe(
     false,
@@ -89,7 +89,7 @@ it("reads v11 fallback and atomically rejects schema 17 without altering its rec
   const source = new Session(),
     records = new Map<string, string>();
   source.save({ setItem: (k, v) => records.set(k, v) });
-  const old = JSON.parse(records.get("industrial-site-save-v12")!);
+  const old = JSON.parse(records.get("industrial-site-save-v13")!);
   old.schemaVersion = 17;
   const raw = JSON.stringify(old),
     restored = new Session(),
