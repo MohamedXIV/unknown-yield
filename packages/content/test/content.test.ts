@@ -20,7 +20,7 @@ describe("content boundary", () => {
   });
   it("accepts the complete tiny scenario", () => {
     const c = validateContent(fixture);
-    expect(c.machines).toHaveLength(9);
+    expect(c.machines).toHaveLength(10);
     expect(c.version).toBe("world-01-v13");
     expect(c.storages).toHaveLength(1);
     expect(c.storages[0]).toMatchObject({ id: "depot", capacity: 40 });
@@ -30,6 +30,17 @@ describe("content boundary", () => {
       "core-probe",
     ]);
     expect(c.site.surveySignals).toHaveLength(2);
+    expect(
+      c.machines.find((machine) => machine.id === "deep-extractor"),
+    ).toMatchObject({
+      role: "extractor",
+      maxExtractionDepth: 20,
+      fuel: 4,
+      unlock: {
+        reactionId: "heat-raw-sealed",
+        hintKey: "machine.deep-extractor.unlock-hint",
+      },
+    });
   });
 
   it("validates sensing capability identity, unlocks and hidden signal bounds", () => {

@@ -120,6 +120,43 @@ describe("hidden deposits and authored depth constraints", () => {
     });
   });
 
+  it("extracts a discovered deep source only with the authored deep capability", () => {
+    const sim = new Simulation(fixture);
+    probeDeepVein(sim);
+    const before = sim.snapshot();
+
+    expect(
+      sim.command({
+        type: "placeMachine",
+        definitionId: "deep-extractor",
+        x: 44,
+        y: 16,
+        direction: 0,
+      }),
+    ).toMatchObject({ ok: true });
+
+    sim.step(fixture.tickMs);
+    expect(
+      sim.snapshot().deposits.find((deposit) => deposit.id === "deep-vein-a")
+        ?.remaining,
+    ).toBe(1199);
+    expect(sim.snapshot().fuel).toBe(before.fuel - 4);
+
+    const machineId = sim
+      .snapshot()
+      .machines.find((machine) => machine.definitionId === "deep-extractor")!.id;
+    expect(
+      sim.command({ type: "setEnabled", machineId, enabled: false }).ok,
+    ).toBe(true);
+    sim.step(30 * fixture.tickMs);
+
+    const machine = sim
+      .snapshot()
+      .machines.find((entry) => entry.id === machineId)!;
+    expect(machine.output.raw).toBe(1);
+    expect(machine.status).toBe("disabled");
+  });
+
   it("rejects forged discovery state without the qualifying probe observation", () => {
     const sim = new Simulation(fixture);
     const forged = sim.serialize();

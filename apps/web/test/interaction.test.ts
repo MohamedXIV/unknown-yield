@@ -62,6 +62,25 @@ it("keeps toolbar hotkeys stable and maps the depot tool to placeStorage", () =>
     direction: 1,
   });
 });
+it("maps the deep extractor to a distinct machine build command", () => {
+  expect(TOOL_HOTKEYS["deep-extractor"]).toBe("0");
+  const s = new Simulation(fixture).snapshot();
+  expect(
+    buildCommand(
+      { ...DEFAULT_MODE, tool: "deep-extractor" },
+      s,
+      { x: 44, y: 16 },
+      null,
+    ),
+  ).toEqual({
+    type: "placeMachine",
+    definitionId: "deep-extractor",
+    x: 44,
+    y: 16,
+    direction: 0,
+  });
+});
+
 it("selects the sealed furnace as a condition-bearing machine tool", () => {
   expect(TOOL_HOTKEYS["sealed-furnace"]).toBe("8");
   const s = new Simulation(fixture).snapshot();

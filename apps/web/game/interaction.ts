@@ -18,6 +18,7 @@ export type Tool =
   | "precipitator"
   | "select"
   | "extractor"
+  | "deep-extractor"
   | "factory"
   | "crusher"
   | "furnace"
@@ -40,6 +41,7 @@ export const TOOL_HOTKEYS: Record<Tool, string> = {
   precipitator: "C",
   select: "↖",
   extractor: "1",
+  "deep-extractor": "0",
   factory: "2",
   crusher: "3",
   furnace: "4",
@@ -210,6 +212,7 @@ export function buildCommand(
       "liquefier",
       "precipitator",
       "extractor",
+      "deep-extractor",
       "crusher",
       "furnace",
       "sealed-furnace",
