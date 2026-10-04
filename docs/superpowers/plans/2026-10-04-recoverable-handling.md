@@ -115,3 +115,7 @@
 Spec coverage: rule (1), state/accounting/commands (2), exposure/reservations/service (3), persistence (4), knowledge/factory/blueprint/fresh chain (5), UI/render/session (6), evidence/delivery (7). Every Review Focus has owning tests. Helper names/fields match across tasks. No additional gameplay choice or speculative subsystem is deferred to implementation; pump direction remains immutable.
 
 Native same-checkout/no-agent execution is already selected. Please review this written plan; approval permits invoking executing-plans and beginning product implementation. Final PR merge approval remains separate.
+
+## Execution status — 2026-10-04
+
+Written-plan approval received; Tasks 1–6 implemented natively. Required Pump/save/snapshot interfaces landed together in 904d981 after focused command/transport RED→GREEN, with self-review fix c93e660. Test filenames consolidate failure/drain cases in pump-recovery-transport.test.ts; persistence and knowledge helpers follow actual existing interfaces. Per-step checkboxes above preserve the approved plan; execution evidence and justified combined commits are recorded in PHASE9_RECOVERY_IMPLEMENTATION_LOG.md. Task 7 final verification/delivery in progress, final merge approval separate.

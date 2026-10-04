@@ -499,3 +499,7 @@ When evidence requires a change:
 4. explain evidence/trade-off;
 5. update affected design/architecture docs;
 6. avoid leaving contradictory guidance in the repository.
+
+## D-037 — Contained pump failure recovers through physical handling
+
+Approved #112 scope: one optional authored pump exposure captures bounded conserved cargo instead of delivering it, stops normal feed, and requires explicit protected service drainage, empty upgrade, repair and restart. This is the sole approved exception to #110 no-mutation incompatibility refusal. It is deterministic and fuel-free on failed delivery/service; no leaks, RNG, pressure physics, spreading hazards or generic recovery framework. sim-core owns rule/state/reservations/ledger/save; presentation consumes safe snapshots. Save 18/world-01-v11/browser v12 are disposable pre-release versions. #113 and Phase 11 remain separate scopes.
