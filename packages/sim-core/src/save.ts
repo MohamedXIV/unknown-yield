@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { Content } from "@site/content";
 import { checkContainment } from "@site/content";
 import { liquidContainment } from "./containment";
+import { validatePumpIncident } from "./pump-recovery";
 import { validateTerminalModules } from "./terminal";
 import {
   emptyFlows,
@@ -134,6 +135,7 @@ const schema = z.object({
     z.literal(15),
     z.literal(16),
     z.literal(17),
+    z.literal(18),
   ]),
   contentVersion: z.string(),
   terminalModules: z
@@ -175,7 +177,22 @@ const schema = z.object({
   pumps: z
     .record(
       safeId,
-      pump.extend({ containmentProfileId: safeId.default("standard") }),
+      pump
+        .extend({
+          containmentProfileId: safeId.default("standard"),
+          incident: z
+            .object({
+              definitionId: safeId,
+              materialId: safeId,
+              quantity: count,
+              startedAt: count,
+              drainEnabled: z.boolean(),
+            })
+            .strict()
+            .nullable()
+            .default(null),
+        })
+        .strict(),
     )
     .default({}),
   staging: inventory,
@@ -227,7 +244,7 @@ const schema = z.object({
 });
 export function initialState(c: Content): Save {
   const state: Save = {
-    schemaVersion: 17,
+    schemaVersion: 18,
     terminalModules: {},
     contentVersion: c.version,
     tick: 0,
@@ -290,12 +307,32 @@ export function initialState(c: Content): Save {
 }
 export function parseSave(input: unknown, c: Content): Save {
   const parsed = schema.parse(input);
+  if (parsed.schemaVersion < 18 && c.liquidLogistics?.pump.containmentFailure)
+    throw Error("Incompatible pump recovery save schema");
+  if (
+    parsed.schemaVersion < 18 &&
+    Object.values(parsed.pumps).some((p) => p.incident)
+  )
+    throw Error("Legacy schema cannot contain pump incidents");
+  if (parsed.schemaVersion === 18) {
+    const raw = input as { pumps?: Record<string, unknown> };
+    if (
+      Object.values(raw.pumps ?? {}).some(
+        (p) =>
+          !p ||
+          typeof p !== "object" ||
+          !Object.hasOwn(p, "incident") ||
+          !Object.hasOwn(p, "containmentProfileId"),
+      )
+    )
+      throw Error("Missing pump incident state");
+  }
   if (
     parsed.schemaVersion < 17 &&
     (c.version === "world-01-v10" || c.site.terminalModules.length)
   )
     throw Error("Incompatible terminal save schema");
-  if (parsed.schemaVersion === 17 && !parsed.terminalModules)
+  if (parsed.schemaVersion >= 17 && !parsed.terminalModules)
     throw Error("Missing terminal module state");
   if (
     parsed.schemaVersion < 17 &&
@@ -416,6 +453,7 @@ export function parseSave(input: unknown, c: Content): Save {
   if (s.schemaVersion === 14) s.schemaVersion = 15;
   if (s.schemaVersion === 15) s.schemaVersion = 16;
   if (s.schemaVersion === 16) s.schemaVersion = 17;
+  if (s.schemaVersion === 17) s.schemaVersion = 18;
   if (s.contentVersion !== c.version || s.remainder >= c.tickMs)
     throw new Error("Incompatible content or timing");
   if (
@@ -758,7 +796,10 @@ export function parseSave(input: unknown, c: Content): Save {
           throw new Error("Pipe inlet and outlet coincide");
         stage.pipes[location] = item;
       } else if (kind === "tank") stage.tanks[location] = s.tanks[location];
-      else stage.pumps[location] = s.pumps[location];
+      else {
+        validatePumpIncident(c, s.pumps[location], s.tick, known);
+        stage.pumps[location] = s.pumps[location];
+      }
       if ("quantity" in entity) {
         const cap =
           kind === "pipe"

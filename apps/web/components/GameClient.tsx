@@ -545,7 +545,12 @@ function GameClientInner() {
                         aria-label={t("ui.containment.profile")}
                         value={(pipe ?? tank ?? pump)!.containmentProfileId}
                         disabled={
-                          !!(pipe?.quantity || tank?.quantity || pump?.enabled)
+                          !!(
+                            pipe?.quantity ||
+                            tank?.quantity ||
+                            pump?.enabled ||
+                            pump?.incident?.quantity
+                          )
                         }
                         onChange={(e) =>
                           act({
@@ -637,7 +642,65 @@ function GameClientInner() {
                     {pump && (
                       <>
                         <p>{t("ui.liquid.status." + pump.status)}</p>
+                        {pump.incident && (
+                          <>
+                            <p>
+                              {t(
+                                snapshot.liquidLogistics!.pump
+                                  .containmentFailure!.descriptionKey,
+                              )}
+                            </p>
+                            <p>
+                              {pump.incident.materialId
+                                ? materialName(pump.incident.materialId)
+                                : t("ui.recovery.unidentified")}{" "}
+                              · {pump.incident.quantity} /{" "}
+                              {
+                                snapshot.liquidLogistics!.pump
+                                  .containmentFailure!.trappedCapacity
+                              }
+                            </p>
+                            {pump.recoveryDiagnostic && (
+                              <p>
+                                {t(
+                                  "ui.containment.reason." +
+                                    pump.recoveryDiagnostic.reason,
+                                )}
+                                {pump.recoveryDiagnostic.missingContainment
+                                  ? capabilityNames(
+                                      pump.recoveryDiagnostic
+                                        .missingContainment,
+                                    )
+                                  : null}
+                              </p>
+                            )}
+                            <button
+                              onClick={() =>
+                                act({
+                                  type: "setPumpRecoveryDrain",
+                                  id: pump.id,
+                                  enabled: !pump.incident!.drainEnabled,
+                                })
+                              }
+                            >
+                              {t(
+                                pump.incident.drainEnabled
+                                  ? "ui.recovery.stop-drain"
+                                  : "ui.recovery.start-drain",
+                              )}
+                            </button>
+                            <button
+                              disabled={!pump.canRepair}
+                              onClick={() =>
+                                act({ type: "repairPump", id: pump.id })
+                              }
+                            >
+                              {t("ui.recovery.repair")}
+                            </button>
+                          </>
+                        )}
                         <button
+                          disabled={!!pump.incident}
                           onClick={() =>
                             act({
                               type: "setPumpEnabled",
@@ -705,7 +768,9 @@ function GameClientInner() {
                           ))}
                       </>
                     )}
-                    {pipe?.quantity || tank?.quantity ? (
+                    {pipe?.quantity ||
+                    tank?.quantity ||
+                    pump?.incident?.quantity ? (
                       <p>{t("ui.liquid.drain-first")}</p>
                     ) : (
                       <button

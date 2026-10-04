@@ -3,6 +3,7 @@ import type {
   MachineDefinition,
   StorageDefinition,
 } from "@site/content";
+import type { TransportDiagnostic } from "./containment";
 export type Point = { x: number; y: number };
 export type Rect = Point & { width: number; height: number };
 export type Inventory = Record<string, number>;
@@ -117,11 +118,19 @@ export type LiquidContents = {
 export type Pipe = Point &
   LiquidContents & { id: string; inlet: number; outlet: number };
 export type Tank = Point & LiquidContents & { id: string; direction: number };
+export type PumpIncident = {
+  definitionId: string;
+  materialId: string;
+  quantity: number;
+  startedAt: number;
+  drainEnabled: boolean;
+};
 export type Pump = Point & {
   id: string;
   direction: number;
   enabled: boolean;
   containmentProfileId: string;
+  incident: PumpIncident | null;
 };
 export type GasContents = { materialId: string | null; quantity: number };
 export type PressureLine = Point &
@@ -270,6 +279,8 @@ export type CommandResult = {
   cost?: number;
 };
 export type GameCommand =
+  | { type: "repairPump"; id: string }
+  | { type: "setPumpRecoveryDrain"; id: string; enabled: boolean }
   | {
       type: "installTerminalModule" | "removeTerminalModule";
       definitionId: string;
@@ -406,8 +417,13 @@ export type PlayerSnapshot = {
   gasLogistics: Content["gasLogistics"];
   pipes: Pipe[];
   tanks: (Tank & { width: number; height: number; capacity: number })[];
-  pumps: (Pump & {
+  pumps: (Omit<Pump, "incident"> & {
+    incident:
+      (Omit<PumpIncident, "materialId"> & { materialId: string | null }) | null;
+    canRepair: boolean;
+    recoveryDiagnostic: TransportDiagnostic | null;
     status:
+      | "incident"
       | "disabled"
       | "needs-fuel"
       | "needs-input"

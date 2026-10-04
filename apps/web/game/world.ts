@@ -760,7 +760,17 @@ export function createWorld(
       }
       for (const p of snapshot.pumps) {
         if (hiddenLiquid(p)) continue;
-        this.box(g, { ...p, width: 1, height: 1 }, 0x88b1b6, 0x36535b, 7);
+        this.box(
+          g,
+          { ...p, width: 1, height: 1 },
+          p.incident
+            ? p.incident.drainEnabled
+              ? 0xe5c481
+              : 0xe57865
+            : 0x88b1b6,
+          0x36535b,
+          7,
+        );
         if (p.containmentProfileId !== "standard")
           g.lineStyle(2, 0xe5c481).strokeCircle(
             (p.x + 0.5) * X,

@@ -1,5 +1,6 @@
 import { liquidConstructionCost } from "./containment";
 import { moduleCommand } from "./terminal";
+import { pumpRepairEligible } from "./pump-recovery";
 import { z } from "zod";
 import type { Content } from "@site/content";
 import { amount, change, total, type Save, type CommandResult } from "./types";
@@ -26,6 +27,12 @@ const coordinate = z.number().int().min(0).max(10000),
   direction = z.number().int().min(0).max(3),
   point = { x: coordinate, y: coordinate };
 const schema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("repairPump"), id: z.string() }),
+  z.object({
+    type: z.literal("setPumpRecoveryDrain"),
+    id: z.string(),
+    enabled: z.boolean(),
+  }),
   z.object({
     type: z.literal("installTerminalModule"),
     definitionId: z.string(),
@@ -416,6 +423,7 @@ export function applyCommand(
           direction: cmd.direction,
           containmentProfileId: cmd.containmentProfileId,
           enabled: true,
+          incident: null,
         };
       return ok("Liquid structure placed", cost, id);
     }
@@ -431,7 +439,7 @@ export function applyCommand(
         )
       )
         return fail("Unknown liquid containment profile");
-      if (pipe?.quantity || tank?.quantity)
+      if (pipe?.quantity || tank?.quantity || pump?.incident?.quantity)
         return fail("Drain liquid contents before changing containment");
       if (pump?.enabled)
         return fail("Disable the pump before changing containment");
@@ -450,8 +458,44 @@ export function applyCommand(
     case "setPumpEnabled": {
       const pump = Object.hasOwn(s.pumps, cmd.id) ? s.pumps[cmd.id] : undefined;
       if (!pump) return fail("Unknown pump");
+      if (cmd.enabled && pump.incident)
+        return {
+          ok: false,
+          message: "Repair the pump before restarting",
+          messageKey: "ui.recovery.repair-first",
+        };
       if (apply) pump.enabled = cmd.enabled;
       return ok("Pump updated");
+    }
+    case "setPumpRecoveryDrain": {
+      const p = Object.hasOwn(s.pumps, cmd.id) ? s.pumps[cmd.id] : undefined;
+      if (!p?.incident || p.enabled)
+        return {
+          ok: false,
+          message: "No stopped pump incident",
+          messageKey: "ui.recovery.no-incident",
+        };
+      if (apply) p.incident.drainEnabled = cmd.enabled;
+      return {
+        ok: true,
+        message: "Recovery outlet updated",
+        messageKey: "ui.recovery.drain-updated",
+      };
+    }
+    case "repairPump": {
+      const p = Object.hasOwn(s.pumps, cmd.id) ? s.pumps[cmd.id] : undefined;
+      if (!p || !pumpRepairEligible(c, p))
+        return {
+          ok: false,
+          message: "Drain and protect the pump before repair",
+          messageKey: "ui.recovery.not-repairable",
+        };
+      if (apply) p.incident = null;
+      return {
+        ok: true,
+        message: "Pump repaired",
+        messageKey: "ui.recovery.repaired",
+      };
     }
     case "configurePipe": {
       const pipe = Object.values(s.pipes).find((p) => p.id === cmd.id);
@@ -765,7 +809,7 @@ export function applyCommand(
         tank = Object.hasOwn(s.tanks, cmd.id) ? s.tanks[cmd.id] : undefined,
         pump = Object.hasOwn(s.pumps, cmd.id) ? s.pumps[cmd.id] : undefined;
       if (pipe || tank || pump) {
-        if (pipe?.quantity || tank?.quantity)
+        if (pipe?.quantity || tank?.quantity || pump?.incident?.quantity)
           return fail("Drain liquid contents before dismantling");
         const kind = pipe ? "pipe" : tank ? "tank" : "pump",
           cost = liquidConstructionCost(

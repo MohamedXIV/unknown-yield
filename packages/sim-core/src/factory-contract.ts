@@ -44,6 +44,11 @@ export function factoryView(
     if (contains(factory, p) && p.materialId && p.quantity)
       change(gasInventory, p.materialId, p.quantity);
   const liquidInventory: Record<string, number> = {};
+  for (const p of Object.values(state.pumps))
+    if (contains(factory, p) && p.incident?.quantity)
+      change(liquidInventory, p.incident.materialId, p.incident.quantity);
+  for (const p of Object.values(state.pumps))
+    if (contains(factory, p) && p.incident) statusCounts.incident++;
   for (const p of [
     ...Object.values(state.pipes),
     ...Object.values(state.tanks),

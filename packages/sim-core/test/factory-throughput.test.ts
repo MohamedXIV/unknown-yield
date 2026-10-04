@@ -229,6 +229,21 @@ it("preserves a live certificate when an unrelated empty tank changes profile", 
       .throughput.state,
   ).toBe("measuring");
 });
+it("preserves unrelated certification across incident service and repair commands",()=>{
+  const {sim,factoryId}=makeLine();
+  const pump=build(sim,{type:"placePump",x:5,y:5,direction:0,containmentProfileId:"lined"});
+  const s=sim.serialize();s.pumps[pump].enabled=false;
+  const unlocked=terminalState();s.knowledge=unlocked.knowledge;s.evidence=unlocked.evidence;s.market=unlocked.market;s.milestones=unlocked.milestones;
+  s.pumps[pump].incident={definitionId:"pump-corrosion",materialId:"liquid-0",quantity:0,startedAt:0,drainEnabled:false};
+  expect(sim.load(s).ok).toBe(true);
+  for(let i=0;i<600;i++)sim.step(fixture.tickMs);
+  const before=sim.snapshot().factories.find(f=>f.id===factoryId)!.contract.throughput;
+  expect(before.state).toBe("stable");
+  build(sim,{type:"setPumpRecoveryDrain",id:pump,enabled:true});
+  expect(sim.snapshot().factories.find(f=>f.id===factoryId)!.contract.throughput).toEqual(before);
+  build(sim,{type:"repairPump",id:pump});
+  expect(sim.snapshot().factories.find(f=>f.id===factoryId)!.contract.throughput).toEqual(before);
+});
 
 function throughput(sim: Simulation, factoryId: string) {
   return sim.snapshot().factories.find((factory) => factory.id === factoryId)!

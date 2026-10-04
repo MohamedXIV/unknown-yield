@@ -51,10 +51,10 @@ it("writes the current save key and reads the previous compatible key", () => {
       },
     }).ok,
   ).toBe(true);
-  expect(records.has("industrial-site-save-v11")).toBe(true);
+  expect(records.has("industrial-site-save-v12")).toBe(true);
 
   const restored = new Session();
-  const previous = records.get("industrial-site-save-v11")!;
+  const previous = records.get("industrial-site-save-v12")!;
   expect(
     restored.restore({
       getItem(key) {
@@ -68,10 +68,10 @@ it("preserves older content records and rejects them without replacing the exped
   const s = new Session(),
     records = new Map<string, string>();
   s.save({ setItem: (key, value) => records.set(key, value) });
-  const old = JSON.parse(records.get("industrial-site-save-v11")!);
+  const old = JSON.parse(records.get("industrial-site-save-v12")!);
   old.contentVersion = "world-01-v6";
   records.set("industrial-site-save-v7", JSON.stringify(old));
-  records.delete("industrial-site-save-v11");
+  records.delete("industrial-site-save-v12");
   const before = s.snapshot();
   expect(s.restore({ getItem: (key) => records.get(key) ?? null }).ok).toBe(
     false,
@@ -83,4 +83,22 @@ it("preserves older content records and rejects them without replacing the exped
   expect(
     JSON.parse(records.get("industrial-site-save-v7")!).contentVersion,
   ).toBe("world-01-v6");
+});
+
+it("reads v11 fallback and atomically rejects schema 17 without altering its record", () => {
+  const source = new Session(),
+    records = new Map<string, string>();
+  source.save({ setItem: (k, v) => records.set(k, v) });
+  const old = JSON.parse(records.get("industrial-site-save-v12")!);
+  old.schemaVersion = 17;
+  const raw = JSON.stringify(old),
+    restored = new Session(),
+    before = restored.snapshot();
+  expect(
+    restored.restore({
+      getItem: (k) => (k === "industrial-site-save-v11" ? raw : null),
+    }).ok,
+  ).toBe(false);
+  expect(restored.snapshot()).toEqual(before);
+  expect(JSON.parse(raw).schemaVersion).toBe(17);
 });

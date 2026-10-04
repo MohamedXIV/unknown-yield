@@ -732,6 +732,7 @@ export class FactoryThroughputMonitor {
     // Shared only within this synchronous observation; next call rebuilds routing.
     let topology: ConnectedTopology | undefined;
     const machinesByFactory = machineMembership(state);
+    const hasPumpIncident = Object.values(state.pumps).some((p) => p.incident);
     const live = new Set(Object.keys(state.factories));
     for (const id of this.trackers.keys())
       if (!live.has(id)) this.trackers.delete(id);
@@ -743,12 +744,24 @@ export class FactoryThroughputMonitor {
         machinesByFactory.get(factory.id) ?? [],
       );
       const tracker = this.ensure(factory, members);
+      const connectedPumpIncident =
+        hasPumpIncident &&
+        liquidRuntime(
+          content,
+          state,
+          members,
+          (topology ??= connectedTopology(content, state)).liquids,
+        ).some(
+          (row) =>
+            row.node.startsWith("pump:") && "incident" in row && !!row.incident,
+        );
       const statuses = members.machines.map((machine) =>
         status(content, state, machine),
       );
 
       if (
-        statuses.some((machineStatus) => blockedStatuses.has(machineStatus))
+        statuses.some((machineStatus) => blockedStatuses.has(machineStatus)) ||
+        connectedPumpIncident
       ) {
         tracker.stable = null;
         tracker.seen.clear();

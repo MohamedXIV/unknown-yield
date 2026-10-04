@@ -18,7 +18,9 @@ import {
   transportLiquids,
   liquidPumpStatus,
   liquidDiagnostics,
+  pumpRecoveryDiagnostic,
 } from "./liquids";
+import { pumpRepairEligible, publicPumpIncident } from "./pump-recovery";
 import { publicTransportDiagnostic } from "./containment";
 import { terminalModuleViews } from "./terminal";
 import { footprint } from "./geometry";
@@ -48,6 +50,8 @@ export class Simulation {
         "type" in input &&
         [
           "setLiquidContainmentProfile",
+          "setPumpRecoveryDrain",
+          "repairPump",
           "installTerminalModule",
           "removeTerminalModule",
         ].includes(String(input.type))
@@ -239,6 +243,11 @@ export class Simulation {
       })),
       pumps: Object.values(s.pumps).map((p) => ({
         ...p,
+        incident: publicPumpIncident(p, known),
+        canRepair: pumpRepairEligible(c, p),
+        recoveryDiagnostic: pumpRecoveryDiagnostic(c, s, p)
+          ? publicTransportDiagnostic(pumpRecoveryDiagnostic(c, s, p)!, known)
+          : null,
         status: liquidPumpStatus(c, s, p),
       })),
       liquidLogistics: c.liquidLogistics,
@@ -276,7 +285,7 @@ export class Simulation {
       return {
         ok: false,
         message:
-          "Save rejected (requires schema 17): " +
+          "Save rejected (requires schema 18): " +
           (error instanceof Error ? error.message : "Invalid data"),
       };
     }
