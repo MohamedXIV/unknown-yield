@@ -110,6 +110,10 @@ export const contentSchema = z.object({
         transfer: positive,
         fuel: positive,
         cost: positive,
+        containmentFailure: z.object({
+          id, nameKey: localeKeySchema, descriptionKey: localeKeySchema,
+          exposedProfileId: id, missingCapabilityId: id, trappedCapacity: positive,
+        }).optional(),
       }),
       containmentProfiles: z
         .array(
@@ -815,6 +819,26 @@ function validateContainmentDefinitions(c: Content) {
       Object.values(standard.additionalCost).some((n) => n !== 0)
     )
       throw Error("Invalid standard containment profile");
+    const failure = cfg.pump.containmentFailure;
+    if (failure) {
+      const exposed = cfg.containmentProfiles.find(p => p.id === failure.exposedProfileId);
+      if (!exposed || !ids.has(failure.missingCapabilityId) ||
+          [...cfg.pump.containmentCapabilities, ...exposed.capabilities].includes(failure.missingCapabilityId))
+        throw Error("Invalid pump failure exposure");
+      if (failure.nameKey !== `handling.failure.${failure.id}.name` ||
+          failure.descriptionKey !== `handling.failure.${failure.id}.description`)
+        throw Error("Invalid pump failure localization identity");
+      const affected = c.materials.filter(m => m.handlingState === "liquid" &&
+        m.requiredContainment.includes(failure.missingCapabilityId) &&
+        c.reactions.some(r => r.output === m.id && c.machines.some(d =>
+          d.role === "processor" && d.operations.includes(r.operation) &&
+          d.processConditionId === r.processConditionId && d.outputStates.includes("liquid") &&
+          checkContainment(c,m.id,["liquid"],d.outputContainment).ok)));
+      if (!affected.length || affected.some(m =>
+        (["pump","pipe","tank"] as const).some(kind => !cfg.containmentProfiles.some(p =>
+          checkContainment(c,m.id,["liquid"],[...cfg[kind].containmentCapabilities,...p.capabilities]).ok))))
+        throw Error("Pump containment failure has no protected recovery path");
+    }
   }
   for (const list of lists)
     if (new Set(list).size !== list.length || list.some((id) => !ids.has(id)))

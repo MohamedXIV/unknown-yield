@@ -21,7 +21,7 @@ describe("content boundary", () => {
   it("accepts the complete tiny scenario", () => {
     const c = validateContent(fixture);
     expect(c.machines).toHaveLength(9);
-    expect(c.version).toBe("world-01-v10");
+    expect(c.version).toBe("world-01-v11");
     expect(c.storages).toHaveLength(1);
     expect(c.storages[0]).toMatchObject({ id: "depot", capacity: 40 });
     expect(c.site.stagingCapacity).toBe(24);

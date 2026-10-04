@@ -44,7 +44,7 @@ describe("authored containment", () => {
     expect(checkContainment(c, "unknown", ["liquid"], []).ok).toBe(false);
   });
   it("authors one provisional protected liquid branch", () => {
-    expect(fixture.version).toBe("world-01-v10");
+    expect(fixture.version).toBe("world-01-v11");
     expect(
       fixture.materials.find((m) => m.id === "liquid-0")!.requiredContainment,
     ).toEqual(["corrosion-resistant"]);

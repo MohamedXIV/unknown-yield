@@ -72,7 +72,7 @@ describe("directed liquid quantity transport", () => {
       },
     };
     state.pumps = {
-      u5: { id: "u5", containmentProfileId: "standard", x: 18, y: 11, direction: 0, enabled: false },
+      u5: { id: "u5", containmentProfileId: "standard", incident: null, x: 18, y: 11, direction: 0, enabled: false },
     };
     state.pipes["20,11"].materialId = "raw";
     state.pipes["20,11"].quantity = 1;
@@ -95,7 +95,7 @@ describe("directed liquid quantity transport", () => {
       },
     };
     state.pumps = {
-      u5: { id: "u5", containmentProfileId: "standard", x: 18, y: 11, direction: 0, enabled: true },
+      u5: { id: "u5", containmentProfileId: "standard", incident: null, x: 18, y: 11, direction: 0, enabled: true },
     };
     const fuel = state.fuel;
     transportLiquids(content, state);

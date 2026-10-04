@@ -38,6 +38,7 @@ export function receivingDiagnostic(
 }
 export type TransportDiagnostic = {
   reason:
+    | "incident"
     | "ready"
     | "terminal-module-missing"
     | "terminal-module-locked"

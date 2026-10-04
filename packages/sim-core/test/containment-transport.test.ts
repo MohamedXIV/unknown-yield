@@ -39,7 +39,7 @@ describe("containment admission", () => {
     state.tanks[source].quantity = 3;
     return { state, source, pump, target };
   }
-  it("requires pump, pipe and tank protection independently, without partial fuel or source changes", () => {
+  it("requires containment independently, with only authored pump exposure trapping cargo", () => {
     for (const kind of ["pump", "pipe", "tank"] as const) {
       const { state, source, pump, target } = liquidRoute();
       if (kind === "pump") state.pumps[pump].containmentProfileId = "standard";
@@ -60,7 +60,12 @@ describe("containment admission", () => {
       ];
       expect(diagnostic.reason).toBe("missing-containment");
       expect(diagnostic.missingContainment).toEqual(["corrosion-resistant"]);
-      expect(state).toEqual(before);
+      if(kind==="pump"){
+        expect(state.tanks[source].quantity).toBe(before.tanks[source].quantity-1);
+        expect(state.pumps[pump].incident?.quantity).toBe(1);
+        expect(state.pumps[pump].enabled).toBe(false);
+        expect(state.pipes).toEqual(before.pipes);expect(state.fuel).toBe(before.fuel);
+      }else expect(state).toEqual(before);
       expect(events).toEqual([]);
     }
     const { state, target } = liquidRoute();

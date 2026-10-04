@@ -43,6 +43,7 @@ export type LedgerRow = {
   pressureVessels: number;
   pipes: number;
   tanks: number;
+  pumpIncidents: number;
   storage: number;
   escrow: number;
   embodied: number;
@@ -76,6 +77,7 @@ function blank(material: string): LedgerRow {
     pressureVessels: 0,
     pipes: 0,
     tanks: 0,
+    pumpIncidents: 0,
     storage: 0,
     escrow: 0,
     embodied: 0,
@@ -140,6 +142,9 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
     if (p.materialId) row(p.materialId).pipes += p.quantity;
   for (const t of Object.values(s.tanks ?? {}))
     if (t.materialId) row(t.materialId).tanks += t.quantity;
+  for (const p of Object.values(s.pumps ?? {}))
+    if (p.incident)
+      row(p.incident.materialId).pumpIncidents += p.incident.quantity;
 
   for (const p of Object.values(s.pressureLines ?? {}))
     if (p.materialId) row(p.materialId).pressureLines += p.quantity;
@@ -229,6 +234,7 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
       r.pressureVessels +
       r.pipes +
       r.tanks +
+      r.pumpIncidents +
       r.storage +
       r.escrow +
       r.embodied +

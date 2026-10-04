@@ -40,4 +40,8 @@ Focused RED→GREEN tests and self-review fixes are recorded in [PHASE9_CONTAINM
 
 #110 merged via #164. The user approved #111 design/plan and native execution in the same checkout, without agents/worktrees. Fixed liquid/gas docks extend existing evidence and exchange contracts; independent bounded physical holdings retain exact conservation. Runtime schema 17 / world-01-v10 / browser slot v11; blueprints remain conditional v1–v5 and exclude terminal installations.
 
-Detailed scoped execution and self-review: [terminal ledger](PHASE9_TERMINAL_IMPLEMENTATION_LOG.md). Final full suite: **58 files / 351 PASS, 2 skipped**. Native browser actions proved both discoveries, missing-dock refusal, Keep staging, full gas backpressure, loaded removal guards, Save/Load and physical exports repaying obligations. Evidence: [terminal acceptance](PHASE9_TERMINAL_ACCEPTANCE.md). #100 stays open; #112/#113 have not begun. Merge awaits final user approval of the concrete PR.
+Detailed scoped execution and self-review: [terminal ledger](PHASE9_TERMINAL_IMPLEMENTATION_LOG.md). Final full suite: **58 files / 351 PASS, 2 skipped**. Native browser actions proved both discoveries, missing-dock refusal, Keep staging, full gas backpressure, loaded removal guards, Save/Load and physical exports repaying obligations. Evidence: [terminal acceptance](PHASE9_TERMINAL_ACCEPTANCE.md). #111 merged via PR #165 / d8578d6 after explicit approval. #100 stays open; #112 is approved and active; #113 has not begun.
+
+## #112 recoverable handling — 2026-10-04
+
+Approved contained pump failure implemented natively in the same checkout. Save 18 / world-01-v11 / browser slot v12; no agents/worktree/dependencies. Details: [recovery ledger](PHASE9_RECOVERY_IMPLEMENTATION_LOG.md), [recovery acceptance](PHASE9_RECOVERY_ACCEPTANCE.md). #100 remains open; #113 untouched; final PR merge approval separate.

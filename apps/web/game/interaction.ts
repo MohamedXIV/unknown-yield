@@ -109,7 +109,15 @@ export function structureKey(s: PlayerSnapshot): string {
       p.containmentProfileId,
     ]),
     s.tanks.map((t) => [t.id, t.x, t.y, t.direction, t.containmentProfileId]),
-    s.pumps.map((p) => [p.id, p.x, p.y, p.direction, p.containmentProfileId]),
+    s.pumps.map((p) => [
+      p.id,
+      p.x,
+      p.y,
+      p.direction,
+      p.containmentProfileId,
+      !!p.incident,
+      p.incident?.drainEnabled,
+    ]),
     s.storages.map((t) => [t.id, t.definitionId, t.x, t.y, t.direction]),
   ]);
 }

@@ -159,7 +159,7 @@ describe("protected save boundaries", () => {
     const pumps = legacy.pumps as Record<string, Record<string, unknown>>;
     for (const pump of Object.values(pumps)) delete pump.containmentProfileId;
     expect(sim.load(legacy).ok).toBe(true);
-    expect(sim.serialize().schemaVersion).toBe(17);
+    expect(sim.serialize().schemaVersion).toBe(18);
     expect(Object.values(sim.serialize().pumps)[0].containmentProfileId).toBe(
       "standard",
     );

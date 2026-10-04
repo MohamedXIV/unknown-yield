@@ -1,4 +1,5 @@
 import { checkContainment } from "@site/content";
+import { pumpExposureEligible, pumpFailureDefinition } from "./pump-recovery";
 import { terminalReceiver, terminalInletDiagnostic } from "./terminal";
 import {
   liquidContainment,
@@ -160,6 +161,7 @@ function targetAt(
   return terminalReceiver(c, s, point, direction, "liquid");
 }
 export type LiquidPumpStatus =
+  | "incident"
   | "disabled"
   | "needs-fuel"
   | "needs-input"
@@ -171,6 +173,7 @@ export function liquidPumpStatus(
   s: Save,
   p: Pump,
 ): LiquidPumpStatus {
+  if (p.incident) return "incident";
   if (!p.enabled) return "disabled";
   if (!c.liquidLogistics || s.fuel < c.liquidLogistics.pump.fuel)
     return "needs-fuel";
@@ -191,6 +194,24 @@ export function liquidPumpStatus(
   if (target.material !== null && target.material !== source.material)
     return "incompatible";
   return target.quantity >= target.capacity ? "output-full" : "ready";
+}
+export function pumpRecoveryDiagnostic(
+  c: Content,
+  s: Save,
+  p: Pump,
+): TransportDiagnostic | null {
+  if (!p.incident) return null;
+  if (!p.incident.quantity) return { reason: "needs-input" };
+  if (!p.incident.drainEnabled) return { reason: "disabled" };
+  const target = targetAt(c, s, next(p, p.direction), p.direction, true);
+  return receivingDiagnostic(
+    c,
+    p.incident.materialId,
+    "liquid",
+    target?.capabilities ?? [],
+    target,
+    p.containmentProfileId,
+  );
 }
 export function liquidDiagnostics(
   c: Content,
@@ -219,6 +240,13 @@ export function liquidDiagnostics(
       );
   }
   for (const p of Object.values(s.pumps)) {
+    if (p.incident) {
+      result[p.id] = {
+        reason: "incident",
+        containmentProfileId: p.containmentProfileId,
+      };
+      continue;
+    }
     if (!p.enabled) {
       result[p.id] = {
         reason: "disabled",
@@ -336,8 +364,71 @@ export function transportLiquids(
   for (const pump of Object.values(s.pumps).sort((a, b) =>
     a.id.localeCompare(b.id),
   )) {
+    const incident = pump.incident;
+    if (incident) {
+      if (!pump.enabled && incident.drainEnabled && incident.quantity > 0)
+        admit(
+          {
+            id: "pump-incident:" + pump.id,
+            material: incident.materialId,
+            units: incident.quantity,
+            take: (n) => {
+              incident.quantity -= n;
+            },
+          },
+          targetAt(c, s, next(pump, pump.direction), pump.direction, true),
+          cfg.pump.transfer,
+          0,
+          pump,
+          pump.direction,
+        );
+      continue;
+    }
     if (!pump.enabled) continue;
     const source = pumpSource(c, s, pump);
+    const target = targetAt(
+      c,
+      s,
+      next(pump, pump.direction),
+      pump.direction,
+      true,
+    );
+    if (
+      source &&
+      target &&
+      fuel >= cfg.pump.fuel &&
+      pumpExposureEligible(c, pump, source.material) &&
+      checkContainment(c, source.material, ["liquid"], target.capabilities).ok
+    ) {
+      const reserved = targets.get(target.id) ?? {
+        quantity: target.quantity,
+        material: target.material,
+      };
+      if (reserved.material !== null && reserved.material !== source.material)
+        continue;
+      const definition = pumpFailureDefinition(c)!;
+      const n = Math.min(
+        definition.trappedCapacity,
+        cfg.pump.transfer,
+        source.units - (sources.get(source.id) ?? 0),
+        target.capacity - reserved.quantity,
+      );
+      if (n > 0) {
+        sources.set(source.id, (sources.get(source.id) ?? 0) + n);
+        plans.push(() => {
+          source.take(n);
+          pump.incident = {
+            definitionId: definition.id,
+            materialId: source.material,
+            quantity: n,
+            startedAt: s.tick,
+            drainEnabled: false,
+          };
+          pump.enabled = false;
+        });
+      }
+      continue;
+    }
     if (
       source &&
       checkContainment(

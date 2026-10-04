@@ -4,4 +4,5 @@ export const historicalFixture = validateContent({
   ...structuredClone(fixture),
   version: "historical-fixture-v1",
   site: { ...fixture.site, terminalModules: [] },
+  liquidLogistics: {...fixture.liquidLogistics!,pump:{...fixture.liquidLogistics!.pump,containmentFailure:undefined}},
 });

@@ -1,6 +1,6 @@
 import { validateContent } from "./schema";
 export const fixture = validateContent({
-  version: "world-01-v10",
+  version: "world-01-v11",
   tickMs: 100,
   containmentCapabilities: [
     {
@@ -16,7 +16,11 @@ export const fixture = validateContent({
   liquidLogistics: {
     pipe: { capacity: 4, transfer: 1, cost: 2 },
     tank: { capacity: 64, width: 2, height: 2, cost: 24 },
-    pump: { transfer: 1, fuel: 1, cost: 12 },
+    pump: { transfer: 1, fuel: 1, cost: 12, containmentFailure: {
+      id: "pump-corrosion", nameKey: "handling.failure.pump-corrosion.name",
+      descriptionKey: "handling.failure.pump-corrosion.description",
+      exposedProfileId: "standard", missingCapabilityId: "corrosion-resistant", trappedCapacity: 1,
+    } },
     containmentProfiles: [
       {
         id: "standard",

@@ -17,6 +17,12 @@ export type LocaleCatalog = z.infer<typeof localeCatalogSchema>;
 
 export function contentKeys(c: Content): string[] {
   return [
+    ...(c.liquidLogistics?.pump.containmentFailure
+      ? [
+          c.liquidLogistics.pump.containmentFailure.nameKey,
+          c.liquidLogistics.pump.containmentFailure.descriptionKey,
+        ]
+      : []),
     ...c.site.terminalModules.map((d) => d.nameKey),
     ...c.containmentCapabilities.map((d) => d.nameKey),
     ...(c.liquidLogistics?.containmentProfiles.map((p) => p.nameKey) ?? []),
@@ -226,7 +232,23 @@ export const enCatalog: LocaleCatalog = {
     "Source or destination containment is incompatible",
   "ui.liquid.status.output-full": "Outlet missing, reversed or full",
   "ui.liquid.status.ready": "Ready",
+  "ui.liquid.status.incident": "Contained pump failure — feed stopped",
+  "ui.liquid.short.incident": "FAILED",
+  "ui.containment.reason.incident": "Contained pump failure",
+  "ui.recovery.unidentified": "Unidentified trapped material",
+  "ui.recovery.start-drain": "Start recovery drain",
+  "ui.recovery.stop-drain": "Stop recovery drain",
+  "ui.recovery.repair": "Repair empty protected pump",
+  "ui.recovery.repair-first": "Repair the pump before restarting",
+  "ui.recovery.no-incident": "No stopped pump incident",
+  "ui.recovery.drain-updated": "Recovery drain updated",
+  "ui.recovery.not-repairable":
+    "Drain the charge and protect the stopped pump before repair",
+  "ui.recovery.repaired": "Pump repaired — feed remains stopped",
 
+  "handling.failure.pump-corrosion.name": "Contained pump failure",
+  "handling.failure.pump-corrosion.description":
+    "An unprotected feed attempt trapped a charge and stopped the pump. Drain through a protected route, upgrade the empty pump, then repair and restart.",
   "material.liquid-0.name": "Vein liquor",
   "operation.liquefy.name": "Liquefy",
   "operation.precipitate.name": "Precipitate",
