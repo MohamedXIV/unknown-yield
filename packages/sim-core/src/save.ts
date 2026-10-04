@@ -22,11 +22,7 @@ import { initializeKnownMarkets, exchangeDefinition } from "./market";
 import { machineUnlocked } from "./progression";
 import { milestoneSatisfied, refreshMilestones } from "./milestones";
 import { assistanceDefinition } from "./assistance";
-import {
-  allDeposits,
-  depositDefinition,
-  hiddenDepositDefinition,
-} from "./deposits";
+import { depositDefinition, hiddenDepositDefinition } from "./deposits";
 import {
   factoryError,
   machinePlacement,
