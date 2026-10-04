@@ -19,6 +19,7 @@ export type Tool =
   | "select"
   | "extractor"
   | "deep-extractor"
+  | "atmospheric-intake"
   | "factory"
   | "crusher"
   | "furnace"
@@ -42,6 +43,7 @@ export const TOOL_HOTKEYS: Record<Tool, string> = {
   select: "↖",
   extractor: "1",
   "deep-extractor": "0",
+  "atmospheric-intake": "K",
   factory: "2",
   crusher: "3",
   furnace: "4",
@@ -79,6 +81,14 @@ export function structureKey(s: PlayerSnapshot): string {
       d.contents.quantity >= d.capacity,
     ]),
     s.machines.map((m) => [m.id, m.x, m.y, m.direction]),
+    s.atmosphericSources.map((source) => [
+      source.id,
+      source.x,
+      source.y,
+      source.width,
+      source.height,
+      source.material,
+    ]),
     s.factories.map((f) => [
       f.id,
       f.x,
@@ -213,6 +223,7 @@ export function buildCommand(
       "precipitator",
       "extractor",
       "deep-extractor",
+      "atmospheric-intake",
       "crusher",
       "furnace",
       "sealed-furnace",

@@ -16,7 +16,12 @@ export type StudioEntityKind =
 export type StudioReference = {
   targetType: StudioEntityKind;
   targetId: string;
-  sourceType: "reaction" | "machine" | "site" | "deposit";
+  sourceType:
+    | "reaction"
+    | "machine"
+    | "site"
+    | "deposit"
+    | "atmospheric-source";
   sourceId: string;
   field: string;
 };
@@ -39,6 +44,7 @@ const machineRow = (machine: Content["machines"][number]) => ({
   nameKey: machine.nameKey,
   role: machine.role,
   maxExtractionDepth: machine.maxExtractionDepth,
+  sourceKind: empty(machine.sourceKind),
   processConditionId: empty(machine.processConditionId),
   unlockReactionId: empty(machine.unlock?.reactionId),
   unlockHintKey: empty(machine.unlock?.hintKey),
@@ -243,6 +249,19 @@ function candidateFromStore(store: Store, base: Content): unknown {
         "maxExtractionDepth",
         label,
       ),
+      ...(optionalText(
+        { sourceKind: row.sourceKind ?? "" },
+        "sourceKind",
+        label,
+      )
+        ? {
+            sourceKind: optionalText(
+              { sourceKind: row.sourceKind ?? "" },
+              "sourceKind",
+              label,
+            ),
+          }
+        : {}),
       ...(optionalText(row, "processConditionId", label)
         ? { processConditionId: optionalText(row, "processConditionId", label) }
         : {}),
@@ -416,6 +435,9 @@ export function referencesTo(
     for (const deposit of content.site.deposits)
       if (deposit.material === targetId)
         push("deposit", deposit.id, "material");
+    for (const source of content.site.atmosphericSources)
+      if (source.material === targetId)
+        push("atmospheric-source", source.id, "material");
     for (const reaction of content.reactions) {
       if (reaction.input === targetId) push("reaction", reaction.id, "input");
       if (reaction.output === targetId) push("reaction", reaction.id, "output");

@@ -62,6 +62,25 @@ it("keeps toolbar hotkeys stable and maps the depot tool to placeStorage", () =>
     direction: 1,
   });
 });
+it("maps the atmospheric intake to a distinct machine build command", () => {
+  expect(TOOL_HOTKEYS["atmospheric-intake"]).toBe("K");
+  const s = new Simulation(fixture).snapshot();
+  expect(
+    buildCommand(
+      { ...DEFAULT_MODE, tool: "atmospheric-intake" },
+      s,
+      { x: 69, y: 25 },
+      null,
+    ),
+  ).toEqual({
+    type: "placeMachine",
+    definitionId: "atmospheric-intake",
+    x: 69,
+    y: 25,
+    direction: 0,
+  });
+});
+
 it("maps the deep extractor to a distinct machine build command", () => {
   expect(TOOL_HOTKEYS["deep-extractor"]).toBe("0");
   const s = new Simulation(fixture).snapshot();
@@ -162,6 +181,28 @@ it("invalidates world geometry on storage-only topology edits", () => {
   sim.step(5000);
   expect(structureKey(sim.snapshot())).toBe(one);
 });
+it("invalidates atmospheric source presentation when material identity becomes known", () => {
+  const snapshot = new Simulation(fixture).snapshot();
+  const source = fixture.site.atmosphericSources[0];
+  snapshot.atmosphericSources = [
+    {
+      id: source.id,
+      nameKey: source.nameKey,
+      x: source.x,
+      y: source.y,
+      width: source.width,
+      height: source.height,
+      units: source.units,
+      material: null,
+      remaining: source.units,
+    },
+  ];
+  const unidentified = structureKey(snapshot);
+  const identified = structuredClone(snapshot);
+  identified.atmosphericSources[0].material = "gas-0";
+  expect(structureKey(identified)).not.toBe(unidentified);
+});
+
 it("invalidates world geometry on diverter switch/rotate", () => {
   const sim = new Simulation(fixture);
   expect(

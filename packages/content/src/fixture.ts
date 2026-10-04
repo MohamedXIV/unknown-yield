@@ -181,6 +181,24 @@ export const fixture = validateContent({
       cost: 36,
     },
     {
+      id: "atmospheric-intake",
+      nameKey: "machine.atmospheric-intake.name",
+      role: "extractor",
+      sourceKind: "atmosphere",
+      unlock: {
+        reactionId: "vaporize-liquid-0",
+        hintKey: "machine.atmospheric-intake.unlock-hint",
+      },
+      operations: [],
+      outputStates: ["gas"],
+      capacity: 8,
+      fuel: 2,
+      durationTicks: 20,
+      width: 2,
+      height: 2,
+      cost: 28,
+    },
+    {
       id: "crusher",
       nameKey: "machine.crusher.name",
       role: "processor",
@@ -381,6 +399,7 @@ export const fixture = validateContent({
     surveySignals: [
       { id: "anomaly-a", x: 46, y: 18, strength: 8, depth: 14 },
       { id: "anomaly-b", x: 62, y: 42, strength: 5, depth: 4 },
+      { id: "anomaly-c", x: 70, y: 26, strength: 7, depth: 1 },
     ],
     hiddenDeposits: [
       {
@@ -392,6 +411,20 @@ export const fixture = validateContent({
         height: 7,
         units: 1200,
         surveySignalId: "anomaly-a",
+        requiredSensingCapabilityId: "core-probe",
+      },
+    ],
+    atmosphericSources: [
+      {
+        id: "atmospheric-plume-a",
+        nameKey: "source.atmospheric-plume-a.name",
+        material: "gas-0",
+        x: 68,
+        y: 24,
+        width: 5,
+        height: 5,
+        units: 600,
+        surveySignalId: "anomaly-c",
         requiredSensingCapabilityId: "core-probe",
       },
     ],

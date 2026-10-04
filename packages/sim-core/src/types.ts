@@ -92,6 +92,7 @@ export const MACHINE_STATUSES = [
   "incident",
   "disabled",
   "deposit-exhausted",
+  "source-exhausted",
   "needs-compatible-input",
   "needs-input",
   "output-full",
@@ -284,6 +285,7 @@ export type Save = {
   sensingObservations: Record<string, SensingObservation>;
   discoveredDeposits: string[];
   deposits: Inventory;
+  atmosphericSources: Inventory;
   machines: Record<string, Machine>;
   factories: Record<string, Factory>;
   belts: Record<string, Belt>;
@@ -379,6 +381,13 @@ export type MachineView = Omit<Machine, "job" | "incident"> & {
   status: MachineStatus;
   progress: number;
 };
+export type AtmosphericSourceView = Omit<
+  Content["site"]["atmosphericSources"][number],
+  "material" | "surveySignalId" | "requiredSensingCapabilityId"
+> & {
+  material: string | null;
+  remaining: number;
+};
 export type MachineDefinitionView = Omit<MachineDefinition, "unlock"> & {
   unlock: { unlocked: boolean; hintKey: string } | null;
 };
@@ -422,11 +431,15 @@ export type PlayerSnapshot = {
   milestone: boolean;
   map: Omit<
     Content["site"],
-    "sensingCapabilities" | "surveySignals" | "hiddenDeposits"
+    | "sensingCapabilities"
+    | "surveySignals"
+    | "hiddenDeposits"
+    | "atmosphericSources"
   >;
   sensingCapabilities: SensingCapabilityView[];
   sensingObservations: SensingObservation[];
   deposits: (Content["site"]["deposits"][number] & { remaining: number })[];
+  atmosphericSources: AtmosphericSourceView[];
   definitions: MachineDefinitionView[];
   storageDefinitions: StorageDefinition[];
   junctionDefinitions: Content["junctions"];

@@ -24,6 +24,10 @@ import { milestoneSatisfied, refreshMilestones } from "./milestones";
 import { assistanceDefinition } from "./assistance";
 import { depositDefinition, hiddenDepositDefinition } from "./deposits";
 import {
+  atmosphericSourceDefinition,
+  atmosphericSourceForRect,
+} from "./atmosphere";
+import {
   factoryError,
   machinePlacement,
   portError,
@@ -33,6 +37,7 @@ import {
   key,
   gasPlacementError,
   liquidPlacementError,
+  footprint,
 } from "./geometry";
 const count = z.number().int().nonnegative().max(1000000000),
   positive = count.positive();
@@ -146,6 +151,7 @@ const schema = z.object({
     z.literal(18),
     z.literal(19),
     z.literal(20),
+    z.literal(21),
   ]),
   contentVersion: z.string(),
   terminalModules: z
@@ -182,6 +188,7 @@ const schema = z.object({
     .default({}),
   discoveredDeposits: z.array(safeId).default([]),
   deposits: inventory,
+  atmosphericSources: inventory.default({}),
   machines: z.record(safeId, machine),
   factories: z.record(safeId, factory),
   belts: z.record(z.string().regex(/^\d+,\d+$/), belt),
@@ -271,7 +278,7 @@ const schema = z.object({
 });
 export function initialState(c: Content): Save {
   const state: Save = {
-    schemaVersion: 20,
+    schemaVersion: 21,
     terminalModules: {},
     contentVersion: c.version,
     tick: 0,
@@ -308,6 +315,8 @@ export function initialState(c: Content): Save {
     // Hidden deposits are deliberately absent until discovery so raw saves do
     // not leak source identity before the player earns that knowledge.
     deposits: Object.fromEntries(c.site.deposits.map((d) => [d.id, d.units])),
+    // Hidden atmospheric source IDs remain absent until a qualifying probe.
+    atmosphericSources: {},
     machines: {},
     factories: {},
     belts: {},
@@ -489,6 +498,9 @@ export function parseSave(input: unknown, c: Content): Save {
   // existed, so the exact migration is an empty observation record.
   if (s.schemaVersion === 18) s.schemaVersion = 19;
   if (s.schemaVersion === 19) s.schemaVersion = 20;
+  // Schema 20 predates identified atmospheric source inventory. No source ID
+  // can be inferred from historical sensing alone, so migration stays empty.
+  if (s.schemaVersion === 20) s.schemaVersion = 21;
   if (s.contentVersion !== c.version || s.remainder >= c.tickMs)
     throw new Error("Incompatible content or timing");
   if (
@@ -662,6 +674,29 @@ export function parseSave(input: unknown, c: Content): Save {
       throw new Error("Discovered deposit lacks probe evidence");
   }
 
+  for (const [id, units] of Object.entries(s.atmosphericSources)) {
+    const source = atmosphericSourceDefinition(c, id);
+    if (!source || units > source.units)
+      throw new Error("Invalid atmospheric source state");
+    const signal = c.site.surveySignals.find(
+      (entry) => entry.id === source.surveySignalId,
+    )!;
+    const observation =
+      s.sensingObservations[
+        sensingObservationKey(
+          source.requiredSensingCapabilityId,
+          signal.x,
+          signal.y,
+        )
+      ];
+    if (
+      !observation ||
+      observation.mode !== "probe" ||
+      observation.signalBand === "none"
+    )
+      throw new Error("Atmospheric source lacks probe evidence");
+  }
+
   validateTerminalModules(c, s, known);
 
   const expectedDepositIds = [
@@ -688,6 +723,7 @@ export function parseSave(input: unknown, c: Content): Save {
   };
   const stage = initialState(c);
   stage.discoveredDeposits = [...s.discoveredDeposits];
+  stage.atmosphericSources = { ...s.atmosphericSources };
   for (const depositId of s.discoveredDeposits)
     stage.deposits[depositId] = s.deposits[depositId];
   for (const [id, f] of Object.entries(s.factories)) {
@@ -714,6 +750,8 @@ export function parseSave(input: unknown, c: Content): Save {
     )
       throw new Error(placement.error ?? "Invalid machine ownership");
     const d = c.machines.find((d) => d.id === m.definitionId)!;
+    if (!machineUnlocked(s, d))
+      throw new Error("Machine locked by unconfirmed knowledge");
     if (m.incident) {
       const hazard = c.reactions.find(
         (r) =>
@@ -751,7 +789,9 @@ export function parseSave(input: unknown, c: Content): Save {
     for (const material of Object.keys(m.output)) {
       const valid =
         d.role === "extractor"
-          ? depositDefinition(c, m.depositId)?.material === material
+          ? (d.sourceKind === "atmosphere"
+              ? atmosphericSourceForRect(c, s, footprint(m, d))?.material
+              : depositDefinition(c, m.depositId)?.material) === material
           : c.reactions.some(
               (r) =>
                 d.operations.includes(r.operation) &&

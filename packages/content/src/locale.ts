@@ -24,6 +24,7 @@ export function contentKeys(c: Content): string[] {
         ]
       : []),
     ...c.site.terminalModules.map((d) => d.nameKey),
+    ...c.site.atmosphericSources.map((d) => d.nameKey),
     ...c.containmentCapabilities.map((d) => d.nameKey),
     ...(c.liquidLogistics?.containmentProfiles.map((p) => p.nameKey) ?? []),
     ...c.materials.map((m) => m.nameKey),
@@ -303,6 +304,12 @@ export const enCatalog: LocaleCatalog = {
   "machine.deep-extractor.name": "Deep extractor",
   "machine.deep-extractor.unlock-hint":
     "a confirmed Heat result from a Sealed furnace",
+  "machine.atmospheric-intake.name": "Atmospheric intake",
+  "machine.atmospheric-intake.unlock-hint":
+    "a confirmed gas-producing Vaporize result",
+  "source.atmospheric-plume-a.name": "Atmospheric trace plume",
+  "ui.gas.atmospheric-intake.description":
+    "Place inside a discovered atmospheric plume. Captured gas leaves through the sealed output and requires a compressor and pressure line.",
   "machine.crusher.name": "Crusher",
   "machine.furnace.name": "Furnace",
   "machine.sealed-furnace.name": "Sealed furnace",

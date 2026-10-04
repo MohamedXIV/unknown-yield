@@ -2,6 +2,8 @@ import { liquidConstructionCost } from "./containment";
 import type { Content } from "@site/content";
 import type { Save } from "./types";
 import { allDeposits, depositDefinition } from "./deposits";
+import { atmosphericSourceForRect } from "./atmosphere";
+import { footprint } from "./geometry";
 
 /**
  * Material ledger (Issues #3–#4).
@@ -33,6 +35,7 @@ import { allDeposits, depositDefinition } from "./deposits";
 export type LedgerRow = {
   material: string;
   deposits: number;
+  atmosphere: number;
   initial: number;
   stock: number;
   staging: number;
@@ -67,6 +70,7 @@ function blank(material: string): LedgerRow {
   return {
     material,
     deposits: 0,
+    atmosphere: 0,
     initial: 0,
     stock: 0,
     staging: 0,
@@ -107,8 +111,10 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
   if (c.site.startStock > 0)
     row(c.site.buildMaterial).initial += c.site.startStock;
   for (const d of allDeposits(c)) row(d.material).initial += d.units;
+  for (const source of c.site.atmosphericSources)
+    row(source.material).initial += source.units;
 
-  // Remaining source material still in the ground.
+  // Remaining source material still in the ground or atmosphere.
   for (const [id, n] of Object.entries(s.deposits ?? {})) {
     const d = depositDefinition(c, id);
     if (d) row(d.material).deposits += n;
@@ -116,6 +122,13 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
   for (const d of c.site.hiddenDeposits)
     if (!s.discoveredDeposits.includes(d.id))
       row(d.material).deposits += d.units;
+  for (const source of c.site.atmosphericSources)
+    row(source.material).atmosphere += Object.hasOwn(
+      s.atmosphericSources,
+      source.id,
+    )
+      ? s.atmosphericSources[source.id]
+      : source.units;
 
   // Terminal/site holdings: construction reserve plus tracked staging.
   for (const [id, n] of Object.entries(s.stock ?? {})) row(id).stock += n;
@@ -163,6 +176,18 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
     } else if (m.depositId) {
       const d = depositDefinition(c, m.depositId);
       if (d) row(d.material).escrow += 1;
+    } else {
+      const definition = c.machines.find(
+        (entry) => entry.id === m.definitionId,
+      );
+      if (definition?.sourceKind === "atmosphere") {
+        const source = atmosphericSourceForRect(
+          c,
+          s,
+          footprint(m, definition),
+        );
+        if (source) row(source.material).escrow += 1;
+      }
     }
   }
 
@@ -228,6 +253,7 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
   const out = [...rows.values()].map((r) => {
     r.held =
       r.deposits +
+      r.atmosphere +
       r.stock +
       r.staging +
       r.terminalModules +

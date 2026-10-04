@@ -202,6 +202,9 @@ describe("containment admission", () => {
     draft.machines.find((m) => m.id === "gas-collector")!.inputContainment = [
       "corrosion-resistant",
     ];
+    draft.machines.find((m) => m.id === "atmospheric-intake")!.outputContainment = [
+      "corrosion-resistant",
+    ];
     for (const d of draft.site.terminalModules)
       d.containmentCapabilities = [
         ...new Set(

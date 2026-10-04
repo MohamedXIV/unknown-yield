@@ -5,6 +5,7 @@ import {
   hiddenDepositDefinition,
   visibleDeposits,
 } from "./deposits";
+import { atmosphericSourceForRect } from "./atmosphere";
 export type FootprintDef = { width: number; height: number };
 export const key = (p: Point) => p.x + "," + p.y;
 export const vectors = [
@@ -190,6 +191,14 @@ export function machinePlacement(
   if (d.role === "extractor") {
     if (Object.values(s.factories).some((f) => overlaps(f, r)))
       return fail("Extractors belong outside factories");
+    if (d.sourceKind === "atmosphere") {
+      const source = atmosphericSourceForRect(c, s, r);
+      if (!source)
+        return fail(
+          "Place the atmospheric intake entirely within a discovered source",
+        );
+      return { factoryId: null, depositId: null };
+    }
     const deposit = visibleDeposits(c, s).find(
       (a) =>
         r.x >= a.x &&

@@ -20,7 +20,7 @@ describe("content boundary", () => {
   });
   it("accepts the complete tiny scenario", () => {
     const c = validateContent(fixture);
-    expect(c.machines).toHaveLength(10);
+    expect(c.machines).toHaveLength(11);
     expect(c.version).toBe("world-01-v13");
     expect(c.storages).toHaveLength(1);
     expect(c.storages[0]).toMatchObject({ id: "depot", capacity: 40 });
@@ -29,7 +29,7 @@ describe("content boundary", () => {
       "survey-scanner",
       "core-probe",
     ]);
-    expect(c.site.surveySignals).toHaveLength(2);
+    expect(c.site.surveySignals).toHaveLength(3);
     expect(
       c.machines.find((machine) => machine.id === "deep-extractor"),
     ).toMatchObject({
@@ -62,6 +62,35 @@ describe("content boundary", () => {
     const outside = structuredClone(fixture);
     outside.site.surveySignals[1].x = outside.site.width;
     expect(() => validateContent(outside)).toThrow(/outside site bounds/i);
+  });
+
+  it("validates atmospheric sources as probe-gated gas sources", () => {
+    const source = fixture.site.atmosphericSources[0];
+    expect(source).toMatchObject({
+      id: "atmospheric-plume-a",
+      material: "gas-0",
+      surveySignalId: "anomaly-c",
+      requiredSensingCapabilityId: "core-probe",
+    });
+    const intake = fixture.machines.find(
+      (machine) => machine.id === "atmospheric-intake",
+    );
+    expect(intake).toMatchObject({
+      role: "extractor",
+      sourceKind: "atmosphere",
+      outputStates: ["gas"],
+      unlock: { reactionId: "vaporize-liquid-0" },
+    });
+
+    const wrongMaterial = structuredClone(fixture);
+    wrongMaterial.site.atmosphericSources[0].material = "raw";
+    expect(() => validateContent(wrongMaterial)).toThrow(/gas material/);
+
+    const sharedSignal = structuredClone(fixture);
+    sharedSignal.site.atmosphericSources[0].surveySignalId = "anomaly-a";
+    expect(() => validateContent(sharedSignal)).toThrow(
+      /multiple hidden sources/,
+    );
   });
 
   it("validates hidden deposit signal and probe references without making them public deposits", () => {
@@ -335,6 +364,7 @@ describe("content boundary", () => {
           sensingCapabilities?: unknown;
           surveySignals?: unknown;
           hiddenDeposits?: unknown;
+          atmosphericSources?: unknown;
         };
       }
     ).site;
@@ -345,6 +375,7 @@ describe("content boundary", () => {
     delete legacySite.sensingCapabilities;
     delete legacySite.surveySignals;
     delete legacySite.hiddenDeposits;
+    delete legacySite.atmosphericSources;
     legacy.economy.exchange = legacy.economy.exchange.slice(0, 1);
     delete legacy.economy.exchange[0].requiredTerminalCapabilityId;
     const parsed = validateContent(legacy);

@@ -248,6 +248,7 @@ function GameClientInner() {
         "compressor",
         "vaporizer",
         "gas-collector",
+        "atmospheric-intake",
       ].includes(tool)
     )
       return t("ui.gas." + tool + ".description");
@@ -1914,6 +1915,7 @@ function GameClientInner() {
               "select",
               "extractor",
               "deep-extractor",
+              "atmospheric-intake",
               "factory",
               "crusher",
               "furnace",
@@ -1954,7 +1956,9 @@ function GameClientInner() {
                     ? "furnace"
                     : tool === "deep-extractor"
                       ? "extractor"
-                      : tool
+                      : tool === "atmospheric-intake"
+                        ? "compressor"
+                        : tool
                 }
                 size={25}
               />

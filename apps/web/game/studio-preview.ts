@@ -130,6 +130,7 @@ function previewLayout(
     sensingCapabilities: [],
     surveySignals: [],
     hiddenDeposits: [],
+    atmosphericSources: [],
     width: siteWidth,
     height: siteHeight,
     startStock: 1_000_000,

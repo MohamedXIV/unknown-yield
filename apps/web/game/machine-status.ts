@@ -12,6 +12,7 @@ const labels: Record<MachineStatus, string> = {
   incident: "Incident lockout",
   disabled: "Disabled",
   "deposit-exhausted": "Deposit exhausted",
+  "source-exhausted": "Source exhausted",
   "needs-compatible-input": "Needs compatible input",
   "needs-input": "Needs input",
   "output-full": "Output full",
