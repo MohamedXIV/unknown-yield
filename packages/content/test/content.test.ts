@@ -298,9 +298,21 @@ describe("content boundary", () => {
     delete legacy.economy.directives;
     delete legacy.economy.terminalCapabilities;
     delete legacy.economy.milestones;
-    (
-      legacy as unknown as { site: { terminalModules?: unknown } }
-    ).site.terminalModules = [];
+    const legacySite = (
+      legacy as unknown as {
+        site: {
+          terminalModules?: unknown;
+          sensingCapabilities?: unknown;
+          surveySignals?: unknown;
+        };
+      }
+    ).site;
+    legacySite.terminalModules = [];
+    // These Phase 10 fields did not exist in the pre-#70 format; deleting
+    // them proves the additive schema defaults rather than retaining modern
+    // milestone references in a historical fixture.
+    delete legacySite.sensingCapabilities;
+    delete legacySite.surveySignals;
     legacy.economy.exchange = legacy.economy.exchange.slice(0, 1);
     delete legacy.economy.exchange[0].requiredTerminalCapabilityId;
     const parsed = validateContent(legacy);
