@@ -40,6 +40,7 @@ export const contentSchema = z.object({
         id,
         nameKey: localeKeySchema,
         role: z.enum(["extractor", "processor"]),
+        maxExtractionDepth: count.default(0),
         processConditionId: id.optional(),
         unlock: z
           .object({
@@ -201,6 +202,21 @@ export const contentSchema = z.object({
           y: pos,
           strength: positive,
           depth: positive,
+        }),
+      )
+      .default([]),
+    hiddenDeposits: z
+      .array(
+        z.object({
+          id,
+          material: id,
+          x: pos,
+          y: pos,
+          width: positive,
+          height: positive,
+          units: positive,
+          surveySignalId: id,
+          requiredSensingCapabilityId: id,
         }),
       )
       .default([]),
@@ -370,9 +386,17 @@ function validateContentInternal(
     c.junctions,
     c.reactions,
     c.site.deposits,
+    c.site.hiddenDeposits,
   ])
     if (new Set(table.map((r) => r.id)).size !== table.length)
       throw new Error("Duplicate content ID");
+  if (
+    new Set(
+      [...c.site.deposits, ...c.site.hiddenDeposits].map((deposit) => deposit.id),
+    ).size !==
+    c.site.deposits.length + c.site.hiddenDeposits.length
+  )
+    throw new Error("Duplicate deposit ID");
   validateContainmentDefinitions(c);
   const materials = new Set(c.materials.map((m) => m.id)),
     operations = new Set(c.operations.map((o) => o.id));
@@ -451,6 +475,8 @@ function validateContentInternal(
       if (m.unlock.hintKey !== "machine." + m.id + ".unlock-hint")
         throw new Error("Localization key must match its machine unlock");
     }
+    if (m.role === "processor" && m.maxExtractionDepth !== 0)
+      throw new Error("Processor cannot have extraction depth");
     if (
       m.role === "processor" &&
       (!m.operations.length ||
@@ -472,7 +498,7 @@ function validateContentInternal(
       throw new Error("Extractor has no processing operation");
   }
   const regions = [c.site.terminal, ...c.site.deposits];
-  for (const r of regions)
+  for (const r of [...regions, ...c.site.hiddenDeposits])
     if (r.x + r.width > c.site.width || r.y + r.height > c.site.height)
       throw new Error("Site entity outside map");
   for (let a = 0; a < regions.length; a++)
@@ -506,6 +532,31 @@ function validateContentInternal(
   for (const d of c.site.deposits)
     if (!c.materials.find((m) => m.id === d.material)?.known)
       throw new Error("Deposit material must be known");
+
+  const hiddenSignalIds = new Set<string>();
+  for (const deposit of c.site.hiddenDeposits) {
+    if (!materials.has(deposit.material))
+      throw new Error("Missing hidden deposit material");
+    const signal = c.site.surveySignals.find(
+      (entry) => entry.id === deposit.surveySignalId,
+    );
+    if (!signal) throw new Error("Missing hidden deposit survey signal");
+    if (hiddenSignalIds.has(signal.id))
+      throw new Error("Survey signal maps to multiple hidden deposits");
+    hiddenSignalIds.add(signal.id);
+    if (
+      signal.x < deposit.x ||
+      signal.y < deposit.y ||
+      signal.x >= deposit.x + deposit.width ||
+      signal.y >= deposit.y + deposit.height
+    )
+      throw new Error("Hidden deposit survey signal must lie inside source");
+    const capability = c.site.sensingCapabilities.find(
+      (entry) => entry.id === deposit.requiredSensingCapabilityId,
+    );
+    if (!capability || capability.mode !== "probe")
+      throw new Error("Hidden deposit requires a probe capability");
+  }
   const exchangeMaterials = new Set<string>();
   for (const listing of c.economy.exchange) {
     if (!materials.has(listing.materialId))

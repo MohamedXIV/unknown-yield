@@ -1,6 +1,6 @@
 import { validateContent } from "./schema";
 export const fixture = validateContent({
-  version: "world-01-v12",
+  version: "world-01-v13",
   tickMs: 100,
   containmentCapabilities: [
     {
@@ -364,6 +364,19 @@ export const fixture = validateContent({
     surveySignals: [
       { id: "anomaly-a", x: 46, y: 18, strength: 8, depth: 14 },
       { id: "anomaly-b", x: 62, y: 42, strength: 5, depth: 4 },
+    ],
+    hiddenDeposits: [
+      {
+        id: "deep-vein-a",
+        material: "raw",
+        x: 43,
+        y: 15,
+        width: 5,
+        height: 7,
+        units: 1200,
+        surveySignalId: "anomaly-a",
+        requiredSensingCapabilityId: "core-probe",
+      },
     ],
     terminalModules: [
       { id: "liquid-dock", nameKey: "terminal.module.liquid-dock.name", handlingState: "liquid", containmentCapabilities: ["corrosion-resistant"], capacity: 24, cost: 30, requiredTerminalCapabilityId: "liquid-outbound", inlet: { x: 1, y: 3, side: 1 } },

@@ -282,6 +282,7 @@ export type Save = {
   knowledge: string[];
   evidence: Record<string, ExperimentEvidence>;
   sensingObservations: Record<string, SensingObservation>;
+  discoveredDeposits: string[];
   deposits: Inventory;
   machines: Record<string, Machine>;
   factories: Record<string, Factory>;
@@ -419,7 +420,10 @@ export type PlayerSnapshot = {
   stock: Inventory;
   exported: number;
   milestone: boolean;
-  map: Omit<Content["site"], "sensingCapabilities" | "surveySignals">;
+  map: Omit<
+    Content["site"],
+    "sensingCapabilities" | "surveySignals" | "hiddenDeposits"
+  >;
   sensingCapabilities: SensingCapabilityView[];
   sensingObservations: SensingObservation[];
   deposits: (Content["site"]["deposits"][number] & { remaining: number })[];

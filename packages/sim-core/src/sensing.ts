@@ -102,10 +102,25 @@ export function applySensingObservation(
     y,
     state.tick,
   );
-  if (apply)
+  if (apply) {
     state.sensingObservations[
       sensingObservationKey(capability.id, x, y)
     ] = observation;
+    if (capability.mode === "probe" && observation.signalBand !== "none") {
+      for (const deposit of content.site.hiddenDeposits) {
+        if (deposit.requiredSensingCapabilityId !== capability.id) continue;
+        const signal = content.site.surveySignals.find(
+          (entry) => entry.id === deposit.surveySignalId,
+        );
+        if (!signal || signal.x !== x || signal.y !== y) continue;
+        if (!state.discoveredDeposits.includes(deposit.id)) {
+          state.discoveredDeposits.push(deposit.id);
+          state.discoveredDeposits.sort();
+        }
+        state.deposits[deposit.id] ??= deposit.units;
+      }
+    }
+  }
   return {
     ok: true as const,
     message: "Sensing observation recorded",

@@ -1,5 +1,10 @@
 import type { Content } from "@site/content";
 import type { Point, Rect, Save, Factory } from "./types";
+import {
+  depositDepth,
+  hiddenDepositDefinition,
+  visibleDeposits,
+} from "./deposits";
 export type FootprintDef = { width: number; height: number };
 export const key = (p: Point) => p.x + "," + p.y;
 export const vectors = [
@@ -185,7 +190,7 @@ export function machinePlacement(
   if (d.role === "extractor") {
     if (Object.values(s.factories).some((f) => overlaps(f, r)))
       return fail("Extractors belong outside factories");
-    const deposit = c.site.deposits.find(
+    const deposit = visibleDeposits(c, s).find(
       (a) =>
         r.x >= a.x &&
         r.y >= a.y &&
@@ -193,6 +198,11 @@ export function machinePlacement(
         r.y + r.height <= a.y + a.height,
     );
     if (!deposit) return fail("Place the extractor entirely over a deposit");
+    if (
+      hiddenDepositDefinition(c, deposit.id) &&
+      d.maxExtractionDepth < depositDepth(c, deposit.id)
+    )
+      return fail("Extraction capability insufficient for deposit depth");
     return { factoryId: null, depositId: deposit.id };
   }
   const f = Object.values(s.factories).find((f) => inside(f, r));

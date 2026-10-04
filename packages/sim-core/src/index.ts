@@ -1,5 +1,12 @@
 export { Simulation } from "./simulation";
 export { collectLedger, auditLedger } from "./ledger";
+export {
+  allDeposits,
+  depositDefinition,
+  depositDepth,
+  hiddenDepositDefinition,
+  visibleDeposits,
+} from "./deposits";
 export type { LedgerRow, LedgerSnapshot, LedgerReport } from "./ledger";
 export {
   socket,

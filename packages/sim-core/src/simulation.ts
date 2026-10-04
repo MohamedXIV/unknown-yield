@@ -144,10 +144,12 @@ export class Simulation {
     const {
       sensingCapabilities: hiddenSensingCapabilities,
       surveySignals: hiddenSurveySignals,
+      hiddenDeposits: hiddenDepositDefinitions,
       ...publicMap
     } = c.site;
     void hiddenSensingCapabilities;
     void hiddenSurveySignals;
+    void hiddenDepositDefinitions;
     return structuredClone({
       tick: s.tick,
       fuel: s.fuel,
@@ -166,10 +168,24 @@ export class Simulation {
       sensingObservations: Object.entries(s.sensingObservations)
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([, observation]) => observation),
-      deposits: c.site.deposits.map((d) => ({
-        ...d,
-        remaining: s.deposits[d.id],
-      })),
+      deposits: [
+        ...c.site.deposits.map((d) => ({
+          ...d,
+          remaining: s.deposits[d.id],
+        })),
+        ...c.site.hiddenDeposits
+          .filter((d) => s.discoveredDeposits.includes(d.id))
+          .map(
+            ({
+              surveySignalId: _surveySignalId,
+              requiredSensingCapabilityId: _requiredSensingCapabilityId,
+              ...d
+            }) => ({
+              ...d,
+              remaining: s.deposits[d.id],
+            }),
+          ),
+      ],
       definitions: c.machines.map((definition) => {
         const { unlock, ...view } = definition;
         return {
