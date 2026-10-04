@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { Content } from "@site/content";
 import { checkContainment } from "@site/content";
 import { liquidContainment } from "./containment";
+import { validateTerminalModules } from "./terminal";
 import {
   emptyFlows,
   experimentEvidenceKey,
@@ -132,8 +133,15 @@ const schema = z.object({
     z.literal(14),
     z.literal(15),
     z.literal(16),
+    z.literal(17),
   ]),
   contentVersion: z.string(),
+  terminalModules: z
+    .record(
+      safeId,
+      z.object({ materialId: safeId.nullable(), quantity: count }).strict(),
+    )
+    .optional(),
   tick: count,
   remainder: z.number().finite().nonnegative(),
   nextId: positive,
@@ -219,7 +227,8 @@ const schema = z.object({
 });
 export function initialState(c: Content): Save {
   const state: Save = {
-    schemaVersion: 16,
+    schemaVersion: 17,
+    terminalModules: {},
     contentVersion: c.version,
     tick: 0,
     remainder: 0,
@@ -280,7 +289,20 @@ export function initialState(c: Content): Save {
   return state;
 }
 export function parseSave(input: unknown, c: Content): Save {
-  const s = schema.parse(input);
+  const parsed = schema.parse(input);
+  if (
+    parsed.schemaVersion < 17 &&
+    (c.version === "world-01-v10" || c.site.terminalModules.length)
+  )
+    throw Error("Incompatible terminal save schema");
+  if (parsed.schemaVersion === 17 && !parsed.terminalModules)
+    throw Error("Missing terminal module state");
+  if (
+    parsed.schemaVersion < 17 &&
+    Object.keys(parsed.terminalModules ?? {}).length
+  )
+    throw Error("Legacy schema cannot contain terminal modules");
+  const s = { ...parsed, terminalModules: parsed.terminalModules ?? {} };
   if (
     s.schemaVersion < 15 &&
     [s.pressureLines, s.pressureVessels, s.compressors].some(
@@ -393,6 +415,7 @@ export function parseSave(input: unknown, c: Content): Save {
   if (s.schemaVersion === 13) s.schemaVersion = 14;
   if (s.schemaVersion === 14) s.schemaVersion = 15;
   if (s.schemaVersion === 15) s.schemaVersion = 16;
+  if (s.schemaVersion === 16) s.schemaVersion = 17;
   if (s.contentVersion !== c.version || s.remainder >= c.tickMs)
     throw new Error("Incompatible content or timing");
   if (
@@ -508,6 +531,8 @@ export function parseSave(input: unknown, c: Content): Save {
       throw new Error("Invalid milestone state");
   }
   refreshMilestones(c, s);
+
+  validateTerminalModules(c, s, known);
 
   if (
     Object.keys(s.deposits).sort().join() !==

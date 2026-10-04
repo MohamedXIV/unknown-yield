@@ -35,6 +35,7 @@ export type LedgerRow = {
   initial: number;
   stock: number;
   staging: number;
+  terminalModules: number;
   machineInput: number;
   machineOutput: number;
   belts: number;
@@ -67,6 +68,7 @@ function blank(material: string): LedgerRow {
     initial: 0,
     stock: 0,
     staging: 0,
+    terminalModules: 0,
     machineInput: 0,
     machineOutput: 0,
     belts: 0,
@@ -112,6 +114,8 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
   // Terminal/site holdings: construction reserve plus tracked staging.
   for (const [id, n] of Object.entries(s.stock ?? {})) row(id).stock += n;
   for (const [id, n] of Object.entries(s.staging ?? {})) row(id).staging += n;
+  for (const t of Object.values(s.terminalModules ?? {}))
+    if (t.materialId) row(t.materialId).terminalModules += t.quantity;
 
   // Machine buffers.
   for (const m of Object.values(s.machines ?? {})) {
@@ -198,6 +202,9 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
     0,
   );
   if (embodied > 0) row(c.site.buildMaterial).embodied += embodied;
+  for (const id of Object.keys(s.terminalModules ?? {}))
+    row(c.site.buildMaterial).embodied +=
+      c.site.terminalModules.find((d) => d.id === id)?.cost ?? 0;
 
   // Cumulative defined sinks and transformation outputs.
   for (const [id, n] of Object.entries(s.flows?.consumed ?? {}))
@@ -214,6 +221,7 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
       r.deposits +
       r.stock +
       r.staging +
+      r.terminalModules +
       r.machineInput +
       r.machineOutput +
       r.belts +

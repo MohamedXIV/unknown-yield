@@ -12,7 +12,8 @@ import {
 
 function knownGranulesContent() {
   const content = structuredClone(fixture);
-  content.materials.find((material) => material.id === "granules")!.known = true;
+  content.materials.find((material) => material.id === "granules")!.known =
+    true;
   delete content.economy.exchange[0].requiredTerminalCapabilityId;
   return content;
 }
@@ -85,7 +86,7 @@ describe("authoritative Materials Exchange", () => {
 
     const restored = new Simulation(content);
     expect(restored.load(JSON.parse(JSON.stringify(save))).ok).toBe(true);
-    expect(restored.serialize().schemaVersion).toBe(16);
+    expect(restored.serialize().schemaVersion).toBe(17);
     expect(restored.serialize().market).toEqual(save.market);
     expect(restored.snapshot().exchange).toEqual([
       {

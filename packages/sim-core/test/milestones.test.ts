@@ -1,3 +1,4 @@
+import { historicalFixture } from "./historical-content";
 import { describe, expect, it } from "vitest";
 import { fixture } from "@site/content";
 import {
@@ -16,7 +17,8 @@ const cadenceMs = fixture.tickMs * fixture.economy.marketEveryTicks;
 
 function knownGranulesContent() {
   const content = structuredClone(fixture);
-  content.materials.find((material) => material.id === "granules")!.known = true;
+  content.materials.find((material) => material.id === "granules")!.known =
+    true;
   return content;
 }
 
@@ -49,14 +51,18 @@ describe("evidence milestones and terminal handling", () => {
     simulation.step(cadenceMs);
 
     const snapshot = simulation.snapshot();
-    expect(snapshot.milestones).toEqual([
-      expect.objectContaining({
-        id: "sealed-study-certified",
-        completed: false,
-      }),
-    ]);
+    expect(snapshot.milestones).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "sealed-study-certified",
+          completed: false,
+        }),
+      ]),
+    );
     expect(JSON.stringify(snapshot)).not.toContain('"materialId":"granules"');
-    expect(JSON.stringify(snapshot.milestones)).not.toContain("heat-raw-sealed");
+    expect(JSON.stringify(snapshot.milestones)).not.toContain(
+      "heat-raw-sealed",
+    );
     expect(JSON.stringify(snapshot.milestones)).not.toContain("granules");
   });
 
@@ -177,26 +183,29 @@ describe("evidence milestones and terminal handling", () => {
   });
 
   it("migrates schema 9 from prior confirmed trial evidence without directive completion", () => {
-    const legacy = initialState(fixture);
-    legacy.tick = fixture.economy.marketEveryTicks;
-    confirmSealedTrial(fixture, legacy);
+    const legacy = initialState(historicalFixture);
+    legacy.tick = historicalFixture.economy.marketEveryTicks;
+    confirmSealedTrial(historicalFixture, legacy);
     expect(legacy.opportunities["sealed-thermal-study"]).toBeUndefined();
 
     const input = JSON.parse(JSON.stringify(legacy));
     input.schemaVersion = 9;
     delete input.milestones;
 
-    const restored = new Simulation(fixture);
+    const restored = new Simulation(historicalFixture);
     expect(restored.load(input).ok).toBe(true);
-    expect(restored.serialize().schemaVersion).toBe(16);
-    expect(restored.serialize().opportunities["sealed-thermal-study"]).toBeUndefined();
+    expect(restored.serialize().schemaVersion).toBe(17);
+    expect(
+      restored.serialize().opportunities["sealed-thermal-study"],
+    ).toBeUndefined();
     expect(restored.serialize().milestones["sealed-study-certified"]).toEqual({
       completedAt: legacy.tick,
     });
     expect(
-      restored.snapshot().exchange.find(
-        (listing) => listing.materialId === "granules",
-      )?.handling,
+      restored
+        .snapshot()
+        .exchange.find((listing) => listing.materialId === "granules")
+        ?.handling,
     ).toEqual({
       nameKey: "terminal.capability.sealed-sample-outbound.name",
       unlocked: true,

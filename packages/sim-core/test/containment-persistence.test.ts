@@ -1,3 +1,4 @@
+import { historicalFixture } from "./historical-content";
 import { describe, it, expect } from "vitest";
 import { fixture, validateContent } from "@site/content";
 import { Simulation, auditLedger } from "../src/index";
@@ -32,6 +33,14 @@ describe("protected save boundaries", () => {
     ];
     for (const machine of draft.machines)
       machine.outputContainment = ["corrosion-resistant"];
+    for (const d of draft.site.terminalModules)
+      d.containmentCapabilities = [
+        ...new Set(
+          draft.materials
+            .filter((m) => m.handlingState === d.handlingState)
+            .flatMap((m) => m.requiredContainment),
+        ),
+      ];
     const content = validateContent(draft),
       sim = new Simulation(content);
     const f = sim.command({
@@ -103,6 +112,14 @@ describe("protected save boundaries", () => {
   it("roundtrips a protected holding and rejects incompatible profiles atomically", () => {
     const draft = structuredClone(fixture);
     draft.materials.find((m) => m.id === "liquid-0")!.known = true;
+    for (const d of draft.site.terminalModules)
+      d.containmentCapabilities = [
+        ...new Set(
+          draft.materials
+            .filter((m) => m.handlingState === d.handlingState)
+            .flatMap((m) => m.requiredContainment),
+        ),
+      ];
     const content = validateContent(draft);
     const sim = new Simulation(content);
     sim.command({
@@ -134,15 +151,15 @@ describe("protected save boundaries", () => {
     ).toBe(false);
     expect(sim.serialize()).toEqual(before);
   });
-  it("migrates matching-content empty schema 15 and refuses older fixture content", () => {
-    const sim = new Simulation(fixture);
+  it("migrates matching-content empty schema 15 and refuses older historicalFixture content", () => {
+    const sim = new Simulation(historicalFixture);
     sim.command({ type: "placePump", x: 10, y: 10, direction: 0 });
     const legacy = structuredClone(sim.serialize()) as Record<string, unknown>;
     legacy.schemaVersion = 15;
     const pumps = legacy.pumps as Record<string, Record<string, unknown>>;
     for (const pump of Object.values(pumps)) delete pump.containmentProfileId;
     expect(sim.load(legacy).ok).toBe(true);
-    expect(sim.serialize().schemaVersion).toBe(16);
+    expect(sim.serialize().schemaVersion).toBe(17);
     expect(Object.values(sim.serialize().pumps)[0].containmentProfileId).toBe(
       "standard",
     );

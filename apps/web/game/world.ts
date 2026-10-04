@@ -482,6 +482,19 @@ export function createWorld(
       }
       const t = snapshot.map.terminal;
       this.box(g, t, 0x9a9f86, 0x565f4c, 18);
+      for (const d of snapshot.terminalModules) {
+        const px = (t.x + d.inlet.x + 0.5) * X,
+          py = (t.y + d.inlet.y + 0.5) * Y;
+        const tint = !d.installed
+          ? 0x66685d
+          : d.contents.quantity >= d.capacity
+            ? 0xd78b62
+            : d.handlingState === "liquid"
+              ? 0x69bac8
+              : 0xdbbf7f;
+        g.fillStyle(tint, 1).fillCircle(px, py, 8);
+        this.arrow(g, px, py, (d.inlet.side + 2) % 4, 0xf1eed4, 5);
+      }
       this.box(
         g,
         { x: t.x + 0.4, y: t.y + 0.5, width: 2.2, height: 1.8 },

@@ -86,6 +86,14 @@ describe("containment admission", () => {
       if (m.outputContainment.length)
         m.outputContainment.push("heat-resistant");
     }
+    for (const d of draft.site.terminalModules)
+      d.containmentCapabilities = [
+        ...new Set(
+          draft.materials
+            .filter((m) => m.handlingState === d.handlingState)
+            .flatMap((m) => m.requiredContainment),
+        ),
+      ];
     const c = validateContent(draft),
       sim = new Simulation(c);
     sim.command({ type: "placeFactory", x: 10, y: 10, width: 10, height: 8 });
@@ -126,6 +134,14 @@ describe("containment admission", () => {
       m.inputContainment = ["corrosion-resistant"];
       m.outputContainment = ["corrosion-resistant"];
     }
+    for (const d of draft.site.terminalModules)
+      d.containmentCapabilities = [
+        ...new Set(
+          draft.materials
+            .filter((m) => m.handlingState === d.handlingState)
+            .flatMap((m) => m.requiredContainment),
+        ),
+      ];
     const c = validateContent(draft),
       state = new Simulation(c).serialize();
     state.belts["10,10"] = {
@@ -181,6 +197,14 @@ describe("containment admission", () => {
     draft.machines.find((m) => m.id === "gas-collector")!.inputContainment = [
       "corrosion-resistant",
     ];
+    for (const d of draft.site.terminalModules)
+      d.containmentCapabilities = [
+        ...new Set(
+          draft.materials
+            .filter((m) => m.handlingState === d.handlingState)
+            .flatMap((m) => m.requiredContainment),
+        ),
+      ];
     const c = validateContent(draft),
       state = new Simulation(c).serialize();
     state.pressureLines = {

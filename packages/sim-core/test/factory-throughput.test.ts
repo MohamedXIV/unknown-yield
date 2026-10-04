@@ -1,4 +1,6 @@
 import { FactoryThroughputMonitor } from "../src/factory-throughput";
+import { terminalState } from "./terminal-helpers";
+import { validateContent } from "@site/content";
 import { describe, expect, it } from "vitest";
 import { fixture } from "@site/content";
 import {
@@ -168,6 +170,30 @@ function makeBackloggedTerminalLine() {
 
   return { sim, factoryId, processorId };
 }
+it("preserves a live certificate across unrelated terminal install and remove", () => {
+  const { sim, factoryId } = makeLine(),
+    save = sim.serialize(),
+    unlocked = terminalState();
+  save.knowledge = unlocked.knowledge;
+  save.evidence = unlocked.evidence;
+  save.market = unlocked.market;
+  save.milestones = unlocked.milestones;
+  expect(sim.load(save).ok).toBe(true);
+  for (let i = 0; i < 600; i++) sim.step(fixture.tickMs);
+  const before = sim.snapshot().factories.find((f) => f.id === factoryId)!
+    .contract.throughput;
+  expect(before.state).toBe("stable");
+  for (const type of [
+    "installTerminalModule",
+    "removeTerminalModule",
+  ] as const) {
+    expect(sim.command({ type, definitionId: "liquid-dock" }).ok).toBe(true);
+    expect(
+      sim.snapshot().factories.find((f) => f.id === factoryId)!.contract
+        .throughput,
+    ).toEqual(before);
+  }
+});
 it("preserves a live certificate when an unrelated empty tank changes profile", () => {
   const { sim, factoryId } = makeLine();
   const tank = build(sim, { type: "placeTank", x: 5, y: 5, direction: 0 });
@@ -863,6 +889,44 @@ describe("gas recurrence boundary", () => {
     state.pressureLines["30,15"].outlet = 1;
     state.tick++;
     monitor.observe(fixture, state);
+    expect(monitor.view(factoryId).state).toBe("measuring");
+  });
+  it("includes connected terminal installation but ignores unrelated dock changes", () => {
+    const { state, monitor, factoryId } = monitorLine();
+    const content = validateContent({
+      ...fixture,
+      site: {
+        ...fixture.site,
+        terminal: { x: 35, y: 14, width: 4, height: 4 },
+        terminalModules: fixture.site.terminalModules.map((d) =>
+          d.id === "gas-dock" ? { ...d, inlet: { x: 0, y: 1, side: 2 } } : d,
+        ),
+      },
+    });
+    for (let i = 1; i < 8; i++) {
+      state.tick = i;
+      monitor.recordMove(state, {
+        from: { x: 25, y: 15 },
+        direction: 0,
+        material: "gas-0",
+        units: 2,
+      });
+      monitor.recordMove(state, {
+        from: { x: 34, y: 15 },
+        direction: 0,
+        material: "gas-0",
+        units: 2,
+      });
+      monitor.observe(content, state);
+    }
+    expect(monitor.view(factoryId).state).toBe("stable");
+    state.terminalModules["liquid-dock"] = { materialId: null, quantity: 0 };
+    state.tick++;
+    monitor.observe(content, state);
+    expect(monitor.view(factoryId).state).toBe("stable");
+    state.terminalModules["gas-dock"] = { materialId: null, quantity: 0 };
+    state.tick++;
+    monitor.observe(content, state);
     expect(monitor.view(factoryId).state).toBe("measuring");
   });
 });

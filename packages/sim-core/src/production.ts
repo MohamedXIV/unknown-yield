@@ -13,13 +13,9 @@ import {
   type Point,
 } from "./types";
 import { key, next, socket, contains, footprint } from "./geometry";
-import {
-  applyExportCompensation,
-  ensureMarket,
-  exchangeDefinition,
-} from "./market";
-import { recordDirectiveExperiment, recordOrderExport } from "./opportunities";
-import { terminalCanExport } from "./milestones";
+import { ensureMarket, exchangeDefinition } from "./market";
+import { recordDirectiveExperiment } from "./opportunities";
+import { settleTerminalExports } from "./terminal";
 export function recipe(c: Content, m: Machine) {
   const definition = c.machines.find((d) => d.id === m.definitionId);
   return c.reactions.find(
@@ -86,9 +82,11 @@ export function completeAndStart(
         if (r && !s.knowledge.includes(r.id)) {
           s.knowledge.push(r.id);
           onDiscovery?.(r.id, m);
-          s.policies[material] = exchangeDefinition(c, material)
-            ? "export"
-            : "keep";
+          s.policies[material] =
+            c.materials.find((m) => m.id === material)?.handlingState ===
+              "solid" && exchangeDefinition(c, material)
+              ? "export"
+              : "keep";
           ensureMarket(c, s, material);
         }
         if (r?.hazard) {
@@ -541,19 +539,5 @@ export function transport(
     if (signal && signal.pending === null && --signal.remaining === 0)
       signal.pending = (1 - signal.axis) as 0 | 1;
   }
-  for (const material of c.materials) {
-    const n = amount(s.staging, material.id);
-    if (
-      n > 0 &&
-      s.policies[material.id] === "export" &&
-      exchangeDefinition(c, material.id) &&
-      terminalCanExport(c, s, material.id)
-    ) {
-      applyExportCompensation(c, s, material.id, n);
-      recordOrderExport(c, s, material.id, n);
-      s.exported += n;
-      change(s.flows.exported, material.id, n);
-      change(s.staging, material.id, -n);
-    }
-  }
+  settleTerminalExports(c, s);
 }

@@ -1,3 +1,4 @@
+import { historicalFixture } from "./historical-content";
 import { describe, expect, it } from "vitest";
 import { fixture } from "@site/content";
 import {
@@ -17,13 +18,7 @@ function build(sim: Simulation, command: GameCommand) {
   return result.id!;
 }
 
-function path(
-  x: number,
-  y: number,
-  endX: number,
-  endY: number,
-  direction = 0,
-) {
+function path(x: number, y: number, endX: number, endY: number, direction = 0) {
   const points = [{ x, y }];
   while (x !== endX) {
     x += Math.sign(endX - x);
@@ -46,7 +41,8 @@ function depletedSimulation(content = fixture) {
 
 function knownGranulesContent() {
   const content = structuredClone(fixture);
-  content.materials.find((material) => material.id === "granules")!.known = true;
+  content.materials.find((material) => material.id === "granules")!.known =
+    true;
   return content;
 }
 
@@ -247,12 +243,7 @@ describe("corporate assistance and recovery standing", () => {
     expect(save.debt).toBe(36);
     expect(save.company.recoveryNetFuel).toBe(0);
 
-    const repayment = applyExportCompensation(
-      content,
-      save,
-      "granules",
-      3,
-    );
+    const repayment = applyExportCompensation(content, save, "granules", 3);
     expect(repayment).toMatchObject({ gross: 36, repaid: 36, net: 0 });
     expect(save.debt).toBe(0);
     expect(save.company.standing).toBe("recovery");
@@ -279,12 +270,7 @@ describe("corporate assistance and recovery standing", () => {
     expect(simulation.command({ type: "assistance" }).ok).toBe(true);
 
     const save = simulation.serialize();
-    const repayment = applyExportCompensation(
-      content,
-      save,
-      "granules",
-      3,
-    );
+    const repayment = applyExportCompensation(content, save, "granules", 3);
     expect(repayment.net).toBe(0);
     expect(save.debt).toBe(0);
     expect(save.company.interventionStreak).toBe(1);
@@ -387,9 +373,10 @@ describe("corporate assistance and recovery standing", () => {
 
     expect(simulation.load(save).ok).toBe(true);
     expect(
-      simulation.snapshot().exchange.find(
-        (entry) => entry.materialId === "granules",
-      )?.handling?.unlocked,
+      simulation
+        .snapshot()
+        .exchange.find((entry) => entry.materialId === "granules")?.handling
+        ?.unlocked,
     ).toBe(true);
     expect(simulation.snapshot().assistance[0]).toMatchObject({
       eligible: true,
@@ -451,9 +438,9 @@ describe("corporate assistance and recovery standing", () => {
     expect(simulation.snapshot().debt).toBeGreaterThan(0);
     expect(simulation.snapshot().exported).toBeGreaterThan(0);
     expect(simulation.snapshot().company.interventionStreak).toBe(2);
-    expect(simulation.serialize().company.repaidSinceAssistanceFuel).toBeGreaterThanOrEqual(
-      12,
-    );
+    expect(
+      simulation.serialize().company.repaidSinceAssistanceFuel,
+    ).toBeGreaterThanOrEqual(12);
     expect(simulation.snapshot().assistance[0]).toMatchObject({
       eligible: true,
       nextObligationFuel: 12,
@@ -510,16 +497,16 @@ describe("corporate assistance and recovery standing", () => {
   });
 
   it("migrates schema 10 debt into recovery standing without changing the obligation", () => {
-    const source = new Simulation(fixture);
+    const source = new Simulation(historicalFixture);
     const legacy = JSON.parse(JSON.stringify(source.serialize()));
     legacy.schemaVersion = 10;
     legacy.fuel = 0;
     legacy.debt = 20;
     delete legacy.company;
 
-    const restored = new Simulation(fixture);
+    const restored = new Simulation(historicalFixture);
     expect(restored.load(legacy).ok).toBe(true);
-    expect(restored.serialize().schemaVersion).toBe(16);
+    expect(restored.serialize().schemaVersion).toBe(17);
     expect(restored.snapshot()).toMatchObject({
       fuel: 0,
       debt: 20,
@@ -586,22 +573,23 @@ describe("corporate assistance and recovery standing", () => {
 
     for (
       let i = 0;
-      i < 600 &&
-      !simulation.serialize().knowledge.includes("heat-raw-sealed");
+      i < 600 && !simulation.serialize().knowledge.includes("heat-raw-sealed");
       i++
     )
       simulation.step(100);
 
     expect(simulation.serialize().knowledge).toContain("heat-raw-sealed");
     expect(
-      simulation.snapshot().milestones.find(
-        (entry) => entry.id === "sealed-study-certified",
-      )?.completed,
+      simulation
+        .snapshot()
+        .milestones.find((entry) => entry.id === "sealed-study-certified")
+        ?.completed,
     ).toBe(true);
     expect(
-      simulation.snapshot().exchange.find(
-        (entry) => entry.materialId === "granules",
-      )?.handling?.unlocked,
+      simulation
+        .snapshot()
+        .exchange.find((entry) => entry.materialId === "granules")?.handling
+        ?.unlocked,
     ).toBe(true);
     expect(
       simulation.serialize().opportunities["sealed-thermal-study"].status,

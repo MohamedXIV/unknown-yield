@@ -178,6 +178,14 @@ export const contentSchema = z.object({
     )
     .min(1),
   site: z.object({
+    terminalModules: z.array(z.object({
+      id, nameKey: localeKeySchema,
+      handlingState: z.enum(["liquid", "gas"]),
+      containmentCapabilities: capabilities,
+      capacity: positive, cost: positive,
+      requiredTerminalCapabilityId: id,
+      inlet: z.object({ x: pos, y: pos, side: z.number().int().min(0).max(3) }),
+    })).default([]),
     beltContainment: capabilities,
     dryContainment: capabilities,
     width: positive,
@@ -702,6 +710,27 @@ function validateContentInternal(
       throw new Error("Terminal handling unlock depends on blocked export");
   }
 
+  const moduleIds = new Set<string>(), moduleStates = new Set<string>(), moduleCells = new Set<string>();
+  for (const d of c.site.terminalModules) {
+    const { x, y, side } = d.inlet, t = c.site.terminal;
+    const cell = `${x},${y}`;
+    if (moduleIds.has(d.id) || moduleStates.has(d.handlingState) || moduleCells.has(cell)) throw Error("Duplicate terminal module slot");
+    moduleIds.add(d.id); moduleStates.add(d.handlingState); moduleCells.add(cell);
+    if (x >= t.width || y >= t.height || !(side === 0 ? x === t.width - 1 : side === 1 ? y === t.height - 1 : side === 2 ? x === 0 : y === 0)) throw Error("Invalid terminal inlet geometry");
+    const outsideX = t.x + x + (side === 0 ? 1 : side === 2 ? -1 : 0);
+    const outsideY = t.y + y + (side === 1 ? 1 : side === 3 ? -1 : 0);
+    if (outsideX < 0 || outsideY < 0 || outsideX >= c.site.width || outsideY >= c.site.height) throw Error("Terminal inlet has no outside approach");
+    if (d.nameKey !== `terminal.module.${d.id}.name`) throw Error("Localization key must match terminal module");
+    if (d.handlingState === "liquid" ? !c.liquidLogistics : !c.gasLogistics) throw Error("Terminal module requires logistics");
+    const unlocker = capabilityUnlocker.get(d.requiredTerminalCapabilityId);
+    if (!capabilityIds.has(d.requiredTerminalCapabilityId) || !unlocker) throw Error("Terminal module requires a capability unlock");
+    for (const listing of c.economy.exchange) {
+      const material = c.materials.find(m => m.id === listing.materialId)!;
+      if (listing.requiredTerminalCapabilityId === d.requiredTerminalCapabilityId && !checkContainment(c, material.id, [d.handlingState], d.containmentCapabilities).ok) throw Error("Terminal module cannot protect listed cargo");
+      if (checkContainment(c, material.id, [d.handlingState], d.containmentCapabilities).ok && dependsOnBlockedExport(unlocker, material.id)) throw Error("Terminal module unlock depends on blocked export");
+    }
+  }
+
   const minimumLegacyRecoveryFuel =
     Math.max(...c.machines.map((m) => m.fuel)) * 8;
   if (
@@ -760,6 +789,7 @@ function validateContainmentDefinitions(c: Content) {
     ...c.storages.map((d) => d.containmentCapabilities),
     c.site.beltContainment,
     c.site.dryContainment,
+    ...c.site.terminalModules.map(d => d.containmentCapabilities),
   ];
   if (c.gasLogistics)
     lists.push(

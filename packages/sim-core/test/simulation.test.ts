@@ -1,3 +1,4 @@
+import { historicalFixture } from "./historical-content";
 import { describe, it, expect } from "vitest";
 import { fixture } from "@site/content";
 import {
@@ -73,8 +74,7 @@ function line(
   });
   const processor = build(s, {
     type: "placeMachine",
-    definitionId:
-      processorDefinitionId ?? (heat ? "furnace" : "crusher"),
+    definitionId: processorDefinitionId ?? (heat ? "furnace" : "crusher"),
     x: 27,
     y: my,
     direction: 0,
@@ -324,9 +324,10 @@ describe("automatic industry", () => {
 
     expect(s.serialize().knowledge).toContain("heat-raw-sealed");
     expect(
-      s.snapshot().milestones.find(
-        (entry) => entry.id === "sealed-study-certified",
-      )?.completed,
+      s
+        .snapshot()
+        .milestones.find((entry) => entry.id === "sealed-study-certified")
+        ?.completed,
     ).toBe(true);
     expect(
       s.snapshot().exchange.find((entry) => entry.materialId === "granules")
@@ -346,9 +347,11 @@ describe("automatic industry", () => {
     const { s, processor } = line(make(), true, true);
     s.step(20000);
     expect(
-      s.snapshot().observations.some(
-        (o) => o.textKey === "reaction.heat-raw.observation",
-      ),
+      s
+        .snapshot()
+        .observations.some(
+          (o) => o.textKey === "reaction.heat-raw.observation",
+        ),
     ).toBe(true);
     expect(
       s.snapshot().machines.find((m) => m.id === processor)?.output.residue,
@@ -374,8 +377,8 @@ describe("automatic industry", () => {
       expect(save.machines[processor].definitionId).toBe(definitionId);
       expect(save.machines[processor].job?.reaction).toBe(reactionId);
       expect(save.knowledge).not.toContain(reactionId);
-      expect(save.schemaVersion).toBe(16);
-      expect(save.contentVersion).toBe("world-01-v9");
+      expect(save.schemaVersion).toBe(17);
+      expect(save.contentVersion).toBe("world-01-v10");
 
       const restored = make(),
         repeated = make();
@@ -392,7 +395,9 @@ describe("automatic industry", () => {
       expect(
         restored
           .snapshot()
-          .observations.some((observation) => observation.outputId === outputId),
+          .observations.some(
+            (observation) => observation.outputId === outputId,
+          ),
       ).toBe(true);
       expect(auditLedger(fixture, restored.serialize()).ok).toBe(true);
     }
@@ -427,7 +432,7 @@ describe("automatic industry", () => {
     expect(JSON.stringify(hinted)).not.toContain("reaction.heat-raw");
 
     const saved = s.serialize();
-    expect(saved.schemaVersion).toBe(16);
+    expect(saved.schemaVersion).toBe(17);
     expect(saved.evidence[hinted!.id].state).toBe("hinted");
 
     const restored = make();
@@ -449,7 +454,9 @@ describe("automatic industry", () => {
     });
     expect(restored.serialize().evidence[hinted!.id].state).toBe("confirmed");
     expect(
-      restored.snapshot().knowledgeEntries.filter((entry) => entry.id === hinted!.id),
+      restored
+        .snapshot()
+        .knowledgeEntries.filter((entry) => entry.id === hinted!.id),
     ).toHaveLength(1);
 
     const confirmedSave = restored.serialize();
@@ -469,13 +476,20 @@ describe("automatic industry", () => {
 
     restored.step(10000);
     expect(
-      restored.snapshot().knowledgeEntries.filter((entry) => entry.id === hinted!.id),
+      restored
+        .snapshot()
+        .knowledgeEntries.filter((entry) => entry.id === hinted!.id),
     ).toHaveLength(1);
     expect(auditLedger(fixture, restored.serialize()).ok).toBe(true);
   });
 
   it("migrates schema-5 knowledge and active experiments into evidence", () => {
-    const { s, processor } = line(make(), true, true, "sealed-furnace");
+    const { s, processor } = line(
+      new Simulation(historicalFixture),
+      true,
+      true,
+      "sealed-furnace",
+    );
     for (
       let ticks = 0;
       ticks < 200 && !s.serialize().machines[processor].job;
@@ -485,13 +499,16 @@ describe("automatic industry", () => {
 
     const legacy = JSON.parse(JSON.stringify(s.serialize()));
     legacy.schemaVersion = 5;
+    legacy.contentVersion = historicalFixture.version;
     delete legacy.evidence;
-    for (const machine of Object.values(legacy.machines) as Array<Record<string, unknown>>)
+    for (const machine of Object.values(legacy.machines) as Array<
+      Record<string, unknown>
+    >)
       delete machine.incident;
 
-    const restored = make();
+    const restored = new Simulation(historicalFixture);
     expect(restored.load(legacy).ok).toBe(true);
-    expect(restored.serialize().schemaVersion).toBe(16);
+    expect(restored.serialize().schemaVersion).toBe(17);
     const hinted = restored
       .snapshot()
       .knowledgeEntries.find(
@@ -541,7 +558,8 @@ describe("automatic industry", () => {
       s.step(100);
     expect(s.serialize().knowledge).toContain("heat-raw-sealed");
     expect(
-      s.snapshot().definitions.find((d) => d.id === "oversealed-furnace")?.unlock,
+      s.snapshot().definitions.find((d) => d.id === "oversealed-furnace")
+        ?.unlock,
     ).toEqual({
       unlocked: true,
       hintKey: "machine.oversealed-furnace.unlock-hint",
@@ -555,9 +573,7 @@ describe("automatic industry", () => {
       direction: 0,
     });
     expect(unlocked.ok, unlocked.message).toBe(true);
-    expect(
-      s.serialize().machines[unlocked.id!],
-    ).toMatchObject({
+    expect(s.serialize().machines[unlocked.id!]).toMatchObject({
       definitionId: "oversealed-furnace",
       factoryId: factory,
     });
@@ -566,9 +582,8 @@ describe("automatic industry", () => {
       restored = make();
     expect(restored.load(JSON.parse(JSON.stringify(saved))).ok).toBe(true);
     expect(
-      restored
-        .snapshot()
-        .definitions.find((d) => d.id === "oversealed-furnace")?.unlock,
+      restored.snapshot().definitions.find((d) => d.id === "oversealed-furnace")
+        ?.unlock,
     ).toEqual({
       unlocked: true,
       hintKey: "machine.oversealed-furnace.unlock-hint",
@@ -620,24 +635,26 @@ describe("automatic industry", () => {
       job: null,
     });
     expect(machine.output.residue).toBeGreaterThan(0);
-    expect(
-      s.snapshot().machines.find((m) => m.id === processor),
-    ).toMatchObject({
-      status: "incident",
-      incident: {
-        nameKey: "hazard.chamber-blowout.name",
-        textKey: "hazard.chamber-blowout.observation",
+    expect(s.snapshot().machines.find((m) => m.id === processor)).toMatchObject(
+      {
+        status: "incident",
+        incident: {
+          nameKey: "hazard.chamber-blowout.name",
+          textKey: "hazard.chamber-blowout.observation",
+        },
       },
-    });
+    );
     expect(
-      s.snapshot().knowledgeEntries.some(
-        (entry) =>
-          entry.state === "confirmed" &&
-          entry.operationId === "heat" &&
-          entry.inputId === "raw" &&
-          entry.setupNameKey === "machine.oversealed-furnace.name" &&
-          entry.outputId === "residue",
-      ),
+      s
+        .snapshot()
+        .knowledgeEntries.some(
+          (entry) =>
+            entry.state === "confirmed" &&
+            entry.operationId === "heat" &&
+            entry.inputId === "raw" &&
+            entry.setupNameKey === "machine.oversealed-furnace.name" &&
+            entry.outputId === "residue",
+        ),
     ).toBe(true);
     expect(auditLedger(fixture, incidentSave).ok).toBe(true);
 
@@ -673,8 +690,7 @@ describe("automatic industry", () => {
     const safe = line(make(), true, true, "sealed-furnace");
     for (
       let ticks = 0;
-      ticks < 500 &&
-      !safe.s.serialize().knowledge.includes("heat-raw-sealed");
+      ticks < 500 && !safe.s.serialize().knowledge.includes("heat-raw-sealed");
       ticks++
     )
       safe.s.step(100);
@@ -692,7 +708,8 @@ describe("automatic industry", () => {
     );
     for (
       let ticks = 0;
-      ticks < 500 && !repeated.s.serialize().machines[repeated.processor].incident;
+      ticks < 500 &&
+      !repeated.s.serialize().machines[repeated.processor].incident;
       ticks++
     )
       repeated.s.step(100);
@@ -702,7 +719,7 @@ describe("automatic industry", () => {
   });
 
   it("migrates schema-6 machines with no incident through schema 11", () => {
-    const s = make();
+    const s = new Simulation(historicalFixture);
     const machineId = build(s, {
       type: "placeMachine",
       definitionId: "extractor",
@@ -712,11 +729,12 @@ describe("automatic industry", () => {
     });
     const legacy = JSON.parse(JSON.stringify(s.serialize()));
     legacy.schemaVersion = 6;
+    legacy.contentVersion = historicalFixture.version;
     delete legacy.machines[machineId].incident;
 
-    const restored = make();
+    const restored = new Simulation(historicalFixture);
     expect(restored.load(legacy).ok).toBe(true);
-    expect(restored.serialize().schemaVersion).toBe(16);
+    expect(restored.serialize().schemaVersion).toBe(17);
     expect(restored.serialize().machines[machineId].incident).toBeNull();
   });
 
@@ -769,9 +787,7 @@ describe("save boundary", () => {
   it("rejects saves from the previous content version without replacing state", () => {
     const s = make(),
       before = s.serialize();
-    expect(
-      s.load({ ...before, contentVersion: "world-01-v4" }).ok,
-    ).toBe(false);
+    expect(s.load({ ...before, contentVersion: "world-01-v4" }).ok).toBe(false);
     expect(s.serialize()).toEqual(before);
   });
   it("rejects invalid time and prevents snapshot mutation", () => {

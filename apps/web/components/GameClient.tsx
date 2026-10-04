@@ -1575,6 +1575,54 @@ function GameClientInner() {
                 ) : (
                   <p className="hint">{t("ui.terminal.opportunities.empty")}</p>
                 )}
+                <h3>{t("ui.terminal.module.heading")}</h3>
+                {snapshot.terminalModules.map((d) => (
+                  <div className="opportunity" key={d.id}>
+                    <h4>{t(d.nameKey)}</h4>
+                    <p>
+                      {t("ui.terminal.module.meta", {
+                        quantity: d.contents.quantity,
+                        capacity: d.capacity,
+                        cost: d.cost,
+                      })}
+                    </p>
+                    <p>
+                      {d.contents.materialId
+                        ? materialName(d.contents.materialId)
+                        : t("ui.terminal.module.empty")}
+                    </p>
+                    <p className="hint">
+                      {t("ui.terminal.module.inlet", {
+                        x: snapshot.map.terminal.x + d.inlet.x,
+                        y: snapshot.map.terminal.y + d.inlet.y,
+                        side: t("ui.direction." + d.inlet.side),
+                      })}
+                    </p>
+                    {d.blockedReason && (
+                      <p className="hint">
+                        {t("ui.terminal.module.result." + d.blockedReason)}
+                      </p>
+                    )}
+                    <button
+                      disabled={d.installed ? !d.canRemove : !d.canInstall}
+                      onClick={() =>
+                        act({
+                          type: d.installed
+                            ? "removeTerminalModule"
+                            : "installTerminalModule",
+                          definitionId: d.id,
+                        })
+                      }
+                    >
+                      {t(
+                        d.installed
+                          ? "ui.terminal.module.remove"
+                          : "ui.terminal.module.install",
+                        { module: t(d.nameKey) },
+                      )}
+                    </button>
+                  </div>
+                ))}
                 <h3>Terminal staging & policies</h3>
                 <p className="hint">
                   Exportable cargo stages at the terminal and ships per policy.
@@ -1592,10 +1640,21 @@ function GameClientInner() {
                         <small>
                           {(m.id === snapshot.map.buildMaterial
                             ? snapshot.stock[m.id]
-                            : snapshot.staging[m.id]) ?? 0}{" "}
+                            : m.handlingState === "solid"
+                              ? snapshot.staging[m.id]
+                              : snapshot.terminalModules.reduce(
+                                  (n, d) =>
+                                    n +
+                                    (d.contents.materialId === m.id
+                                      ? d.contents.quantity
+                                      : 0),
+                                  0,
+                                )) ?? 0}{" "}
                           {m.id === snapshot.map.buildMaterial
                             ? "reserved"
-                            : "staged"}{" "}
+                            : m.handlingState === "solid"
+                              ? "staged"
+                              : t("ui.terminal.module.staged")}{" "}
                           {exchangeFor(m.id)
                             ? "· " +
                               exchangeFor(m.id)!.compensationPerUnit +

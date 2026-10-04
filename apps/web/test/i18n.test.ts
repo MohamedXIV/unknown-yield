@@ -52,3 +52,16 @@ it("resolves authored containment profiles, requirements, reasons and feedback",
     expect(t(key)).not.toBe(key);
   expect(t("ui.containment.cost", { count: 34 })).toBe("34 structural plates");
 });
+
+it("resolves terminal module controls and admission feedback", () => {
+  for (const key of [
+    "ui.terminal.module.heading",
+    "ui.terminal.module.inlet",
+    "ui.terminal.module.install",
+    "ui.terminal.module.remove",
+    "ui.terminal.module.result.loaded",
+    "ui.containment.reason.terminal-module-missing",
+    "ui.containment.reason.terminal-module-locked",
+  ])
+    expect(t(key)).not.toBe(key);
+});

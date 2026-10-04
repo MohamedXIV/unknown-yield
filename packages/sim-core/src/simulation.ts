@@ -20,6 +20,7 @@ import {
   liquidDiagnostics,
 } from "./liquids";
 import { publicTransportDiagnostic } from "./containment";
+import { terminalModuleViews } from "./terminal";
 import { footprint } from "./geometry";
 import { factoryView } from "./factory-contract";
 import { FactoryThroughputMonitor } from "./factory-throughput";
@@ -45,7 +46,11 @@ export class Simulation {
         typeof input === "object" &&
         input !== null &&
         "type" in input &&
-        input.type === "setLiquidContainmentProfile"
+        [
+          "setLiquidContainmentProfile",
+          "installTerminalModule",
+          "removeTerminalModule",
+        ].includes(String(input.type))
       )
         this.factoryThroughput.observe(this.content, this.state);
       else this.factoryThroughput.reset();
@@ -179,6 +184,7 @@ export class Simulation {
         };
       }),
       staging: s.staging,
+      terminalModules: terminalModuleViews(c, s),
       policies: s.policies,
       exchange: marketListings(c, s),
       opportunities: opportunityViews(c, s),
@@ -270,7 +276,7 @@ export class Simulation {
       return {
         ok: false,
         message:
-          "Save rejected (requires schema 16): " +
+          "Save rejected (requires schema 17): " +
           (error instanceof Error ? error.message : "Invalid data"),
       };
     }

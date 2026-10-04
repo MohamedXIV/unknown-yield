@@ -1,3 +1,4 @@
+import { historicalFixture } from "./historical-content";
 import { describe, expect, it } from "vitest";
 import { fixture } from "@site/content";
 import { Simulation, auditLedger } from "../src/index";
@@ -135,7 +136,7 @@ it("rejects impossible phase/route states atomically", () => {
   expect(sim.load(t).ok).toBe(false);
 });
 it("migrates schema 12 T fairness without inventing crossing state", () => {
-  const sim = new Simulation(fixture);
+  const sim = new Simulation(historicalFixture);
   sim.command({ type: "placeBelts", points: [{ x: 20, y: 20 }], direction: 0 });
   const id = sim.snapshot().belts[0].id;
   sim.command({
@@ -149,7 +150,7 @@ it("migrates schema 12 T fairness without inventing crossing state", () => {
   s.schemaVersion = 12;
   s.belts["20,20"].junction!.cursor = 1;
   const expected = structuredClone(s);
-  expected.schemaVersion = 16;
+  expected.schemaVersion = 17;
   expect(sim.load(s).ok).toBe(true);
   expect(sim.serialize()).toEqual(expected);
 });

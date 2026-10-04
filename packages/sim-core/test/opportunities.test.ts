@@ -1,3 +1,4 @@
+import { historicalFixture } from "./historical-content";
 import { describe, expect, it } from "vitest";
 import { fixture } from "@site/content";
 import {
@@ -17,7 +18,8 @@ const cadenceMs = fixture.tickMs * fixture.economy.marketEveryTicks;
 
 function knownGranulesContent() {
   const content = structuredClone(fixture);
-  content.materials.find((material) => material.id === "granules")!.known = true;
+  content.materials.find((material) => material.id === "granules")!.known =
+    true;
   delete content.economy.exchange[0].requiredTerminalCapabilityId;
   return content;
 }
@@ -39,9 +41,7 @@ describe("Corporate Orders and Special Directives", () => {
     });
     expect(JSON.stringify(opportunities)).not.toContain("granules");
     expect(JSON.stringify(opportunities)).not.toContain("heat-raw-sealed");
-    expect(
-      opportunities.some((entry) => entry.kind === "order"),
-    ).toBe(false);
+    expect(opportunities.some((entry) => entry.kind === "order")).toBe(false);
   });
 
   it("offers the corporate order only after its exchange product becomes known", () => {
@@ -90,22 +90,18 @@ describe("Corporate Orders and Special Directives", () => {
       content.economy.marketEveryTicks;
     const simulation = new Simulation(content);
 
-    simulation.step(
-      content.tickMs * content.economy.marketEveryTicks,
-    );
+    simulation.step(content.tickMs * content.economy.marketEveryTicks);
     expect(
-      simulation.snapshot().opportunities.some(
-        (entry) => entry.id === "sealed-thermal-study",
-      ),
+      simulation
+        .snapshot()
+        .opportunities.some((entry) => entry.id === "sealed-thermal-study"),
     ).toBe(true);
 
-    simulation.step(
-      content.tickMs * content.economy.marketEveryTicks,
-    );
+    simulation.step(content.tickMs * content.economy.marketEveryTicks);
     expect(
-      simulation.snapshot().opportunities.some(
-        (entry) => entry.id === "sealed-thermal-study",
-      ),
+      simulation
+        .snapshot()
+        .opportunities.some((entry) => entry.id === "sealed-thermal-study"),
     ).toBe(false);
     expect(
       simulation.serialize().opportunities["sealed-thermal-study"].status,
@@ -153,9 +149,7 @@ describe("Corporate Orders and Special Directives", () => {
   it("counts only physical terminal exports toward an order and preserves the ledger", () => {
     const content = knownGranulesContent();
     const simulation = new Simulation(content);
-    simulation.step(
-      content.tickMs * content.economy.marketEveryTicks,
-    );
+    simulation.step(content.tickMs * content.economy.marketEveryTicks);
     const save = simulation.serialize();
     expect(save.opportunities["granules-procurement"].status).toBe("offered");
     save.staging.granules = 4;
@@ -256,8 +250,7 @@ describe("Corporate Orders and Special Directives", () => {
     tampered.opportunities["granules-procurement"] = {
       status: "offered",
       offeredAt: tampered.tick,
-      expiresAt:
-        tampered.tick + fixture.economy.orders[0].durationTicks,
+      expiresAt: tampered.tick + fixture.economy.orders[0].durationTicks,
       progress: 0,
       completedAt: null,
     };
@@ -292,17 +285,17 @@ describe("Corporate Orders and Special Directives", () => {
 
     const restored = new Simulation(content);
     expect(restored.load(JSON.parse(JSON.stringify(partial))).ok).toBe(true);
-    expect(restored.serialize().schemaVersion).toBe(16);
+    expect(restored.serialize().schemaVersion).toBe(17);
     expect(restored.serialize().opportunities).toEqual(partial.opportunities);
 
     const legacy = JSON.parse(
-      JSON.stringify(new Simulation(fixture).serialize()),
+      JSON.stringify(new Simulation(historicalFixture).serialize()),
     );
     legacy.schemaVersion = 8;
     delete legacy.opportunities;
-    const migrated = new Simulation(fixture);
+    const migrated = new Simulation(historicalFixture);
     expect(migrated.load(legacy).ok).toBe(true);
-    expect(migrated.serialize().schemaVersion).toBe(16);
+    expect(migrated.serialize().schemaVersion).toBe(17);
     expect(migrated.serialize().opportunities).toEqual({});
   });
 });
