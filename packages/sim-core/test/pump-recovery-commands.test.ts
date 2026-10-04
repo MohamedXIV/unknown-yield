@@ -2,6 +2,21 @@ import { it, expect } from "vitest";
 import { fixture } from "@site/content";
 import { auditLedger, type GameCommand } from "../src/index";
 import { recoveryRig } from "./pump-recovery-helpers";
+it("stops incident feed idempotently and reclaims an empty failed pump", () => {
+  const { sim, pumpId, sourceMachineId } = recoveryRig(),
+    s = sim.serialize();
+  s.pumps[pumpId].incident!.quantity = 0;
+  s.machines[sourceMachineId].output["liquid-0"]++;
+  expect(sim.load(s).ok).toBe(true);
+  const before = sim.serialize();
+  expect(
+    sim.command({ type: "setPumpEnabled", id: pumpId, enabled: false }).ok,
+  ).toBe(true);
+  expect(sim.serialize()).toEqual(before);
+  expect(sim.command({ type: "dismantle", id: pumpId }).ok).toBe(true);
+  expect(sim.serialize().stock.plates).toBe(before.stock.plates + 12);
+  expect(auditLedger(fixture, sim.serialize()).ok).toBe(true);
+});
 it("refuses loaded incident commands and previews atomically", () => {
   const { sim, pumpId } = recoveryRig();
   const before = sim.serialize();

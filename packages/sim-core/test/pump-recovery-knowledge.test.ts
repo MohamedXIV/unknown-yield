@@ -1,6 +1,6 @@
 import { it, expect } from "vitest";
 import { fixture } from "@site/content";
-import { publicPumpIncident } from "../src/pump-recovery";
+import { publicPumpIncident, validatePumpIncident } from "../src/pump-recovery";
 import { publicTransportDiagnostic } from "../src/containment";
 import { pumpRecoveryDiagnostic } from "../src/liquids";
 import { recoveryRig } from "./pump-recovery-helpers";
@@ -25,4 +25,11 @@ it("sanitizes incident identity without creating reaction evidence", () => {
   expect(
     sim.snapshot().pumps.find((p) => p.id === pumpId)?.incident?.materialId,
   ).toBe("liquid-0");
+  const c = structuredClone(fixture);
+  c.materials
+    .find((m) => m.id === "liquid-0")!
+    .requiredContainment.push("heat-resistant");
+  expect(() =>
+    validatePumpIncident(c, p, s.tick, new Set(["liquid-0"])),
+  ).toThrow(/incident/);
 });

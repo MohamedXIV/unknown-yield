@@ -28,6 +28,11 @@ export function validatePumpIncident(
     !known.has(i.materialId) ||
     m.handlingState !== "liquid" ||
     !m.requiredContainment.includes(d.missingCapabilityId) ||
+    !pumpExposureEligible(
+      c,
+      { ...p, incident: null, containmentProfileId: d.exposedProfileId },
+      i.materialId,
+    ) ||
     p.enabled ||
     i.startedAt > tick ||
     i.quantity > d.trappedCapacity ||

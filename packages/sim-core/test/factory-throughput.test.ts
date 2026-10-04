@@ -229,20 +229,44 @@ it("preserves a live certificate when an unrelated empty tank changes profile", 
       .throughput.state,
   ).toBe("measuring");
 });
-it("preserves unrelated certification across incident service and repair commands",()=>{
-  const {sim,factoryId}=makeLine();
-  const pump=build(sim,{type:"placePump",x:5,y:5,direction:0,containmentProfileId:"lined"});
-  const s=sim.serialize();s.pumps[pump].enabled=false;
-  const unlocked=terminalState();s.knowledge=unlocked.knowledge;s.evidence=unlocked.evidence;s.market=unlocked.market;s.milestones=unlocked.milestones;
-  s.pumps[pump].incident={definitionId:"pump-corrosion",materialId:"liquid-0",quantity:0,startedAt:0,drainEnabled:false};
+it("preserves unrelated certification across incident service and repair commands", () => {
+  const { sim, factoryId } = makeLine();
+  const pump = build(sim, {
+    type: "placePump",
+    x: 5,
+    y: 5,
+    direction: 0,
+    containmentProfileId: "lined",
+  });
+  const s = sim.serialize();
+  s.pumps[pump].enabled = false;
+  const unlocked = terminalState();
+  s.knowledge = unlocked.knowledge;
+  s.evidence = unlocked.evidence;
+  s.market = unlocked.market;
+  s.milestones = unlocked.milestones;
+  s.pumps[pump].incident = {
+    definitionId: "pump-corrosion",
+    materialId: "liquid-0",
+    quantity: 0,
+    startedAt: 0,
+    drainEnabled: false,
+  };
   expect(sim.load(s).ok).toBe(true);
-  for(let i=0;i<600;i++)sim.step(fixture.tickMs);
-  const before=sim.snapshot().factories.find(f=>f.id===factoryId)!.contract.throughput;
+  for (let i = 0; i < 600; i++) sim.step(fixture.tickMs);
+  const before = sim.snapshot().factories.find((f) => f.id === factoryId)!
+    .contract.throughput;
   expect(before.state).toBe("stable");
-  build(sim,{type:"setPumpRecoveryDrain",id:pump,enabled:true});
-  expect(sim.snapshot().factories.find(f=>f.id===factoryId)!.contract.throughput).toEqual(before);
-  build(sim,{type:"repairPump",id:pump});
-  expect(sim.snapshot().factories.find(f=>f.id===factoryId)!.contract.throughput).toEqual(before);
+  build(sim, { type: "setPumpRecoveryDrain", id: pump, enabled: true });
+  expect(
+    sim.snapshot().factories.find((f) => f.id === factoryId)!.contract
+      .throughput,
+  ).toEqual(before);
+  build(sim, { type: "repairPump", id: pump });
+  expect(
+    sim.snapshot().factories.find((f) => f.id === factoryId)!.contract
+      .throughput,
+  ).toEqual(before);
 });
 
 function throughput(sim: Simulation, factoryId: string) {
@@ -700,6 +724,43 @@ describe("fresh throughput topology membership", () => {
 });
 
 describe("liquid recurrence boundary", () => {
+  it.each(["internal", "connected", "unrelated"] as const)(
+    "blocks only %s relevant failed pumps even with empty chambers",
+    (kind) => {
+      const { state, monitor, factoryId } = monitorLine();
+      for (let i = 1; i < 8; i++) {
+        state.tick = i;
+        pulse(state, monitor);
+      }
+      expect(monitor.view(factoryId).state).toBe("stable");
+      const source = Object.values(state.pumps)[0];
+      const p =
+        kind === "connected"
+          ? source
+          : {
+              ...source,
+              id: "u999",
+              x: kind === "internal" ? 30 : 5,
+              y: kind === "internal" ? 17 : 5,
+            };
+      state.pumps[p.id] = p;
+      p.enabled = false;
+      p.incident = {
+        definitionId: "pump-corrosion",
+        materialId: "liquid-0",
+        quantity: 0,
+        startedAt: state.tick,
+        drainEnabled: false,
+      };
+      for (let i = 8; i < 20; i++) {
+        state.tick = i;
+        pulse(state, monitor);
+      }
+      expect(monitor.view(factoryId).state).toBe(
+        kind === "unrelated" ? "stable" : "measuring",
+      );
+    },
+  );
   function monitorLine() {
     const sim = new Simulation(fixture);
     const factoryId = build(sim, {
