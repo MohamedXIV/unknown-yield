@@ -1,6 +1,6 @@
 # #112 — contained pump failure and physical recovery
 
-Status: conversational approach approved 2026-10-04; written spec awaiting review. Same checkout, branch `codex/112-recoverable-handling`, based on main `d8578d622e63d7695b2442c3936218d77867cb98`. #111 is CLOSED through PR #165; live #112 and #100 are OPEN, with no competing open PR. No product implementation is claimed.
+Status: conversational approach and written spec approved 2026-10-04; implementation plan awaiting review. Same checkout, branch `codex/112-recoverable-handling`, based on main `d8578d622e63d7695b2442c3936218d77867cb98`. #111 is CLOSED through PR #165; live #112 and #100 are OPEN, with no competing open PR. No product implementation is claimed.
 
 ## Intent and acceptance
 
@@ -89,4 +89,4 @@ No spreading spill, ground pollution, leaks, pressure/temperature physics, RNG, 
 
 ## Spec self-review
 
-The trigger is limited to a feasible authored feed attempt; ordinary refusal remains intact elsewhere. The incident creates a real bounded holding and interrupted production, with no missing unit or imaginary downstream delivery. Recovery uses an explicit service mode and real directed protected receiving locations; zero-fuel drainage prevents an incident-only fuel soft-lock. Current save validation distinguishes loaded exposed profile from empty upgraded repair state. Blueprint exports exclude live recovery. No placeholders, unresolved gameplay choices or later-phase dependencies remain in this proposed spec; written approval is still required before planning/product implementation.
+The trigger is limited to a feasible authored feed attempt; ordinary refusal remains intact elsewhere. The incident creates a real bounded holding and interrupted production, with no missing unit or imaginary downstream delivery. Recovery uses an explicit service mode and real directed protected receiving locations; zero-fuel drainage prevents an incident-only fuel soft-lock. Current save validation distinguishes loaded exposed profile from empty upgraded repair state. Blueprint exports exclude live recovery. No placeholders, unresolved gameplay choices or later-phase dependencies remain in this proposed spec; Written-spec approval was received; written-plan review is required before product implementation.
