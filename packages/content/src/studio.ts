@@ -38,6 +38,7 @@ const empty = (value: string | undefined) => value ?? "";
 const machineRow = (machine: Content["machines"][number]) => ({
   nameKey: machine.nameKey,
   role: machine.role,
+  maxExtractionDepth: machine.maxExtractionDepth,
   processConditionId: empty(machine.processConditionId),
   unlockReactionId: empty(machine.unlock?.reactionId),
   unlockHintKey: empty(machine.unlock?.hintKey),
@@ -237,6 +238,11 @@ function candidateFromStore(store: Store, base: Content): unknown {
       id,
       nameKey: stringCell(row, "nameKey", label),
       role: stringCell(row, "role", label),
+      maxExtractionDepth: numberCell(
+        { maxExtractionDepth: row.maxExtractionDepth ?? 0 },
+        "maxExtractionDepth",
+        label,
+      ),
       ...(optionalText(row, "processConditionId", label)
         ? { processConditionId: optionalText(row, "processConditionId", label) }
         : {}),

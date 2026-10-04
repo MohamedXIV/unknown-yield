@@ -78,7 +78,9 @@ const descriptions: Partial<Record<Tool, string>> = {
   select:
     "Click equipment to inspect. Drag with the right mouse button to pan.",
   extractor:
-    "Place entirely on a deposit. The arrow marks its output belt cell.",
+    "Place entirely on a surface deposit. The arrow marks its output belt cell.",
+  "deep-extractor":
+    "Reach discovered deep deposits that the basic extractor cannot access. Uses more fuel per extraction batch.",
   factory: "Drag a rectangle, 6–20 cells per side. Click for a 6×6 factory.",
   crusher: "Place inside a factory. Cyan is input; gold is output.",
   furnace: "Place inside a factory.",
@@ -1911,6 +1913,7 @@ function GameClientInner() {
             [
               "select",
               "extractor",
+              "deep-extractor",
               "factory",
               "crusher",
               "furnace",
@@ -1949,7 +1952,9 @@ function GameClientInner() {
                 type={
                   tool === "sealed-furnace" || tool === "oversealed-furnace"
                     ? "furnace"
-                    : tool
+                    : tool === "deep-extractor"
+                      ? "extractor"
+                      : tool
                 }
                 size={25}
               />

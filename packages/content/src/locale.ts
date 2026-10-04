@@ -300,6 +300,9 @@ export const enCatalog: LocaleCatalog = {
   "operation.crush.name": "Crush",
   "operation.heat.name": "Heat",
   "machine.extractor.name": "Extractor",
+  "machine.deep-extractor.name": "Deep extractor",
+  "machine.deep-extractor.unlock-hint":
+    "a confirmed Heat result from a Sealed furnace",
   "machine.crusher.name": "Crusher",
   "machine.furnace.name": "Furnace",
   "machine.sealed-furnace.name": "Sealed furnace",

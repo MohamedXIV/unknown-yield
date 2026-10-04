@@ -26,6 +26,9 @@ describe("Content Studio authoring core", () => {
     expect(bundle.locale).toEqual(enCatalog);
     expect(contentFromStore(store, fixture)).toEqual(fixture);
     expect(catalogFromStore(store)).toEqual(enCatalog);
+    expect(
+      store.getCell("machines", "deep-extractor", "maxExtractionDepth"),
+    ).toBe(20);
 
     expect(hasStudioEntity(store, "material", "raw")).toBe(true);
     expect(hasStudioEntity(store, "operation", "heat")).toBe(true);

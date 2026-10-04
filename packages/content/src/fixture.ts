@@ -164,6 +164,23 @@ export const fixture = validateContent({
       cost: 18,
     },
     {
+      id: "deep-extractor",
+      nameKey: "machine.deep-extractor.name",
+      role: "extractor",
+      maxExtractionDepth: 20,
+      unlock: {
+        reactionId: "heat-raw-sealed",
+        hintKey: "machine.deep-extractor.unlock-hint",
+      },
+      operations: [],
+      capacity: 8,
+      fuel: 4,
+      durationTicks: 30,
+      width: 2,
+      height: 2,
+      cost: 36,
+    },
+    {
       id: "crusher",
       nameKey: "machine.crusher.name",
       role: "processor",
