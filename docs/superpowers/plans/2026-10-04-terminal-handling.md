@@ -12,7 +12,7 @@
 
 ## Execution status — 2026-10-04
 
-Tasks 1–7 completed natively: content commit d5f293f; integrated runtime/UI commit 94e5d5e. Task 8 local verification complete, scoped PR delivery pending. The detailed checklist below remains the original intended procedure; exact test grouping/names and separate per-task commits were superseded by the execution rulings in [the implementation ledger](../../PHASE9_TERMINAL_IMPLEMENTATION_LOG.md). No omitted gameplay requirement is inferred from that procedural change.
+Tasks 1–7 completed natively: content commit d5f293f; integrated runtime/UI commit 94e5d5e. Task 8 local verification and scoped PR delivery complete: [PR #165](https://github.com/MohamedXIV/unknown-yield/pull/165). Final merge approval is pending. The detailed checklist below remains the original intended procedure; exact test grouping/names and separate per-task commits were superseded by the execution rulings in [the implementation ledger](../../PHASE9_TERMINAL_IMPLEMENTATION_LOG.md). No omitted gameplay requirement is inferred from that procedural change.
 
 - [x] Author protected executable dock definitions and evidence unlocks.
 - [x] Install/remove atomically with exact embodied costs and valid current saves.
@@ -22,7 +22,7 @@ Tasks 1–7 completed natively: content commit d5f293f; integrated runtime/UI co
 - [x] Reconcile connected factory contracts; prove normal-command fresh chain and blueprint exclusion.
 - [x] Expose localized playable controls and physical inlet markers.
 - [x] Run native self-review, full tests, typecheck/lint/build/static export and normal-controls browser acceptance.
-- [ ] Commit final evidence, push and create/attach the scoped PR.
+- [x] Commit final evidence, push and create/attach the scoped PR (#165).
 - [ ] Final user approval and verified merge; keep #100 open and do not start later scope.
 
 ## Global Constraints

@@ -50,3 +50,5 @@ Exact-commit recheck: restarted the local server on `94e5d5e`, opened a fresh IA
 - `git diff --check`: PASS.
 
 The earlier full suite was 345 PASS / 2 skipped; six added focused regressions passed in the final suite. New test-fixture failures were corrected without changing runtime validation or timeouts. No remote CI pass or merge is claimed. #100 remains open; #112/#113 were not started. Final merge awaits user approval of the verified PR.
+
+Delivery: [PR #165](https://github.com/MohamedXIV/unknown-yield/pull/165), OPEN, based on main. Runtime/content unchanged after behavioral commit 94e5d5e. Local and remote delivery heads matched when inspected. Automatic Vercel check was PENDING; it was not operated, bypassed or counted as local acceptance. Merge requires final user approval; #111/#100 remain OPEN.
