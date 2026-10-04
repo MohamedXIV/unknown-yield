@@ -30,7 +30,9 @@ describe("content boundary", () => {
       "core-probe",
     ]);
     expect(c.site.surveySignals).toHaveLength(2);
-    expect(c.machines.find((machine) => machine.id === "deep-extractor")).toMatchObject({
+    expect(
+      c.machines.find((machine) => machine.id === "deep-extractor"),
+    ).toMatchObject({
       role: "extractor",
       maxExtractionDepth: 20,
       fuel: 4,

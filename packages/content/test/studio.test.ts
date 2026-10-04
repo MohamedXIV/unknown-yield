@@ -230,6 +230,13 @@ describe("Content Studio authoring core", () => {
         targetType: "reaction",
         targetId: "heat-raw-sealed",
         sourceType: "machine",
+        sourceId: "deep-extractor",
+        field: "unlock.reactionId",
+      },
+      {
+        targetType: "reaction",
+        targetId: "heat-raw-sealed",
+        sourceType: "machine",
         sourceId: "oversealed-furnace",
         field: "unlock.reactionId",
       },
