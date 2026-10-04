@@ -135,6 +135,7 @@ describe("non-surface atmospheric resource source", () => {
         { x: 67, y: 26, inlet: 0, outlet: 2 },
         { x: 66, y: 26, inlet: 0, outlet: 2 },
         { x: 65, y: 26, inlet: 0, outlet: 2 },
+        { x: 64, y: 26, inlet: 0, outlet: 2 },
       ],
     });
 

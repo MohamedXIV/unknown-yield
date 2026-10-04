@@ -364,6 +364,7 @@ describe("content boundary", () => {
           sensingCapabilities?: unknown;
           surveySignals?: unknown;
           hiddenDeposits?: unknown;
+          atmosphericSources?: unknown;
         };
       }
     ).site;
@@ -374,6 +375,7 @@ describe("content boundary", () => {
     delete legacySite.sensingCapabilities;
     delete legacySite.surveySignals;
     delete legacySite.hiddenDeposits;
+    delete legacySite.atmosphericSources;
     legacy.economy.exchange = legacy.economy.exchange.slice(0, 1);
     delete legacy.economy.exchange[0].requiredTerminalCapabilityId;
     const parsed = validateContent(legacy);

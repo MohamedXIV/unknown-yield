@@ -69,6 +69,7 @@ function scenario(cells: number, blocked: boolean) {
       sensingCapabilities: [],
       surveySignals: [],
       hiddenDeposits: [],
+      atmosphericSources: [],
       width: 80,
       height: cells * 16 + 20,
       startStock: 1000000,

@@ -17,6 +17,7 @@ describe("liquid handling content", () => {
               "precipitator",
               "vaporizer",
               "gas-collector",
+              "atmospheric-intake",
             ].includes(m.id),
         )
         .every(
