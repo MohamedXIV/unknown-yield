@@ -189,7 +189,7 @@ npm run build
 
 Run focused package/tests before the full baseline. Browser acceptance is required when world interaction, Phaser presentation/input, React gameplay UI, save/load UX, or an issue's explicit gate needs it.
 
-GitHub Actions CI runs `npm test`, `npm run typecheck`, `npm run lint`, and `npm run build` on pull requests and pushes to `main`. Treat the exact workflow result as remote automated evidence. Browser acceptance remains a separate gate when world interaction, presentation/input, save/load UX, or an issue explicitly requires it.
+GitHub Actions CI is intentionally budget-conscious: it runs the full `npm test` + typecheck + lint + build gate when a pull request becomes ready for review, on later non-draft PR updates, or by explicit manual dispatch. Draft PRs and docs-only changes do not consume runner time, newer commits cancel older in-progress runs for the same PR, and merges to `main` do not trigger a duplicate CI run. Treat the exact workflow result as remote automated evidence. Browser acceptance remains a separate gate when world interaction, presentation/input, save/load UX, or an issue explicitly requires it.
 
 ## Scope rules
 

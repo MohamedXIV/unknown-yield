@@ -158,7 +158,7 @@ Content changes should pass:
 
 For bugs, add a regression test when the behavior can be expressed deterministically.
 
-GitHub Actions CI mirrors the repository baseline (`npm test`, typecheck, lint, build) on pull requests and `main`. CI is automated evidence, not a substitute for issue-required browser/device acceptance.
+GitHub Actions CI mirrors the repository baseline (`npm test`, typecheck, lint, build) only at economical merge gates: ready/non-draft PR updates or explicit manual dispatch. Draft PRs, docs-only changes, and duplicate post-merge `main` pushes do not spend CI minutes; newer PR commits cancel older in-progress runs. CI is automated evidence, not a substitute for issue-required browser/device acceptance.
 
 ## 9. Performance work
 
