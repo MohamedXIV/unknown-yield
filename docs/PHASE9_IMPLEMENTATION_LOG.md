@@ -45,3 +45,7 @@ Detailed scoped execution and self-review: [terminal ledger](PHASE9_TERMINAL_IMP
 ## #112 recoverable handling — 2026-10-04
 
 Approved contained pump failure implemented natively in the same checkout. Save 18 / world-01-v11 / browser slot v12; no agents/worktree/dependencies. Details: [recovery ledger](PHASE9_RECOVERY_IMPLEMENTATION_LOG.md), [recovery acceptance](PHASE9_RECOVERY_ACCEPTANCE.md). #100 remains open; #113 untouched; final PR merge approval separate.
+
+## #113 integrated review — 2026-10-04
+
+#112 merged through PR #166 / main 539f3f37dc2d317423748493c7c65383009e0a27. The user approved #113 as the next scope. Same-checkout native review adds phase9-exit.test.ts and [integrated evidence](PHASE9_EXIT_REVIEW.md), with no production/content/schema changes. Fresh domain chain combines contained recovery, protected liquid storage, gas production/storage and terminal export; four 60-step restored futures reconcile conservation. Browser continues the accepted #112 expedition through gas dock holding, restore and export. Local gate: 381 PASS / 2 skipped, typecheck/lint/build/static-export/browser PASS. #100/#113 stay open until accepted merge; later phases untouched.
