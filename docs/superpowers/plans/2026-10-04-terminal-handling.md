@@ -10,6 +10,21 @@
 
 **Spec:** [Approved terminal handling design](../specs/2026-10-04-terminal-handling-design.md), written-spec approval received on 2026-10-04.
 
+## Execution status — 2026-10-04
+
+Tasks 1–7 completed natively: content commit d5f293f; integrated runtime/UI commit 94e5d5e. Task 8 local verification complete, scoped PR delivery pending. The detailed checklist below remains the original intended procedure; exact test grouping/names and separate per-task commits were superseded by the execution rulings in [the implementation ledger](../../PHASE9_TERMINAL_IMPLEMENTATION_LOG.md). No omitted gameplay requirement is inferred from that procedural change.
+
+- [x] Author protected executable dock definitions and evidence unlocks.
+- [x] Install/remove atomically with exact embodied costs and valid current saves.
+- [x] Admit through native directed transport; refuse and back up physically.
+- [x] Settle physical cargo once through existing economy/order bookkeeping.
+- [x] Sanitize detached views and restore deterministic futures.
+- [x] Reconcile connected factory contracts; prove normal-command fresh chain and blueprint exclusion.
+- [x] Expose localized playable controls and physical inlet markers.
+- [x] Run native self-review, full tests, typecheck/lint/build/static export and normal-controls browser acceptance.
+- [ ] Commit final evidence, push and create/attach the scoped PR.
+- [ ] Final user approval and verified merge; keep #100 open and do not start later scope.
+
 ## Global Constraints
 
 - Work in `F:\_WIP\unknown-yield` on `codex/111-terminal-handling`, based on main `9a2f7be167f013454491d5781ee6370175b9170d`; live GitHub is canonical.
@@ -183,4 +198,4 @@ expect(view.terminalModules.every(m => !m.installed && !m.unlocked)).toBe(true);
 
 ## Execution Handoff
 
-Plan self-review covers all approved spec sections and each Review Focus case in its owning task. Native execution is already selected by the user's same-checkout/no-agents constraints. Await review of this written plan before invoking executing-plans and changing product code.
+Plan self-review covers all approved spec sections and each Review Focus case in its owning task. Native execution is already selected by the user's same-checkout/no-agents constraints. Written-plan approval was received; native implementation and verification are recorded above. Final merge approval is still pending.

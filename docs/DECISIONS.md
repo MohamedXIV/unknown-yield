@@ -483,6 +483,12 @@ Accepted for #110 on 2026-10-04: use stable all-of capability requirements indep
 
 Requirements become inspectable through discovered material metadata and sanitized current-route diagnostics. Equipment capabilities are public without undiscovered material associations or predicted outcomes. Save schema 16 / world-01-v9 explicitly reject incompatible older content; profiled liquid blueprint v5 excludes live state. See [approved design](superpowers/specs/2026-10-04-containment-compatibility-design.md) and [local verification](PHASE9_CONTAINMENT_ACCEPTANCE.md).
 
+## D-036 — Terminal capabilities gate physical fixed docks
+
+Accepted for #111 on 2026-10-04. Extend Phase 5 handling capability evidence into installed content-authored liquid/gas terminal slots with fixed directed inlets and independent single-material holdings. Pure sim-core owns admission, embodiment, conservation, settlement and persistence; React/Phaser only present sanitized snapshots. Real liquid/gas trials unlock modules without predicted outputs, opportunity deadlines or export prerequisites.
+
+Keep remains the discovery default for sealed cargo. One existing-cadence settlement path handles all physical terminal exports through the Exchange. Module definitions are site content and installations are save state, outside factory blueprints. Save 17 / world-01-v10 explicitly rejects prior schema for current content; pre-release backward compatibility remains outside scope. No pressure physics, movable cylinders, new chemistry, imports or terminal placement is introduced. See [design](superpowers/specs/2026-10-04-terminal-handling-design.md) and [acceptance](PHASE9_TERMINAL_ACCEPTANCE.md).
+
 ## How to change a decision
 
 When evidence requires a change:
