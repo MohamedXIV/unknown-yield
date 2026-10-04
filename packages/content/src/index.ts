@@ -1,4 +1,9 @@
 export {
+  checkContainment,
+  type HandlingState,
+  type ContainmentResult,
+} from "./containment";
+export {
   validateContent,
   validateSimulationContent,
   contentSchema,

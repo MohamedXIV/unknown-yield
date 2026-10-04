@@ -17,6 +17,8 @@ export type LocaleCatalog = z.infer<typeof localeCatalogSchema>;
 
 export function contentKeys(c: Content): string[] {
   return [
+    ...c.containmentCapabilities.map((d) => d.nameKey),
+    ...(c.liquidLogistics?.containmentProfiles.map((p) => p.nameKey) ?? []),
     ...c.materials.map((m) => m.nameKey),
     ...c.operations.map((o) => o.nameKey),
     ...c.machines.map((m) => m.nameKey),
@@ -56,6 +58,9 @@ export function validateLocaleCoverage(
 }
 
 export const enCatalog: LocaleCatalog = {
+  "containment.corrosion-resistant.name": "Corrosion-resistant containment",
+  "containment.profile.standard.name": "Standard",
+  "containment.profile.lined.name": "Lined",
   "ui.gas.command.unavailable": "Gas infrastructure is not authored",
   "ui.gas.command.invalid-path": "Invalid directed pressure line path",
   "ui.gas.command.disconnected": "Pressure line endpoints must connect",

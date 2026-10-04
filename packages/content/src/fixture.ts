@@ -1,7 +1,13 @@
 import { validateContent } from "./schema";
 export const fixture = validateContent({
-  version: "world-01-v8",
+  version: "world-01-v9",
   tickMs: 100,
+  containmentCapabilities: [
+    {
+      id: "corrosion-resistant",
+      nameKey: "containment.corrosion-resistant.name",
+    },
+  ],
   gasLogistics: {
     line: { capacity: 4, transfer: 1, cost: 3 },
     vessel: { capacity: 48, width: 2, height: 2, cost: 28 },
@@ -11,6 +17,20 @@ export const fixture = validateContent({
     pipe: { capacity: 4, transfer: 1, cost: 2 },
     tank: { capacity: 64, width: 2, height: 2, cost: 24 },
     pump: { transfer: 1, fuel: 1, cost: 12 },
+    containmentProfiles: [
+      {
+        id: "standard",
+        nameKey: "containment.profile.standard.name",
+        capabilities: [],
+        additionalCost: { pipe: 0, tank: 0, pump: 0 },
+      },
+      {
+        id: "lined",
+        nameKey: "containment.profile.lined.name",
+        capabilities: ["corrosion-resistant"],
+        additionalCost: { pipe: 2, tank: 10, pump: 4 },
+      },
+    ],
   },
   materials: [
     {
@@ -22,6 +42,7 @@ export const fixture = validateContent({
     },
     {
       id: "liquid-0",
+      requiredContainment: ["corrosion-resistant"],
       nameKey: "material.liquid-0.name",
       color: "#69bac8",
       known: false,
@@ -69,6 +90,7 @@ export const fixture = validateContent({
   machines: [
     {
       id: "vaporizer",
+      inputContainment: ["corrosion-resistant"],
       nameKey: "machine.vaporizer.name",
       role: "processor",
       operations: ["vaporize"],
@@ -97,6 +119,7 @@ export const fixture = validateContent({
     },
     {
       id: "liquefier",
+      outputContainment: ["corrosion-resistant"],
       nameKey: "machine.liquefier.name",
       role: "processor",
       operations: ["liquefy"],
@@ -111,6 +134,7 @@ export const fixture = validateContent({
     },
     {
       id: "precipitator",
+      inputContainment: ["corrosion-resistant"],
       nameKey: "machine.precipitator.name",
       role: "processor",
       operations: ["precipitate"],
