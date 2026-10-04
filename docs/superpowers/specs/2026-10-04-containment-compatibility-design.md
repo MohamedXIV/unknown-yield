@@ -1,6 +1,6 @@
 # #110 — authored transport and containment compatibility
 
-Status: conversational design approved on 2026-10-04; written spec awaiting review. Based on main `dd67f42f5e391c425cbbc2188618a4366b4e6821`, live #110 and parent #100. #109 is closed through PR #163; no competing open PR was present. No product implementation is claimed.
+Status: conversational design and written spec approved on 2026-10-04; implementation plan awaiting review. Based on main `dd67f42f5e391c425cbbc2188618a4366b4e6821`, live #110 and parent #100. #109 is closed through PR #163; no competing open PR was present. No product implementation is claimed.
 
 ## Intent and acceptance
 
@@ -95,4 +95,4 @@ Execution is native in `F:\_WIP\unknown-yield`, branch `codex/110-containment-co
 
 ## Spec self-review
 
-The example has one material requirement and one selectable protective profile. Empty profile changes, successful-only fuel, safe output buffering, all physical admission boundaries, knowledge visibility, version changes and refund accounting are explicit. No generic transport rewrite, hidden recipe hint, pressure model, damage incident, terminal upgrade or later child issue is included. This written contract is ready for user review; implementation planning and product edits have not started.
+The example has one material requirement and one selectable protective profile. Empty profile changes, successful-only fuel, safe output buffering, all physical admission boundaries, knowledge visibility, version changes and refund accounting are explicit. No generic transport rewrite, hidden recipe hint, pressure model, damage incident, terminal upgrade or later child issue is included. Written-spec review is approved; the implementation plan is prepared for review, and product edits have not started.
