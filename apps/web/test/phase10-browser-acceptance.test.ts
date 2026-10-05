@@ -1,5 +1,6 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { existsSync } from "node:fs";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
@@ -90,11 +91,13 @@ browserIt(
     const chrome = chromeExecutable();
     expect(chrome, "Chrome/Chromium must be available on the CI runner").toBeTruthy();
 
-    const npm = process.platform === "win32" ? "npm.cmd" : "npm";
+    const require = createRequire(import.meta.url);
+    const nextBin = require.resolve("next/dist/bin/next");
     const server = spawn(
-      npm,
-      ["run", "dev", "--workspace", "@site/web", "--", "--port", "4010"],
+      process.execPath,
+      [nextBin, "dev", "--hostname", "127.0.0.1", "--port", "4010"],
       {
+        cwd: join(process.cwd(), "apps", "web"),
         env: { ...process.env, NEXT_TELEMETRY_DISABLED: "1" },
         stdio: ["ignore", "pipe", "pipe"],
       },
@@ -140,11 +143,19 @@ browserIt(
         });
       });
 
+      type CdpResult = {
+        exceptionDetails?: {
+          exception?: { description?: string };
+          text?: string;
+        };
+        result?: { value?: unknown };
+      };
+
       let sequence = 0;
       const pending = new Map<
         number,
         {
-          resolve: (value: any) => void;
+          resolve: (value: CdpResult) => void;
           reject: (error: Error) => void;
           timer: ReturnType<typeof setTimeout>;
         }
@@ -154,7 +165,7 @@ browserIt(
         const message = JSON.parse(String(event.data)) as {
           id?: number;
           error?: unknown;
-          result?: any;
+          result?: CdpResult;
         };
         if (!message.id || !pending.has(message.id)) return;
         const waiter = pending.get(message.id)!;
@@ -162,11 +173,11 @@ browserIt(
         pending.delete(message.id);
         if (message.error)
           waiter.reject(new Error(JSON.stringify(message.error)));
-        else waiter.resolve(message.result);
+        else waiter.resolve(message.result ?? {});
       });
 
       const call = (method: string, params: Record<string, unknown> = {}) =>
-        new Promise<any>((resolve, reject) => {
+        new Promise<CdpResult>((resolve, reject) => {
           const id = ++sequence;
           const timer = setTimeout(() => {
             pending.delete(id);
@@ -188,7 +199,7 @@ browserIt(
               response.exceptionDetails.text ??
               "Browser evaluation failed",
           );
-        return response.result.value as T;
+        return response.result?.value as T;
       };
 
       const waitForExpression = async (
