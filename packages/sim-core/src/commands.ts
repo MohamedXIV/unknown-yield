@@ -113,6 +113,10 @@ const schema = z.discriminatedUnion("type", [
     direction,
   }),
   z.object({
+    type: z.literal("recoverMachineIncident"),
+    machineId: z.string(),
+  }),
+  z.object({
     type: z.literal("placeStorage"),
     ...point,
     definitionId: z.string(),
@@ -732,6 +736,30 @@ export function applyCommand(
       const next = !belt.switched;
       if (apply) belt.switched = next;
       return ok(next ? "Flow switched" : "Flow restored");
+    }
+    case "recoverMachineIncident": {
+      const machine = s.machines[cmd.machineId];
+      if (!machine) return fail("Unknown machine");
+      if (!machine.incident || total(machine.incidentInventory) === 0)
+        return fail("No trapped hazard material to recover");
+      const definition = c.machines.find(
+        (entry) => entry.id === machine.definitionId,
+      )!;
+      if (
+        total(machine.output) + total(machine.incidentInventory) >
+        definition.capacity
+      )
+        return fail("Clear machine output before recovering hazard material");
+      if (apply) {
+        for (const [materialId, quantity] of Object.entries(
+          machine.incidentInventory,
+        ))
+          change(machine.output, materialId, quantity);
+        machine.incidentInventory = {};
+        machine.incident = null;
+        machine.enabled = false;
+      }
+      return ok("Hazard material reclaimed to machine output");
     }
     case "setEnabled": {
       const machine = s.machines[cmd.machineId],

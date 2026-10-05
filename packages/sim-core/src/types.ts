@@ -364,6 +364,7 @@ export type GameCommand =
   | { type: "rotateDivert"; beltId: string }
   | { type: "switchDivert"; beltId: string }
   | { type: "dismantle"; id: string }
+  | { type: "recoverMachineIncident"; machineId: string }
   | { type: "setEnabled"; machineId: string; enabled: boolean }
   | { type: "setOperation"; machineId: string; operation: string }
   | { type: "setPolicy"; materialId: string; policy: "keep" | "export" }
