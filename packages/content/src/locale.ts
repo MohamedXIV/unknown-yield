@@ -129,6 +129,20 @@ export const enCatalog: LocaleCatalog = {
   "ui.terminal.shipment.result.empty": "Select cargo before dispatch",
   "ui.terminal.shipment.result.selected": "Shipment manifest updated",
   "ui.terminal.shipment.result.dispatched": "Shipment dispatched",
+  "ui.terminal.import.heading": "Off-world supplies",
+  "ui.terminal.import.hint":
+    "Imports arrive into a bounded terminal holding area. Route them out through the dry import outlet; they never enter global stock.",
+  "ui.terminal.import.capacity": "{{used}} / {{capacity}} import cargo held",
+  "ui.terminal.import.meta": "{{quantity}} units · {{cost}} fuel",
+  "ui.terminal.import.request": "Request {{supply}}",
+  "ui.terminal.import.outlet": "Dry import outlet: ({{x}}, {{y}}) toward {{side}}",
+  "ui.terminal.import.result.unknown": "That import supply is unavailable",
+  "ui.terminal.import.result.fuel": "Not enough company fuel for this import",
+  "ui.terminal.import.result.capacity": "Clear terminal import cargo first",
+  "ui.terminal.import.result.received": "Off-world cargo received at the terminal",
+  "import.orbital-binder-crate.name": "Orbital binder crate",
+  "import.orbital-binder-crate.brief":
+    "A specialized off-world sintering feedstock unavailable from local extraction. It must leave the terminal through ordinary dry logistics.",
   "ui.direction.0": "east",
   "ui.direction.1": "south",
   "ui.direction.2": "west",
@@ -345,6 +359,7 @@ export const enCatalog: LocaleCatalog = {
   "material.granules.name": "Conductive granules",
   "material.residue.name": "Vitrified residue",
   "material.catalyst.name": "Catalytic stone",
+  "material.orbital-binder.name": "Orbital binder",
   "material.matrix.name": "Resonant matrix",
   "operation.crush.name": "Crush",
   "operation.heat.name": "Heat",
@@ -380,6 +395,8 @@ export const enCatalog: LocaleCatalog = {
     "The sample vitrifies under heat. It has no export value; mechanical processing remains worth investigating.",
   "reaction.heat-raw-sealed.observation":
     "Heating the ore in a sealed furnace releases conductive grains.",
+  "reaction.sinter-orbital-binder.observation":
+    "The off-world binder sinters into a resonant matrix. The feedstock is consumed physically and must be resupplied through the terminal.",
   "reaction.sinter-catalyst.observation":
     "The catalytic stone binds into a resonant matrix with a stable export signature.",
   "reaction.heat-raw-oversealed.observation":

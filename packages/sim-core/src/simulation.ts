@@ -28,6 +28,7 @@ import { footprint } from "./geometry";
 import { factoryView } from "./factory-contract";
 import { FactoryThroughputMonitor } from "./factory-throughput";
 import { sensingCapabilityUnlocked } from "./sensing";
+import { importSupplyViews, terminalImportOutlet } from "./imports";
 import {
   total,
   type Save,
@@ -285,6 +286,9 @@ export class Simulation {
       }),
       staging: s.staging,
       shipmentManifest: s.shipmentManifest,
+      importStaging: s.terminalImports.staging,
+      importSupplies: importSupplyViews(c, s),
+      importOutlet: terminalImportOutlet(c),
       terminalModules: terminalModuleViews(c, s),
       policies: s.policies,
       exchange: marketListings(c, s),

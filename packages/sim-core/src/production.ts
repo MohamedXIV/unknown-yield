@@ -19,6 +19,7 @@ import { settleTerminalExports } from "./terminal";
 import { depositDefinition } from "./deposits";
 import { atmosphericSourceForRect } from "./atmosphere";
 import { applyReactionHazard } from "./hazards";
+import { terminalImportOutlet } from "./imports";
 export function recipe(c: Content, m: Machine) {
   const definition = c.machines.find((d) => d.id === m.definitionId);
   return c.reactions.find(
@@ -338,6 +339,24 @@ export function transport(
         inventory: t.inventory,
         emission: key(socket(t, def, true)),
       });
+  }
+  const importedMaterial = Object.keys(s.terminalImports.staging)
+    .sort()
+    .find(
+      (id) =>
+        s.terminalImports.staging[id] > 0 &&
+        c.materials.find((entry) => entry.id === id)?.handlingState === "solid" &&
+        checkContainment(c, id, ["solid"], c.site.dryContainment).ok,
+    );
+  if (importedMaterial) {
+    const outlet = terminalImportOutlet(c);
+    sources.push({
+      point: outlet,
+      material: importedMaterial,
+      directions: [outlet.direction],
+      inventory: s.terminalImports.staging,
+      emission: key(next(outlet, outlet.direction)),
+    });
   }
   const targetFor = (source: Source, direction: number): Target | null => {
     if (

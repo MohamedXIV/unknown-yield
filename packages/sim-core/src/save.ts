@@ -171,6 +171,7 @@ const schema = z.object({
     z.literal(20),
     z.literal(21),
     z.literal(22),
+    z.literal(23),
   ]),
   contentVersion: z.string(),
   terminalModules: z
@@ -251,6 +252,13 @@ const schema = z.object({
     .default({}),
   staging: inventory,
   shipmentManifest: inventory.default({}),
+  terminalImports: z
+    .object({
+      staging: inventory,
+      received: inventory,
+    })
+    .strict()
+    .default({ staging: {}, received: {} }),
   policies: z.record(safeId, z.enum(["keep", "export"])),
   market: z
     .record(
@@ -299,7 +307,7 @@ const schema = z.object({
 });
 export function initialState(c: Content): Save {
   const state: Save = {
-    schemaVersion: 22,
+    schemaVersion: 23,
     terminalModules: {},
     contentVersion: c.version,
     tick: 0,
@@ -351,6 +359,7 @@ export function initialState(c: Content): Save {
     storages: {},
     staging: {},
     shipmentManifest: {},
+    terminalImports: { staging: {}, received: {} },
     policies: Object.fromEntries(
       c.materials.filter((m) => m.known).map((m) => [m.id, "keep"]),
     ),
@@ -377,6 +386,13 @@ export function parseSave(input: unknown, c: Content): Save {
       !Object.hasOwn(input, "shipmentManifest"))
   )
     throw Error("Missing shipment manifest state");
+  if (
+    parsed.schemaVersion >= 23 &&
+    (!input ||
+      typeof input !== "object" ||
+      !Object.hasOwn(input, "terminalImports"))
+  )
+    throw Error("Missing terminal import state");
   if (parsed.schemaVersion < 18 && c.liquidLogistics?.pump.containmentFailure)
     throw Error("Incompatible pump recovery save schema");
   if (
@@ -534,6 +550,9 @@ export function parseSave(input: unknown, c: Content): Save {
   // Schema 21 predates explicit cargo manifests. No pending player shipment
   // intent existed, so migration starts with an empty manifest.
   if (s.schemaVersion === 21) s.schemaVersion = 22;
+  // Schema 22 predates physical off-world import holdings and their cumulative
+  // material-source record. No import cargo existed, so migration is empty.
+  if (s.schemaVersion === 22) s.schemaVersion = 23;
   if (s.contentVersion !== c.version || s.remainder >= c.tickMs)
     throw new Error("Incompatible content or timing");
   if (
@@ -1151,9 +1170,24 @@ export function parseSave(input: unknown, c: Content): Save {
         );
   if (total(s.staging) > c.site.stagingCapacity)
     throw new Error("Terminal staging capacity exceeded");
+  if (total(s.terminalImports.staging) > c.site.terminalShipmentCapacity)
+    throw new Error("Terminal import capacity exceeded");
+  const importMaterials = new Set(
+    c.economy.imports.map((entry) => entry.materialId),
+  );
+  for (const [id, units] of Object.entries(s.terminalImports.staging))
+    if (
+      !importMaterials.has(id) ||
+      units > (s.terminalImports.received[id] ?? 0)
+    )
+      throw new Error("Invalid terminal import staging");
+  for (const id of Object.keys(s.terminalImports.received))
+    if (!importMaterials.has(id))
+      throw new Error("Invalid imported material history");
   for (const inv of [
     s.stock,
     s.staging,
+    s.terminalImports.staging,
     ...Object.values(s.flows),
     ...Object.values(s.machines).flatMap((m) => [m.input, m.output]),
     ...Object.values(s.storages).map((t) => t.inventory),

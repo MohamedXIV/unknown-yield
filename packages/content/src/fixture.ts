@@ -122,6 +122,12 @@ export const fixture = validateContent({
       known: true,
     },
     {
+      id: "orbital-binder",
+      nameKey: "material.orbital-binder.name",
+      color: "#9eb6d8",
+      known: true,
+    },
+    {
       id: "matrix",
       nameKey: "material.matrix.name",
       color: "#8fd1c8",
@@ -439,6 +445,16 @@ export const fixture = validateContent({
       known: false,
     },
     {
+      id: "sinter-orbital-binder",
+      operation: "sinter",
+      input: "orbital-binder",
+      inputAmount: 2,
+      output: "matrix",
+      outputAmount: 1,
+      observationKey: "reaction.sinter-orbital-binder.observation",
+      known: false,
+    },
+    {
       id: "sinter-catalyst",
       operation: "sinter",
       input: "catalyst",
@@ -650,6 +666,16 @@ export const fixture = validateContent({
         repeatObligationStepFuel: 12,
         continuationObligationFuel: 12,
         recoveryNetFuel: 24,
+      },
+    ],
+    imports: [
+      {
+        id: "orbital-binder-crate",
+        nameKey: "import.orbital-binder-crate.name",
+        briefKey: "import.orbital-binder-crate.brief",
+        materialId: "orbital-binder",
+        quantity: 6,
+        fuelCost: 42,
       },
     ],
     exchange: [

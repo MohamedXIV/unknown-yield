@@ -12,10 +12,10 @@ import { footprint } from "./geometry";
  * defined reaction, consumed by a defined sink, stored, or exported off-map.
  * The per-material invariant is:
  *
- *   deposits + stock + staging + machineInput + machineOutput
+ *   deposits + stock + staging + importStaging + machineInput + machineOutput
  *     + machineIncidents + belts + pipes + tanks + storage + escrow + embodied
  *     + flows.exported + flows.discarded + flows.consumed
- *       = initial + flows.produced
+ *       = initial + flows.produced + imported
  *
  * - `deposits`/`initial` derive from content + save; extraction needs no
  *   counter because `initial - remaining` always covers extracted units.
@@ -39,6 +39,7 @@ export type LedgerRow = {
   initial: number;
   stock: number;
   staging: number;
+  importStaging: number;
   terminalModules: number;
   machineInput: number;
   machineOutput: number;
@@ -54,6 +55,7 @@ export type LedgerRow = {
   embodied: number;
   consumed: number;
   produced: number;
+  imported: number;
   exported: number;
   discarded: number;
   held: number;
@@ -75,6 +77,7 @@ function blank(material: string): LedgerRow {
     initial: 0,
     stock: 0,
     staging: 0,
+    importStaging: 0,
     terminalModules: 0,
     machineInput: 0,
     machineOutput: 0,
@@ -90,6 +93,7 @@ function blank(material: string): LedgerRow {
     embodied: 0,
     consumed: 0,
     produced: 0,
+    imported: 0,
     exported: 0,
     discarded: 0,
     held: 0,
@@ -135,6 +139,8 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
   // Terminal/site holdings: construction reserve plus tracked staging.
   for (const [id, n] of Object.entries(s.stock ?? {})) row(id).stock += n;
   for (const [id, n] of Object.entries(s.staging ?? {})) row(id).staging += n;
+  for (const [id, n] of Object.entries(s.terminalImports?.staging ?? {}))
+    row(id).importStaging += n;
   for (const t of Object.values(s.terminalModules ?? {}))
     if (t.materialId) row(t.materialId).terminalModules += t.quantity;
 
@@ -249,6 +255,8 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
     row(id).consumed += n;
   for (const [id, n] of Object.entries(s.flows?.produced ?? {}))
     row(id).produced += n;
+  for (const [id, n] of Object.entries(s.terminalImports?.received ?? {}))
+    row(id).imported += n;
   for (const [id, n] of Object.entries(s.flows?.exported ?? {}))
     row(id).exported += n;
   for (const [id, n] of Object.entries(s.flows?.discarded ?? {}))
@@ -260,6 +268,7 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
       r.atmosphere +
       r.stock +
       r.staging +
+      r.importStaging +
       r.terminalModules +
       r.machineInput +
       r.machineOutput +
@@ -276,7 +285,7 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
       r.exported +
       r.discarded +
       r.consumed;
-    r.sources = r.initial + r.produced;
+    r.sources = r.initial + r.produced + r.imported;
     r.delta = r.held - r.sources;
     return r;
   });
