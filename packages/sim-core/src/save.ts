@@ -414,6 +414,11 @@ export function parseSave(input: unknown, c: Content): Save {
   )
     throw Error("Missing market signal history");
   if (
+    parsed.schemaVersion < 24 &&
+    Object.keys(parsed.marketSignals).length
+  )
+    throw Error("Legacy schema cannot contain market signal history");
+  if (
     parsed.schemaVersion < 23 &&
     (Object.keys(parsed.terminalImports.staging).length ||
       Object.keys(parsed.terminalImports.received).length)

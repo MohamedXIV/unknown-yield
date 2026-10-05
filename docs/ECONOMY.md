@@ -178,3 +178,12 @@ Terminal handling modules now use the same authored handling-state + containment
 Off-world imports may name a required terminal module. Delivery is refused while that capability is locked, while the module is uninstalled, when another material occupies the single-material holding, or when capacity is exhausted. Accepted cargo enters the module's real persisted holding; it does not enter site stock or a second virtual import inventory. Import-only module cargo then exits through the same fixed edge port into an ordinary belt, pipe or pressure line. Incompatible downstream containment retains the cargo in the terminal module.
 
 The fixture proves three paths: Orbital binder through the bounded dry import holding and belt outlet, Orbital propellant through the existing gas dock, and Orbital coolant through a specialized liquid dock requiring cryogenic-rated + hazard-isolated + secure-chain containment. The latter can enter only a matching `sealed-cold` liquid path.
+
+
+## Phase 13 — discovery-created market memory (#135)
+
+The Materials Exchange now has explicit authored demand shocks instead of arbitrary price RNG. A shock names one exchange material, one reaction whose confirmed output characterizes that material, localized company bulletin text and a bounded demand delta. The shock cannot fire until that exact reaction is in authoritative confirmed knowledge, so undiscovered material/application truth is never surfaced by the economy.
+
+On the ordinary slow market cadence, saturation first recovers toward zero, then a newly eligible shock is applied exactly once and recorded in persisted `marketSignals`. Demand subsequently moves deterministically back toward the listing's authored baseline by `demandRecoveryPerMarketTickBps`; the bulletin history remains even after demand normalizes. Repeated save/load therefore cannot replay a shock or forget why demand moved.
+
+The Phase 13 fixture uses the first confirmed `sinter-orbital-binder` matrix result to reveal the already-authored Resonant matrix listing, offer a bounded Matrix procurement order, and issue an **Orbital resonance application identified** bulletin that raises demand from 100% to 150% before slow recovery. Discovering the alternate catalyst route does not falsely claim that specific application.

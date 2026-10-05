@@ -468,6 +468,12 @@ export const enCatalog: LocaleCatalog = {
   "directive.sealed-thermal-study.name": "Sealed thermal study",
   "directive.sealed-thermal-study.brief":
     "Run a sealed Heat trial on Veined ore and report the observed result. The company does not predict the output.",
+  "ui.terminal.market-bulletins.heading": "Company market bulletins",
+  "ui.terminal.market-bulletins.hint":
+    "Demand changes only from company-known applications and recovers on the slow market cadence. Bulletins are persistent history, not random price events.",
+  "ui.terminal.market-bulletins.empty": "No market bulletin has been issued.",
+  "ui.terminal.market-bulletin.meta":
+    "{{material}} · demand {{direction}}{{delta}}%",
   "ui.terminal.opportunities.heading": "Corporate opportunities",
   "ui.terminal.opportunities.hint":
     "Ship requested materials to fulfill orders. Complete requested experiments to fulfill directives. Successful opportunities grant bonus fuel.",

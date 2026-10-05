@@ -1898,6 +1898,29 @@ function GameClientInner() {
                     <p>{t(milestone.hintKey)}</p>
                   </article>
                 ))}
+                <h3>{t("ui.terminal.market-bulletins.heading")}</h3>
+                <p className="hint">
+                  {t("ui.terminal.market-bulletins.hint")}
+                </p>
+                {snapshot.marketBulletins.length ? (
+                  snapshot.marketBulletins.map((bulletin) => (
+                    <article className="observation" key={bulletin.id}>
+                      <small>
+                        {t("ui.terminal.market-bulletin.meta", {
+                          material: materialName(bulletin.materialId),
+                          direction: bulletin.demandDeltaBps > 0 ? "+" : "",
+                          delta: Math.round(bulletin.demandDeltaBps / 100),
+                        })}
+                      </small>
+                      <h3>{t(bulletin.nameKey)}</h3>
+                      <p>{t(bulletin.briefKey)}</p>
+                    </article>
+                  ))
+                ) : (
+                  <p className="hint">
+                    {t("ui.terminal.market-bulletins.empty")}
+                  </p>
+                )}
                 <h3>{t("ui.terminal.opportunities.heading")}</h3>
                 <p className="hint">{t("ui.terminal.opportunities.hint")}</p>
                 {snapshot.opportunities.length ? (
@@ -2153,6 +2176,8 @@ function GameClientInner() {
                             ? "· " +
                               exchangeFor(m.id)!.compensationPerUnit +
                               " fuel/unit · " +
+                              Math.round(exchangeFor(m.id)!.demandBps / 100) +
+                              "% demand · " +
                               Math.round(
                                 exchangeFor(m.id)!.saturationBps / 100,
                               ) +
