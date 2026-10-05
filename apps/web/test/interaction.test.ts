@@ -463,3 +463,44 @@ it("builds, selects, and fingerprints underground routes without treating cargo 
   movedPortal.undergroundSolids[0].exit.x += 1;
   expect(structureKey(movedPortal)).not.toBe(key);
 });
+
+
+it("builds, selects, and fingerprints elevated gantries without treating cargo as topology", () => {
+  expect(TOOL_HOTKEYS["elevated-solid"]).toBe("E");
+  const snapshot = new Simulation(fixture).snapshot();
+  expect(
+    buildCommand(
+      { ...DEFAULT_MODE, tool: "elevated-solid" },
+      snapshot,
+      { x: 14, y: 12 },
+      { x: 10, y: 10 },
+    ),
+  ).toEqual({
+    type: "placeElevatedSolid",
+    entry: { x: 10, y: 10 },
+    exit: { x: 14, y: 10 },
+  });
+
+  const sim = new Simulation(fixture);
+  const placed = sim.command({
+    type: "placeElevatedSolid",
+    entry: { x: 10, y: 10 },
+    exit: { x: 15, y: 10 },
+  });
+  expect(placed.ok).toBe(true);
+  expect(hitTest(sim.snapshot(), { x: 10, y: 10 }, [])).toBe(placed.id);
+  expect(hitTest(sim.snapshot(), { x: 15, y: 10 }, [])).toBe(placed.id);
+
+  const base = sim.snapshot(),
+    key = structureKey(base),
+    cargoOnly = structuredClone(base);
+  cargoOnly.elevatedSolids[0].cargo = {
+    materialId: "plates",
+    remainingSteps: 2,
+  };
+  expect(structureKey(cargoOnly)).toBe(key);
+
+  const movedDeck = structuredClone(base);
+  movedDeck.elevatedSolids[0].exit.x += 1;
+  expect(structureKey(movedDeck)).not.toBe(key);
+});
