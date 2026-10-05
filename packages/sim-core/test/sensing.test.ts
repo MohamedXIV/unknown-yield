@@ -46,6 +46,13 @@ describe("industrial sensing observations", () => {
         range: 1,
         unlocked: false,
       },
+      {
+        id: "resonance-probe",
+        nameKey: "sensing.capability.resonance-probe.name",
+        mode: "probe",
+        range: 1,
+        unlocked: false,
+      },
     ]);
     expect(snapshot.map).not.toHaveProperty("surveySignals");
     expect(snapshot.map).not.toHaveProperty("sensingCapabilities");
@@ -161,6 +168,57 @@ describe("industrial sensing observations", () => {
       "atmospheric-plume-a": 600,
     });
     expect(JSON.stringify(sim.snapshot())).not.toContain("anomaly-c");
+  });
+
+  it("unlocks the manufactured resonance capability before revealing its resource opportunity", () => {
+    const sim = new Simulation(fixture);
+    expect(
+      sim.command({
+        type: "sense",
+        capabilityId: "resonance-probe",
+        x: 57,
+        y: 10,
+      }),
+    ).toMatchObject({ ok: false, message: "Sensing capability is locked" });
+    expect(JSON.stringify(sim.snapshot())).not.toContain("catalyst-seam-a");
+    expect(JSON.stringify(sim.serialize())).not.toContain("catalyst-seam-a");
+
+    const save = sim.serialize();
+    const reaction = fixture.reactions.find(
+      (entry) => entry.id === "collect-gas-0",
+    )!;
+    save.knowledge.push(reaction.id);
+    save.evidence[
+      experimentEvidenceKey(
+        reaction.operation,
+        reaction.input,
+        reaction.processConditionId ?? null,
+      )
+    ] = {
+      operationId: reaction.operation,
+      inputId: reaction.input,
+      processConditionId: reaction.processConditionId ?? null,
+      state: "confirmed",
+    };
+    initializeKnownMarkets(fixture, save);
+    expect(sim.load(save).ok).toBe(true);
+
+    expect(
+      sim.snapshot().sensingCapabilities.find(
+        (entry) => entry.id === "resonance-probe",
+      )?.unlocked,
+    ).toBe(true);
+    expect(
+      sim.command({
+        type: "sense",
+        capabilityId: "resonance-probe",
+        x: 57,
+        y: 10,
+      }),
+    ).toMatchObject({ ok: true });
+    expect(sim.serialize().discoveredDeposits).toContain("catalyst-seam-a");
+    expect(sim.serialize().deposits["catalyst-seam-a"]).toBe(800);
+    expect(JSON.stringify(sim.snapshot())).not.toContain("anomaly-d");
   });
 
   it("reports none deterministically outside authored signal range", () => {

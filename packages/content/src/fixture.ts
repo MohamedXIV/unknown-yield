@@ -82,6 +82,18 @@ export const fixture = validateContent({
       color: "#b298c4",
       known: false,
     },
+    {
+      id: "catalyst",
+      nameKey: "material.catalyst.name",
+      color: "#d5c4a1",
+      known: true,
+    },
+    {
+      id: "matrix",
+      nameKey: "material.matrix.name",
+      color: "#8fd1c8",
+      known: false,
+    },
   ],
   operations: [
     { id: "vaporize", nameKey: "operation.vaporize.name" },
@@ -90,6 +102,7 @@ export const fixture = validateContent({
     { id: "precipitate", nameKey: "operation.precipitate.name" },
     { id: "crush", nameKey: "operation.crush.name" },
     { id: "heat", nameKey: "operation.heat.name" },
+    { id: "sinter", nameKey: "operation.sinter.name" },
   ],
   machines: [
     {
@@ -197,6 +210,18 @@ export const fixture = validateContent({
       width: 2,
       height: 2,
       cost: 28,
+    },
+    {
+      id: "sinterer",
+      nameKey: "machine.sinterer.name",
+      role: "processor",
+      operations: ["sinter"],
+      capacity: 12,
+      fuel: 3,
+      durationTicks: 36,
+      width: 2,
+      height: 2,
+      cost: 34,
     },
     {
       id: "crusher",
@@ -364,6 +389,16 @@ export const fixture = validateContent({
       known: false,
     },
     {
+      id: "sinter-catalyst",
+      operation: "sinter",
+      input: "catalyst",
+      inputAmount: 2,
+      output: "matrix",
+      outputAmount: 1,
+      observationKey: "reaction.sinter-catalyst.observation",
+      known: false,
+    },
+    {
       id: "heat-raw-oversealed",
       operation: "heat",
       processConditionId: "oversealed",
@@ -395,11 +430,19 @@ export const fixture = validateContent({
         range: 1,
         requiredMilestoneId: "sealed-study-certified",
       },
+      {
+        id: "resonance-probe",
+        nameKey: "sensing.capability.resonance-probe.name",
+        mode: "probe",
+        range: 1,
+        requiredMilestoneId: "resonance-survey-certified",
+      },
     ],
     surveySignals: [
       { id: "anomaly-a", x: 46, y: 18, strength: 8, depth: 14 },
       { id: "anomaly-b", x: 62, y: 42, strength: 5, depth: 4 },
       { id: "anomaly-c", x: 70, y: 26, strength: 7, depth: 1 },
+      { id: "anomaly-d", x: 57, y: 10, strength: 8, depth: 9 },
     ],
     hiddenDeposits: [
       {
@@ -412,6 +455,17 @@ export const fixture = validateContent({
         units: 1200,
         surveySignalId: "anomaly-a",
         requiredSensingCapabilityId: "core-probe",
+      },
+      {
+        id: "catalyst-seam-a",
+        material: "catalyst",
+        x: 55,
+        y: 8,
+        width: 5,
+        height: 5,
+        units: 800,
+        surveySignalId: "anomaly-d",
+        requiredSensingCapabilityId: "resonance-probe",
       },
     ],
     atmosphericSources: [
@@ -515,6 +569,7 @@ export const fixture = validateContent({
       },
       { materialId: "liquid-0", baseCompensation: 6, floorCompensation: 2, baseDemandBps: 10000, saturationPerUnitBps: 1000, recoveryPerMarketTickBps: 250, requiredTerminalCapabilityId: "liquid-outbound" },
       { materialId: "gas-0", baseCompensation: 8, floorCompensation: 3, baseDemandBps: 10000, saturationPerUnitBps: 1000, recoveryPerMarketTickBps: 250, requiredTerminalCapabilityId: "gas-outbound" },
+      { materialId: "matrix", baseCompensation: 16, floorCompensation: 6, baseDemandBps: 10000, saturationPerUnitBps: 800, recoveryPerMarketTickBps: 250 },
     ],
     orders: [
       {
@@ -562,6 +617,13 @@ export const fixture = validateContent({
       },
       { id: "liquid-study-certified", nameKey: "milestone.liquid-study-certified.name", hintKey: "milestone.liquid-study-certified.hint", requires: [{ type: "reaction-confirmed", reactionId: "liquefy-raw" }], unlockTerminalCapabilityIds: ["liquid-outbound"] },
       { id: "gas-study-certified", nameKey: "milestone.gas-study-certified.name", hintKey: "milestone.gas-study-certified.hint", requires: [{ type: "reaction-confirmed", reactionId: "vaporize-liquid-0" }], unlockTerminalCapabilityIds: ["gas-outbound"] },
+      {
+        id: "resonance-survey-certified",
+        nameKey: "milestone.resonance-survey-certified.name",
+        hintKey: "milestone.resonance-survey-certified.hint",
+        requires: [{ type: "reaction-confirmed", reactionId: "collect-gas-0" }],
+        unlockTerminalCapabilityIds: [],
+      },
     ],
   },
 });

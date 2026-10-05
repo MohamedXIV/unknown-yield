@@ -93,6 +93,7 @@ export const enCatalog: LocaleCatalog = {
   "ui.direction.3": "north",
   "sensing.capability.survey-scanner.name": "Survey scanner",
   "sensing.capability.core-probe.name": "Core probe",
+  "sensing.capability.resonance-probe.name": "Resonance probe",
   "terminal.module.liquid-dock.name": "Lined liquid dock",
   "terminal.module.gas-dock.name": "Sealed gas dock",
   "terminal.capability.liquid-outbound.name": "Liquid outbound handling",
@@ -103,6 +104,9 @@ export const enCatalog: LocaleCatalog = {
   "milestone.gas-study-certified.name": "Gas handling authorization",
   "milestone.gas-study-certified.hint":
     "Confirm a gas-producing trial to authorize sealed gas handling.",
+  "milestone.resonance-survey-certified.name": "Resonance survey capability",
+  "milestone.resonance-survey-certified.hint":
+    "Manufacture conductive granules through sealed gas collection to calibrate the resonance probe.",
   "containment.corrosion-resistant.name": "Corrosion-resistant containment",
   "containment.profile.standard.name": "Standard",
   "containment.profile.lined.name": "Lined",
@@ -298,8 +302,11 @@ export const enCatalog: LocaleCatalog = {
   "material.raw.name": "Veined ore",
   "material.granules.name": "Conductive granules",
   "material.residue.name": "Vitrified residue",
+  "material.catalyst.name": "Catalytic stone",
+  "material.matrix.name": "Resonant matrix",
   "operation.crush.name": "Crush",
   "operation.heat.name": "Heat",
+  "operation.sinter.name": "Sinter",
   "machine.extractor.name": "Extractor",
   "machine.deep-extractor.name": "Deep extractor",
   "machine.deep-extractor.unlock-hint":
@@ -310,6 +317,7 @@ export const enCatalog: LocaleCatalog = {
   "source.atmospheric-plume-a.name": "Atmospheric trace plume",
   "ui.gas.atmospheric-intake.description":
     "Place inside a discovered atmospheric plume. Captured gas leaves through the sealed output and requires a compressor and pressure line.",
+  "machine.sinterer.name": "Sinterer",
   "machine.crusher.name": "Crusher",
   "machine.furnace.name": "Furnace",
   "machine.sealed-furnace.name": "Sealed furnace",
@@ -325,6 +333,8 @@ export const enCatalog: LocaleCatalog = {
     "The sample vitrifies under heat. It has no export value; mechanical processing remains worth investigating.",
   "reaction.heat-raw-sealed.observation":
     "Heating the ore in a sealed furnace releases conductive grains.",
+  "reaction.sinter-catalyst.observation":
+    "The catalytic stone binds into a resonant matrix with a stable export signature.",
   "reaction.heat-raw-oversealed.observation":
     "The oversealed chamber vitrifies the sample and trips a violent pressure release. The setup itself caused the failure.",
   "hazard.chamber-blowout.name": "Chamber blowout",
