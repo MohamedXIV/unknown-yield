@@ -1035,7 +1035,7 @@ function validateContentInternal(
       ).ok
     )
       throw new Error("Fuel class terminal module cannot protect its material");
-    if (fuelClass.nameKey !== "fuel-class." + fuelClass.id + ".name")
+    if (fuelClass.nameKey !== "fuel.class." + fuelClass.id + ".name")
       throw new Error("Localization key must match fuel class");
   }
 
