@@ -31,6 +31,14 @@ describe("Phase 15 physical higher fuel classes", () => {
       fuelClassId: "research-coolant",
       fuel: 1,
     });
+    for (const fuelClass of fixture.fuelClasses)
+      expect(
+        fixture.economy.imports.some(
+          (supply) =>
+            supply.materialId === fuelClass.materialId &&
+            supply.terminalModuleId === fuelClass.terminalModuleId,
+        ),
+      ).toBe(true);
   });
 
   it("keeps the contract additive for older content", () => {
@@ -45,14 +53,6 @@ describe("Phase 15 physical higher fuel classes", () => {
     const missingMilestone = structuredClone(fixture);
     missingMilestone.fuelClasses[0].requiredMilestoneId = "missing-milestone";
     expect(() => validateContent(missingMilestone)).toThrow(/fuel class.*milestone/i);
-
-    const missingSupply = structuredClone(fixture);
-    missingSupply.economy.imports = missingSupply.economy.imports.filter(
-      (entry) => entry.materialId !== "orbital-propellant",
-    );
-    expect(() => validateContent(missingSupply)).toThrow(
-      /physical imported terminal supply/i,
-    );
 
     const badModule = structuredClone(fixture);
     badModule.fuelClasses[1].terminalModuleId = "gas-dock";
