@@ -388,6 +388,21 @@ export const contentSchema = z.object({
         }),
       )
       .default([]),
+    propertyDirectives: z
+      .array(
+        z.object({
+          id,
+          nameKey: localeKeySchema,
+          briefKey: localeKeySchema,
+          propertyKey: localeKeySchema,
+          targetMaterialId: id,
+          solutionReactionIds: z.array(id).min(1),
+          durationTicks: positive,
+          rewardFuel: count.default(0),
+          rewardImportSupplyId: id.optional(),
+        }),
+      )
+      .default([]),
     terminalCapabilities: z
       .array(
         z.object({
@@ -847,6 +862,40 @@ function validateContentInternal(
     )
       throw new Error("Localization key must match its directive");
   }
+  for (const directive of c.economy.propertyDirectives) {
+    if (opportunityIds.has(directive.id))
+      throw new Error("Duplicate company opportunity ID");
+    opportunityIds.add(directive.id);
+    if (!materials.has(directive.targetMaterialId))
+      throw new Error("Property directive target material is missing");
+    if (
+      new Set(directive.solutionReactionIds).size !==
+      directive.solutionReactionIds.length
+    )
+      throw new Error("Duplicate property directive solution");
+    for (const reactionId of directive.solutionReactionIds) {
+      const reaction = c.reactions.find((entry) => entry.id === reactionId);
+      if (!reaction || reaction.output !== directive.targetMaterialId)
+        throw new Error("Property directive solution must produce target material");
+      if (reaction.known)
+        throw new Error("Property directive solution must begin unconfirmed");
+    }
+    if (
+      directive.rewardImportSupplyId &&
+      !c.economy.imports.some(
+        (supply) => supply.id === directive.rewardImportSupplyId,
+      )
+    )
+      throw new Error("Property directive reward import is missing");
+    if (!directive.rewardFuel && !directive.rewardImportSupplyId)
+      throw new Error("Property directive requires a reward");
+    if (
+      directive.nameKey !== "directive." + directive.id + ".name" ||
+      directive.briefKey !== "directive." + directive.id + ".brief" ||
+      directive.propertyKey !== "property." + directive.id + ".name"
+    )
+      throw new Error("Localization key must match property directive");
+  }
   const assistanceIds = new Set<string>();
   for (const assistance of c.economy.assistancePackages) {
     if (assistanceIds.has(assistance.id))
@@ -935,7 +984,7 @@ function validateContentInternal(
             (order) => order.id === requirement.orderId,
           )) ||
         (requirement.type === "directive-completed" &&
-          !c.economy.directives.some(
+          ![...c.economy.directives, ...c.economy.propertyDirectives].some(
             (directive) => directive.id === requirement.directiveId,
           )) ||
         (requirement.type === "milestone-completed" &&

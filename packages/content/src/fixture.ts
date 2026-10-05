@@ -786,6 +786,19 @@ export const fixture = validateContent({
         rewardFuel: 18,
       },
     ],
+    propertyDirectives: [
+      {
+        id: "matrix-local-route",
+        nameKey: "directive.matrix-local-route.name",
+        briefKey: "directive.matrix-local-route.brief",
+        propertyKey: "property.matrix-local-route.name",
+        targetMaterialId: "matrix",
+        solutionReactionIds: ["sinter-catalyst"],
+        durationTicks: 10000,
+        rewardFuel: 0,
+        rewardImportSupplyId: "orbital-coolant-canister",
+      },
+    ],
     terminalCapabilities: [
       {
         id: "sealed-sample-outbound",

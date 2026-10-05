@@ -47,6 +47,11 @@ export function contentKeys(c: Content): string[] {
       directive.nameKey,
       directive.briefKey,
     ]),
+    ...c.economy.propertyDirectives.flatMap((directive) => [
+      directive.nameKey,
+      directive.briefKey,
+      directive.propertyKey,
+    ]),
     ...c.economy.assistancePackages.flatMap((assistance) => [
       assistance.nameKey,
       assistance.briefKey,
@@ -468,6 +473,11 @@ export const enCatalog: LocaleCatalog = {
   "directive.sealed-thermal-study.name": "Sealed thermal study",
   "directive.sealed-thermal-study.brief":
     "Run a sealed Heat trial on Veined ore and report the observed result. The company does not predict the output.",
+  "directive.matrix-local-route.name": "Local matrix qualification",
+  "directive.matrix-local-route.brief":
+    "Demonstrate an alternate locally supplied process that produces the characterized resonant matrix. The company specifies the property target, not the recipe.",
+  "property.matrix-local-route.name":
+    "Stable resonant matrix from a locally sourced feed",
   "ui.terminal.market-bulletins.heading": "Company market bulletins",
   "ui.terminal.market-bulletins.hint":
     "Demand changes only from company-known applications and recovers on the slow market cadence. Bulletins are persistent history, not random price events.",

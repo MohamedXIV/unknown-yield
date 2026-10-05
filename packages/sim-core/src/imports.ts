@@ -87,11 +87,15 @@ function importDestination(
 export function importSupplyViews(c: Content, s: Save): ImportSupplyView[] {
   return c.economy.imports.map((definition) => {
     const destination = importDestination(c, s, definition);
+    const allocations = s.company.importAllocations[definition.id] ?? 0;
     const reason =
-      s.fuel < definition.fuelCost ? "fuel" : destination.reason;
+      !allocations && s.fuel < definition.fuelCost
+        ? "fuel"
+        : destination.reason;
     return {
       ...definition,
       held: destination.held,
+      allocations,
       eligible: reason === null,
       reason,
     };
@@ -123,7 +127,8 @@ export function requestImportCommand(
       message: "Unknown import supply",
       messageKey: "ui.terminal.import.result.unknown",
     };
-  if (s.fuel < definition.fuelCost)
+  const allocations = s.company.importAllocations[definition.id] ?? 0;
+  if (!allocations && s.fuel < definition.fuelCost)
     return {
       ok: false,
       message: "Not enough company fuel for import",
@@ -137,7 +142,9 @@ export function requestImportCommand(
       messageKey: "ui.terminal.import.result." + destination.reason,
     };
   if (apply) {
-    s.fuel -= definition.fuelCost;
+    if (allocations)
+      change(s.company.importAllocations, definition.id, -1);
+    else s.fuel -= definition.fuelCost;
     destination.apply(definition.quantity);
     change(
       s.terminalImports.received,
@@ -149,6 +156,6 @@ export function requestImportCommand(
     ok: true,
     message: "Off-world cargo received",
     messageKey: "ui.terminal.import.result.received",
-    cost: definition.fuelCost,
+    cost: allocations ? 0 : definition.fuelCost,
   };
 }
