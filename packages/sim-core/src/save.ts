@@ -23,6 +23,7 @@ import { machineUnlocked } from "./progression";
 import { hazardDefinition } from "./hazards";
 import { milestoneSatisfied, refreshMilestones } from "./milestones";
 import { assistanceDefinition } from "./assistance";
+import { validateFactoryRelocationState } from "./factory-relocation";
 import { depositDefinition, hiddenDepositDefinition } from "./deposits";
 import {
   atmosphericSourceDefinition,
@@ -62,6 +63,21 @@ const factory = z.object({
   width: positive,
   height: positive,
   ports: z.array(port),
+  relocation: z
+    .object({
+      remainingTicks: count,
+      requirements: z.array(
+        z
+          .object({
+            portId: safeId,
+            kind: z.enum(["solid", "liquid", "gas"]),
+          })
+          .strict(),
+      ),
+    })
+    .strict()
+    .nullable()
+    .default(null),
 });
 const machine = z.object({
   ...point,
@@ -1031,6 +1047,9 @@ export function parseSave(input: unknown, c: Content): Save {
       )
     )
       throw new Error("Dry inventory handling state mismatch");
+  for (const factory of Object.values(s.factories))
+    validateFactoryRelocationState(c, s, factory);
+
   const protect = (
     inv: Record<string, number>,
     states: ("solid" | "liquid" | "gas")[],
