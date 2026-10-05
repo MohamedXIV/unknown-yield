@@ -59,6 +59,7 @@ export type {
   FlowTotals,
   ExperimentEvidence,
   KnowledgeEntry,
+  KnowledgeInsightView,
   SensingCapabilityView,
   SensingDepthBand,
   SensingObservation,

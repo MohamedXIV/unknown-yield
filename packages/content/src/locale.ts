@@ -7,7 +7,7 @@ import type { Content } from "./schema";
  * Content identity is always a stable machine-readable ID. Player-facing
  * wording lives in locale catalogs keyed by namespaced dotted keys:
  * `material.<id>.name`, `operation.<id>.name`, `machine.<id>.name`,
- * `storage.<id>.name`, `reaction.<id>.observation`, `machine.<id>.unlock-hint`, and `hazard.<id>.*`. Renaming an English value never changes an ID
+ * `storage.<id>.name`, `reaction.<id>.observation`, `knowledge.insight.<id>.text`, `machine.<id>.unlock-hint`, and `hazard.<id>.*`. Renaming an English value never changes an ID
  * and never requires a save migration. This package validates catalog shape
  * and key coverage; resolution (i18next) lives outside `sim-core`.
  */
@@ -35,6 +35,7 @@ export function contentKeys(c: Content): string[] {
     ...c.junctions.map((j) => j.nameKey),
     ...c.storages.map((s) => s.nameKey),
     ...c.reactions.map((r) => r.observationKey),
+    ...c.knowledgeInsights.map((insight) => insight.textKey),
     ...c.reactions.flatMap((r) =>
       r.hazard
         ? [r.hazard.nameKey, r.hazard.observationKey, r.hazard.saferHintKey]
@@ -76,6 +77,10 @@ export function validateLocaleCoverage(
 }
 
 export const enCatalog: LocaleCatalog = {
+  "ui.knowledge.insights.heading": "Material findings",
+  "ui.knowledge.insight.property": "Observed property",
+  "ui.knowledge.insight.branch": "Open branch",
+  "ui.knowledge.insight.opportunity": "Company opportunity",
   "ui.diverter.heading": "District feed diverter",
   "ui.diverter.none": "No alternate exit is configured.",
   "ui.diverter.status":
@@ -393,6 +398,22 @@ export const enCatalog: LocaleCatalog = {
   "material.orbital-propellant.name": "Orbital propellant",
   "material.orbital-coolant.name": "Orbital coolant",
   "material.matrix.name": "Resonant matrix",
+  "knowledge.insight.ferrite-capital.text":
+    "Ferrite already anchors site construction through structural plate production. Diverting the same feedstock into other applications competes directly with physical expansion.",
+  "knowledge.insight.ferrite-thermal-branch.text":
+    "Ferrite still has unresolved thermal behavior. Treat heating trials as a separate branch rather than assuming the construction route is its only useful application.",
+  "knowledge.insight.ferrite-ceramic-market.text":
+    "Magnetic ceramic carries strong small-batch company value, but demand saturates quickly. It is an opportunistic export, not a stable backbone.",
+  "knowledge.insight.veined-multi-state.text":
+    "Veined ore supports more than one process path. Some transformations may leave ordinary dry handling and require different logistics.",
+  "knowledge.insight.corrosive-liquid.text":
+    "The observed liquid phase attacks standard wetted surfaces. Corrosion-resistant containment is required anywhere this material is moved or stored.",
+  "knowledge.insight.catalyst-choice.text":
+    "Catalytic stone has competing industrial uses. A commodity branch may provide steady value, while preserving feedstock leaves room for higher-grade resonance work.",
+  "knowledge.insight.catalyst-powder-market.text":
+    "Catalyst powder has broad, slow-saturating demand. Its unit value is modest, but it is a steadier outlet than short-lived specialty markets.",
+  "knowledge.insight.matrix-local-value.text":
+    "A local resonant-matrix route is now confirmed. Matrix supports higher-value company demand and should be weighed against consuming scarce catalytic stone elsewhere.",
   "operation.crush.name": "Crush",
   "operation.heat.name": "Heat",
   "operation.sinter.name": "Sinter",

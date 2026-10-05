@@ -37,6 +37,7 @@ import { importSupplyViews, terminalImportOutlet } from "./imports";
 import { advanceUndergroundRoutes } from "./underground";
 import { advanceElevatedRoutes } from "./elevated";
 import {
+  experimentEvidenceKey,
   total,
   type Save,
   type CommandResult,
@@ -194,6 +195,31 @@ export class Simulation {
       known.add(r.input);
       known.add(r.output);
     });
+    const knowledgeInsights = c.knowledgeInsights.flatMap((insight) => {
+      if (!known.has(insight.materialId)) return [];
+      const requirement = insight.requires;
+      const visible =
+        requirement.type === "material-known"
+          ? known.has(requirement.materialId)
+          : (() => {
+              const reaction = c.reactions.find(
+                (entry) => entry.id === requirement.reactionId,
+              )!;
+              const evidence =
+                s.evidence[
+                  experimentEvidenceKey(
+                    reaction.operation,
+                    reaction.input,
+                    reaction.processConditionId ?? null,
+                  )
+                ];
+              return evidence?.state === requirement.state;
+            })();
+      if (!visible) return [];
+      const { requires: _requires, ...view } = insight;
+      void _requires;
+      return [view];
+    });
     const {
       sensingCapabilities: hiddenSensingCapabilities,
       surveySignals: hiddenSurveySignals,
@@ -310,6 +336,7 @@ export class Simulation {
       milestones: milestoneViews(c, s),
       company: companyView(c, s),
       assistance: assistanceViews(c, s),
+      knowledgeInsights,
       knowledgeEntries,
       hazardEvidence,
       machines: Object.values(s.machines).map((m) => {

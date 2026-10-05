@@ -589,6 +589,80 @@ export const fixture = validateContent({
       known: false,
     },
   ],
+  knowledgeInsights: [
+    {
+      id: "ferrite-capital",
+      materialId: "ferrite",
+      kind: "property",
+      textKey: "knowledge.insight.ferrite-capital.text",
+      requires: { type: "material-known", materialId: "ferrite" },
+    },
+    {
+      id: "ferrite-thermal-branch",
+      materialId: "ferrite",
+      kind: "branch",
+      textKey: "knowledge.insight.ferrite-thermal-branch.text",
+      requires: { type: "material-known", materialId: "ferrite" },
+    },
+    {
+      id: "ferrite-ceramic-market",
+      materialId: "ferrite-ceramic",
+      kind: "opportunity",
+      textKey: "knowledge.insight.ferrite-ceramic-market.text",
+      requires: {
+        type: "reaction-evidence",
+        reactionId: "heat-ferrite",
+        state: "confirmed",
+      },
+    },
+    {
+      id: "veined-multi-state",
+      materialId: "raw",
+      kind: "branch",
+      textKey: "knowledge.insight.veined-multi-state.text",
+      requires: { type: "material-known", materialId: "raw" },
+    },
+    {
+      id: "corrosive-liquid",
+      materialId: "liquid-0",
+      kind: "property",
+      textKey: "knowledge.insight.corrosive-liquid.text",
+      requires: {
+        type: "reaction-evidence",
+        reactionId: "liquefy-raw",
+        state: "confirmed",
+      },
+    },
+    {
+      id: "catalyst-choice",
+      materialId: "catalyst",
+      kind: "branch",
+      textKey: "knowledge.insight.catalyst-choice.text",
+      requires: { type: "material-known", materialId: "catalyst" },
+    },
+    {
+      id: "catalyst-powder-market",
+      materialId: "catalyst-powder",
+      kind: "opportunity",
+      textKey: "knowledge.insight.catalyst-powder-market.text",
+      requires: {
+        type: "reaction-evidence",
+        reactionId: "crush-catalyst",
+        state: "confirmed",
+      },
+    },
+    {
+      id: "matrix-local-value",
+      materialId: "matrix",
+      kind: "opportunity",
+      textKey: "knowledge.insight.matrix-local-value.text",
+      requires: {
+        type: "reaction-evidence",
+        reactionId: "sinter-catalyst",
+        state: "confirmed",
+      },
+    },
+  ],
   site: {
     sensingCapabilities: [
       {

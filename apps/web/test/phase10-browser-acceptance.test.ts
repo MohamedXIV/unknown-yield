@@ -560,6 +560,28 @@ browserIt(
         `document.querySelector(".build-hint strong")?.textContent === "Sinterer"`,
       );
 
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Knowledge notebook"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.body.textContent?.includes("FIELD NOTEBOOK") === true &&
+          document.body.textContent?.includes("Material findings") === true &&
+          document.body.textContent?.includes("Ferrite rubble") === true &&
+          document.body.textContent?.includes("Veined ore") === true &&
+          document.body.textContent?.includes("Catalytic stone") === true`,
+      );
+      const initialNotebook = await evaluate<string>(
+        `document.querySelector(".context-panel")?.textContent ?? ""`,
+      );
+      expect(initialNotebook).toContain("OPEN BRANCH");
+      expect(initialNotebook).not.toContain("Magnetic ceramic");
+      expect(initialNotebook).not.toContain("Catalyst powder");
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Knowledge notebook"]')?.click();
+        return true;
+      })()`);
+
       const learned = hazardSave();
       const beforeEvidence = await evaluate<string>(
         `document.body.textContent ?? ""`,

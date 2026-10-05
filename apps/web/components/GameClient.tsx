@@ -1910,6 +1910,25 @@ function GameClientInner() {
                   Known construction methods and your observed discoveries.
                   There is no complete recipe book.
                 </p>
+                {snapshot.knowledgeInsights.length > 0 && (
+                  <>
+                    <h3>{t("ui.knowledge.insights.heading")}</h3>
+                    {snapshot.knowledgeInsights.map((entry) => (
+                      <article
+                        className="observation"
+                        key={"insight-" + entry.id}
+                      >
+                        <small>
+                          {t(
+                            "ui.knowledge.insight." + entry.kind,
+                          ).toUpperCase()}
+                        </small>
+                        <h3>{materialName(entry.materialId)}</h3>
+                        <p>{t(entry.textKey)}</p>
+                      </article>
+                    ))}
+                  </>
+                )}
                 {snapshot.hazardEvidence.map((entry) => {
                   const operationKey = snapshot.operations.find(
                     (op) => op.id === entry.operationId,
