@@ -43,6 +43,8 @@ import {
   undergroundDirection,
   undergroundPlacementError,
   undergroundSpan,
+  cardinalSpan,
+  elevatedPlacementError,
 } from "./geometry";
 const count = z.number().int().nonnegative().max(1000000000),
   positive = count.positive();
@@ -160,6 +162,7 @@ const undergroundSolid = z
       .nullable(),
   })
   .strict();
+const elevatedSolid = undergroundSolid;
 const undergroundLiquid = z
   .object({
     id: safeId,
@@ -203,6 +206,7 @@ const schema = z.object({
     z.literal(24),
     z.literal(25),
     z.literal(26),
+    z.literal(27),
   ]),
   contentVersion: z.string(),
   terminalModules: z
@@ -246,6 +250,7 @@ const schema = z.object({
   belts: z.record(z.string().regex(/^\d+,\d+$/), belt),
   undergroundSolids: z.record(safeId, undergroundSolid).default({}),
   undergroundLiquids: z.record(safeId, undergroundLiquid).default({}),
+  elevatedSolids: z.record(safeId, elevatedSolid).default({}),
   storages: z.record(safeId, storage),
   pressureLines: z.record(z.string().regex(/^\d+,\d+$/), pipe).default({}),
   pressureVessels: z.record(safeId, tank).default({}),
@@ -348,7 +353,7 @@ const schema = z.object({
 });
 export function initialState(c: Content): Save {
   const state: Save = {
-    schemaVersion: 26,
+    schemaVersion: 27,
     terminalModules: {},
     contentVersion: c.version,
     tick: 0,
@@ -393,6 +398,7 @@ export function initialState(c: Content): Save {
     belts: {},
     undergroundSolids: {},
     undergroundLiquids: {},
+    elevatedSolids: {},
     pressureLines: {},
     pressureVessels: {},
     compressors: {},
@@ -483,6 +489,15 @@ export function parseSave(input: unknown, c: Content): Save {
       Object.keys(parsed.undergroundLiquids).length)
   )
     throw Error("Legacy schema cannot contain underground routes");
+  if (
+    parsed.schemaVersion >= 27 &&
+    (!input ||
+      typeof input !== "object" ||
+      !Object.hasOwn(input, "elevatedSolids"))
+  )
+    throw Error("Missing elevated route state");
+  if (parsed.schemaVersion < 27 && Object.keys(parsed.elevatedSolids).length)
+    throw Error("Legacy schema cannot contain elevated routes");
   if (
     parsed.schemaVersion < 23 &&
     (Object.keys(parsed.terminalImports.staging).length ||
@@ -660,6 +675,9 @@ export function parseSave(input: unknown, c: Content): Save {
   // Schema 25 predates underground transport. No buried cargo or route
   // endpoints existed, so migration is exactly two empty route records.
   if (s.schemaVersion === 25) s.schemaVersion = 26;
+  // Schema 26 predates elevated gantries. No raised deck or in-transit cargo
+  // existed, so migration is exactly an empty route record.
+  if (s.schemaVersion === 26) s.schemaVersion = 27;
   if (s.contentVersion !== c.version || s.remainder >= c.tickMs)
     throw new Error("Incompatible content or timing");
   if (
@@ -1192,6 +1210,24 @@ export function parseSave(input: unknown, c: Content): Save {
       throw new Error("Invalid underground liquid cargo");
     stage.undergroundLiquids[id] = route;
   }
+  for (const [id, route] of Object.entries(s.elevatedSolids)) {
+    takeId(id, "e");
+    if (route.id !== id) throw new Error("Mismatched elevated solid ID");
+    const direction = undergroundDirection(route.entry, route.exit);
+    if (direction === null || direction !== route.direction)
+      throw new Error("Invalid elevated solid direction");
+    const error = elevatedPlacementError(c, stage, route.entry, route.exit);
+    if (error) throw new Error(error);
+    if (
+      route.cargo &&
+      (!known.has(route.cargo.materialId) ||
+        c.materials.find((m) => m.id === route.cargo!.materialId)
+          ?.handlingState !== "solid" ||
+        route.cargo.remainingSteps > cardinalSpan(route.entry, route.exit))
+    )
+      throw new Error("Invalid elevated solid cargo");
+    stage.elevatedSolids[id] = route;
+  }
   for (const [id, t] of Object.entries(s.storages)) {
     takeId(id, "s");
     if (t.id !== id) throw new Error("Mismatched storage ID");
@@ -1363,6 +1399,13 @@ export function parseSave(input: unknown, c: Content): Save {
         { [route.materialId]: route.quantity },
         ["liquid"],
         liquidContainment(c, "pipe", route.containmentProfileId),
+      );
+  for (const route of Object.values(s.elevatedSolids))
+    if (route.cargo)
+      protect(
+        { [route.cargo.materialId]: 1 },
+        ["solid"],
+        c.site.beltContainment,
       );
   for (const m of Object.values(s.machines)) {
     const d = c.machines.find((d) => d.id === m.definitionId)!;
