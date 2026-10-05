@@ -4,6 +4,7 @@ import type { Save } from "./types";
 import { allDeposits, depositDefinition } from "./deposits";
 import { atmosphericSourceForRect } from "./atmosphere";
 import { footprint } from "./geometry";
+import { undergroundLiquidCost, undergroundSolidCost } from "./underground";
 
 /**
  * Material ledger (Issues #3–#4).
@@ -13,7 +14,8 @@ import { footprint } from "./geometry";
  * The per-material invariant is:
  *
  *   deposits + stock + staging + importStaging + machineInput + machineOutput
- *     + machineIncidents + belts + pipes + tanks + storage + escrow + embodied
+ *     + machineIncidents + belts + undergroundSolids + undergroundLiquids
+ *     + pipes + tanks + storage + escrow + embodied
  *     + flows.exported + flows.discarded + flows.consumed
  *       = initial + flows.produced + imported
  *
@@ -45,6 +47,8 @@ export type LedgerRow = {
   machineOutput: number;
   machineIncidents: number;
   belts: number;
+  undergroundSolids: number;
+  undergroundLiquids: number;
   pressureLines: number;
   pressureVessels: number;
   pipes: number;
@@ -83,6 +87,8 @@ function blank(material: string): LedgerRow {
     machineOutput: 0,
     machineIncidents: 0,
     belts: 0,
+    undergroundSolids: 0,
+    undergroundLiquids: 0,
     pressureLines: 0,
     pressureVessels: 0,
     pipes: 0,
@@ -158,6 +164,12 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
   for (const b of Object.values(s.belts ?? {})) {
     if (b.cargo) row(b.cargo).belts += 1;
   }
+
+  for (const route of Object.values(s.undergroundSolids ?? {}))
+    if (route.cargo) row(route.cargo.materialId).undergroundSolids += 1;
+  for (const route of Object.values(s.undergroundLiquids ?? {}))
+    if (route.materialId)
+      row(route.materialId).undergroundLiquids += route.quantity;
 
   // Physical bulk storage contents.
   for (const t of Object.values(s.storages ?? {})) {
@@ -245,6 +257,14 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
       (c.junctions.find((d) => d.id === b.junction?.definitionId)?.cost ?? 0),
     0,
   );
+  embodied += Object.values(s.undergroundSolids ?? {}).reduce(
+    (sum, route) => sum + undergroundSolidCost(c, route),
+    0,
+  );
+  embodied += Object.values(s.undergroundLiquids ?? {}).reduce(
+    (sum, route) => sum + undergroundLiquidCost(c, route),
+    0,
+  );
   if (embodied > 0) row(c.site.buildMaterial).embodied += embodied;
   for (const id of Object.keys(s.terminalModules ?? {}))
     row(c.site.buildMaterial).embodied +=
@@ -274,6 +294,8 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
       r.machineOutput +
       r.machineIncidents +
       r.belts +
+      r.undergroundSolids +
+      r.undergroundLiquids +
       r.pressureLines +
       r.pressureVessels +
       r.pipes +
