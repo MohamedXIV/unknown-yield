@@ -228,6 +228,16 @@ it("persists a conservative stranded-output consequence without deleting materia
     message: "Physical hazard consequence blocks restart",
   });
   expect(sim.serialize()).toEqual(beforeRestart);
+  expect(
+    sim.command({
+      type: "dismantle",
+      id: processorId,
+    }),
+  ).toMatchObject({
+    ok: false,
+    message: "Empty the machine buffers through compatible transport first",
+  });
+  expect(sim.serialize()).toEqual(beforeRestart);
 
   const restored = new Simulation(fixture);
   expect(restored.load(JSON.parse(JSON.stringify(state))).ok).toBe(true);

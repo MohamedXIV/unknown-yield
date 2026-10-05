@@ -853,7 +853,12 @@ export function applyCommand(
         // in a real place. Dismantling must not teleport them across the map,
         // so a buffered machine cannot be reclaimed until its contents leave
         // through belts (output drains; incompatible input needs rerouting).
-        if (total(m.input) + total(m.output) > 0)
+        if (
+          total(m.input) +
+            total(m.output) +
+            total(m.incidentInventory) >
+          0
+        )
           return fail(
             "Empty the machine buffers through compatible transport first",
           );
