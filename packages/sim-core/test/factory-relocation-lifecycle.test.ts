@@ -152,7 +152,8 @@ describe("factory relocation lifecycle", () => {
     expect(auditLedger(fixture, state).ok).toBe(true);
 
     const restored = new Simulation(fixture);
-    expect(restored.load(JSON.parse(JSON.stringify(state))).ok).toBe(true);
+    const restoredResult = restored.load(JSON.parse(JSON.stringify(state)));
+    expect(restoredResult.ok, restoredResult.message).toBe(true);
     expect(restored.serialize()).toEqual(state);
 
     expect(
