@@ -538,6 +538,10 @@ export type KnowledgeEntry = {
   initial: boolean;
   observedAt?: Point;
 };
+export type KnowledgeInsightView = Omit<
+  Content["knowledgeInsights"][number],
+  "requires"
+>;
 export type PlayerSnapshot = {
   terminalModules: TerminalModuleView[];
   containmentCapabilities: Content["containmentCapabilities"];
@@ -619,6 +623,7 @@ export type PlayerSnapshot = {
   milestones: MilestoneView[];
   company: CompanyView;
   assistance: AssistanceView[];
+  knowledgeInsights: KnowledgeInsightView[];
   knowledgeEntries: KnowledgeEntry[];
   hazardEvidence: HazardEvidenceView[];
   observations: Observation[];
