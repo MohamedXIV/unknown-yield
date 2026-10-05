@@ -13,7 +13,7 @@ function portOutside(factory: Factory, port: Factory["ports"][number]) {
       ? (port.direction + 2) % 4
       : port.direction,
     point = next(port, outward);
-  return { point, towardPort: (outward + 2) % 4 };
+  return { point, outward, towardPort: (outward + 2) % 4 };
 }
 
 function connectionKindsAtPort(
@@ -22,22 +22,38 @@ function connectionKindsAtPort(
   factory: Factory,
   port: Factory["ports"][number],
 ): FactoryConnectionKind[] {
-  const { point, towardPort } = portOutside(factory, port),
+  const { point, outward, towardPort } = portOutside(factory, port),
     result: FactoryConnectionKind[] = [],
-    belt = state.belts[key(point)];
-  if (belt) {
-    const arms = beltArms(content, belt);
-    if (
-      arms.inlets.includes(towardPort) ||
-      arms.outlets.includes(towardPort)
-    )
-      result.push("solid");
+    belt = state.belts[key(point)],
+    wallBelt = state.belts[key(port)];
+  if (belt && wallBelt) {
+    const outsideArms = beltArms(content, belt),
+      wallArms = beltArms(content, wallBelt),
+      outsideConnects =
+        outsideArms.inlets.includes(towardPort) ||
+        outsideArms.outlets.includes(towardPort),
+      wallConnects =
+        wallArms.inlets.includes(outward) ||
+        wallArms.outlets.includes(outward);
+    if (outsideConnects && wallConnects) result.push("solid");
   }
-  const pipe = state.pipes[key(point)];
-  if (pipe && (pipe.inlet === towardPort || pipe.outlet === towardPort))
+  const pipe = state.pipes[key(point)],
+    wallPipe = state.pipes[key(port)];
+  if (
+    pipe &&
+    wallPipe &&
+    (pipe.inlet === towardPort || pipe.outlet === towardPort) &&
+    (wallPipe.inlet === outward || wallPipe.outlet === outward)
+  )
     result.push("liquid");
-  const line = state.pressureLines[key(point)];
-  if (line && (line.inlet === towardPort || line.outlet === towardPort))
+  const line = state.pressureLines[key(point)],
+    wallLine = state.pressureLines[key(port)];
+  if (
+    line &&
+    wallLine &&
+    (line.inlet === towardPort || line.outlet === towardPort) &&
+    (wallLine.inlet === outward || wallLine.outlet === outward)
+  )
     result.push("gas");
   return result;
 }

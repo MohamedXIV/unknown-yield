@@ -258,6 +258,100 @@ describe("factory relocation lifecycle", () => {
     expect(finalReload.serialize()).toEqual(final);
   });
 
+  it("requires a real wall crossing before recording an external connection", () => {
+    const sim = new Simulation(fixture);
+    const factoryId = build(sim, {
+      type: "placeFactory",
+      x: 24,
+      y: 22,
+      width: 10,
+      height: 10,
+    });
+    build(sim, {
+      type: "placePort",
+      factoryId,
+      x: 24,
+      y: 25,
+      direction: 0,
+    });
+    build(sim, {
+      type: "placeBelts",
+      points: [{ x: 23, y: 25 }],
+      direction: 0,
+    });
+
+    expect(
+      sim.command({
+        type: "relocateFactory",
+        factoryId,
+        x: 25,
+        y: 22,
+      }).ok,
+    ).toBe(true);
+    expect(sim.serialize().factories[factoryId].relocation?.requirements).toEqual(
+      [],
+    );
+  });
+
+  it("blocks new enabled equipment and protects required ports during the hold", () => {
+    const { sim, factoryId } = lifecycleFactory();
+    expect(
+      sim.command({
+        type: "relocateFactory",
+        factoryId,
+        x: 25,
+        y: 22,
+      }).ok,
+    ).toBe(true);
+
+    for (const command of [
+      {
+        type: "placeMachine" as const,
+        definitionId: "crusher",
+        x: 28,
+        y: 23,
+        direction: 0,
+      },
+      {
+        type: "placePump" as const,
+        containmentProfileId: "standard",
+        x: 27,
+        y: 30,
+        direction: 0,
+      },
+      {
+        type: "placeCompressor" as const,
+        x: 28,
+        y: 30,
+        direction: 0,
+      },
+    ]) {
+      const before = sim.serialize();
+      expect(sim.command(command)).toMatchObject({
+        ok: false,
+        message: "Finish factory relocation before adding equipment",
+      });
+      expect(sim.serialize()).toEqual(before);
+    }
+
+    const moved = sim.serialize(),
+      solidPort = moved.factories[factoryId].ports.find(
+        (port) => port.y === 25,
+      )!,
+      wallBelt = moved.belts["25,25"];
+    expect(wallBelt).toBeDefined();
+    expect(sim.command({ type: "dismantle", id: wallBelt.id }).ok).toBe(true);
+    expect(
+      sim.command({ type: "dismantle", id: solidPort.id }),
+    ).toMatchObject({
+      ok: false,
+      message: "Required relocation port must remain until restart",
+    });
+    const roundTrip = new Simulation(fixture);
+    const result = roundTrip.load(JSON.parse(JSON.stringify(sim.serialize())));
+    expect(result.ok, result.message).toBe(true);
+  });
+
   it("blocks reshape and repeated relocation until the lifecycle is completed", () => {
     const { sim, factoryId } = lifecycleFactory();
     expect(

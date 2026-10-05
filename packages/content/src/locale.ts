@@ -69,6 +69,14 @@ export function validateLocaleCoverage(
 }
 
 export const enCatalog: LocaleCatalog = {
+  "ui.factory.relocation.hold": "Relocation hold",
+  "ui.factory.relocation.downtime": "{{ticks}} ticks of downtime remaining",
+  "ui.factory.relocation.restored": "External requirements restored",
+  "ui.factory.relocation.reconnect": "Reconnect external logistics",
+  "ui.factory.relocation.requirements":
+    "Required prior external connections: {{count}}. Restore every required route before restarting internal equipment.",
+  "ui.factory.relocation.move-hint":
+    "Move the suspended shell and its internal equipment together by one cell. Each step costs {{fuel}} fuel and starts {{ticks}} ticks of downtime. External logistics stay at the source and previously connected media must be rebuilt before resume.",
   "ui.terminal.module.heading": "Physical handling docks",
   "ui.terminal.module.inlet": "Inlet ({{x}}, {{y}}), approach from {{side}}",
   "ui.terminal.module.meta":

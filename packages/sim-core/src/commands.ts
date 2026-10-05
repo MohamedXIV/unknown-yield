@@ -326,6 +326,13 @@ export function applyCommand(
       const kind = cmd.type === "placePressureVessel" ? "vessel" : "compressor",
         error = gasPlacementError(c, s, cmd, kind);
       if (error) return fail(error);
+      if (
+        kind === "compressor" &&
+        Object.values(s.factories).some(
+          (factory) => factory.relocation && contains(factory, cmd),
+        )
+      )
+        return fail("Finish factory relocation before adding equipment");
       const cost = cfg[kind].cost;
       if (!affordable(cost)) return fail("Not enough structural plates");
       if (!apply) return ok("Place gas structure", cost);
@@ -447,6 +454,13 @@ export function applyCommand(
       const kind = cmd.type === "placeTank" ? "tank" : "pump",
         error = liquidPlacementError(c, s, cmd, kind);
       if (error) return fail(error);
+      if (
+        kind === "pump" &&
+        Object.values(s.factories).some(
+          (factory) => factory.relocation && contains(factory, cmd),
+        )
+      )
+        return fail("Finish factory relocation before adding equipment");
       const cost = liquidConstructionCost(c, kind, cmd.containmentProfileId);
       if (!affordable(cost)) return fail("Not enough structural plates");
       if (!apply) return ok("Place liquid structure", cost);
@@ -708,6 +722,11 @@ export function applyCommand(
         return fail("Capability locked by unconfirmed knowledge");
       const placement = machinePlacement(c, s, cmd);
       if (placement.error) return fail(placement.error);
+      if (
+        placement.factoryId &&
+        s.factories[placement.factoryId]?.relocation
+      )
+        return fail("Finish factory relocation before adding equipment");
       if (!affordable(def.cost)) return fail("Not enough structural plates");
       if (!apply) return ok("Place machine", def.cost);
       const id = issue("m");
@@ -1111,6 +1130,12 @@ export function applyCommand(
       for (const f of Object.values(s.factories)) {
         const p = f.ports.find((p) => p.id === cmd.id);
         if (p) {
+          if (
+            f.relocation?.requirements.some(
+              (requirement) => requirement.portId === p.id,
+            )
+          )
+            return fail("Required relocation port must remain until restart");
           if (
             s.pressureLines[key(p)] ||
             Object.values(s.compressors).some((a) => key(a) === key(p)) ||

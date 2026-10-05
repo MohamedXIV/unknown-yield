@@ -1103,23 +1103,20 @@ function GameClientInner() {
                     </p>
                     {factory.relocation && (
                       <div className="milestone">
-                        <small>RELOCATION HOLD</small>
+                        <small>{t("ui.factory.relocation.hold")}</small>
                         <h3>
                           {factory.relocation.remainingTicks > 0
-                            ? factory.relocation.remainingTicks +
-                              " ticks of downtime remaining"
+                            ? t("ui.factory.relocation.downtime", {
+                                ticks: factory.relocation.remainingTicks,
+                              })
                             : factory.relocation.connectionsRestored
-                              ? "External requirements restored"
-                              : "Reconnect external logistics"}
+                              ? t("ui.factory.relocation.restored")
+                              : t("ui.factory.relocation.reconnect")}
                         </h3>
                         <p>
-                          {factory.relocation.requiredConnections} prior
-                          external connection
-                          {factory.relocation.requiredConnections === 1
-                            ? ""
-                            : "s"}{" "}
-                          must be restored before any internal equipment can
-                          restart.
+                          {t("ui.factory.relocation.requirements", {
+                            count: factory.relocation.requiredConnections,
+                          })}
                         </p>
                       </div>
                     )}
@@ -1255,12 +1252,10 @@ function GameClientInner() {
                     </div>
                     <h3>Intact relocation</h3>
                     <p className="hint">
-                      Move the suspended shell and its internal equipment
-                      together by one cell. Each step costs{" "}
-                      {snapshot.map.factoryRelocationFuelPerStep} fuel and
-                      starts {snapshot.map.factoryRelocationDowntimeTicks} ticks
-                      of downtime. External logistics stay at the source and
-                      previously connected media must be rebuilt before resume.
+                      {t("ui.factory.relocation.move-hint", {
+                        fuel: snapshot.map.factoryRelocationFuelPerStep,
+                        ticks: snapshot.map.factoryRelocationDowntimeTicks,
+                      })}
                     </p>
                     <div className="button-row">
                       <button
