@@ -506,7 +506,7 @@ describe("corporate assistance and recovery standing", () => {
 
     const restored = new Simulation(historicalFixture);
     expect(restored.load(legacy).ok).toBe(true);
-    expect(restored.serialize().schemaVersion).toBe(23);
+    expect(restored.serialize().schemaVersion).toBe(24);
     expect(restored.snapshot()).toMatchObject({
       fuel: 0,
       debt: 20,

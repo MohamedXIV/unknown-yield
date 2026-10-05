@@ -70,7 +70,7 @@ it("bounds imports and releases them only through the physical dry outlet", () =
 });
 
 
-it("migrates schema 22 to empty import state and requires state in schema 23", () => {
+it("migrates schema 22 to empty import state and requires it in the current schema", () => {
   const sim = new Simulation(fixture);
   const current = sim.serialize();
   const legacy = structuredClone(current) as Record<string, unknown>;
@@ -79,7 +79,7 @@ it("migrates schema 22 to empty import state and requires state in schema 23", (
 
   const restored = new Simulation(fixture);
   expect(restored.load(legacy).ok).toBe(true);
-  expect(restored.serialize().schemaVersion).toBe(23);
+  expect(restored.serialize().schemaVersion).toBe(24);
   expect(restored.serialize().terminalImports).toEqual({
     staging: {},
     received: {},
