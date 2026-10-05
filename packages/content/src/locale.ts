@@ -41,6 +41,7 @@ export function contentKeys(c: Content): string[] {
         : [],
     ),
     ...c.economy.imports.flatMap((supply) => [supply.nameKey, supply.briefKey]),
+    ...c.economy.demandShocks.flatMap((shock) => [shock.nameKey, shock.briefKey]),
     ...c.economy.orders.flatMap((order) => [order.nameKey, order.briefKey]),
     ...c.economy.directives.flatMap((directive) => [
       directive.nameKey,
@@ -457,6 +458,13 @@ export const enCatalog: LocaleCatalog = {
   "order.granules-procurement.name": "Orbital conductor allocation",
   "order.granules-procurement.brief":
     "Supply a bounded batch of the newly characterized conductor while the orbital allocation window is open.",
+  "order.matrix-procurement.name": "Resonant matrix qualification batch",
+  "order.matrix-procurement.brief":
+    "Supply a small matrix batch while orbital systems engineering evaluates the newly characterized resonant application.",
+  "market-shock.resonance-orbital-application.name":
+    "Orbital resonance application identified",
+  "market-shock.resonance-orbital-application.brief":
+    "Company engineering linked the characterized matrix to an orbital resonance-control application. Demand increased, but the program is expected to normalize gradually.",
   "directive.sealed-thermal-study.name": "Sealed thermal study",
   "directive.sealed-thermal-study.brief":
     "Run a sealed Heat trial on Veined ore and report the observed result. The company does not predict the output.",
