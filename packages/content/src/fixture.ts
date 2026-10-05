@@ -189,7 +189,7 @@ export const fixture = validateContent({
     },
     {
       id: "research-coolant",
-      nameKey: "fuel-class.research-coolant.name",
+      nameKey: "fuel.class.research-coolant.name",
       materialId: "orbital-coolant",
       terminalModuleId: "cryo-dock",
       requiredMilestoneId: "resonance-survey-certified",
