@@ -53,7 +53,7 @@ This document is intentionally procedural. Game/design truth lives in the domain
 - Completed phase: **Phase 10 — industrial exploration and deep extraction (#101)**.
 - Completed phase: **Phase 11 — hazardous science and recovery (#102)**.
 - Completed phase: **Phase 12 — factory lifecycle and reconfiguration (#103)**. #126–#129 landed; #130 and #131 closed not planned under their recorded evidence/user decisions, with no false integrated-exit PASS claim for #131.
-- Current gameplay phase: **Phase 13 — terminal and off-world exchange depth (#104)**. #132 cargo manifests ✓. **#133 is ACTIVE / FIRST UNBLOCKED**; #134–#138 remain dependency-ordered behind it.
+- Current gameplay phase: **Phase 13 — terminal and off-world exchange depth (#104)**. #132 cargo manifests ✓; #133 physical off-world imports ✓. **#134 is ACTIVE / FIRST UNBLOCKED**; #135–#138 remain dependency-ordered behind it.
 
 ## Phase 1.5 dependency graph
 
