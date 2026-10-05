@@ -11,7 +11,7 @@ function build(sim: Simulation, command: GameCommand) {
 }
 
 it("proves underground and elevated logistics solve distinct spatial problems in one persistent world", () => {
-  let sim = new Simulation(fixture);
+  const sim = new Simulation(fixture);
 
   const undergroundId = build(sim, {
     type: "placeUndergroundSolid",
