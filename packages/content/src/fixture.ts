@@ -116,6 +116,12 @@ export const fixture = validateContent({
       known: true,
     },
     {
+      id: "ferrite-ceramic",
+      nameKey: "material.ferrite-ceramic.name",
+      color: "#c98f72",
+      known: false,
+    },
+    {
       id: "raw",
       nameKey: "material.raw.name",
       color: "#c8aa73",
@@ -138,6 +144,12 @@ export const fixture = validateContent({
       nameKey: "material.catalyst.name",
       color: "#d5c4a1",
       known: true,
+    },
+    {
+      id: "catalyst-powder",
+      nameKey: "material.catalyst-powder.name",
+      color: "#d8cfb9",
+      known: false,
     },
     {
       id: "orbital-binder",
@@ -446,6 +458,17 @@ export const fixture = validateContent({
       known: true,
     },
     {
+      id: "heat-ferrite",
+      operation: "heat",
+      processConditionId: "ambient",
+      input: "ferrite",
+      inputAmount: 2,
+      output: "ferrite-ceramic",
+      outputAmount: 1,
+      observationKey: "reaction.heat-ferrite.observation",
+      known: false,
+    },
+    {
       id: "crush-raw",
       operation: "crush",
       input: "raw",
@@ -495,6 +518,16 @@ export const fixture = validateContent({
       output: "matrix",
       outputAmount: 1,
       observationKey: "reaction.sinter-catalyst.observation",
+      known: false,
+    },
+    {
+      id: "crush-catalyst",
+      operation: "crush",
+      input: "catalyst",
+      inputAmount: 2,
+      output: "catalyst-powder",
+      outputAmount: 1,
+      observationKey: "reaction.crush-catalyst.observation",
       known: false,
     },
     {
@@ -736,6 +769,24 @@ export const fixture = validateContent({
       },
     ],
     exchange: [
+      {
+        materialId: "ferrite-ceramic",
+        baseCompensation: 14,
+        floorCompensation: 3,
+        baseDemandBps: 10000,
+        saturationPerUnitBps: 2500,
+        recoveryPerMarketTickBps: 200,
+        demandRecoveryPerMarketTickBps: 100,
+      },
+      {
+        materialId: "catalyst-powder",
+        baseCompensation: 9,
+        floorCompensation: 5,
+        baseDemandBps: 10000,
+        saturationPerUnitBps: 500,
+        recoveryPerMarketTickBps: 300,
+        demandRecoveryPerMarketTickBps: 100,
+      },
       {
         materialId: "granules",
         baseCompensation: 12,
