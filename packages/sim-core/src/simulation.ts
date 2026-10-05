@@ -23,7 +23,10 @@ import {
 } from "./liquids";
 import { pumpRepairEligible, publicPumpIncident } from "./pump-recovery";
 import { publicTransportDiagnostic } from "./containment";
-import { terminalModuleViews } from "./terminal";
+import {
+  shipmentManifestView,
+  terminalModuleViews,
+} from "./terminal";
 import { footprint } from "./geometry";
 import { factoryView } from "./factory-contract";
 import { FactoryThroughputMonitor } from "./factory-throughput";
@@ -284,6 +287,7 @@ export class Simulation {
         };
       }),
       staging: s.staging,
+      shipment: shipmentManifestView(c, s),
       terminalModules: terminalModuleViews(c, s),
       policies: s.policies,
       exchange: marketListings(c, s),

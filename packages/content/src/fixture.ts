@@ -637,6 +637,7 @@ export const fixture = validateContent({
     assistanceBelow: 2,
     milestoneExports: 1,
     marketEveryTicks: 50,
+    shipmentCapacity: 8,
     defaultAssistancePackageId: "emergency-fuel",
     assistancePackages: [
       {

@@ -55,6 +55,8 @@ export type {
   MachineDefinitionView,
   StorageView,
   Storage,
+  ShipmentManifestMaterialView,
+  ShipmentManifestView,
   Inventory,
   FlowTotals,
   ExperimentEvidence,
@@ -131,5 +133,12 @@ export {
   recordNetExportRecovery,
   recordObligationRepayment,
 } from "./assistance";
+
+export {
+  dispatchShipment,
+  shipmentManifestView,
+  terminalCargoAmount,
+  validateShipmentManifest,
+} from "./terminal";
 
 export { beltArms } from "./junctions";

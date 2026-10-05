@@ -300,6 +300,7 @@ export const contentSchema = z.object({
     assistanceBelow: positive,
     milestoneExports: positive,
     marketEveryTicks: positive,
+    shipmentCapacity: positive.default(8),
     defaultAssistancePackageId: id.optional(),
     assistancePackages: z
       .array(

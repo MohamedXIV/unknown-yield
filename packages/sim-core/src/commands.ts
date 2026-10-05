@@ -1,5 +1,10 @@
 import { liquidConstructionCost } from "./containment";
-import { moduleCommand } from "./terminal";
+import {
+  clearShipmentManifest,
+  dispatchShipment,
+  moduleCommand,
+  setShipmentManifestLine,
+} from "./terminal";
 import { pumpRepairEligible } from "./pump-recovery";
 import { z } from "zod";
 import type { Content } from "@site/content";
@@ -183,6 +188,13 @@ const schema = z.discriminatedUnion("type", [
     materialId: z.string(),
     policy: z.enum(["keep", "export"]),
   }),
+  z.object({
+    type: z.literal("setShipmentManifestLine"),
+    materialId: z.string(),
+    quantity: z.number().int().nonnegative().max(1000000000),
+  }),
+  z.object({ type: z.literal("clearShipmentManifest") }),
+  z.object({ type: z.literal("dispatchShipment") }),
   z.object({
     type: z.literal("sense"),
     capabilityId: z.string(),
@@ -993,6 +1005,18 @@ export function applyCommand(
       if (apply) m.operation = cmd.operation;
       return ok("Operation selected");
     }
+    case "setShipmentManifestLine":
+      return setShipmentManifestLine(
+        c,
+        s,
+        cmd.materialId,
+        cmd.quantity,
+        apply,
+      );
+    case "clearShipmentManifest":
+      return clearShipmentManifest(s, apply);
+    case "dispatchShipment":
+      return dispatchShipment(c, s, apply);
     case "setPolicy": {
       const mat = c.materials.find((m) => m.id === cmd.materialId);
       const known =

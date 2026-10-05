@@ -3,7 +3,10 @@ import type { Content } from "@site/content";
 import { checkContainment } from "@site/content";
 import { liquidContainment } from "./containment";
 import { validatePumpIncident } from "./pump-recovery";
-import { validateTerminalModules } from "./terminal";
+import {
+  validateShipmentManifest,
+  validateTerminalModules,
+} from "./terminal";
 import {
   emptyFlows,
   experimentEvidenceKey,
@@ -249,6 +252,7 @@ const schema = z.object({
     )
     .default({}),
   staging: inventory,
+  shipmentManifest: inventory.default({}),
   policies: z.record(safeId, z.enum(["keep", "export"])),
   market: z
     .record(
@@ -348,6 +352,7 @@ export function initialState(c: Content): Save {
     pumps: {},
     storages: {},
     staging: {},
+    shipmentManifest: {},
     policies: Object.fromEntries(
       c.materials.filter((m) => m.known).map((m) => [m.id, "keep"]),
     ),
@@ -727,6 +732,7 @@ export function parseSave(input: unknown, c: Content): Save {
   }
 
   validateTerminalModules(c, s, known);
+  validateShipmentManifest(c, s, known);
 
   const expectedDepositIds = [
     ...c.site.deposits.map((deposit) => deposit.id),
