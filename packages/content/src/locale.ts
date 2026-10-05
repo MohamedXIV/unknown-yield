@@ -7,7 +7,7 @@ import type { Content } from "./schema";
  * Content identity is always a stable machine-readable ID. Player-facing
  * wording lives in locale catalogs keyed by namespaced dotted keys:
  * `material.<id>.name`, `operation.<id>.name`, `machine.<id>.name`,
- * `storage.<id>.name`, `reaction.<id>.observation`, `machine.<id>.unlock-hint`, and `hazard.<id>.*`. Renaming an English value never changes an ID
+ * `storage.<id>.name`, `reaction.<id>.observation`, `knowledge.insight.<id>.text`, `machine.<id>.unlock-hint`, and `hazard.<id>.*`. Renaming an English value never changes an ID
  * and never requires a save migration. This package validates catalog shape
  * and key coverage; resolution (i18next) lives outside `sim-core`.
  */
