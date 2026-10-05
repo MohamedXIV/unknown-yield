@@ -176,11 +176,32 @@ describe("content boundary", () => {
       output: "residue",
       hazard: {
         id: "chamber-blowout",
+        classId: "pressure-expansion",
         nameKey: "hazard.chamber-blowout.name",
         observationKey: "hazard.chamber-blowout.observation",
       },
     });
   });
+  it("validates authored deterministic hazard classes", () => {
+    expect(fixture.hazardClasses).toEqual([
+      expect.objectContaining({ id: "thermal-runaway", machineEffect: "lockout" }),
+      expect.objectContaining({ id: "pressure-expansion", machineEffect: "lockout" }),
+      expect.objectContaining({ id: "corrosion", machineEffect: "lockout" }),
+      expect.objectContaining({ id: "instability", machineEffect: "lockout" }),
+      expect.objectContaining({ id: "contamination", machineEffect: "lockout" }),
+    ]);
+
+    const missing = structuredClone(fixture);
+    missing.reactions.find(
+      (reaction) => reaction.id === "heat-raw-oversealed",
+    )!.hazard!.classId = "missing-class";
+    expect(() => validateContent(missing)).toThrow(/Missing hazard class/);
+
+    const borrowed = structuredClone(fixture);
+    borrowed.hazardClasses[0].nameKey = "hazard.chamber-blowout.name";
+    expect(() => validateContent(borrowed)).toThrow(/hazard class/i);
+  });
+
   it("rejects hazards without an explicit process condition", () => {
     const c = structuredClone(fixture);
     const hazardous = c.reactions.find((r) => r.id === "heat-raw-oversealed")!;
@@ -198,6 +219,7 @@ describe("content boundary", () => {
     const sealed = c.reactions.find((r) => r.id === "heat-raw-sealed")!;
     sealed.hazard = {
       id: "chamber-blowout",
+      classId: "pressure-expansion",
       nameKey: "hazard.chamber-blowout.name",
       observationKey: "hazard.chamber-blowout.observation",
     };

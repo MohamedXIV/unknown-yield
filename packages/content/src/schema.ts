@@ -21,6 +21,15 @@ export const contentSchema = z.object({
   containmentCapabilities: z
     .array(z.object({ id, nameKey: localeKeySchema }))
     .default([]),
+  hazardClasses: z
+    .array(
+      z.object({
+        id,
+        nameKey: localeKeySchema,
+        machineEffect: z.literal("lockout"),
+      }),
+    )
+    .default([]),
   materials: z
     .array(
       z.object({
@@ -175,6 +184,7 @@ export const contentSchema = z.object({
         hazard: z
           .object({
             id,
+            classId: id,
             nameKey: localeKeySchema,
             observationKey: localeKeySchema,
           })
@@ -396,6 +406,7 @@ function validateContentInternal(
   const c = contentSchema.parse(input);
   for (const table of [
     c.containmentCapabilities,
+    c.hazardClasses,
     c.materials,
     c.operations,
     c.machines,
@@ -422,6 +433,11 @@ function validateContentInternal(
     throw new Error("Construction material must be initially known");
   if (c.site.factoryMin < 4 || c.site.factoryMax < c.site.factoryMin)
     throw new Error("Invalid factory size");
+  const hazardClassIds = new Set(c.hazardClasses.map((entry) => entry.id));
+  for (const hazardClass of c.hazardClasses)
+    if (hazardClass.nameKey !== "hazard.class." + hazardClass.id + ".name")
+      throw new Error("Localization key must match its hazard class");
+
   const matches = new Set<string>(),
     hazardIds = new Set<string>();
   for (const r of c.reactions) {
@@ -438,6 +454,8 @@ function validateContentInternal(
     if (r.hazard) {
       if (!r.processConditionId)
         throw new Error("Hazard requires an explicit process condition");
+      if (!hazardClassIds.has(r.hazard.classId))
+        throw new Error("Missing hazard class");
       if (hazardIds.has(r.hazard.id)) throw new Error("Duplicate hazard ID");
       hazardIds.add(r.hazard.id);
       if (

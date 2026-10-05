@@ -32,6 +32,9 @@ describe("Content Studio authoring core", () => {
     expect(
       store.getCell("machines", "atmospheric-intake", "sourceKind"),
     ).toBe("atmosphere");
+    expect(
+      store.getCell("reactions", "heat-raw-oversealed", "hazardClassId"),
+    ).toBe("pressure-expansion");
 
     expect(hasStudioEntity(store, "material", "raw")).toBe(true);
     expect(referencesTo(fixture, "material", "gas-0")).toContainEqual({
@@ -82,6 +85,7 @@ describe("Content Studio authoring core", () => {
       outputAmount: 1,
       observationKey: "reaction.polish-raw.observation",
       hazardId: "",
+      hazardClassId: "",
       hazardNameKey: "",
       hazardObservationKey: "",
       known: false,

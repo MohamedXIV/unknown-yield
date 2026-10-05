@@ -70,6 +70,7 @@ const reactionRow = (reaction: Content["reactions"][number]) => ({
   outputAmount: reaction.outputAmount,
   observationKey: reaction.observationKey,
   hazardId: empty(reaction.hazard?.id),
+  hazardClassId: empty(reaction.hazard?.classId),
   hazardNameKey: empty(reaction.hazard?.nameKey),
   hazardObservationKey: empty(reaction.hazard?.observationKey),
   known: reaction.known,
@@ -307,6 +308,11 @@ function candidateFromStore(store: Store, base: Content): unknown {
     const row = rawRow(store, "reactions", id),
       label = "Reaction " + id,
       hazardId = optionalText(row, "hazardId", label),
+      hazardClassId = optionalText(
+        { hazardClassId: row.hazardClassId ?? "" },
+        "hazardClassId",
+        label,
+      ),
       hazardNameKey = optionalText(row, "hazardNameKey", label),
       hazardObservationKey = optionalText(row, "hazardObservationKey", label);
     return {
@@ -320,10 +326,11 @@ function candidateFromStore(store: Store, base: Content): unknown {
       output: stringCell(row, "output", label),
       outputAmount: numberCell(row, "outputAmount", label),
       observationKey: stringCell(row, "observationKey", label),
-      ...(hazardId || hazardNameKey || hazardObservationKey
+      ...(hazardId || hazardClassId || hazardNameKey || hazardObservationKey
         ? {
             hazard: {
               id: hazardId ?? "",
+              classId: hazardClassId ?? "",
               nameKey: hazardNameKey ?? "",
               observationKey: hazardObservationKey ?? "",
             },
