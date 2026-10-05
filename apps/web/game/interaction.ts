@@ -6,6 +6,7 @@ import {
   type GameCommand,
 } from "@site/sim-core";
 export type Tool =
+  | "elevated-solid"
   | "underground-solid"
   | "underground-liquid"
   | "pressure-line"
@@ -34,6 +35,7 @@ export type Tool =
   | "port"
   | "demolish";
 export const TOOL_HOTKEYS: Record<Tool, string> = {
+  "elevated-solid": "E",
   "underground-solid": "H",
   "underground-liquid": "I",
   "pressure-line": "G",
@@ -134,6 +136,14 @@ export function structureKey(s: PlayerSnapshot): string {
       route.direction,
       route.containmentProfileId,
     ]),
+    s.elevatedSolids.map((route) => [
+      route.id,
+      route.entry.x,
+      route.entry.y,
+      route.exit.x,
+      route.exit.y,
+      route.direction,
+    ]),
     s.pressureLines.map((p) => [p.id, p.x, p.y, p.inlet, p.outlet]),
     s.pressureVessels.map((p) => [p.id, p.x, p.y, p.direction]),
     s.compressors.map((p) => [p.id, p.x, p.y, p.direction]),
@@ -217,15 +227,16 @@ export function hitTest(
     (t) => t.x === p.x && t.y === p.y,
   );
   if (liquid) return liquid.id;
-  const underground = [
+  const layered = [
     ...s.undergroundSolids,
     ...s.undergroundLiquids,
+    ...s.elevatedSolids,
   ].find(
     (route) =>
       (route.entry.x === p.x && route.entry.y === p.y) ||
       (route.exit.x === p.x && route.exit.y === p.y),
   );
-  if (underground) return underground.id;
+  if (layered) return layered.id;
   const b = s.belts.find((b) => b.x === p.x && b.y === p.y);
   if (b) return b.id;
   const port = factory?.ports.find((a) => a.x === p.x && a.y === p.y);
@@ -318,6 +329,7 @@ export function buildCommand(
     };
   }
   if (
+    mode.tool === "elevated-solid" ||
     mode.tool === "underground-solid" ||
     mode.tool === "underground-liquid"
   ) {
@@ -328,14 +340,16 @@ export function buildCommand(
         Math.abs(dx) >= Math.abs(dy)
           ? { x: p.x, y: entry.y }
           : { x: entry.x, y: p.y };
-    return mode.tool === "underground-solid"
-      ? { type: "placeUndergroundSolid", entry, exit }
-      : {
-          type: "placeUndergroundLiquid",
-          entry,
-          exit,
-          containmentProfileId: mode.containmentProfileId,
-        };
+    return mode.tool === "elevated-solid"
+      ? { type: "placeElevatedSolid", entry, exit }
+      : mode.tool === "underground-solid"
+        ? { type: "placeUndergroundSolid", entry, exit }
+        : {
+            type: "placeUndergroundLiquid",
+            entry,
+            exit,
+            containmentProfileId: mode.containmentProfileId,
+          };
   }
   if (mode.tool === "belt") {
     const points = beltPath(anchor ?? p, p),
