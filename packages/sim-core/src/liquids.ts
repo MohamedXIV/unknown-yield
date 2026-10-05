@@ -383,7 +383,10 @@ export function transportLiquids(
         id: "terminal:" + definition.id,
         material: contents.materialId,
         units: contents.quantity,
-        take: (n) => takeContents(contents, n),
+        take: (n) => {
+          contents.quantity -= n;
+          if (!contents.quantity) contents.materialId = null;
+        },
       },
       targetAt(c, s, outlet, outlet.direction, true),
       cfg.pipe.transfer,
