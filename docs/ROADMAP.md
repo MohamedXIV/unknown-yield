@@ -333,7 +333,7 @@ A hazardous experiment can be reproduced under the same authored conditions, tea
 
 ## Phase 12 — Factory lifecycle and district reconfiguration
 
-**Epic:** GitHub Issue #103. **ACTIVE GAMEPLAY PHASE.** Children #126–#131. #126 is complete through PR #181, #127 through PR #182 and #128 through PR #183; #129 is the active dependency-ready child.
+**Epic:** GitHub Issue #103. **ACTIVE GAMEPLAY PHASE.** Children #126–#131. #126 is complete through PR #181, #127 through PR #182, #128 through PR #183 and #129 through PR #184; #130 closed not-planned after its evidence gate, and #131 is the active integrated exit gate.
 
 ### Question
 
