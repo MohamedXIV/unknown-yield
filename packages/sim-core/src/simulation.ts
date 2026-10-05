@@ -281,6 +281,8 @@ export class Simulation {
         factoryView(c, s, factory, this.factoryThroughput.view(factory.id)),
       ),
       belts: Object.values(s.belts),
+      undergroundSolids: Object.values(s.undergroundSolids),
+      undergroundLiquids: Object.values(s.undergroundLiquids),
       storages: Object.values(s.storages).map((t) => {
         const d = c.storages.find((d) => d.id === t.definitionId)!;
         const r = footprint(t, d);
