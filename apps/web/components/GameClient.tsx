@@ -81,8 +81,6 @@ const descriptions: Partial<Record<Tool, string>> = {
     "Place entirely on a surface deposit. The arrow marks its output belt cell.",
   "deep-extractor":
     "Reach discovered deep deposits that the basic extractor cannot access. Uses more fuel per extraction batch.",
-  sinterer:
-    "Place inside a factory. Feed discovered solid inputs by belt; output leaves by belt.",
   factory: "Drag a rectangle, 6–20 cells per side. Click for a 6×6 factory.",
   crusher: "Place inside a factory. Cyan is input; gold is output.",
   furnace: "Place inside a factory.",
@@ -256,6 +254,7 @@ function GameClientInner() {
       return t("ui.gas." + tool + ".description");
     if (["pipe", "tank", "pump", "liquefier", "precipitator"].includes(tool))
       return t("ui.liquid." + tool + ".description");
+    if (tool === "sinterer") return t("ui.machine.sinterer.description");
     const unlock = unlockFor(tool);
     if (unlock && !unlock.unlocked)
       return "Locked · Requires " + t(unlock.hintKey) + ".";

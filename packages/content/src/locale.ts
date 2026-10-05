@@ -318,6 +318,8 @@ export const enCatalog: LocaleCatalog = {
   "ui.gas.atmospheric-intake.description":
     "Place inside a discovered atmospheric plume. Captured gas leaves through the sealed output and requires a compressor and pressure line.",
   "machine.sinterer.name": "Sinterer",
+  "ui.machine.sinterer.description":
+    "Place inside a factory. Feed discovered solid inputs by belt; output leaves by belt.",
   "machine.crusher.name": "Crusher",
   "machine.furnace.name": "Furnace",
   "machine.sealed-furnace.name": "Sealed furnace",
