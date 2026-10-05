@@ -22,6 +22,7 @@ import {
 import GameHost from "./GameHost";
 function Glyph({ type, size = 20 }: { type: string; size?: number }) {
   const paths: Record<string, string> = {
+    "elevated-solid": "M3 17h18 M5 17V8 M19 17V8 M5 8h14 M9 8V5 M15 8V5",
     "underground-solid": "M3 7h5l2 5-2 5H3 M21 7h-5l-2 5 2 5h5 M8 12h8",
     "underground-liquid": "M3 7h5l2 5-2 5H3 M21 7h-5l-2 5 2 5h5 M12 9c-2 3-3 4-3 6a3 3 0 0 0 6 0c0-2-1-3-3-6z",
     "pressure-line": "M3 8h18 M3 16h18 M8 5v14 M16 5v14",
@@ -70,6 +71,7 @@ function Glyph({ type, size = 20 }: { type: string; size?: number }) {
   );
 }
 const genericNames: Record<string, string> = {
+  "elevated-solid": "Elevated gantry",
   "underground-solid": "Underground belt",
   "underground-liquid": "Underground pipe",
   select: "Inspect",
@@ -79,6 +81,8 @@ const genericNames: Record<string, string> = {
   demolish: "Dismantle",
 };
 const descriptions: Partial<Record<Tool, string>> = {
+  "elevated-solid":
+    "Drag a visible raised solid route. Deck spans cross low logistics, while ground supports must land on clear cells.",
   "underground-solid":
     "Drag between two surface portals. One solid unit remains physically in transit until it reaches an unblocked exit.",
   "underground-liquid":
@@ -200,6 +204,9 @@ function GameClientInner() {
     pipe = snapshot.pipes.find((p) => p.id === mode.selected),
     tank = snapshot.tanks.find((p) => p.id === mode.selected),
     pump = snapshot.pumps.find((p) => p.id === mode.selected),
+    elevatedSolid = snapshot.elevatedSolids.find(
+      (route) => route.id === mode.selected,
+    ),
     undergroundSolid = snapshot.undergroundSolids.find(
       (route) => route.id === mode.selected,
     ),
@@ -234,7 +241,7 @@ function GameClientInner() {
                   )!.capabilities,
                 ]),
               ]
-            : undergroundSolid || belt
+            : elevatedSolid || undergroundSolid || belt
               ? snapshot.map.beltContainment
               : undefined;
   const capabilityNames = (ids: string[]) =>
@@ -349,8 +356,10 @@ function GameClientInner() {
     (entry) => !entry.initial,
   ).length;
   const toolCost = (tool: Tool) =>
-    tool === "underground-solid"
-      ? snapshot.map.beltCost
+    tool === "elevated-solid"
+      ? snapshot.map.elevatedSolid.deckCostPerCell
+      : tool === "underground-solid"
+        ? snapshot.map.beltCost
       : tool === "underground-liquid"
         ? (snapshot.liquidLogistics?.pipe.cost ?? 0) +
           (snapshot.liquidLogistics?.containmentProfiles.find(
@@ -582,6 +591,27 @@ function GameClientInner() {
                         : null}
                     </p>
                   )}
+                {elevatedSolid && (
+                  <>
+                    <h2>Elevated gantry</h2>
+                    <p>
+                      {elevatedSolid.entry.x},{elevatedSolid.entry.y} →{" "}
+                      {elevatedSolid.exit.x},{elevatedSolid.exit.y}
+                    </p>
+                    <p>
+                      Supports every ≤ {snapshot.map.elevatedSolid.maxSupportSpan} cells
+                      · support cost {snapshot.map.elevatedSolid.supportCost}
+                    </p>
+                    <p>
+                      {elevatedSolid.cargo
+                        ? materialName(elevatedSolid.cargo.materialId) +
+                          " · " +
+                          elevatedSolid.cargo.remainingSteps +
+                          " raised steps remaining"
+                        : "Empty"}
+                    </p>
+                  </>
+                )}
                 {undergroundSolid && (
                   <>
                     <h2>Underground belt</h2>
@@ -2484,6 +2514,7 @@ function GameClientInner() {
               "relief-furnace",
               "belt",
               "underground-solid",
+              "elevated-solid",
               "port",
               "depot",
               "liquefier",
@@ -2539,6 +2570,8 @@ function GameClientInner() {
                   tool === "underground-solid" ||
                   tool === "underground-liquid"
                     ? "/cell"
+                    : tool === "elevated-solid"
+                      ? "/deck cell + supports"
                     : ""}
                 </em>
               ) : (
