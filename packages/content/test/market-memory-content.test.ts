@@ -13,8 +13,8 @@ it("authors a discovery-gated demand shock with localized bulletin text", () => 
   ]);
   expect(contentKeys(content)).toEqual(
     expect.arrayContaining([
-      "market-shock.resonance-orbital-application.name",
-      "market-shock.resonance-orbital-application.brief",
+      "market.shock.resonance-orbital-application.name",
+      "market.shock.resonance-orbital-application.brief",
     ]),
   );
 });

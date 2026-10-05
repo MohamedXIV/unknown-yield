@@ -747,8 +747,8 @@ export const fixture = validateContent({
     demandShocks: [
       {
         id: "resonance-orbital-application",
-        nameKey: "market-shock.resonance-orbital-application.name",
-        briefKey: "market-shock.resonance-orbital-application.brief",
+        nameKey: "market.shock.resonance-orbital-application.name",
+        briefKey: "market.shock.resonance-orbital-application.brief",
         materialId: "matrix",
         triggerReactionId: "sinter-orbital-binder",
         demandDeltaBps: 5000,

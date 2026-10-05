@@ -782,8 +782,8 @@ function validateContentInternal(
     if (reaction.output !== shock.materialId)
       throw new Error("Demand shock trigger must characterize its market material");
     if (
-      shock.nameKey !== "market-shock." + shock.id + ".name" ||
-      shock.briefKey !== "market-shock." + shock.id + ".brief"
+      shock.nameKey !== "market.shock." + shock.id + ".name" ||
+      shock.briefKey !== "market.shock." + shock.id + ".brief"
     )
       throw new Error("Localization key must match demand shock");
   }

@@ -461,9 +461,9 @@ export const enCatalog: LocaleCatalog = {
   "order.matrix-procurement.name": "Resonant matrix qualification batch",
   "order.matrix-procurement.brief":
     "Supply a small matrix batch while orbital systems engineering evaluates the newly characterized resonant application.",
-  "market-shock.resonance-orbital-application.name":
+  "market.shock.resonance-orbital-application.name":
     "Orbital resonance application identified",
-  "market-shock.resonance-orbital-application.brief":
+  "market.shock.resonance-orbital-application.brief":
     "Company engineering linked the characterized matrix to an orbital resonance-control application. Demand increased, but the program is expected to normalize gradually.",
   "directive.sealed-thermal-study.name": "Sealed thermal study",
   "directive.sealed-thermal-study.brief":
