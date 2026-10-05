@@ -274,6 +274,8 @@ describe("Phase 2 experimentation/discovery exit gate", () => {
     ).toMatchObject({
       status: "incident",
       incident: {
+        classId: "pressure-expansion",
+        classNameKey: "hazard.class.pressure-expansion.name",
         nameKey: "hazard.chamber-blowout.name",
         textKey: "hazard.chamber-blowout.observation",
       },
