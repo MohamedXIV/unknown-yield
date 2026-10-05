@@ -202,6 +202,27 @@ export const contentSchema = z.object({
       }),
     )
     .min(1),
+  knowledgeInsights: z
+    .array(
+      z.object({
+        id,
+        materialId: id,
+        kind: z.enum(["property", "branch", "opportunity"]),
+        textKey: localeKeySchema,
+        requires: z.discriminatedUnion("type", [
+          z.object({
+            type: z.literal("material-known"),
+            materialId: id,
+          }),
+          z.object({
+            type: z.literal("reaction-evidence"),
+            reactionId: id,
+            state: z.enum(["hinted", "confirmed"]),
+          }),
+        ]),
+      }),
+    )
+    .default([]),
   site: z.object({
     sensingCapabilities: z
       .array(
@@ -482,6 +503,7 @@ function validateContentInternal(
     c.storages,
     c.junctions,
     c.reactions,
+    c.knowledgeInsights,
     c.site.deposits,
     c.site.hiddenDeposits,
     c.site.atmosphericSources,
@@ -582,6 +604,29 @@ function validateContentInternal(
         !c.materials.find((m) => m.id === r.output)?.known)
     )
       throw new Error("Known reaction references hidden material");
+  }
+  for (const insight of c.knowledgeInsights) {
+    if (!materials.has(insight.materialId))
+      throw new Error("Knowledge insight target material is missing");
+    if (insight.textKey !== "knowledge.insight." + insight.id + ".text")
+      throw new Error("Localization key must match knowledge insight");
+    if (insight.requires.type === "material-known") {
+      if (
+        insight.requires.materialId !== insight.materialId ||
+        !materials.has(insight.requires.materialId)
+      )
+        throw new Error("Knowledge insight material evidence is invalid");
+    } else {
+      const reaction = c.reactions.find(
+        (entry) => entry.id === insight.requires.reactionId,
+      );
+      if (
+        !reaction ||
+        (reaction.input !== insight.materialId &&
+          reaction.output !== insight.materialId)
+      )
+        throw new Error("Knowledge insight reaction evidence is invalid");
+    }
   }
   for (const m of c.machines) {
     if (m.unlock) {
