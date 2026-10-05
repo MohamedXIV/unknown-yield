@@ -276,6 +276,17 @@ export const contentSchema = z.object({
     factoryRelocationFuelPerStep: positive.default(2),
     factoryRelocationDowntimeTicks: positive.default(24),
     beltCost: positive,
+    elevatedSolid: z
+      .object({
+        maxSupportSpan: positive,
+        deckCostPerCell: positive,
+        supportCost: positive,
+      })
+      .default({
+        maxSupportSpan: 4,
+        deckCostPerCell: 1,
+        supportCost: 2,
+      }),
     portCost: positive,
     transportEveryTicks: positive,
     stagingCapacity: positive,

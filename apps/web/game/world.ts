@@ -424,6 +424,36 @@ export function createWorld(
         drawUnderground(route.entry, route.exit, route.direction, 0xb6ab7a);
       for (const route of snapshot.undergroundLiquids)
         drawUnderground(route.entry, route.exit, route.direction, 0x72aeb7);
+      for (const route of snapshot.elevatedSolids) {
+        const sx = (route.entry.x + 0.5) * X,
+          sy = (route.entry.y + 0.5) * Y - 14,
+          ex = (route.exit.x + 0.5) * X,
+          ey = (route.exit.y + 0.5) * Y - 14,
+          span =
+            Math.abs(route.exit.x - route.entry.x) +
+            Math.abs(route.exit.y - route.entry.y),
+          dx = Math.sign(route.exit.x - route.entry.x),
+          dy = Math.sign(route.exit.y - route.entry.y),
+          maxSupport = snapshot.map.elevatedSolid.maxSupportSpan,
+          supports = [0];
+        for (let distance = maxSupport; distance < span; distance += maxSupport)
+          supports.push(distance);
+        if (supports.at(-1) !== span) supports.push(span);
+        g.lineStyle(10, 0x39443c, 0.95).lineBetween(sx, sy, ex, ey);
+        g.lineStyle(3, 0xc8bd8b, 0.95).lineBetween(sx, sy, ex, ey);
+        for (const distance of supports) {
+          const x = (route.entry.x + dx * distance + 0.5) * X,
+            groundY = (route.entry.y + dy * distance + 0.5) * Y;
+          g.lineStyle(4, 0x6e7566, 0.95).lineBetween(
+            x,
+            groundY + 7,
+            x,
+            groundY - 14,
+          );
+          g.fillStyle(0x535d50, 0.95).fillRect(x - 5, groundY + 3, 10, 6);
+        }
+        this.arrow(g, ex, ey, route.direction, 0xe1cc8f, 4);
+      }
 
       const beltViews = beltPresentations(snapshot);
       for (const b of snapshot.belts) {
@@ -613,6 +643,34 @@ export function createWorld(
           progress = 1 - route.cargo.remainingSteps / span,
           x = (route.entry.x + 0.5 + (route.exit.x - route.entry.x) * progress) * X,
           y = (route.entry.y + 0.5 + (route.exit.y - route.entry.y) * progress) * Y,
+          material = snapshot.materials.find(
+            (m) => m.id === route.cargo!.materialId,
+          );
+        g.fillStyle(color(material?.color ?? "#dad5b8")).fillRoundedRect(
+          x - 5,
+          y - 5,
+          10,
+          10,
+          2,
+        );
+      }
+      for (const route of snapshot.elevatedSolids) {
+        if (!route.cargo) continue;
+        const span =
+            Math.abs(route.exit.x - route.entry.x) +
+            Math.abs(route.exit.y - route.entry.y),
+          progress = 1 - route.cargo.remainingSteps / span,
+          x =
+            (route.entry.x +
+              0.5 +
+              (route.exit.x - route.entry.x) * progress) *
+            X,
+          y =
+            (route.entry.y +
+              0.5 +
+              (route.exit.y - route.entry.y) * progress) *
+              Y -
+            14,
           material = snapshot.materials.find(
             (m) => m.id === route.cargo!.materialId,
           );
@@ -1123,6 +1181,7 @@ export function createWorld(
       const selectedRoute = [
           ...snapshot.undergroundSolids,
           ...snapshot.undergroundLiquids,
+          ...snapshot.elevatedSolids,
         ].find((route) => route.id === mode.selected),
         selected =
           snapshot.machines.find((m) => m.id === mode.selected) ??
@@ -1165,20 +1224,51 @@ export function createWorld(
         tint = result.ok ? 0xbdd79f : 0xe79b7c;
       ghost.fillStyle(tint, 0.2).lineStyle(2, tint, 0.8);
       if (
+        command.type === "placeElevatedSolid" ||
         command.type === "placeUndergroundSolid" ||
         command.type === "placeUndergroundLiquid"
       ) {
-        const sx = (command.entry.x + 0.5) * X,
+        const raised = command.type === "placeElevatedSolid",
+          lift = raised ? 14 : 0,
+          sx = (command.entry.x + 0.5) * X,
           sy = (command.entry.y + 0.5) * Y,
           ex = (command.exit.x + 0.5) * X,
           ey = (command.exit.y + 0.5) * Y;
-        ghost.lineStyle(3, tint, 0.75).lineBetween(sx, sy, ex, ey);
-        for (const portal of [command.entry, command.exit])
-          ghost
-            .fillStyle(tint, 0.2)
-            .fillRect(portal.x * X, portal.y * Y, X, Y)
-            .lineStyle(2, tint, 0.9)
-            .strokeRect(portal.x * X, portal.y * Y, X, Y);
+        ghost
+          .lineStyle(raised ? 7 : 3, tint, 0.75)
+          .lineBetween(sx, sy - lift, ex, ey - lift);
+        if (raised) {
+          const span =
+              Math.abs(command.exit.x - command.entry.x) +
+              Math.abs(command.exit.y - command.entry.y),
+            dx = Math.sign(command.exit.x - command.entry.x),
+            dy = Math.sign(command.exit.y - command.entry.y),
+            maxSupport = snapshot.map.elevatedSolid.maxSupportSpan,
+            supports = [0];
+          for (
+            let distance = maxSupport;
+            distance < span;
+            distance += maxSupport
+          )
+            supports.push(distance);
+          if (supports.at(-1) !== span) supports.push(span);
+          for (const distance of supports) {
+            const x = (command.entry.x + dx * distance + 0.5) * X,
+              y = (command.entry.y + dy * distance + 0.5) * Y;
+            ghost
+              .fillStyle(tint, 0.2)
+              .fillRect(x - X / 2, y - Y / 2, X, Y)
+              .lineStyle(2, tint, 0.9)
+              .strokeRect(x - X / 2, y - Y / 2, X, Y)
+              .lineBetween(x, y, x, y - lift);
+          }
+        } else
+          for (const portal of [command.entry, command.exit])
+            ghost
+              .fillStyle(tint, 0.2)
+              .fillRect(portal.x * X, portal.y * Y, X, Y)
+              .lineStyle(2, tint, 0.9)
+              .strokeRect(portal.x * X, portal.y * Y, X, Y);
       } else if (command.type === "placeFactory") {
         ghost
           .fillRect(

@@ -19,6 +19,7 @@ import {
   contains,
   footprint,
   undergroundSpan,
+  cardinalSpan,
 } from "./geometry";
 import { ensureMarket, exchangeDefinition } from "./market";
 import { recordDirectiveExperiment } from "./opportunities";
@@ -192,6 +193,16 @@ function dryReceiver(
       capacity: 1,
       material: underground.cargo?.materialId ?? null,
     };
+  const elevated = Object.values(s.elevatedSolids).find(
+    (route) => key(route.entry) === key(point) && route.direction === direction,
+  );
+  if (elevated)
+    return {
+      capabilities: c.site.beltContainment,
+      quantity: elevated.cargo ? 1 : 0,
+      capacity: 1,
+      material: elevated.cargo?.materialId ?? null,
+    };
   const b = s.belts[key(point)];
   if (b) {
     const inlet = (direction + 2) % 4,
@@ -265,6 +276,24 @@ export function solidDiagnostics(
       result[b.id] = routes.find((d) => d.reason === "ready") ?? routes[0];
     }
   for (const route of Object.values(s.undergroundSolids))
+    if (route.cargo && route.cargo.remainingSteps === 0) {
+      const target = dryReceiver(
+        c,
+        s,
+        route.exit,
+        next(route.exit, route.direction),
+        route.cargo.materialId,
+        route.direction,
+      );
+      result[route.id] = receivingDiagnostic(
+        c,
+        route.cargo.materialId,
+        "solid",
+        target?.capabilities ?? [],
+        target,
+      );
+    }
+  for (const route of Object.values(s.elevatedSolids))
     if (route.cargo && route.cargo.remainingSteps === 0) {
       const target = dryReceiver(
         c,
@@ -366,6 +395,18 @@ export function transport(
       return { point: b, material: b.cargo!, directions, belt: b };
     });
   for (const route of Object.values(s.undergroundSolids).sort((a, b) =>
+    a.id.localeCompare(b.id),
+  ))
+    if (route.cargo && route.cargo.remainingSteps === 0)
+      sources.push({
+        point: route.exit,
+        material: route.cargo.materialId,
+        directions: [route.direction],
+        take: () => {
+          route.cargo = null;
+        },
+      });
+  for (const route of Object.values(s.elevatedSolids).sort((a, b) =>
     a.id.localeCompare(b.id),
   ))
     if (route.cargo && route.cargo.remainingSteps === 0)
@@ -511,6 +552,33 @@ export function transport(
           };
     }
     if (p) {
+      const elevated = Object.values(s.elevatedSolids).find(
+        (route) =>
+          key(route.entry) === key(p) && route.direction === direction,
+      );
+      if (elevated) {
+        if (
+          elevated.cargo ||
+          !checkContainment(
+            c,
+            source.material,
+            ["solid"],
+            c.site.beltContainment,
+          ).ok
+        )
+          return null;
+        return {
+          id: "elevated-solid:" + elevated.id,
+          capacity: 1,
+          put: (material) => {
+            elevated.cargo = {
+              materialId: material,
+              remainingSteps: cardinalSpan(elevated.entry, elevated.exit),
+            };
+          },
+          inlet,
+        };
+      }
       const underground = Object.values(s.undergroundSolids).find(
         (route) =>
           key(route.entry) === key(p) && route.direction === direction,

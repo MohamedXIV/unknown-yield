@@ -35,6 +35,7 @@ import { FactoryThroughputMonitor } from "./factory-throughput";
 import { sensingCapabilityUnlocked } from "./sensing";
 import { importSupplyViews, terminalImportOutlet } from "./imports";
 import { advanceUndergroundRoutes } from "./underground";
+import { advanceElevatedRoutes } from "./elevated";
 import {
   total,
   type Save,
@@ -111,6 +112,7 @@ export class Simulation {
       refreshMilestones(c, s);
       if (s.tick % c.site.transportEveryTicks === 0) {
         advanceUndergroundRoutes(s);
+        advanceElevatedRoutes(s);
         transportGases(c, s, (event) =>
           this.factoryThroughput.recordMove(s, event),
         );
@@ -283,6 +285,7 @@ export class Simulation {
       belts: Object.values(s.belts),
       undergroundSolids: Object.values(s.undergroundSolids),
       undergroundLiquids: Object.values(s.undergroundLiquids),
+      elevatedSolids: Object.values(s.elevatedSolids),
       storages: Object.values(s.storages).map((t) => {
         const d = c.storages.find((d) => d.id === t.definitionId)!;
         const r = footprint(t, d);

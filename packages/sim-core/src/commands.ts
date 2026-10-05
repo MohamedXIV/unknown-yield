@@ -3,6 +3,7 @@ import {
   undergroundLiquidCost,
   undergroundSolidCost,
 } from "./underground";
+import { elevatedSolidCost } from "./elevated";
 import {
   dispatchShipmentCommand,
   moduleCommand,
@@ -42,6 +43,7 @@ import {
   footprint,
   undergroundDirection,
   undergroundPlacementError,
+  elevatedPlacementError,
 } from "./geometry";
 const coordinate = z.number().int().min(0).max(10000),
   direction = z.number().int().min(0).max(3),
@@ -166,6 +168,11 @@ const schema = z.discriminatedUnion("type", [
   }),
   z.object({
     type: z.literal("placeUndergroundSolid"),
+    entry: z.object(point),
+    exit: z.object(point),
+  }),
+  z.object({
+    type: z.literal("placeElevatedSolid"),
     entry: z.object(point),
     exit: z.object(point),
   }),
@@ -817,6 +824,25 @@ export function applyCommand(
       f.ports.push({ id, x: cmd.x, y: cmd.y, direction: cmd.direction });
       return ok("Wall port placed", c.site.portCost, id);
     }
+    case "placeElevatedSolid": {
+      const error = elevatedPlacementError(c, s, cmd.entry, cmd.exit);
+      if (error) return fail(error);
+      const direction = undergroundDirection(cmd.entry, cmd.exit)!,
+        draft = { entry: cmd.entry, exit: cmd.exit },
+        cost = elevatedSolidCost(c, draft);
+      if (!affordable(cost)) return fail("Not enough structural plates");
+      if (!apply) return ok("Place elevated solid gantry", cost);
+      const id = issue("e");
+      pay(cost);
+      s.elevatedSolids[id] = {
+        id,
+        entry: { ...cmd.entry },
+        exit: { ...cmd.exit },
+        direction,
+        cargo: null,
+      };
+      return ok("Elevated solid gantry placed", cost, id);
+    }
     case "placeUndergroundSolid":
     case "placeUndergroundLiquid": {
       const error = undergroundPlacementError(c, s, cmd.entry, cmd.exit);
@@ -1124,6 +1150,21 @@ export function applyCommand(
       };
     }
     case "dismantle": {
+      {
+        const elevated = Object.hasOwn(s.elevatedSolids, cmd.id)
+          ? s.elevatedSolids[cmd.id]
+          : undefined;
+        if (elevated) {
+          if (elevated.cargo)
+            return fail("Drain elevated gantry contents before dismantling");
+          const cost = elevatedSolidCost(c, elevated);
+          if (apply) {
+            delete s.elevatedSolids[cmd.id];
+            change(s.stock, c.site.buildMaterial, cost);
+          }
+          return ok("Elevated gantry reclaimed", cost);
+        }
+      }
       {
         const solid = Object.hasOwn(s.undergroundSolids, cmd.id)
             ? s.undergroundSolids[cmd.id]
