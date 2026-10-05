@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { fixture } from "@site/content";
 import {
   Simulation,
+  auditLedger,
   experimentEvidenceKey,
   initializeKnownMarkets,
 } from "../src/index";
@@ -38,6 +39,40 @@ function probeDeepVein(sim: Simulation) {
       y: 18,
     }),
   ).toMatchObject({ ok: true });
+}
+
+function provisionAdvancedFuel(sim: Simulation) {
+  const save = sim.serialize();
+  const reaction = fixture.reactions.find(
+    (entry) => entry.id === "vaporize-liquid-0",
+  )!;
+  if (!save.knowledge.includes(reaction.id)) save.knowledge.push(reaction.id);
+  save.evidence[
+    experimentEvidenceKey(
+      reaction.operation,
+      reaction.input,
+      reaction.processConditionId ?? null,
+    )
+  ] = {
+    operationId: reaction.operation,
+    inputId: reaction.input,
+    processConditionId: reaction.processConditionId ?? null,
+    state: "confirmed",
+  };
+  initializeKnownMarkets(fixture, save);
+  expect(sim.load(save).ok).toBe(true);
+  expect(
+    sim.command({
+      type: "installTerminalModule",
+      definitionId: "gas-dock",
+    }).ok,
+  ).toBe(true);
+  expect(
+    sim.command({
+      type: "requestImport",
+      supplyId: "orbital-propellant-cylinder",
+    }).ok,
+  ).toBe(true);
 }
 
 describe("hidden deposits and authored depth constraints", () => {
@@ -123,6 +158,7 @@ describe("hidden deposits and authored depth constraints", () => {
   it("extracts a discovered deep source only with the authored deep capability", () => {
     const sim = new Simulation(fixture);
     probeDeepVein(sim);
+    provisionAdvancedFuel(sim);
     const before = sim.snapshot();
 
     expect(
@@ -140,7 +176,13 @@ describe("hidden deposits and authored depth constraints", () => {
       sim.snapshot().deposits.find((deposit) => deposit.id === "deep-vein-a")
         ?.remaining,
     ).toBe(1199);
-    expect(sim.snapshot().fuel).toBe(before.fuel - 4);
+    expect(sim.snapshot().fuel).toBe(before.fuel);
+    expect(sim.serialize().terminalModules["gas-dock"]).toEqual({
+      materialId: "orbital-propellant",
+      quantity: 3,
+    });
+    expect(sim.serialize().flows.consumed["orbital-propellant"]).toBe(1);
+    expect(auditLedger(fixture, sim.serialize()).ok).toBe(true);
 
     const machineId = sim
       .snapshot()
