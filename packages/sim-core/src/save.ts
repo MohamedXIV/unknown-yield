@@ -387,12 +387,23 @@ export function parseSave(input: unknown, c: Content): Save {
   )
     throw Error("Missing shipment manifest state");
   if (
+    parsed.schemaVersion < 22 &&
+    Object.keys(parsed.shipmentManifest).length
+  )
+    throw Error("Legacy schema cannot contain shipment manifest");
+  if (
     parsed.schemaVersion >= 23 &&
     (!input ||
       typeof input !== "object" ||
       !Object.hasOwn(input, "terminalImports"))
   )
     throw Error("Missing terminal import state");
+  if (
+    parsed.schemaVersion < 23 &&
+    (Object.keys(parsed.terminalImports.staging).length ||
+      Object.keys(parsed.terminalImports.received).length)
+  )
+    throw Error("Legacy schema cannot contain terminal imports");
   if (parsed.schemaVersion < 18 && c.liquidLogistics?.pump.containmentFailure)
     throw Error("Incompatible pump recovery save schema");
   if (

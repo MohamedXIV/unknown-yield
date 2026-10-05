@@ -89,4 +89,20 @@ it("migrates schema 22 to empty import state and requires state in schema 23", (
   delete tampered.terminalImports;
   expect(sim.load(tampered).ok).toBe(false);
   expect(sim.serialize()).toEqual(current);
+
+  const impossibleLegacy = structuredClone(current) as Record<string, unknown>;
+  impossibleLegacy.schemaVersion = 22;
+  impossibleLegacy.terminalImports = {
+    staging: { "orbital-binder": 6 },
+    received: { "orbital-binder": 6 },
+  };
+  expect(sim.load(impossibleLegacy).ok).toBe(false);
+  expect(sim.serialize()).toEqual(current);
+
+  const preManifest = structuredClone(current) as Record<string, unknown>;
+  preManifest.schemaVersion = 21;
+  delete preManifest.terminalImports;
+  preManifest.shipmentManifest = { ferrite: 1 };
+  expect(sim.load(preManifest).ok).toBe(false);
+  expect(sim.serialize()).toEqual(current);
 });
