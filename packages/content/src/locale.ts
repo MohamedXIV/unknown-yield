@@ -86,7 +86,7 @@ export const enCatalog: LocaleCatalog = {
   "ui.machine.fuel.terminal-held": "{{count}} units held at {{module}}",
   "ui.machine.fuel.locked": "Fuel class not yet certified",
   "fuel.class.advanced-propellant.name": "Advanced propellant",
-  "fuel-class.research-coolant.name": "Research-grade coolant",
+  "fuel.class.research-coolant.name": "Research-grade coolant",
   "ui.diverter.heading": "District feed diverter",
   "ui.diverter.none": "No alternate exit is configured.",
   "ui.diverter.status":
