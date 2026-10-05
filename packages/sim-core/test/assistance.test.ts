@@ -261,6 +261,7 @@ describe("corporate assistance and recovery standing", () => {
       recoveryNetFuel: 0,
       recoveryPackageId: null,
       repaidSinceAssistanceFuel: 0,
+      importAllocations: {},
     });
   });
 
@@ -343,6 +344,7 @@ describe("corporate assistance and recovery standing", () => {
       recoveryNetFuel: 0,
       recoveryPackageId: "emergency-fuel",
       repaidSinceAssistanceFuel: 0,
+      importAllocations: {},
     };
     save.knowledge.push(reaction.id);
     save.evidence[
