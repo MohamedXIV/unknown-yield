@@ -789,6 +789,11 @@ browserIt(
           ?.textContent.includes("Automatic operation enabled") === true`,
       );
 
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Center camera"]')?.click();
+        return true;
+      })()`);
+      await sleep(150);
       await clickCell(39, 37);
       await waitForExpression(
         `document.body.textContent?.includes("District feed diverter") === true &&
