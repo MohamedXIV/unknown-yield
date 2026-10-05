@@ -30,6 +30,12 @@ describe("Content Studio authoring core", () => {
       store.getCell("machines", "deep-extractor", "maxExtractionDepth"),
     ).toBe(20);
     expect(
+      store.getCell("machines", "deep-extractor", "fuelClassId"),
+    ).toBe("advanced-propellant");
+    expect(
+      store.getCell("machines", "sinterer", "fuelClassId"),
+    ).toBe("research-coolant");
+    expect(
       store.getCell("machines", "atmospheric-intake", "sourceKind"),
     ).toBe("atmosphere");
     expect(
