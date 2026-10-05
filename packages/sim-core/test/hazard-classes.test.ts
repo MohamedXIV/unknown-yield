@@ -321,8 +321,10 @@ it("persists a conservative stranded-output consequence without deleting materia
     tick < 200 &&
     (recoveredReload.serialize().machines[processorId].output.residue ?? 0) > 0;
     tick++
-  )
+  ) {
     recoveredReload.step(fixture.tickMs);
+    expect(auditLedger(fixture, recoveredReload.serialize()).ok).toBe(true);
+  }
 
   expect(
     recoveredReload.serialize().machines[processorId].output.residue ?? 0,
