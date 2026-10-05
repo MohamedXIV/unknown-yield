@@ -1,9 +1,7 @@
 import { expect, it } from "vitest";
 import { fixture } from "@site/content";
-import {
-  elevatedSolidCost,
-  elevatedSupportPoints,
-} from "../src/elevated";
+import { elevatedSolidCost } from "../src/elevated";
+import { elevatedSupportPoints } from "../src/geometry";
 import { auditLedger } from "../src/ledger";
 import { Simulation } from "../src/simulation";
 import type { GameCommand } from "../src/types";
