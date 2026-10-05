@@ -525,19 +525,20 @@ function validateContentInternal(
   }
   for (const m of c.machines) {
     if (m.unlock) {
+      const unlock = m.unlock;
       if (
-        "reactionId" in m.unlock
-          ? !c.reactions.some((r) => r.id === m.unlock.reactionId)
+        "reactionId" in unlock
+          ? !c.reactions.some((r) => r.id === unlock.reactionId)
           : !c.reactions.some(
-              (r) => r.hazard?.id === m.unlock.hazardEvidenceId,
+              (r) => r.hazard?.id === unlock.hazardEvidenceId,
             )
       )
         throw new Error(
-          "reactionId" in m.unlock
+          "reactionId" in unlock
             ? "Missing machine unlock reaction"
             : "Missing machine unlock hazard evidence",
         );
-      if (m.unlock.hintKey !== "machine." + m.id + ".unlock-hint")
+      if (unlock.hintKey !== "machine." + m.id + ".unlock-hint")
         throw new Error("Localization key must match its machine unlock");
     }
     if (m.role === "processor" && m.maxExtractionDepth !== 0)

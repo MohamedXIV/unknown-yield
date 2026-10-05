@@ -157,9 +157,12 @@ describe("content boundary", () => {
   });
   it("rejects missing or borrowed machine unlock references", () => {
     const missing = structuredClone(fixture);
-    missing.machines.find(
+    const missingUnlock = missing.machines.find(
       (m) => m.id === "oversealed-furnace",
-    )!.unlock!.reactionId = "missing-reaction";
+    )!.unlock!;
+    if (!("reactionId" in missingUnlock))
+      throw new Error("Expected reaction-gated oversealed furnace");
+    missingUnlock.reactionId = "missing-reaction";
     expect(() => validateContent(missing)).toThrow(/unlock reaction/i);
 
     const borrowed = structuredClone(fixture);

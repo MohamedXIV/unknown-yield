@@ -504,7 +504,11 @@ export function referencesTo(
 
   if (targetType === "reaction")
     for (const machine of content.machines)
-      if (machine.unlock?.reactionId === targetId)
+      if (
+        machine.unlock &&
+        "reactionId" in machine.unlock &&
+        machine.unlock.reactionId === targetId
+      )
         push("machine", machine.id, "unlock.reactionId");
 
   return refs.sort(
