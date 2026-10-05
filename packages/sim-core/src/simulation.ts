@@ -69,9 +69,9 @@ export class Simulation {
       ) {
         // Idempotent district automation must not erase otherwise valid
         // throughput certificates when authoritative routing did not change.
-      } else if (commandType === "sense") {
-        // Sensing changes knowledge only; it must not disturb production
-        // throughput measurement state.
+      } else if (commandType === "sense" || commandType === "setShipmentQuantity") {
+        // Sensing and shipment selection change knowledge/intent only; neither
+        // mutates production topology or physical factory state.
       } else if (
         [
           "setLiquidContainmentProfile",
@@ -284,6 +284,7 @@ export class Simulation {
         };
       }),
       staging: s.staging,
+      shipmentManifest: s.shipmentManifest,
       terminalModules: terminalModuleViews(c, s),
       policies: s.policies,
       exchange: marketListings(c, s),

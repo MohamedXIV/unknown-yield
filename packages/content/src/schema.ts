@@ -279,6 +279,7 @@ export const contentSchema = z.object({
     portCost: positive,
     transportEveryTicks: positive,
     stagingCapacity: positive,
+    terminalShipmentCapacity: positive.default(12),
     terminal: z.object({ x: pos, y: pos, width: positive, height: positive }),
     deposits: z
       .array(

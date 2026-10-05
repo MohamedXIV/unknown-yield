@@ -3,7 +3,7 @@ import type { Content } from "@site/content";
 import { checkContainment } from "@site/content";
 import { liquidContainment } from "./containment";
 import { validatePumpIncident } from "./pump-recovery";
-import { validateTerminalModules } from "./terminal";
+import { shipmentManifestError, validateTerminalModules } from "./terminal";
 import {
   emptyFlows,
   experimentEvidenceKey,
@@ -170,6 +170,7 @@ const schema = z.object({
     z.literal(19),
     z.literal(20),
     z.literal(21),
+    z.literal(22),
   ]),
   contentVersion: z.string(),
   terminalModules: z
@@ -249,6 +250,7 @@ const schema = z.object({
     )
     .default({}),
   staging: inventory,
+  shipmentManifest: inventory.default({}),
   policies: z.record(safeId, z.enum(["keep", "export"])),
   market: z
     .record(
@@ -297,7 +299,7 @@ const schema = z.object({
 });
 export function initialState(c: Content): Save {
   const state: Save = {
-    schemaVersion: 21,
+    schemaVersion: 22,
     terminalModules: {},
     contentVersion: c.version,
     tick: 0,
@@ -348,6 +350,7 @@ export function initialState(c: Content): Save {
     pumps: {},
     storages: {},
     staging: {},
+    shipmentManifest: {},
     policies: Object.fromEntries(
       c.materials.filter((m) => m.known).map((m) => [m.id, "keep"]),
     ),
@@ -367,6 +370,13 @@ export function initialState(c: Content): Save {
 }
 export function parseSave(input: unknown, c: Content): Save {
   const parsed = schema.parse(input);
+  if (
+    parsed.schemaVersion >= 22 &&
+    (!input ||
+      typeof input !== "object" ||
+      !Object.hasOwn(input, "shipmentManifest"))
+  )
+    throw Error("Missing shipment manifest state");
   if (parsed.schemaVersion < 18 && c.liquidLogistics?.pump.containmentFailure)
     throw Error("Incompatible pump recovery save schema");
   if (
@@ -521,6 +531,9 @@ export function parseSave(input: unknown, c: Content): Save {
   // Schema 20 predates identified atmospheric source inventory. No source ID
   // can be inferred from historical sensing alone, so migration stays empty.
   if (s.schemaVersion === 20) s.schemaVersion = 21;
+  // Schema 21 predates explicit cargo manifests. No pending player shipment
+  // intent existed, so migration starts with an empty manifest.
+  if (s.schemaVersion === 21) s.schemaVersion = 22;
   if (s.contentVersion !== c.version || s.remainder >= c.tickMs)
     throw new Error("Incompatible content or timing");
   if (
@@ -727,6 +740,9 @@ export function parseSave(input: unknown, c: Content): Save {
   }
 
   validateTerminalModules(c, s, known);
+  const manifestError = shipmentManifestError(c, s);
+  if (manifestError)
+    throw new Error("Invalid shipment manifest: " + manifestError);
 
   const expectedDepositIds = [
     ...c.site.deposits.map((deposit) => deposit.id),

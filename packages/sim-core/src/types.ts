@@ -317,6 +317,7 @@ export type Save = {
   pumps: Record<string, Pump>;
   storages: Record<string, Storage>;
   staging: Inventory;
+  shipmentManifest: Inventory;
   policies: Record<string, "keep" | "export">;
   market: Record<string, MarketState>;
   opportunities: Record<string, OpportunityState>;
@@ -393,6 +394,8 @@ export type GameCommand =
   | { type: "setEnabled"; machineId: string; enabled: boolean }
   | { type: "setOperation"; machineId: string; operation: string }
   | { type: "setPolicy"; materialId: string; policy: "keep" | "export" }
+  | { type: "setShipmentQuantity"; materialId: string; quantity: number }
+  | { type: "dispatchShipment" }
   | { type: "sense"; capabilityId: string; x: number; y: number }
   | { type: "assistance"; packageId?: string };
 export type MachineHazardView = {
@@ -525,6 +528,7 @@ export type PlayerSnapshot = {
   liquidLogistics: Content["liquidLogistics"];
   storages: StorageView[];
   staging: Inventory;
+  shipmentManifest: Inventory;
   policies: Record<string, "keep" | "export">;
   exchange: MarketListingView[];
   opportunities: OpportunityView[];

@@ -1,5 +1,9 @@
 import { liquidConstructionCost } from "./containment";
-import { moduleCommand } from "./terminal";
+import {
+  dispatchShipmentCommand,
+  moduleCommand,
+  shipmentQuantityCommand,
+} from "./terminal";
 import { pumpRepairEligible } from "./pump-recovery";
 import { z } from "zod";
 import type { Content } from "@site/content";
@@ -183,6 +187,12 @@ const schema = z.discriminatedUnion("type", [
     materialId: z.string(),
     policy: z.enum(["keep", "export"]),
   }),
+  z.object({
+    type: z.literal("setShipmentQuantity"),
+    materialId: z.string(),
+    quantity: z.number().int().nonnegative().max(1000000000),
+  }),
+  z.object({ type: z.literal("dispatchShipment") }),
   z.object({
     type: z.literal("sense"),
     capabilityId: z.string(),
@@ -1006,6 +1016,16 @@ export function applyCommand(
       if (apply) s.policies[cmd.materialId] = cmd.policy;
       return ok("Terminal policy updated");
     }
+    case "setShipmentQuantity":
+      return shipmentQuantityCommand(
+        c,
+        s,
+        cmd.materialId,
+        cmd.quantity,
+        apply,
+      );
+    case "dispatchShipment":
+      return dispatchShipmentCommand(c, s, apply);
     case "assistance": {
       const eligibility = assistanceEligibility(c, s, cmd.packageId);
       if (!eligibility.definition)

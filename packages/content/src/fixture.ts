@@ -591,6 +591,7 @@ export const fixture = validateContent({
     portCost: 2,
     transportEveryTicks: 3,
     stagingCapacity: 24,
+    terminalShipmentCapacity: 12,
     terminal: { x: 38, y: 26, width: 4, height: 4 },
     deposits: [
       {
