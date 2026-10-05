@@ -23,4 +23,4 @@ The existing real-Chromium acceptance is part of the required full CI suite. It 
 
 ## Completion rule
 
-This document does not claim Phase 11 complete until the #125 exact head passes the repository full gate: tests (including Chromium), typecheck, lint and build. After that gate and merge, reconcile #102 and activate the approved Phase 12 queue.
+Phase 11 completed through #125 / PR #180. Exact head `52574cfe3157a4e67e2b9e2eba10c650a6f1b2e2` passed the repository full gate — tests including Chromium, typecheck, lint and build — before squash merge `1577f045312ac661c1453154d8bc121b6665fb3f`. Epic #102 is closed and Phase 12 / #103 is the active approved queue.

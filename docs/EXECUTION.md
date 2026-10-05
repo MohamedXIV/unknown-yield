@@ -202,7 +202,7 @@ GitHub Actions CI is intentionally budget-conscious: it runs the full `npm test`
 - Do not add Rust/WASM without benchmark/profiler evidence.
 - Completed phases are foundations, not active scope: extend their accepted contracts rather than reopening them casually.
 - Phase 7 performance work remains deferred until measured browser/scale evidence justifies reopening it; Phase 8 art work is parallel and explicitly selected only when needed.
-- Phase 10 is complete through #119 / PR #174. Phase 11 is the active gameplay queue. #120 is complete through PR #175, #121 through PR #176, #122 through PR #177, #123 through PR #178 and #124 through PR #179; #125 is the active integrated exit gate. Do not pull Phase 12+ systems forward until it passes.
+- Phase 10 is complete through #119 / PR #174 and Phase 11 through #125 / PR #180. Phase 12 is the active gameplay queue. Preserve #126 → #127 → #128 → #129 → #130 → #131 dependency order and do not pull Phase 13+ systems forward.
 
 ## Active/later phase epics
 
@@ -213,8 +213,9 @@ GitHub Actions CI is intentionally budget-conscious: it runs the full `npm test`
 - #80 — readable belts and controlled ground junctions — COMPLETE through #84 / PR #89.
 - #100 — Phase 9 material-state logistics and containment — COMPLETE through #113 / PR #167.
 - #101 — Phase 10 industrial exploration and deep extraction — COMPLETE through #119 / PR #174.
-- #102 — Phase 11 hazardous industrial science and recovery — ACTIVE; #120 COMPLETE through PR #175, #121 COMPLETE through PR #176, #122 COMPLETE through PR #177, #123 COMPLETE through PR #178, #124 COMPLETE through PR #179, #125 ACTIVE EXIT GATE.
-- #103–#107 — Phases 12–16 — dependency-ordered later queues; none is implicitly active.
+- #102 — Phase 11 hazardous industrial science and recovery — COMPLETE through #125 / PR #180.
+- #103 — Phase 12 factory lifecycle and district reconfiguration — ACTIVE; #126 FIRST UNBLOCKED, then #127–#131.
+- #104–#107 — Phases 13–16 — dependency-ordered later queues; none is implicitly active.
 - Phase 8 — art production pipeline — parallel planned track, selected explicitly when useful.
 - Completed Phase 7 baseline: **#90 — single-world simulation/snapshot baseline**, through PR #91. Evidence: PHASE7_BASELINE.md. Phase 7 remains deferred; #92 profiling completed through PR #93; 32-factory / 10ms joint-p95 budget FAILS. Evidence: PHASE7_PROFILING.md. Optimization #94 is complete through PR #95: shared connected topology indexing within each throughput observation; all dynamic recurrence checks retained. Browser costs remain a separate gate.
 

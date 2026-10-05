@@ -111,6 +111,141 @@ export function factoryError(c: Content, s: Save, r: Rect): string | null {
     return "Space is already occupied";
   return null;
 }
+export function factoryReshapeError(
+  c: Content,
+  s: Save,
+  factory: Factory,
+  target: Rect,
+): string | null {
+  if (!overlaps(factory, target))
+    return "Factory reshape must overlap its existing footprint";
+
+  const ownedMachines = Object.values(s.machines).filter(
+      (machine) => machine.factoryId === factory.id,
+    ),
+    ownedBelts = Object.values(s.belts).filter((belt) => contains(factory, belt)),
+    ownedPipes = Object.values(s.pipes).filter((pipe) => contains(factory, pipe)),
+    ownedPumps = Object.values(s.pumps).filter((pump) => contains(factory, pump)),
+    ownedTanks = Object.values(s.tanks).filter((tank) =>
+      inside(factory, footprint(tank, c.liquidLogistics!.tank)),
+    ),
+    ownedLines = Object.values(s.pressureLines).filter((line) =>
+      contains(factory, line),
+    ),
+    ownedCompressors = Object.values(s.compressors).filter((compressor) =>
+      contains(factory, compressor),
+    ),
+    ownedVessels = Object.values(s.pressureVessels).filter((vessel) =>
+      inside(factory, footprint(vessel, c.gasLogistics!.vessel)),
+    );
+
+  const external = structuredClone(s);
+  delete external.factories[factory.id];
+  for (const machine of ownedMachines) delete external.machines[machine.id];
+  for (const belt of ownedBelts) delete external.belts[key(belt)];
+  for (const pipe of ownedPipes) delete external.pipes[key(pipe)];
+  for (const pump of ownedPumps) delete external.pumps[pump.id];
+  for (const tank of ownedTanks) delete external.tanks[tank.id];
+  for (const line of ownedLines) delete external.pressureLines[key(line)];
+  for (const compressor of ownedCompressors)
+    delete external.compressors[compressor.id];
+  for (const vessel of ownedVessels)
+    delete external.pressureVessels[vessel.id];
+
+  const shellError = factoryError(c, external, target);
+  if (shellError) return shellError;
+
+  const candidate: Factory = {
+    ...factory,
+    ...target,
+    ports: [],
+  };
+  for (const port of factory.ports) {
+    const error = portError(candidate, port, port.direction);
+    if (error) return "Existing ports must remain valid on factory walls";
+    candidate.ports.push(port);
+  }
+
+  const verify = structuredClone(s);
+  verify.factories[factory.id] = {
+    ...factory,
+    ...target,
+  };
+
+  for (const machine of ownedMachines) {
+    const stage = structuredClone(verify);
+    delete stage.machines[machine.id];
+    const placement = machinePlacement(c, stage, machine);
+    if (placement.error || placement.factoryId !== factory.id)
+      return "Factory reshape would exclude existing equipment";
+  }
+
+  for (const belt of ownedBelts) {
+    if (!contains(target, belt))
+      return "Factory reshape would exclude existing belts";
+    const stage = structuredClone(verify);
+    delete stage.belts[key(belt)];
+    const error = beltError(c, stage, belt, belt.direction);
+    if (error) return "Factory reshape would invalidate internal belts";
+  }
+
+  if (c.liquidLogistics) {
+    for (const pipe of ownedPipes) {
+      if (!contains(target, pipe))
+        return "Factory reshape would exclude liquid infrastructure";
+      const stage = structuredClone(verify);
+      delete stage.pipes[key(pipe)];
+      const error = liquidPlacementError(c, stage, pipe, "pipe");
+      if (error) return "Factory reshape would invalidate liquid infrastructure";
+    }
+    for (const pump of ownedPumps) {
+      if (!contains(target, pump))
+        return "Factory reshape would exclude liquid infrastructure";
+      const stage = structuredClone(verify);
+      delete stage.pumps[pump.id];
+      const error = liquidPlacementError(c, stage, pump, "pump");
+      if (error) return "Factory reshape would invalidate liquid infrastructure";
+    }
+    for (const tank of ownedTanks) {
+      if (!inside(target, footprint(tank, c.liquidLogistics.tank)))
+        return "Factory reshape would exclude liquid infrastructure";
+      const stage = structuredClone(verify);
+      delete stage.tanks[tank.id];
+      const error = liquidPlacementError(c, stage, tank, "tank");
+      if (error) return "Factory reshape would invalidate liquid infrastructure";
+    }
+  }
+
+  if (c.gasLogistics) {
+    for (const line of ownedLines) {
+      if (!contains(target, line))
+        return "Factory reshape would exclude gas infrastructure";
+      const stage = structuredClone(verify);
+      delete stage.pressureLines[key(line)];
+      const error = gasPlacementError(c, stage, line, "line");
+      if (error) return "Factory reshape would invalidate gas infrastructure";
+    }
+    for (const compressor of ownedCompressors) {
+      if (!contains(target, compressor))
+        return "Factory reshape would exclude gas infrastructure";
+      const stage = structuredClone(verify);
+      delete stage.compressors[compressor.id];
+      const error = gasPlacementError(c, stage, compressor, "compressor");
+      if (error) return "Factory reshape would invalidate gas infrastructure";
+    }
+    for (const vessel of ownedVessels) {
+      if (!inside(target, footprint(vessel, c.gasLogistics.vessel)))
+        return "Factory reshape would exclude gas infrastructure";
+      const stage = structuredClone(verify);
+      delete stage.pressureVessels[vessel.id];
+      const error = gasPlacementError(c, stage, vessel, "vessel");
+      if (error) return "Factory reshape would invalidate gas infrastructure";
+    }
+  }
+
+  return null;
+}
+
 export function storageError(
   c: Content,
   s: Save,

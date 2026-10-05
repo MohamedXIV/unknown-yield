@@ -352,6 +352,7 @@ export type GameCommand =
   | ({ type: "placeMachine"; definitionId: string; direction: number } & Point)
   | ({ type: "placeStorage"; definitionId: string; direction: number } & Point)
   | ({ type: "placeFactory" } & Rect)
+  | ({ type: "reshapeFactory"; factoryId: string } & Rect)
   | ({ type: "placePort"; factoryId: string; direction: number } & Point)
   | { type: "placeBelts"; points: Point[]; direction: number }
   | {
