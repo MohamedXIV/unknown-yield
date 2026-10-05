@@ -278,6 +278,14 @@ export type TerminalModuleContents = {
   materialId: string | null;
   quantity: number;
 };
+export type TerminalImportState = {
+  staging: Inventory;
+  received: Inventory;
+};
+export type ImportSupplyView = Content["economy"]["imports"][number] & {
+  eligible: boolean;
+  reason: "fuel" | "capacity" | null;
+};
 export type TerminalModuleView = Content["site"]["terminalModules"][number] & {
   installed: boolean;
   unlocked: boolean;
@@ -318,6 +326,7 @@ export type Save = {
   storages: Record<string, Storage>;
   staging: Inventory;
   shipmentManifest: Inventory;
+  terminalImports: TerminalImportState;
   policies: Record<string, "keep" | "export">;
   market: Record<string, MarketState>;
   opportunities: Record<string, OpportunityState>;
@@ -396,6 +405,7 @@ export type GameCommand =
   | { type: "setPolicy"; materialId: string; policy: "keep" | "export" }
   | { type: "setShipmentQuantity"; materialId: string; quantity: number }
   | { type: "dispatchShipment" }
+  | { type: "requestImport"; supplyId: string }
   | { type: "sense"; capabilityId: string; x: number; y: number }
   | { type: "assistance"; packageId?: string };
 export type MachineHazardView = {
@@ -529,6 +539,9 @@ export type PlayerSnapshot = {
   storages: StorageView[];
   staging: Inventory;
   shipmentManifest: Inventory;
+  importStaging: Inventory;
+  importSupplies: ImportSupplyView[];
+  importOutlet: Point & { direction: number };
   policies: Record<string, "keep" | "export">;
   exchange: MarketListingView[];
   opportunities: OpportunityView[];

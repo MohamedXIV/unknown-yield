@@ -6,7 +6,7 @@ import { recoveryRig } from "./pump-recovery-helpers";
 it("round trips incident and rejects tampering atomically", () => {
   const { sim, pumpId } = recoveryRig();
   const before = sim.serialize();
-  expect(before.schemaVersion).toBe(22);
+  expect(before.schemaVersion).toBe(23);
   expect(sim.load(before).ok).toBe(true);
   expect(sim.serialize()).toEqual(before);
   const mutations = [
@@ -101,7 +101,7 @@ it("migrates historical schema 17 with empty pump state only", () => {
   s.schemaVersion = 17;
   delete (s.pumps[id] as Partial<(typeof s.pumps)[string]>).incident;
   expect(sim.load(s).ok).toBe(true);
-  expect(sim.serialize().schemaVersion).toBe(22);
+  expect(sim.serialize().schemaVersion).toBe(23);
   expect(sim.serialize().pumps[id].incident).toBeNull();
   const bad = sim.serialize();
   bad.schemaVersion = 17;

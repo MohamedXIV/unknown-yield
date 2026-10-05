@@ -160,3 +160,12 @@ The starter package `emergency-fuel` is eligible below its authored fuel thresho
 The recovery path is intentionally independent from time-limited Corporate Opportunities. In particular, an expired Sealed thermal study cannot block recovery: assistance can fund the durable real sealed Heat experiment, that confirmed evidence unlocks the #71 terminal handling capability, and legal granule exports can then repay the obligation and rebuild standing. The Directive may still award its optional bonus when available, but it is not part of assistance eligibility or recovery truth.
 
 Existing `debt` remains the authoritative outstanding obligation for compatibility. Bonus Order/Directive allocations never reduce it. Only Materials Exchange compensation from a legal physical export repays it before net fuel is credited.
+
+
+## Phase 13 — physical off-world imports (#133)
+
+The Earth/company -> planet direction is now materialized as terminal cargo rather than a global purchase result. Authored import supplies spend company fuel and arrive into a bounded `terminalImports.staging` holding. The imported units are recorded as an explicit material source in the conservation ledger, remain physically present at the terminal, and leave through a deterministic dry-cargo outlet into ordinary belts.
+
+The first proof supply is **Orbital binder**. It is initially company-known, has no local deposit/source and is not exchange-listed, so it cannot be round-tripped directly for fuel. A Sinterer can consume the imported binder to discover Resonant matrix. This makes the import useful industrial feedstock while preserving the long-term possibility that other locally sourced materials can later replace off-world dependence.
+
+Import request is immediate once affordable because the strategic constraint is physical handling/capacity, not a waiting timer. The terminal holding is bounded by the same authored cargo-capacity dimension introduced in #132; a blocked or missing outlet therefore produces real backpressure at the company boundary rather than teleporting supplies into site stock.

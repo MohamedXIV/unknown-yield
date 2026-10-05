@@ -12,6 +12,7 @@ import { machineUnlocked } from "./progression";
 import { exchangeDefinition } from "./market";
 import { applyAssistance, assistanceEligibility } from "./assistance";
 import { applySensingObservation } from "./sensing";
+import { requestImportCommand } from "./imports";
 import {
   factoryConnectionRequirements,
   factoryRelocationResumeError,
@@ -193,6 +194,7 @@ const schema = z.discriminatedUnion("type", [
     quantity: z.number().int().nonnegative().max(1000000000),
   }),
   z.object({ type: z.literal("dispatchShipment") }),
+  z.object({ type: z.literal("requestImport"), supplyId: z.string() }),
   z.object({
     type: z.literal("sense"),
     capabilityId: z.string(),
@@ -1026,6 +1028,8 @@ export function applyCommand(
       );
     case "dispatchShipment":
       return dispatchShipmentCommand(c, s, apply);
+    case "requestImport":
+      return requestImportCommand(c, s, cmd.supplyId, apply);
     case "assistance": {
       const eligibility = assistanceEligibility(c, s, cmd.packageId);
       if (!eligibility.definition)

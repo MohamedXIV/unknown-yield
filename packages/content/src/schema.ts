@@ -317,6 +317,18 @@ export const contentSchema = z.object({
         }),
       )
       .default([]),
+    imports: z
+      .array(
+        z.object({
+          id,
+          nameKey: localeKeySchema,
+          briefKey: localeKeySchema,
+          materialId: id,
+          quantity: positive,
+          fuelCost: positive,
+        }),
+      )
+      .default([]),
     exchange: z
       .array(
         z.object({
@@ -678,6 +690,28 @@ function validateContentInternal(
     )
       throw new Error("Atmospheric intake containment mismatches material");
   }
+  const importIds = new Set<string>();
+  for (const supply of c.economy.imports) {
+    if (importIds.has(supply.id)) throw new Error("Duplicate import supply ID");
+    importIds.add(supply.id);
+    const material = c.materials.find((entry) => entry.id === supply.materialId);
+    if (!material || !material.known || material.handlingState !== "solid")
+      throw new Error("Import supply requires a known solid material");
+    if (supply.quantity > c.site.terminalShipmentCapacity)
+      throw new Error("Import supply exceeds terminal cargo capacity");
+    if (
+      c.site.deposits.some((entry) => entry.material === supply.materialId) ||
+      c.site.hiddenDeposits.some((entry) => entry.material === supply.materialId) ||
+      c.site.atmosphericSources.some((entry) => entry.material === supply.materialId) ||
+      c.reactions.some((entry) => entry.output === supply.materialId)
+    )
+      throw new Error("Import supply material has a local source");
+    if (
+      supply.nameKey !== "import." + supply.id + ".name" ||
+      supply.briefKey !== "import." + supply.id + ".brief"
+    )
+      throw new Error("Localization key must match import supply");
+  }
   const exchangeMaterials = new Set<string>();
   for (const listing of c.economy.exchange) {
     if (!materials.has(listing.materialId))
@@ -688,6 +722,12 @@ function validateContentInternal(
     if (listing.floorCompensation > listing.baseCompensation)
       throw new Error("Exchange floor exceeds base compensation");
   }
+  if (
+    c.economy.imports.some((supply) =>
+      exchangeMaterials.has(supply.materialId),
+    )
+  )
+    throw new Error("Import-only material cannot be exchange-listed");
   const opportunityIds = new Set<string>(),
     directiveExperiments = new Set<string>();
   for (const order of c.economy.orders) {
