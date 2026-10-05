@@ -12,8 +12,8 @@ import { footprint } from "./geometry";
  * defined reaction, consumed by a defined sink, stored, or exported off-map.
  * The per-material invariant is:
  *
- *   deposits + stock + staging + machineInput + machineOutput + belts
- *     + pipes + tanks + storage + escrow + embodied
+ *   deposits + stock + staging + machineInput + machineOutput
+ *     + machineIncidents + belts + pipes + tanks + storage + escrow + embodied
  *     + flows.exported + flows.discarded + flows.consumed
  *       = initial + flows.produced
  *
@@ -42,6 +42,7 @@ export type LedgerRow = {
   terminalModules: number;
   machineInput: number;
   machineOutput: number;
+  machineIncidents: number;
   belts: number;
   pressureLines: number;
   pressureVessels: number;
@@ -77,6 +78,7 @@ function blank(material: string): LedgerRow {
     terminalModules: 0,
     machineInput: 0,
     machineOutput: 0,
+    machineIncidents: 0,
     belts: 0,
     pressureLines: 0,
     pressureVessels: 0,
@@ -142,6 +144,8 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
       row(id).machineInput += n;
     for (const [id, n] of Object.entries(m.output ?? {}))
       row(id).machineOutput += n;
+    for (const [id, n] of Object.entries(m.incidentInventory ?? {}))
+      row(id).machineIncidents += n;
   }
 
   // Belt/transit cargo.
@@ -259,6 +263,7 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
       r.terminalModules +
       r.machineInput +
       r.machineOutput +
+      r.machineIncidents +
       r.belts +
       r.pressureLines +
       r.pressureVessels +

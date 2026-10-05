@@ -348,6 +348,11 @@ export const enCatalog: LocaleCatalog = {
   "hazard.chamber-blowout.name": "Chamber blowout",
   "hazard.chamber-blowout.observation":
     "The oversealed chamber vented violently and forced an automatic lockout. Processed material remains physically accounted for in the line; acknowledge the incident before restarting.",
+  "reaction.heat-ferrite-oversealed.observation":
+    "Oversealed heating destabilized the ferrite charge into vitrified residue and jammed the chamber.",
+  "hazard.slag-jam.name": "Vitrified slag jam",
+  "hazard.slag-jam.observation":
+    "The unstable ferrite batch vitrified inside the chamber. The residue remains physically trapped in the stopped machine until a later recovery operation clears it.",
   "order.granules-procurement.name": "Orbital conductor allocation",
   "order.granules-procurement.brief":
     "Supply a bounded batch of the newly characterized conductor while the orbital allocation window is open.",

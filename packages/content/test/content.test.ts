@@ -187,7 +187,11 @@ describe("content boundary", () => {
       expect.objectContaining({ id: "thermal-runaway", machineEffect: "lockout" }),
       expect.objectContaining({ id: "pressure-expansion", machineEffect: "lockout" }),
       expect.objectContaining({ id: "corrosion", machineEffect: "lockout" }),
-      expect.objectContaining({ id: "instability", machineEffect: "lockout" }),
+      expect.objectContaining({
+        id: "instability",
+        machineEffect: "lockout",
+        strandedOutputUnits: 1,
+      }),
       expect.objectContaining({ id: "contamination", machineEffect: "lockout" }),
     ]);
 
@@ -200,6 +204,14 @@ describe("content boundary", () => {
     const borrowed = structuredClone(fixture);
     borrowed.hazardClasses[0].nameKey = "hazard.chamber-blowout.name";
     expect(() => validateContent(borrowed)).toThrow(/hazard class/i);
+
+    const excessive = structuredClone(fixture);
+    excessive.hazardClasses.find(
+      (entry) => entry.id === "instability",
+    )!.strandedOutputUnits = 2;
+    expect(() => validateContent(excessive)).toThrow(
+      /Hazard consequence exceeds reaction output/,
+    );
   });
 
   it("rejects hazards without an explicit process condition", () => {

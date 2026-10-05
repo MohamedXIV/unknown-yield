@@ -73,6 +73,7 @@ const machine = z.object({
   operation: safeId.nullable(),
   enabled: z.boolean(),
   incident: safeId.nullable().default(null),
+  incidentInventory: inventory.default({}),
   input: inventory,
   output: inventory,
   job: z
@@ -763,7 +764,16 @@ export function parseSave(input: unknown, c: Content): Save {
         m.job
       )
         throw new Error("Invalid machine incident state");
-    }
+      if (
+        Object.keys(m.incidentInventory).some(
+          (materialId) => materialId !== hazard.reaction.output,
+        ) ||
+        total(m.incidentInventory) !==
+          hazard.classDefinition.strandedOutputUnits
+      )
+        throw new Error("Invalid machine hazard inventory");
+    } else if (total(m.incidentInventory) > 0)
+      throw new Error("Hazard inventory requires an incident");
     if (
       d.role === "processor"
         ? !m.operation || !d.operations.includes(m.operation)

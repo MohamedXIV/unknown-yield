@@ -27,6 +27,7 @@ export const contentSchema = z.object({
         id,
         nameKey: localeKeySchema,
         machineEffect: z.literal("lockout"),
+        strandedOutputUnits: count.default(0),
       }),
     )
     .default([]),
@@ -456,6 +457,11 @@ function validateContentInternal(
         throw new Error("Hazard requires an explicit process condition");
       if (!hazardClassIds.has(r.hazard.classId))
         throw new Error("Missing hazard class");
+      const hazardClass = c.hazardClasses.find(
+        (entry) => entry.id === r.hazard!.classId,
+      )!;
+      if (hazardClass.strandedOutputUnits > r.outputAmount)
+        throw new Error("Hazard consequence exceeds reaction output");
       if (hazardIds.has(r.hazard.id)) throw new Error("Duplicate hazard ID");
       hazardIds.add(r.hazard.id);
       if (

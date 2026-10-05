@@ -573,6 +573,7 @@ export function applyCommand(
         operation: def.operations[0] ?? null,
         enabled: true,
         incident: null,
+        incidentInventory: {},
         input: {},
         output: {},
         job: null,
@@ -735,6 +736,8 @@ export function applyCommand(
     case "setEnabled": {
       const machine = s.machines[cmd.machineId],
         recovering = cmd.enabled && machine.incident !== null;
+      if (recovering && total(machine.incidentInventory) > 0)
+        return fail("Physical hazard consequence blocks restart");
       if (apply) {
         machine.enabled = cmd.enabled;
         if (cmd.enabled) machine.incident = null;
@@ -850,7 +853,12 @@ export function applyCommand(
         // in a real place. Dismantling must not teleport them across the map,
         // so a buffered machine cannot be reclaimed until its contents leave
         // through belts (output drains; incompatible input needs rerouting).
-        if (total(m.input) + total(m.output) > 0)
+        if (
+          total(m.input) +
+            total(m.output) +
+            total(m.incidentInventory) >
+          0
+        )
           return fail(
             "Empty the machine buffers through compatible transport first",
           );

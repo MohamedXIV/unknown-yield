@@ -124,6 +124,7 @@ describe("Corporate Orders and Special Directives", () => {
       operation: "heat",
       enabled: true,
       incident: null,
+      incidentInventory: {},
       input: {},
       output: {},
       job: { remaining: 1, reaction: "heat-raw-sealed" },

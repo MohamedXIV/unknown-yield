@@ -1,5 +1,5 @@
 import type { Content } from "@site/content";
-import type { Machine } from "./types";
+import { change, type Machine } from "./types";
 
 export type HazardReaction = Content["reactions"][number];
 export type HazardInstance = NonNullable<HazardReaction["hazard"]>;
@@ -60,9 +60,17 @@ export function applyReactionHazard(
     throw new Error("Reaction references an unknown hazard class");
 
   switch (classDefinition.machineEffect) {
-    case "lockout":
+    case "lockout": {
+      const stranded = classDefinition.strandedOutputUnits;
+      if (stranded > 0) {
+        if ((machine.output[reaction.output] ?? 0) < stranded)
+          throw new Error("Hazard consequence exceeds completed output");
+        change(machine.output, reaction.output, -stranded);
+        change(machine.incidentInventory, reaction.output, stranded);
+      }
       machine.incident = reaction.hazard.id;
       machine.enabled = false;
       return;
+    }
   }
 }

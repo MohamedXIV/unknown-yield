@@ -109,6 +109,7 @@ export type Machine = Point & {
   operation: string | null;
   enabled: boolean;
   incident: string | null;
+  incidentInventory: Inventory;
   input: Inventory;
   output: Inventory;
   job: Job | null;
