@@ -53,7 +53,7 @@ This document is intentionally procedural. Game/design truth lives in the domain
 - Completed phase: **Phase 10 — industrial exploration and deep extraction (#101)**.
 - Completed phase: **Phase 11 — hazardous science and recovery (#102)**.
 - Completed phase: **Phase 12 — factory lifecycle and reconfiguration (#103)**. #126–#129 landed; #130 and #131 closed not planned under their recorded evidence/user decisions, with no false integrated-exit PASS claim for #131.
-- Current gameplay phase: **Phase 13 — terminal and off-world exchange depth (#104)**. #132 cargo manifests ✓; #133 physical off-world imports ✓; #134 bidirectional terminal handling ✓; #135 discovery-created market memory ✓; #136 property-target Special Directives ✓. **#137 is ACTIVE / FIRST UNBLOCKED**; #138 remains dependency-ordered behind it.
+- Current gameplay phase: **Phase 13 — terminal and off-world exchange depth (#104)**. #132 cargo manifests ✓; #133 physical off-world imports ✓; #134 bidirectional terminal handling ✓; #135 discovery-created market memory ✓; #136 property-target Special Directives ✓; #137 strategic physical stockpiles ✓. **#138 is ACTIVE / FIRST UNBLOCKED integrated exit gate**.
 
 ## Phase 1.5 dependency graph
 
@@ -205,7 +205,7 @@ GitHub Actions CI is intentionally budget-conscious: it runs the full `npm test`
 - Do not add Rust/WASM without benchmark/profiler evidence.
 - Completed phases are foundations, not active scope: extend their accepted contracts rather than reopening them casually.
 - Phase 7 performance work remains deferred until measured browser/scale evidence justifies reopening it; Phase 8 art work is parallel and explicitly selected only when needed.
-- Phase 10 is complete through #119 / PR #174, Phase 11 through #125 / PR #180, and Phase 12 is complete: #126–#129 landed while #130 and #131 closed not planned under their recorded evidence/decisions. Phase 13 is active: #132–#136 are complete, #137 is the first unblocked child, and #138 remains dependency-ordered behind it.
+- Phase 10 is complete through #119 / PR #174, Phase 11 through #125 / PR #180, and Phase 12 is complete: #126–#129 landed while #130 and #131 closed not planned under their recorded evidence/decisions. Phase 13 is active: #132–#137 are complete and #138 is the first unblocked integrated exit gate.
 
 ## Active/later phase epics
 
@@ -218,7 +218,7 @@ GitHub Actions CI is intentionally budget-conscious: it runs the full `npm test`
 - #101 — Phase 10 industrial exploration and deep extraction — COMPLETE through #119 / PR #174.
 - #102 — Phase 11 hazardous industrial science and recovery — COMPLETE through #125 / PR #180.
 - #103 — Phase 12 factory lifecycle and district reconfiguration — COMPLETE; #126–#129 landed, while #130 and #131 closed NOT PLANNED under their recorded evidence/decisions.
-- #104 — Phase 13 terminal and off-world exchange depth — ACTIVE; #132–#136 COMPLETE, #137 ACTIVE / FIRST UNBLOCKED, #138 dependency-ordered behind it.
+- #104 — Phase 13 terminal and off-world exchange depth — ACTIVE EXIT GATE; #132–#137 COMPLETE, #138 ACTIVE / FIRST UNBLOCKED.
 - #105–#107 — Phases 14–16 — dependency-ordered later queues; none is implicitly active.
 - Phase 8 — art production pipeline — parallel planned track, selected explicitly when useful.
 - Completed Phase 7 baseline: **#90 — single-world simulation/snapshot baseline**, through PR #91. Evidence: PHASE7_BASELINE.md. Phase 7 remains deferred; #92 profiling completed through PR #93; 32-factory / 10ms joint-p95 budget FAILS. Evidence: PHASE7_PROFILING.md. Optimization #94 is complete through PR #95: shared connected topology indexing within each throughput observation; all dynamic recurrence checks retained. Browser costs remain a separate gate.
@@ -251,7 +251,7 @@ The roadmap now records Phases 9–16 for the major gameplay directions that wer
 - Phase 15 — content scale and expedition arc;
 - Phase 16 — production vertical slice.
 
-Canonical GitHub epics and children exist for Phase 9 #100 (#108–#113), Phase 10 #101 (#114–#119), Phase 11 #102 (#120–#125), Phase 12 #103 (#126–#131), Phase 13 #104 (#132–#138), Phase 14 #105 (#139–#144), Phase 15 #106 (#145–#152), and Phase 16 #107 (#153–#161). Phase 9 is complete through #113 / PR #167. Phase 10 / #101 is complete through #119 / PR #174. Phase 11 / #102 is now active, beginning with #120. Later phases remain dependency-ordered planning/execution queues.
+Canonical GitHub epics and children exist for Phase 9 #100 (#108–#113), Phase 10 #101 (#114–#119), Phase 11 #102 (#120–#125), Phase 12 #103 (#126–#131), Phase 13 #104 (#132–#138), Phase 14 #105 (#139–#144), Phase 15 #106 (#145–#152), and Phase 16 #107 (#153–#161). Phases 9–12 are complete under their recorded exit decisions. Phase 13 / #104 is active at its integrated exit gate #138 after #132–#137 completed. Phases 14–16 remain dependency-ordered later queues.
 
 Phase 7 remains deferred with its accepted unmet performance budget preserved. Phase 8 remains a parallel art-pipeline track and does not block Phase 10 gameplay work. Do not reopen completed foundations merely because later phases deepen discovery, company systems or logistics; extend the accepted contracts.
 
