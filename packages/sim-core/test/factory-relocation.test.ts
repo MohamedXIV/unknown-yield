@@ -69,6 +69,16 @@ function populatedAsset() {
     y: 30,
     direction: 0,
   });
+  expect(sim.command({ type: "setPumpEnabled", id: pumpId, enabled: false }).ok).toBe(
+    true,
+  );
+  expect(
+    sim.command({
+      type: "setCompressorEnabled",
+      id: compressorId,
+      enabled: false,
+    }).ok,
+  ).toBe(true);
 
   const state = sim.serialize();
   state.deposits["ferrite-field"] -= 3;
@@ -83,6 +93,30 @@ function populatedAsset() {
 }
 
 describe("intact factory relocation", () => {
+  it("requires the persistent asset to be suspended before moving", () => {
+    const { sim, factoryId, machineId } = populatedAsset();
+    expect(
+      sim.command({
+        type: "setEnabled",
+        machineId,
+        enabled: true,
+      }).ok,
+    ).toBe(true);
+    const before = sim.serialize();
+    expect(
+      sim.command({
+        type: "relocateFactory",
+        factoryId,
+        x: 40,
+        y: 40,
+      }),
+    ).toMatchObject({
+      ok: false,
+      message: "Suspend internal equipment before relocation",
+    });
+    expect(sim.serialize()).toEqual(before);
+  });
+
   it("translates one persistent asset while leaving external cargo at the source", () => {
     const { sim, factoryId, machineId, pumpId, compressorId } =
       populatedAsset();

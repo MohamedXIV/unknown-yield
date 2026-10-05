@@ -282,6 +282,13 @@ export function factoryRelocationError(
       inside(factory, footprint(vessel, c.gasLogistics!.vessel)),
     );
 
+  if (
+    ownedMachines.some((machine) => machine.enabled || machine.job) ||
+    ownedPumps.some((pump) => pump.enabled) ||
+    ownedCompressors.some((compressor) => compressor.enabled)
+  )
+    return "Suspend internal equipment before relocation";
+
   const stage = structuredClone(s);
   delete stage.factories[factory.id];
   for (const machine of ownedMachines) delete stage.machines[machine.id];

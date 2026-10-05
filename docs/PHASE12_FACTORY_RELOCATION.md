@@ -12,7 +12,7 @@ Issue #127 moves a populated factory as one persistent industrial asset while pr
 - internal liquid pipes, pumps and tanks;
 - internal gas lines, compressors and vessels.
 
-Stable IDs, buffers, jobs, incidents, cargo, junction state, containment profiles and enabled state are unchanged. Coordinate-keyed belts/pipes/pressure lines are removed from their old keys before any translated keys are inserted, so one-cell moves cannot overwrite neighboring members of the same asset.
+Relocation requires the asset to be suspended first: no processor may be enabled or have an active batch, and internal pumps/compressors must be disabled. Stable IDs, buffers, incidents, cargo, junction state and containment profiles are otherwise unchanged. Coordinate-keyed belts/pipes/pressure lines are removed from their old keys before any translated keys are inserted, so one-cell moves cannot overwrite neighboring members of the same asset.
 
 External logistics are not members of the relocation group. A belt or pipe immediately outside a wall remains at its original world coordinate with its cargo/contents unchanged. This deliberately leaves reconnection work instead of teleporting the district network.
 
