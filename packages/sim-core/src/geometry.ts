@@ -18,12 +18,53 @@ export const next = (p: Point, d: number) => ({
   x: p.x + vectors[d].x,
   y: p.y + vectors[d].y,
 });
-export const undergroundSpan = (a: Point, b: Point) =>
+export const cardinalSpan = (a: Point, b: Point) =>
   Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+export const undergroundSpan = cardinalSpan;
 export function undergroundDirection(a: Point, b: Point): number | null {
   if (a.y === b.y && a.x !== b.x) return b.x > a.x ? 0 : 2;
   if (a.x === b.x && a.y !== b.y) return b.y > a.y ? 1 : 3;
   return null;
+}
+export function elevatedDeckPoints(a: Point, b: Point): Point[] {
+  const direction = undergroundDirection(a, b);
+  if (direction === null) return [];
+  const span = cardinalSpan(a, b),
+    vector = vectors[direction];
+  return Array.from({ length: span + 1 }, (_, distance) => ({
+    x: a.x + vector.x * distance,
+    y: a.y + vector.y * distance,
+  }));
+}
+export function elevatedSupportPoints(
+  c: Content,
+  a: Point,
+  b: Point,
+): Point[] {
+  const deck = elevatedDeckPoints(a, b),
+    last = deck.length - 1,
+    maxSpan = c.site.elevatedSolid.maxSupportSpan;
+  return deck.filter(
+    (_point, index) => index === 0 || index === last || index % maxSpan === 0,
+  );
+}
+export function elevatedDeckRects(s: Save): Rect[] {
+  return Object.values(s.elevatedSolids).flatMap((route) =>
+    elevatedDeckPoints(route.entry, route.exit).map((point) => ({
+      ...point,
+      width: 1,
+      height: 1,
+    })),
+  );
+}
+export function elevatedSupportRects(c: Content, s: Save): Rect[] {
+  return Object.values(s.elevatedSolids).flatMap((route) =>
+    elevatedSupportPoints(c, route.entry, route.exit).map((point) => ({
+      ...point,
+      width: 1,
+      height: 1,
+    })),
+  );
 }
 export function undergroundPortalRects(s: Save): Rect[] {
   return [
@@ -120,12 +161,70 @@ export function undergroundPlacementError(
         ),
       ) ||
       Object.hasOwn(s.belts, key(point)) ||
-      [...liquidRects(c, s), ...gasRects(c, s), ...undergroundPortalRects(s)].some(
-        (other) => contains(other, point),
-      )
+      [
+        ...liquidRects(c, s),
+        ...gasRects(c, s),
+        ...undergroundPortalRects(s),
+        ...elevatedSupportRects(c, s),
+      ].some((other) => contains(other, point))
     )
       return "Underground portal surface cell is occupied";
   }
+  return null;
+}
+export function elevatedPlacementError(
+  c: Content,
+  s: Save,
+  entry: Point,
+  exit: Point,
+): string | null {
+  const direction = undergroundDirection(entry, exit);
+  if (direction === null)
+    return "Elevated endpoints must share one cardinal axis";
+  if (cardinalSpan(entry, exit) < 2)
+    return "Elevated span must cross at least one raised cell";
+
+  for (const point of elevatedDeckPoints(entry, exit)) {
+    const cell = { ...point, width: 1, height: 1 };
+    if (!bounds(c, cell)) return "Outside the site boundary";
+    if (
+      contains(c.site.terminal, point) ||
+      c.site.deposits.some((deposit) => contains(deposit, point)) ||
+      Object.values(s.factories).some((factory) => contains(factory, point)) ||
+      Object.values(s.machines).some((machine) =>
+        contains(
+          footprint(
+            machine,
+            c.machines.find((d) => d.id === machine.definitionId)!,
+          ),
+          point,
+        ),
+      ) ||
+      Object.values(s.storages).some((storage) =>
+        contains(
+          footprint(
+            storage,
+            c.storages.find((d) => d.id === storage.definitionId)!,
+          ),
+          point,
+        ),
+      )
+    )
+      return "Elevated deck needs clear building airspace";
+    if (elevatedDeckRects(s).some((other) => contains(other, point)))
+      return "Elevated decks cannot intersect";
+  }
+
+  for (const point of elevatedSupportPoints(c, entry, exit))
+    if (
+      Object.hasOwn(s.belts, key(point)) ||
+      [
+        ...liquidRects(c, s),
+        ...gasRects(c, s),
+        ...undergroundPortalRects(s),
+      ].some((other) => contains(other, point))
+    )
+      return "Elevated support surface cell is occupied";
   return null;
 }
 export function factoryError(c: Content, s: Save, r: Rect): string | null {
@@ -173,6 +272,7 @@ export function factoryError(c: Content, s: Save, r: Rect): string | null {
       ...liquidRects(c, s),
       ...gasRects(c, s),
       ...undergroundPortalRects(s),
+      ...elevatedDeckRects(s),
     ].some((other) => overlaps(r, other))
   )
     return "Space is already occupied";
@@ -491,6 +591,7 @@ export function storageError(
       ...liquidRects(c, s),
       ...gasRects(c, s),
       ...undergroundPortalRects(s),
+      ...elevatedDeckRects(s),
     ].some((other) => overlaps(r, other))
   )
     return "Space is already occupied";
@@ -531,6 +632,7 @@ export function machinePlacement(
       ...liquidRects(c, s),
       ...gasRects(c, s),
       ...undergroundPortalRects(s),
+      ...elevatedDeckRects(s),
     ].some((other) => overlaps(r, other))
   )
     return fail("Space is already occupied");
@@ -617,6 +719,7 @@ export function beltError(
       ...liquidRects(c, s),
       ...gasRects(c, s),
       ...undergroundPortalRects(s),
+      ...elevatedSupportRects(c, s),
     ].some((r) => contains(r, p))
   )
     return "A structure occupies this cell";
@@ -673,6 +776,7 @@ export function liquidPlacementError(
       ...liquidRects(c, s),
       ...gasRects(c, s),
       ...undergroundPortalRects(s),
+      ...elevatedSupportRects(c, s),
     ].some((other) => overlaps(r, other))
   )
     return "Space is already occupied";
@@ -743,6 +847,7 @@ export function gasPlacementError(
       ...liquidRects(c, s),
       ...gasRects(c, s),
       ...undergroundPortalRects(s),
+      ...elevatedSupportRects(c, s),
     ].some((other) => overlaps(r, other))
   )
     return "Space is already occupied";
