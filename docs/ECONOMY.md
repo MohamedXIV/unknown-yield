@@ -198,3 +198,12 @@ The accepted fixture proves this with `matrix-local-route`. The company can alre
 Rewards are no longer fuel-only. A property directive may award fuel and/or one persisted import allocation. The fixture awards one `orbital-coolant-canister` allocation. Claiming that allocation still goes through the existing terminal handling command and its physical capability/install/identity/capacity gates; a failed claim preserves the allocation. A successful claim consumes exactly one allocation, costs zero fuel, and materializes the same conserved physical import cargo as an ordinary paid request.
 
 The generic `propertyKey` is presentation semantics such as purity, stability, prototype fitness or another company-observable quality. It does not add a hidden numeric “quality meter” or reveal the reaction chosen to satisfy it. New quality breadth should remain content-driven until a real simulation property requires a separate conserved/derived state.
+
+
+## Phase 13 — strategic physical stockpiles (#137)
+
+No new global stockpile state is introduced. Existing storage buildings already provide the strategic primitive: production can be routed into a geographically fixed depot whose inventory remains ordinary conserved material and whose output moves only when a real belt path exists.
+
+The #137 proof deliberately slows only the company opportunity cadence in a test fixture. A normal extractor/crusher line discovers and produces Conductive granules and physically fills a four-unit depot stockpile **before** the first Corporate Order evaluation; the test waits on that physical condition under a strict pre-cadence bound rather than assuming a fixed production timestamp. With no depot outlet route, the material cannot teleport to the terminal even though its export policy is eligible.
+
+At the later company cadence, the existing `granules-procurement` Order appears. Production is then disabled, the saved stockpile is restored exactly, and only then is a physical depot-output belt built to terminal staging. The previously held units travel through ordinary belt/terminal rules, complete the Order through real exports, earn ordinary exchange/order compensation, and remain ledger-conserved. This proves demand-response strategy without a separate stockpile abstraction or instant movement.

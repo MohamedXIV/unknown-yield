@@ -551,3 +551,10 @@ Property-directive truth is content-authored in sim-core. The save records only 
 Save schema 25 adds `company.importAllocations`. Schema 24 migrates exactly to an empty record because no earlier directive could award one. A schema-24 payload carrying a non-empty allocation record is rejected, and schema-25 payloads must explicitly contain the field. Save validation rejects non-positive counts, unknown supply IDs, completed property directives without confirmed acceptable reaction evidence, and active property directives whose solution has already been confirmed.
 
 An allocation changes only the payment source of `requestImport`. Admission still evaluates the physical destination first; a failed request cannot consume the allocation. A successful allocated request decrements the persisted count and feeds the existing import material-source ledger path with zero company-fuel cost.
+
+
+## Phase 13 strategic stockpile proof — #137
+
+Strategic stockpiling is composition of existing authoritative systems, not a new simulation container. Storage inventory remains keyed to a placed world entity. A stored unit cannot satisfy an Order or affect market saturation until ordinary logistics withdraw it, terminal handling admits it, and the export settlement path consumes that physical unit.
+
+The #137 integration regression uses a delayed company cadence to establish causal order: real production fills a depot first; the later Corporate Order is then offered; the world is save/loaded with the depot inventory intact; production is disabled; a new physical outlet route is constructed; only the pre-existing stored units can then travel and complete the opportunity. Conservation is audited before and after release.
