@@ -1,5 +1,10 @@
 import type { Content } from "@site/content";
-import type { MarketListingView, MarketState, Save } from "./types";
+import type {
+  MarketBulletinView,
+  MarketListingView,
+  MarketState,
+  Save,
+} from "./types";
 import { terminalCapabilityUnlocked } from "./milestones";
 import {
   recordNetExportRecovery,
@@ -124,7 +129,58 @@ export function recoverMarkets(
       0,
       state.saturationBps - listing.recoveryPerMarketTickBps,
     );
+    if (state.demandBps > listing.baseDemandBps)
+      state.demandBps = Math.max(
+        listing.baseDemandBps,
+        state.demandBps - listing.demandRecoveryPerMarketTickBps,
+      );
+    else if (state.demandBps < listing.baseDemandBps)
+      state.demandBps = Math.min(
+        listing.baseDemandBps,
+        state.demandBps + listing.demandRecoveryPerMarketTickBps,
+      );
   }
+}
+
+export function refreshMarketSignals(
+  c: Content,
+  s: Pick<Save, "tick" | "knowledge" | "market" | "marketSignals">,
+): void {
+  for (const shock of c.economy.demandShocks) {
+    if (
+      Object.hasOwn(s.marketSignals, shock.id) ||
+      !s.knowledge.includes(shock.triggerReactionId) ||
+      !companyKnowsMaterial(c, s, shock.materialId)
+    )
+      continue;
+    const state = ensureMarket(c, s, shock.materialId);
+    if (!state) continue;
+    state.demandBps = Math.max(
+      1000,
+      Math.min(20000, state.demandBps + shock.demandDeltaBps),
+    );
+    s.marketSignals[shock.id] = { triggeredAt: s.tick };
+  }
+}
+
+export function marketBulletins(
+  c: Content,
+  s: Pick<Save, "knowledge" | "marketSignals">,
+): MarketBulletinView[] {
+  return c.economy.demandShocks
+    .flatMap((shock) => {
+      const state = s.marketSignals[shock.id];
+      if (!state || !companyKnowsMaterial(c, s, shock.materialId)) return [];
+      return [{
+        id: shock.id,
+        nameKey: shock.nameKey,
+        briefKey: shock.briefKey,
+        materialId: shock.materialId,
+        demandDeltaBps: shock.demandDeltaBps,
+        triggeredAt: state.triggeredAt,
+      }];
+    })
+    .sort((a, b) => b.triggeredAt - a.triggeredAt || a.id.localeCompare(b.id));
 }
 
 export function marketListings(

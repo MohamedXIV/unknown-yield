@@ -742,7 +742,17 @@ export const fixture = validateContent({
       },
       { materialId: "liquid-0", baseCompensation: 6, floorCompensation: 2, baseDemandBps: 10000, saturationPerUnitBps: 1000, recoveryPerMarketTickBps: 250, requiredTerminalCapabilityId: "liquid-outbound" },
       { materialId: "gas-0", baseCompensation: 8, floorCompensation: 3, baseDemandBps: 10000, saturationPerUnitBps: 1000, recoveryPerMarketTickBps: 250, requiredTerminalCapabilityId: "gas-outbound" },
-      { materialId: "matrix", baseCompensation: 16, floorCompensation: 6, baseDemandBps: 10000, saturationPerUnitBps: 800, recoveryPerMarketTickBps: 250 },
+      { materialId: "matrix", baseCompensation: 16, floorCompensation: 6, baseDemandBps: 10000, saturationPerUnitBps: 800, recoveryPerMarketTickBps: 250, demandRecoveryPerMarketTickBps: 100 },
+    ],
+    demandShocks: [
+      {
+        id: "resonance-orbital-application",
+        nameKey: "market.shock.resonance-orbital-application.name",
+        briefKey: "market.shock.resonance-orbital-application.brief",
+        materialId: "matrix",
+        triggerReactionId: "sinter-orbital-binder",
+        demandDeltaBps: 5000,
+      },
     ],
     orders: [
       {
@@ -753,6 +763,15 @@ export const fixture = validateContent({
         quantity: 4,
         durationTicks: 6000,
         rewardFuel: 24,
+      },
+      {
+        id: "matrix-procurement",
+        nameKey: "order.matrix-procurement.name",
+        briefKey: "order.matrix-procurement.brief",
+        materialId: "matrix",
+        quantity: 3,
+        durationTicks: 8000,
+        rewardFuel: 30,
       },
     ],
     directives: [

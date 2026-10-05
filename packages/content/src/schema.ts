@@ -339,10 +339,28 @@ export const contentSchema = z.object({
           baseDemandBps: z.number().int().min(1000).max(20000),
           saturationPerUnitBps: z.number().int().positive().max(10000),
           recoveryPerMarketTickBps: z.number().int().positive().max(10000),
+          demandRecoveryPerMarketTickBps: z
+            .number()
+            .int()
+            .positive()
+            .max(10000)
+            .default(100),
           requiredTerminalCapabilityId: id.optional(),
         }),
       )
       .min(1),
+    demandShocks: z
+      .array(
+        z.object({
+          id,
+          nameKey: localeKeySchema,
+          briefKey: localeKeySchema,
+          materialId: id,
+          triggerReactionId: id,
+          demandDeltaBps: z.number().int().min(-10000).max(10000).refine((n) => n !== 0),
+        }),
+      )
+      .default([]),
     orders: z
       .array(
         z.object({
@@ -754,6 +772,21 @@ function validateContentInternal(
     )
   )
     throw new Error("Import-only material cannot be exchange-listed");
+  const shockIds = new Set<string>();
+  for (const shock of c.economy.demandShocks) {
+    if (shockIds.has(shock.id)) throw new Error("Duplicate demand shock ID");
+    shockIds.add(shock.id);
+    const reaction = c.reactions.find((entry) => entry.id === shock.triggerReactionId);
+    if (!exchangeMaterials.has(shock.materialId) || !reaction)
+      throw new Error("Demand shock requires exchange material and reaction");
+    if (reaction.output !== shock.materialId)
+      throw new Error("Demand shock trigger must characterize its market material");
+    if (
+      shock.nameKey !== "market.shock." + shock.id + ".name" ||
+      shock.briefKey !== "market.shock." + shock.id + ".brief"
+    )
+      throw new Error("Localization key must match demand shock");
+  }
   const opportunityIds = new Set<string>(),
     directiveExperiments = new Set<string>();
   for (const order of c.economy.orders) {

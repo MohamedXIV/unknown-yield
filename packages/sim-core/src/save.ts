@@ -172,6 +172,7 @@ const schema = z.object({
     z.literal(21),
     z.literal(22),
     z.literal(23),
+    z.literal(24),
   ]),
   contentVersion: z.string(),
   terminalModules: z
@@ -269,6 +270,12 @@ const schema = z.object({
       }),
     )
     .default({}),
+  marketSignals: z
+    .record(
+      safeId,
+      z.object({ triggeredAt: count }).strict(),
+    )
+    .default({}),
   opportunities: z
     .record(
       safeId,
@@ -307,7 +314,7 @@ const schema = z.object({
 });
 export function initialState(c: Content): Save {
   const state: Save = {
-    schemaVersion: 23,
+    schemaVersion: 24,
     terminalModules: {},
     contentVersion: c.version,
     tick: 0,
@@ -364,6 +371,7 @@ export function initialState(c: Content): Save {
       c.materials.filter((m) => m.known).map((m) => [m.id, "keep"]),
     ),
     market: {},
+    marketSignals: {},
     opportunities: {},
     milestones: {},
     company: {
@@ -398,6 +406,18 @@ export function parseSave(input: unknown, c: Content): Save {
       !Object.hasOwn(input, "terminalImports"))
   )
     throw Error("Missing terminal import state");
+  if (
+    parsed.schemaVersion >= 24 &&
+    (!input ||
+      typeof input !== "object" ||
+      !Object.hasOwn(input, "marketSignals"))
+  )
+    throw Error("Missing market signal history");
+  if (
+    parsed.schemaVersion < 24 &&
+    Object.keys(parsed.marketSignals).length
+  )
+    throw Error("Legacy schema cannot contain market signal history");
   if (
     parsed.schemaVersion < 23 &&
     (Object.keys(parsed.terminalImports.staging).length ||
@@ -564,6 +584,9 @@ export function parseSave(input: unknown, c: Content): Save {
   // Schema 22 predates physical off-world import holdings and their cumulative
   // material-source record. No import cargo existed, so migration is empty.
   if (s.schemaVersion === 22) s.schemaVersion = 23;
+  // Schema 23 predates authored demand-shock history. Earlier saves cannot
+  // have consumed a bulletin, so migration starts with empty signal memory.
+  if (s.schemaVersion === 23) s.schemaVersion = 24;
   if (s.contentVersion !== c.version || s.remainder >= c.tickMs)
     throw new Error("Incompatible content or timing");
   if (
@@ -599,6 +622,17 @@ export function parseSave(input: unknown, c: Content): Save {
     )
   )
     throw new Error("Invalid market state");
+  for (const [id, signal] of Object.entries(s.marketSignals)) {
+    const shock = c.economy.demandShocks.find((entry) => entry.id === id);
+    if (
+      !shock ||
+      signal.triggeredAt > s.tick ||
+      !s.knowledge.includes(shock.triggerReactionId) ||
+      !known.has(shock.materialId) ||
+      !Object.hasOwn(s.market, shock.materialId)
+    )
+      throw new Error("Invalid market signal history");
+  }
   for (const [id, state] of Object.entries(s.opportunities)) {
     const order = c.economy.orders.find((entry) => entry.id === id),
       directive = c.economy.directives.find((entry) => entry.id === id),
