@@ -16,6 +16,7 @@ import { elevatedSolidCost } from "./elevated";
  *
  *   deposits + stock + staging + importStaging + machineInput + machineOutput
  *     + machineIncidents + belts + undergroundSolids + undergroundLiquids
+     + elevatedSolids
  *     + pipes + tanks + storage + escrow + embodied
  *     + flows.exported + flows.discarded + flows.consumed
  *       = initial + flows.produced + imported
