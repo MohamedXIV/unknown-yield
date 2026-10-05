@@ -441,7 +441,7 @@ describe("content boundary", () => {
     ).site;
     legacySite.terminalModules = [];
     // Higher fuel classes are Phase 15 content and did not exist in this historical fixture.
-    (legacy as typeof legacy & { fuelClasses?: unknown }).fuelClasses = undefined;
+    delete (legacy as unknown as { fuelClasses?: unknown }).fuelClasses;
     for (const machine of legacy.machines) delete machine.fuelClassId;
     // These Phase 10 fields did not exist in the pre-#70 format; deleting
     // them proves the additive schema defaults rather than retaining modern
