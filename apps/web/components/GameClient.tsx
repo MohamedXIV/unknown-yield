@@ -254,6 +254,7 @@ function GameClientInner() {
       return t("ui.gas." + tool + ".description");
     if (["pipe", "tank", "pump", "liquefier", "precipitator"].includes(tool))
       return t("ui.liquid." + tool + ".description");
+    if (tool === "sinterer") return t("ui.machine.sinterer.description");
     const unlock = unlockFor(tool);
     if (unlock && !unlock.unlocked)
       return "Locked · Requires " + t(unlock.hintKey) + ".";
@@ -1916,6 +1917,7 @@ function GameClientInner() {
               "extractor",
               "deep-extractor",
               "atmospheric-intake",
+              "sinterer",
               "factory",
               "crusher",
               "furnace",
@@ -1958,7 +1960,9 @@ function GameClientInner() {
                       ? "extractor"
                       : tool === "atmospheric-intake"
                         ? "compressor"
-                        : tool
+                        : tool === "sinterer"
+                          ? "furnace"
+                          : tool
                 }
                 size={25}
               />
