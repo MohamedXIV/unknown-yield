@@ -1101,6 +1101,136 @@ function GameClientInner() {
                       buffer and cargo slot continues in the detailed
                       simulation.
                     </p>
+                    <h3>Shell reshape</h3>
+                    <p className="hint">
+                      Move one wall at a time around the existing interior.
+                      Equipment stays at its world coordinates; ports and
+                      external logistics are never moved implicitly.
+                    </p>
+                    <div className="button-row">
+                      <button
+                        className="secondary"
+                        onClick={() =>
+                          act({
+                            type: "reshapeFactory",
+                            factoryId: factory.id,
+                            x: factory.x - 1,
+                            y: factory.y,
+                            width: factory.width + 1,
+                            height: factory.height,
+                          })
+                        }
+                      >
+                        Expand west
+                      </button>
+                      <button
+                        className="secondary"
+                        onClick={() =>
+                          act({
+                            type: "reshapeFactory",
+                            factoryId: factory.id,
+                            x: factory.x,
+                            y: factory.y,
+                            width: factory.width + 1,
+                            height: factory.height,
+                          })
+                        }
+                      >
+                        Expand east
+                      </button>
+                      <button
+                        className="secondary"
+                        onClick={() =>
+                          act({
+                            type: "reshapeFactory",
+                            factoryId: factory.id,
+                            x: factory.x,
+                            y: factory.y - 1,
+                            width: factory.width,
+                            height: factory.height + 1,
+                          })
+                        }
+                      >
+                        Expand north
+                      </button>
+                      <button
+                        className="secondary"
+                        onClick={() =>
+                          act({
+                            type: "reshapeFactory",
+                            factoryId: factory.id,
+                            x: factory.x,
+                            y: factory.y,
+                            width: factory.width,
+                            height: factory.height + 1,
+                          })
+                        }
+                      >
+                        Expand south
+                      </button>
+                    </div>
+                    <div className="button-row">
+                      <button
+                        className="secondary"
+                        onClick={() =>
+                          act({
+                            type: "reshapeFactory",
+                            factoryId: factory.id,
+                            x: factory.x + 1,
+                            y: factory.y,
+                            width: factory.width - 1,
+                            height: factory.height,
+                          })
+                        }
+                      >
+                        Trim west
+                      </button>
+                      <button
+                        className="secondary"
+                        onClick={() =>
+                          act({
+                            type: "reshapeFactory",
+                            factoryId: factory.id,
+                            x: factory.x,
+                            y: factory.y,
+                            width: factory.width - 1,
+                            height: factory.height,
+                          })
+                        }
+                      >
+                        Trim east
+                      </button>
+                      <button
+                        className="secondary"
+                        onClick={() =>
+                          act({
+                            type: "reshapeFactory",
+                            factoryId: factory.id,
+                            x: factory.x,
+                            y: factory.y + 1,
+                            width: factory.width,
+                            height: factory.height - 1,
+                          })
+                        }
+                      >
+                        Trim north
+                      </button>
+                      <button
+                        className="secondary"
+                        onClick={() =>
+                          act({
+                            type: "reshapeFactory",
+                            factoryId: factory.id,
+                            x: factory.x,
+                            y: factory.y,
+                            width: factory.width,
+                            height: factory.height - 1,
+                          })
+                        }
+                      >
+                        Trim south
+                      </button>
+                    </div>
                     <h3>External contract</h3>
                     {factoryPresentation && (
                       <div

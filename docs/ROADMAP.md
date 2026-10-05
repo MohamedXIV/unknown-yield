@@ -309,7 +309,7 @@ The player manufactures an industrial capability, uses it to reveal a previously
 
 ## Phase 11 — Hazardous industrial science and recovery
 
-**Epic:** GitHub Issue #102. **ACTIVE GAMEPLAY PHASE.** Children #120–#125. #120 is complete through PR #175, #121 through PR #176, #122 through PR #177, #123 through PR #178 and #124 through PR #179; #125 is the active exit gate.
+**Epic:** GitHub Issue #102. **COMPLETE** through #125 / PR #180, merged to `main` at `1577f045312ac661c1453154d8bc121b6665fb3f`. Children #120–#125 are complete.
 
 ### Question
 
@@ -333,7 +333,7 @@ A hazardous experiment can be reproduced under the same authored conditions, tea
 
 ## Phase 12 — Factory lifecycle and district reconfiguration
 
-**Epic:** GitHub Issue #103. Planned after Phase 11. Children #126–#131.
+**Epic:** GitHub Issue #103. **ACTIVE GAMEPLAY PHASE.** Children #126–#131; #126 is the first unblocked implementation issue.
 
 ### Question
 

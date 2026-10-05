@@ -10,6 +10,7 @@ import { applyAssistance, assistanceEligibility } from "./assistance";
 import { applySensingObservation } from "./sensing";
 import {
   factoryError,
+  factoryReshapeError,
   machinePlacement,
   portError,
   beltError,
@@ -102,6 +103,13 @@ const schema = z.discriminatedUnion("type", [
 
   z.object({
     type: z.literal("placeFactory"),
+    ...point,
+    width: z.number().int().positive(),
+    height: z.number().int().positive(),
+  }),
+  z.object({
+    type: z.literal("reshapeFactory"),
+    factoryId: z.string(),
     ...point,
     width: z.number().int().positive(),
     height: z.number().int().positive(),
@@ -554,6 +562,26 @@ export function applyCommand(
         ports: [],
       };
       return ok("Factory built", cost, id);
+    }
+    case "reshapeFactory": {
+      const factory = Object.hasOwn(s.factories, cmd.factoryId)
+        ? s.factories[cmd.factoryId]
+        : undefined;
+      if (!factory) return fail("Unknown factory");
+      const error = factoryReshapeError(c, s, factory, cmd);
+      if (error) return fail(error);
+      const oldArea = factory.width * factory.height,
+        newArea = cmd.width * cmd.height,
+        cost = (newArea - oldArea) * c.site.factoryCellCost;
+      if (cost > 0 && !affordable(cost))
+        return fail("Not enough structural plates");
+      if (!apply) return ok("Reshape factory shell", cost);
+      pay(cost);
+      factory.x = cmd.x;
+      factory.y = cmd.y;
+      factory.width = cmd.width;
+      factory.height = cmd.height;
+      return ok("Factory shell reshaped", cost, factory.id);
     }
     case "placeMachine": {
       const def = c.machines.find((d) => d.id === cmd.definitionId);
