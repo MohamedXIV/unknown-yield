@@ -1472,15 +1472,20 @@ function GameClientInner() {
                     )}
                     {!belt.junction && (
                       <>
-                        <h3>Diverter</h3>
+                        <h3>{t("ui.diverter.heading")}</h3>
                         <p className="hint">
                           {belt.alternate === null
-                            ? "No alternate exit."
-                            : "Alternate exit: " +
-                              ["east", "south", "west", "north"][
-                                belt.alternate
-                              ] +
-                              (belt.switched ? " (active)." : " (standby).")}
+                            ? t("ui.diverter.none")
+                            : t("ui.diverter.status", {
+                                direction: t(
+                                  "ui.direction." + belt.alternate,
+                                ),
+                                route: t(
+                                  belt.switched
+                                    ? "ui.diverter.route-name.alternate"
+                                    : "ui.diverter.route-name.primary",
+                                ),
+                              })}
                         </p>
                         <button
                           className="secondary"
@@ -1488,16 +1493,35 @@ function GameClientInner() {
                             act({ type: "rotateDivert", beltId: belt.id })
                           }
                         >
-                          Cycle alternate exit
+                          {t("ui.diverter.cycle")}
                         </button>
                         <button
                           className="secondary"
-                          disabled={belt.alternate === null}
+                          disabled={!belt.switched}
                           onClick={() =>
-                            act({ type: "switchDivert", beltId: belt.id })
+                            act({
+                              type: "setDivertRoute",
+                              beltId: belt.id,
+                              route: "primary",
+                            })
                           }
                         >
-                          {belt.switched ? "Restore main exit" : "Switch exit"}
+                          {t("ui.diverter.select-primary")}
+                        </button>
+                        <button
+                          className="secondary"
+                          disabled={
+                            belt.alternate === null || belt.switched
+                          }
+                          onClick={() =>
+                            act({
+                              type: "setDivertRoute",
+                              beltId: belt.id,
+                              route: "alternate",
+                            })
+                          }
+                        >
+                          {t("ui.diverter.select-alternate")}
                         </button>
                       </>
                     )}
