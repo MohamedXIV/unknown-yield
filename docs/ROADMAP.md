@@ -333,7 +333,7 @@ A hazardous experiment can be reproduced under the same authored conditions, tea
 
 ## Phase 12 — Factory lifecycle and district reconfiguration
 
-**Epic:** GitHub Issue #103. **ACTIVE GAMEPLAY PHASE.** Children #126–#131. #126 is complete through PR #181, #127 through PR #182, #128 through PR #183 and #129 through PR #184; #130 closed not-planned after its evidence gate, and #131 is the active integrated exit gate.
+**Epic:** GitHub Issue #103. **COMPLETE under the recorded Phase 12 decisions.** #126–#129 landed through PRs #181–#184; #130 and #131 closed not planned under their recorded evidence/user decisions, with no false integrated-exit PASS claim for #131.
 
 ### Question
 
@@ -355,7 +355,7 @@ A populated factory can be suspended, moved or expanded under defined rules, rec
 
 ## Phase 13 — Terminal and off-world exchange depth
 
-**Epic:** GitHub Issue #104. Planned after Phase 12. Children #132–#138.
+**Epic:** GitHub Issue #104. **COMPLETE** through #138 / PR #192, merged to `main` at `a42e6e94a9f41588ddd4ecc19efea3829f8ddb42`. Children #132–#138 are complete. Integrated evidence: [PHASE13_EXIT_REVIEW.md](PHASE13_EXIT_REVIEW.md).
 
 ### Question
 
@@ -504,4 +504,4 @@ User chose to return to gameplay after #96 / PR #97 rather than continue snapsho
 
 Phase 7 performance work is deferred. The fixed 32-factory joint p95 <=10ms gate remains unmet (24.5777ms flowing / 19.6748ms backpressured); browser/device gates remain unverified. Keep existing evidence and correctness boundaries. Revisit when an actual browser-playability problem or an agreed feature scale requirement justifies it. Old NEXT recommendations in profiling docs are historical candidates, not active assignments.
 
-Roadmap expansion approved on 2026-10-02: Phases 9–16 capture the major post-foundation gameplay discussed but not represented by the earlier execution phases. Canonical epics #100–#107 and children #108–#161 form the canonical queue. Phase 9 / #100 is complete through #113 / PR #167; Phase 10 / #101 is active with #114 FIRST UNBLOCKED. Later phases remain planned dependency-ordered work, not authorization to stack speculative implementations. Phase 7 remains deferred and Phase 8 remains a parallel art-production track.
+Roadmap expansion approved on 2026-10-02: Phases 9–16 capture the major post-foundation gameplay discussed but not represented by the earlier execution phases. Canonical epics #100–#107 and children #108–#161 form the canonical queue. Phases 9–13 are complete through their recorded exit decisions, most recently Phase 13 / #104 through #138 / PR #192. Phase 14 / #105 is the next dependency-ordered queue but is not started by this closeout; later phases remain planned work, not authorization to stack speculative implementations. Phase 7 remains deferred and Phase 8 remains a parallel art-production track.
