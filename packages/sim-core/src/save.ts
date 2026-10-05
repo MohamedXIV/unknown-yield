@@ -805,7 +805,10 @@ export function parseSave(input: unknown, c: Content): Save {
         )
       )
         throw new Error("Machine handling state mismatch");
-    if (total(m.input) > d.capacity || total(m.output) > d.capacity)
+    if (
+      total(m.input) > d.capacity ||
+      total(m.output) + total(m.incidentInventory) > d.capacity
+    )
       throw new Error("Capacity exceeded");
     if (d.role === "extractor" && total(m.input))
       throw new Error("Extractor cannot contain inputs");

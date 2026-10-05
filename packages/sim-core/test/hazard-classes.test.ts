@@ -173,13 +173,14 @@ function armedFerriteHazardLine() {
     width: 10,
     height: 10,
   });
-  build(sim, {
-    type: "placePort",
-    factoryId,
-    x: 24,
-    y: 27,
-    direction: 0,
-  });
+  for (const x of [24, 33])
+    build(sim, {
+      type: "placePort",
+      factoryId,
+      x,
+      y: 27,
+      direction: 0,
+    });
   build(sim, {
     type: "placeMachine",
     definitionId: "extractor",
@@ -198,6 +199,14 @@ function armedFerriteHazardLine() {
     type: "placeBelts",
     points: Array.from({ length: 7 }, (_, index) => ({
       x: 20 + index,
+      y: 27,
+    })),
+    direction: 0,
+  });
+  build(sim, {
+    type: "placeBelts",
+    points: Array.from({ length: 9 }, (_, index) => ({
+      x: 29 + index,
       y: 27,
     })),
     direction: 0,
@@ -272,4 +281,57 @@ it("persists a conservative stranded-output consequence without deleting materia
     JSON.stringify(restored.snapshot().hazardEvidence),
   ).not.toContain("heat-ferrite-sealed");
   expect(auditLedger(fixture, restored.serialize()).ok).toBe(true);
+
+  const beforeRecovery = restored.serialize();
+  expect(
+    restored.preview({
+      type: "recoverMachineIncident",
+      machineId: processorId,
+    }),
+  ).toMatchObject({ ok: true });
+  expect(restored.serialize()).toEqual(beforeRecovery);
+
+  expect(
+    restored.command({
+      type: "recoverMachineIncident",
+      machineId: processorId,
+    }),
+  ).toMatchObject({
+    ok: true,
+    message: "Hazard material reclaimed to machine output",
+  });
+  expect(restored.serialize().machines[processorId]).toMatchObject({
+    incident: null,
+    enabled: false,
+    incidentInventory: {},
+    output: { residue: 1 },
+  });
+  expect(restored.serialize().hazardEvidence).toEqual(["slag-jam"]);
+  expect(auditLedger(fixture, restored.serialize()).ok).toBe(true);
+
+  const recoveredSave = restored.serialize();
+  const recoveredReload = new Simulation(fixture);
+  expect(recoveredReload.load(JSON.parse(JSON.stringify(recoveredSave))).ok).toBe(
+    true,
+  );
+  expect(recoveredReload.serialize()).toEqual(recoveredSave);
+
+  for (
+    let tick = 0;
+    tick < 300 &&
+    (recoveredReload.serialize().staging.residue ?? 0) < 1;
+    tick++
+  ) {
+    recoveredReload.step(fixture.tickMs);
+    expect(auditLedger(fixture, recoveredReload.serialize()).ok).toBe(true);
+  }
+
+  expect(
+    recoveredReload.serialize().machines[processorId].output.residue ?? 0,
+  ).toBe(0);
+  expect(recoveredReload.serialize().staging.residue ?? 0).toBeGreaterThanOrEqual(
+    1,
+  );
+  expect(recoveredReload.serialize().hazardEvidence).toEqual(["slag-jam"]);
+  expect(auditLedger(fixture, recoveredReload.serialize()).ok).toBe(true);
 });

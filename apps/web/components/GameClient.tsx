@@ -974,10 +974,35 @@ function GameClientInner() {
                         <p>{t(machine.incident.evidenceKey)}</p>
                         <strong>SAFER NEXT TEST</strong>
                         <p>{t(machine.incident.saferHintKey)}</p>
+                        {Object.values(machine.incidentInventory).some(
+                          (quantity) => quantity > 0,
+                        ) && (
+                          <>
+                            <strong>TRAPPED MATERIAL</strong>
+                            {buffer(machine.incidentInventory)}
+                            <button
+                              className="primary"
+                              onClick={() =>
+                                act({
+                                  type: "recoverMachineIncident",
+                                  machineId: machine.id,
+                                })
+                              }
+                            >
+                              Reclaim trapped material to output
+                            </button>
+                          </>
+                        )}
                       </div>
                     )}
                     <button
                       className="primary"
+                      disabled={
+                        !!machine.incident &&
+                        Object.values(machine.incidentInventory).some(
+                          (quantity) => quantity > 0,
+                        )
+                      }
                       onClick={() =>
                         act({
                           type: "setEnabled",
@@ -986,11 +1011,16 @@ function GameClientInner() {
                         })
                       }
                     >
-                      {machine.incident
-                        ? "Acknowledge incident & re-enable"
-                        : machine.enabled
-                          ? "Stop after this batch"
-                          : "Enable automatic operation"}
+                      {machine.incident &&
+                      Object.values(machine.incidentInventory).some(
+                        (quantity) => quantity > 0,
+                      )
+                        ? "Recover trapped material first"
+                        : machine.incident
+                          ? "Acknowledge incident & re-enable"
+                          : machine.enabled
+                            ? "Stop after this batch"
+                            : "Enable automatic operation"}
                     </button>
                     {machine.role === "processor" && (
                       <>

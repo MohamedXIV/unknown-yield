@@ -406,6 +406,122 @@ browserIt(
           ) === true`,
       );
 
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Knowledge notebook"]')?.click();
+        window.dispatchEvent(new KeyboardEvent("keydown", { key: "Home" }));
+        window.dispatchEvent(new KeyboardEvent("keyup", { key: "Home" }));
+        return true;
+      })()`);
+
+      const factoryPoint = await evaluate<{ x: number; y: number }>(`(() => {
+        const canvas = document.querySelector("canvas");
+        if (!canvas) throw new Error("Canvas missing");
+        const rect = canvas.getBoundingClientRect();
+        const X = 32, Y = 24;
+        const zoom = Math.min(rect.width / (36 * X), rect.height / (27 * Y));
+        const scrollX = 29 * X - rect.width / (2 * zoom);
+        const scrollY = 30 * Y - rect.height / (2 * zoom);
+        const worldX = 25.5 * X;
+        const worldY = 24.5 * Y;
+        return {
+          x: rect.left + (worldX - scrollX) * zoom,
+          y: rect.top + (worldY - scrollY) * zoom,
+        };
+      })()`);
+      await call("Input.dispatchMouseEvent", {
+        type: "mousePressed",
+        x: factoryPoint.x,
+        y: factoryPoint.y,
+        button: "left",
+        buttons: 1,
+        clickCount: 1,
+      });
+      await call("Input.dispatchMouseEvent", {
+        type: "mouseReleased",
+        x: factoryPoint.x,
+        y: factoryPoint.y,
+        button: "left",
+        buttons: 0,
+        clickCount: 1,
+      });
+      await waitForExpression(
+        `[...document.querySelectorAll("button.entity-row")]
+          .some((button) => button.textContent?.includes("Oversealed furnace"))`,
+      );
+      await evaluate(`(() => {
+        [...document.querySelectorAll("button.entity-row")]
+          .find((button) => button.textContent?.includes("Oversealed furnace"))
+          ?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.body.textContent?.includes("Vitrified slag jam") === true &&
+          [...document.querySelectorAll("button")]
+            .some((button) =>
+              button.textContent?.includes("Reclaim trapped material to output")
+            )`,
+      );
+      await evaluate(`(() => {
+        [...document.querySelectorAll("button")]
+          .find((button) =>
+            button.textContent?.includes("Reclaim trapped material to output")
+          )
+          ?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector('[role="status"]')
+          ?.textContent.includes("Hazard material reclaimed to machine output") === true &&
+          [...document.querySelectorAll("button")]
+            .some((button) => button.textContent?.includes("Enable automatic operation"))`,
+      );
+
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Game menu"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `[...document.querySelectorAll("button")]
+          .some((button) => button.textContent?.includes("Save world"))`,
+      );
+      await evaluate(`(() => {
+        [...document.querySelectorAll("button")]
+          .find((button) => button.textContent?.includes("Save world"))
+          ?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector('[role="status"]')
+          ?.textContent.includes("Field record saved on this device") === true`,
+      );
+      const recovered = await evaluate<{
+        incident: string | null;
+        enabled: boolean;
+        incidentInventory: Record<string, number>;
+        output: Record<string, number>;
+        hazardEvidence: string[];
+      }>(`(() => {
+        const save = JSON.parse(
+          localStorage.getItem("industrial-site-save-v15") ?? "null"
+        );
+        const processor = Object.values(save.machines)
+          .find((machine) => machine.definitionId === "oversealed-furnace");
+        return {
+          incident: processor.incident,
+          enabled: processor.enabled,
+          incidentInventory: processor.incidentInventory,
+          output: processor.output,
+          hazardEvidence: save.hazardEvidence,
+        };
+      })()`);
+      expect(recovered).toEqual({
+        incident: null,
+        enabled: false,
+        incidentInventory: {},
+        output: { residue: 1 },
+        hazardEvidence: ["slag-jam"],
+      });
+
       socket.close();
     } catch (error) {
       throw new Error(
