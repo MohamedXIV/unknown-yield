@@ -638,6 +638,11 @@ export const fixture = validateContent({
     factoryRelocationFuelPerStep: 2,
     factoryRelocationDowntimeTicks: 24,
     beltCost: 1,
+    elevatedSolid: {
+      maxSupportSpan: 4,
+      deckCostPerCell: 1,
+      supportCost: 2,
+    },
     portCost: 2,
     transportEveryTicks: 3,
     stagingCapacity: 24,
