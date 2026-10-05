@@ -383,10 +383,12 @@ export const enCatalog: LocaleCatalog = {
   "ui.direction.north": "north",
   "material.ferrite.name": "Ferrite rubble",
   "material.plates.name": "Structural plates",
+  "material.ferrite-ceramic.name": "Magnetic ceramic",
   "material.raw.name": "Veined ore",
   "material.granules.name": "Conductive granules",
   "material.residue.name": "Vitrified residue",
   "material.catalyst.name": "Catalytic stone",
+  "material.catalyst-powder.name": "Catalyst powder",
   "material.orbital-binder.name": "Orbital binder",
   "material.orbital-propellant.name": "Orbital propellant",
   "material.orbital-coolant.name": "Orbital coolant",
@@ -419,6 +421,8 @@ export const enCatalog: LocaleCatalog = {
   "storage.depot.name": "Depot",
   "reaction.press-ferrite.observation":
     "Ferrite compacts into structural plates for local construction.",
+  "reaction.heat-ferrite.observation":
+    "Ambient heating vitrifies ferrite into a magnetic ceramic. The company values small batches, but demand saturates quickly.",
   "reaction.crush-raw.observation":
     "Fracturing the ore releases conductive grains. The company accepts this material for fuel.",
   "reaction.heat-raw.observation":
@@ -429,6 +433,8 @@ export const enCatalog: LocaleCatalog = {
     "The off-world binder sinters into a resonant matrix. The feedstock is consumed physically and must be resupplied through the terminal.",
   "reaction.sinter-catalyst.observation":
     "The catalytic stone binds into a resonant matrix with a stable export signature.",
+  "reaction.crush-catalyst.observation":
+    "Mechanical milling yields a stable catalyst powder. It is less valuable than resonant matrix, but company demand is broad and slow to saturate.",
   "reaction.heat-raw-oversealed.observation":
     "The oversealed chamber vitrifies the sample and trips a violent pressure release. The setup itself caused the failure.",
   "hazard.class.thermal-runaway.name": "Thermal runaway",
