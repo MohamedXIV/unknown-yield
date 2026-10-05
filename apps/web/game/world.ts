@@ -378,6 +378,53 @@ export function createWorld(
           ),
         );
       }
+      const drawUnderground = (
+        entry: Point,
+        exit: Point,
+        direction: number,
+        tint: number,
+      ) => {
+        const sx = (entry.x + 0.5) * X,
+          sy = (entry.y + 0.5) * Y,
+          ex = (exit.x + 0.5) * X,
+          ey = (exit.y + 0.5) * Y,
+          span = Math.abs(exit.x - entry.x) + Math.abs(exit.y - entry.y);
+        g.lineStyle(3, tint, 0.36);
+        for (let i = 0; i < span; i += 2) {
+          const from = i / span,
+            to = Math.min(1, (i + 1) / span);
+          g.lineBetween(
+            sx + (ex - sx) * from,
+            sy + (ey - sy) * from,
+            sx + (ex - sx) * to,
+            sy + (ey - sy) * to,
+          );
+        }
+        for (const portal of [entry, exit]) {
+          const cx = (portal.x + 0.5) * X,
+            cy = (portal.y + 0.5) * Y;
+          g.fillStyle(0x1b241d, 0.95).fillRoundedRect(
+            portal.x * X + 4,
+            portal.y * Y + 3,
+            X - 8,
+            Y - 6,
+            5,
+          );
+          g.lineStyle(2, tint, 0.9).strokeRoundedRect(
+            portal.x * X + 4,
+            portal.y * Y + 3,
+            X - 8,
+            Y - 6,
+            5,
+          );
+          this.arrow(g, cx, cy, direction, tint, 4);
+        }
+      };
+      for (const route of snapshot.undergroundSolids)
+        drawUnderground(route.entry, route.exit, route.direction, 0xb6ab7a);
+      for (const route of snapshot.undergroundLiquids)
+        drawUnderground(route.entry, route.exit, route.direction, 0x72aeb7);
+
       const beltViews = beltPresentations(snapshot);
       for (const b of snapshot.belts) {
         if (
@@ -558,6 +605,36 @@ export function createWorld(
       this.structures.add(
         this.text((t.x + 2) * X, (t.y + 4) * Y + 16, "COMPANY TERMINAL", 10),
       );
+      for (const route of snapshot.undergroundSolids) {
+        if (!route.cargo) continue;
+        const span =
+            Math.abs(route.exit.x - route.entry.x) +
+            Math.abs(route.exit.y - route.entry.y),
+          progress = 1 - route.cargo.remainingSteps / span,
+          x = (route.entry.x + 0.5 + (route.exit.x - route.entry.x) * progress) * X,
+          y = (route.entry.y + 0.5 + (route.exit.y - route.entry.y) * progress) * Y,
+          material = snapshot.materials.find(
+            (m) => m.id === route.cargo!.materialId,
+          );
+        g.fillStyle(color(material?.color ?? "#dad5b8")).fillRoundedRect(
+          x - 5,
+          y - 5,
+          10,
+          10,
+          2,
+        );
+      }
+      for (const route of snapshot.undergroundLiquids) {
+        if (!route.materialId || !route.quantity) continue;
+        const span =
+            Math.abs(route.exit.x - route.entry.x) +
+            Math.abs(route.exit.y - route.entry.y),
+          progress = 1 - route.remainingSteps / span,
+          x = (route.entry.x + 0.5 + (route.exit.x - route.entry.x) * progress) * X,
+          y = (route.entry.y + 0.5 + (route.exit.y - route.entry.y) * progress) * Y,
+          material = snapshot.materials.find((m) => m.id === route.materialId);
+        g.fillStyle(color(material?.color ?? "#69bac8")).fillCircle(x, y, 5);
+      }
       for (const m of snapshot.machines) {
         if (m.factoryId && !mode.openFactories.includes(m.factoryId)) continue;
         this.box(
@@ -1043,21 +1120,34 @@ export function createWorld(
           3,
         );
       }
-      const selected =
-        snapshot.machines.find((m) => m.id === mode.selected) ??
-        snapshot.factories.find((f) => f.id === mode.selected) ??
-        snapshot.storages.find((t) => t.id === mode.selected) ??
-        snapshot.pressureVessels.find((t) => t.id === mode.selected) ??
-        snapshot.tanks.find((t) => t.id === mode.selected) ??
-        [
-          ...snapshot.pipes,
-          ...snapshot.pumps,
-          ...snapshot.pressureLines,
-          ...snapshot.compressors,
-        ]
-          .filter((p) => p.id === mode.selected)
-          .map((p) => ({ ...p, width: 1, height: 1 }))[0] ??
-        (mode.selected === "terminal" ? snapshot.map.terminal : null);
+      const selectedRoute = [
+          ...snapshot.undergroundSolids,
+          ...snapshot.undergroundLiquids,
+        ].find((route) => route.id === mode.selected),
+        selected =
+          snapshot.machines.find((m) => m.id === mode.selected) ??
+          snapshot.factories.find((f) => f.id === mode.selected) ??
+          snapshot.storages.find((t) => t.id === mode.selected) ??
+          snapshot.pressureVessels.find((t) => t.id === mode.selected) ??
+          snapshot.tanks.find((t) => t.id === mode.selected) ??
+          [
+            ...snapshot.pipes,
+            ...snapshot.pumps,
+            ...snapshot.pressureLines,
+            ...snapshot.compressors,
+          ]
+            .filter((p) => p.id === mode.selected)
+            .map((p) => ({ ...p, width: 1, height: 1 }))[0] ??
+          (selectedRoute
+            ? {
+                x: Math.min(selectedRoute.entry.x, selectedRoute.exit.x),
+                y: Math.min(selectedRoute.entry.y, selectedRoute.exit.y),
+                width: Math.abs(selectedRoute.exit.x - selectedRoute.entry.x) + 1,
+                height: Math.abs(selectedRoute.exit.y - selectedRoute.entry.y) + 1,
+              }
+            : mode.selected === "terminal"
+              ? snapshot.map.terminal
+              : null);
       if (selected)
         g.lineStyle(2, 0xe3c78a, 0.85).strokeRect(
           selected.x * X - 3,
@@ -1074,7 +1164,22 @@ export function createWorld(
       const result = actions.preview(command),
         tint = result.ok ? 0xbdd79f : 0xe79b7c;
       ghost.fillStyle(tint, 0.2).lineStyle(2, tint, 0.8);
-      if (command.type === "placeFactory") {
+      if (
+        command.type === "placeUndergroundSolid" ||
+        command.type === "placeUndergroundLiquid"
+      ) {
+        const sx = (command.entry.x + 0.5) * X,
+          sy = (command.entry.y + 0.5) * Y,
+          ex = (command.exit.x + 0.5) * X,
+          ey = (command.exit.y + 0.5) * Y;
+        ghost.lineStyle(3, tint, 0.75).lineBetween(sx, sy, ex, ey);
+        for (const portal of [command.entry, command.exit])
+          ghost
+            .fillStyle(tint, 0.2)
+            .fillRect(portal.x * X, portal.y * Y, X, Y)
+            .lineStyle(2, tint, 0.9)
+            .strokeRect(portal.x * X, portal.y * Y, X, Y);
+      } else if (command.type === "placeFactory") {
         ghost
           .fillRect(
             command.x * X,
