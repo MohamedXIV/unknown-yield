@@ -316,7 +316,11 @@ function candidateFromStore(store: Store, base: Content): unknown {
       ),
       hazardNameKey = optionalText(row, "hazardNameKey", label),
       hazardObservationKey = optionalText(row, "hazardObservationKey", label),
-      hazardSaferHintKey = optionalText(row, "hazardSaferHintKey", label);
+      hazardSaferHintKey = optionalText(
+        { hazardSaferHintKey: row.hazardSaferHintKey ?? "" },
+        "hazardSaferHintKey",
+        label,
+      );
     return {
       id,
       operation: stringCell(row, "operation", label),
