@@ -1,7 +1,8 @@
 # Phase 14 Exit Review — Layered and long-distance logistics
 
 Issue: #144  
-Parent epic: #105
+Parent epic: #105  
+Delivery: PR #196
 
 Phase 14 evaluates topology-changing transport by demonstrated need rather than genre completeness.
 
