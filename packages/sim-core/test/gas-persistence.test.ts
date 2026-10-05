@@ -49,7 +49,7 @@ describe("gas persistence foundation", () => {
   });
   it("starts with explicit empty physical gas locations in the current schema", () => {
     const sim = new Simulation(fixture);
-    expect(sim.serialize().schemaVersion).toBe(21);
+    expect(sim.serialize().schemaVersion).toBe(22);
     expect(sim.serialize().pressureLines).toEqual({});
     expect(sim.serialize().pressureVessels).toEqual({});
     expect(sim.serialize().compressors).toEqual({});
@@ -84,7 +84,7 @@ describe("gas persistence foundation", () => {
     delete legacy.pressureVessels;
     delete legacy.compressors;
     expect(sim.load(legacy).ok).toBe(true);
-    expect(sim.serialize().schemaVersion).toBe(21);
+    expect(sim.serialize().schemaVersion).toBe(22);
     expect(sim.serialize().pressureLines).toEqual({});
     const before = sim.serialize();
     legacy.contentVersion = "world-01-v7";

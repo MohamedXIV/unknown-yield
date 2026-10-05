@@ -25,6 +25,7 @@ describe("content boundary", () => {
     expect(c.storages).toHaveLength(1);
     expect(c.storages[0]).toMatchObject({ id: "depot", capacity: 40 });
     expect(c.site.stagingCapacity).toBe(24);
+    expect(c.site.terminalShipmentCapacity).toBe(12);
     expect(c.site.sensingCapabilities.map((entry) => entry.id)).toEqual([
       "survey-scanner",
       "core-probe",
@@ -281,6 +282,7 @@ describe("content boundary", () => {
     "exchange",
     "storage",
     "staging",
+    "shipment",
   ] as const)("rejects invalid %s", (kind) => {
     const c = structuredClone(fixture);
     if (kind === "duplicate") c.materials.push(c.materials[0]);
@@ -291,6 +293,7 @@ describe("content boundary", () => {
     if (kind === "exchange") c.economy.exchange[0].floorCompensation = 13;
     if (kind === "storage") c.storages[0].capacity = 0;
     if (kind === "staging") c.site.stagingCapacity = 0;
+    if (kind === "shipment") c.site.terminalShipmentCapacity = 0;
     expect(() => validateContent(c)).toThrow();
   });
   it("validates authored assistance packages and repeat-recovery rules", () => {
