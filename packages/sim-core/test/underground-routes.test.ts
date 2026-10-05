@@ -178,7 +178,7 @@ it("rejects protected liquid when the buried route lacks required containment", 
 
 it("migrates schema 25 to empty underground route records and requires them in schema 26", () => {
   const current = new Simulation(fixture).serialize();
-  expect(current.schemaVersion).toBe(26);
+  expect(current.schemaVersion).toBe(27);
 
   const legacy = structuredClone(current) as Record<string, unknown>;
   legacy.schemaVersion = 25;
@@ -186,7 +186,7 @@ it("migrates schema 25 to empty underground route records and requires them in s
   delete legacy.undergroundLiquids;
   const migrated = new Simulation(fixture);
   expect(migrated.load(legacy).ok).toBe(true);
-  expect(migrated.serialize().schemaVersion).toBe(26);
+  expect(migrated.serialize().schemaVersion).toBe(27);
   expect(migrated.serialize().undergroundSolids).toEqual({});
   expect(migrated.serialize().undergroundLiquids).toEqual({});
 
