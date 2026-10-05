@@ -246,6 +246,142 @@ export function factoryReshapeError(
   return null;
 }
 
+export function factoryRelocationError(
+  c: Content,
+  s: Save,
+  factory: Factory,
+  target: Point,
+): string | null {
+  if (target.x === factory.x && target.y === factory.y)
+    return "Factory is already at the target location";
+
+  const dx = target.x - factory.x,
+    dy = target.y - factory.y,
+    targetRect: Rect = {
+      x: target.x,
+      y: target.y,
+      width: factory.width,
+      height: factory.height,
+    },
+    ownedMachines = Object.values(s.machines).filter(
+      (machine) => machine.factoryId === factory.id,
+    ),
+    ownedBelts = Object.values(s.belts).filter((belt) => contains(factory, belt)),
+    ownedPipes = Object.values(s.pipes).filter((pipe) => contains(factory, pipe)),
+    ownedPumps = Object.values(s.pumps).filter((pump) => contains(factory, pump)),
+    ownedTanks = Object.values(s.tanks).filter((tank) =>
+      inside(factory, footprint(tank, c.liquidLogistics!.tank)),
+    ),
+    ownedLines = Object.values(s.pressureLines).filter((line) =>
+      contains(factory, line),
+    ),
+    ownedCompressors = Object.values(s.compressors).filter((compressor) =>
+      contains(factory, compressor),
+    ),
+    ownedVessels = Object.values(s.pressureVessels).filter((vessel) =>
+      inside(factory, footprint(vessel, c.gasLogistics!.vessel)),
+    );
+
+  if (
+    ownedMachines.some((machine) => machine.enabled || machine.job) ||
+    ownedPumps.some((pump) => pump.enabled) ||
+    ownedCompressors.some((compressor) => compressor.enabled)
+  )
+    return "Suspend internal equipment before relocation";
+
+  const stage = structuredClone(s);
+  delete stage.factories[factory.id];
+  for (const machine of ownedMachines) delete stage.machines[machine.id];
+  for (const belt of ownedBelts) delete stage.belts[key(belt)];
+  for (const pipe of ownedPipes) delete stage.pipes[key(pipe)];
+  for (const pump of ownedPumps) delete stage.pumps[pump.id];
+  for (const tank of ownedTanks) delete stage.tanks[tank.id];
+  for (const line of ownedLines) delete stage.pressureLines[key(line)];
+  for (const compressor of ownedCompressors)
+    delete stage.compressors[compressor.id];
+  for (const vessel of ownedVessels)
+    delete stage.pressureVessels[vessel.id];
+
+  const shellError = factoryError(c, stage, targetRect);
+  if (shellError) return shellError;
+
+  const movedFactory: Factory = {
+    ...factory,
+    ...targetRect,
+    ports: [],
+  };
+  for (const port of factory.ports) {
+    const moved = { ...port, x: port.x + dx, y: port.y + dy };
+    const error = portError(movedFactory, moved, moved.direction);
+    if (error) return "Relocated factory port is invalid";
+    movedFactory.ports.push(moved);
+  }
+  stage.factories[factory.id] = movedFactory;
+
+  for (const machine of ownedMachines) {
+    const moved = { ...machine, x: machine.x + dx, y: machine.y + dy };
+    const placement = machinePlacement(c, stage, moved);
+    if (placement.error || placement.factoryId !== factory.id)
+      return placement.error ?? "Relocated machine lost factory ownership";
+    stage.machines[machine.id] = moved;
+  }
+
+  for (const belt of ownedBelts) {
+    const moved = { ...belt, x: belt.x + dx, y: belt.y + dy };
+    const error = beltError(c, stage, moved, moved.direction);
+    if (error) return error;
+    stage.belts[key(moved)] = moved;
+  }
+
+  if (c.liquidLogistics) {
+    for (const pipe of ownedPipes) {
+      const moved = { ...pipe, x: pipe.x + dx, y: pipe.y + dy };
+      const error = liquidPlacementError(c, stage, moved, "pipe");
+      if (error) return error;
+      stage.pipes[key(moved)] = moved;
+    }
+    for (const pump of ownedPumps) {
+      const moved = { ...pump, x: pump.x + dx, y: pump.y + dy };
+      const error = liquidPlacementError(c, stage, moved, "pump");
+      if (error) return error;
+      stage.pumps[pump.id] = moved;
+    }
+    for (const tank of ownedTanks) {
+      const moved = { ...tank, x: tank.x + dx, y: tank.y + dy };
+      const error = liquidPlacementError(c, stage, moved, "tank");
+      if (error) return error;
+      stage.tanks[tank.id] = moved;
+    }
+  }
+
+  if (c.gasLogistics) {
+    for (const line of ownedLines) {
+      const moved = { ...line, x: line.x + dx, y: line.y + dy };
+      const error = gasPlacementError(c, stage, moved, "line");
+      if (error) return error;
+      stage.pressureLines[key(moved)] = moved;
+    }
+    for (const compressor of ownedCompressors) {
+      const moved = {
+        ...compressor,
+        x: compressor.x + dx,
+        y: compressor.y + dy,
+      };
+      const error = gasPlacementError(c, stage, moved, "compressor");
+      if (error) return error;
+      stage.compressors[compressor.id] = moved;
+    }
+    for (const vessel of ownedVessels) {
+      const moved = { ...vessel, x: vessel.x + dx, y: vessel.y + dy };
+      const error = gasPlacementError(c, stage, moved, "vessel");
+      if (error) return error;
+      stage.pressureVessels[vessel.id] = moved;
+    }
+  }
+
+  return null;
+}
+
 export function storageError(
   c: Content,
   s: Save,
