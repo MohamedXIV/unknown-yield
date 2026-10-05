@@ -1,6 +1,12 @@
 import { checkContainment } from "@site/content";
 import { pumpExposureEligible, pumpFailureDefinition } from "./pump-recovery";
-import { terminalReceiver, terminalInletDiagnostic } from "./terminal";
+import {
+  terminalReceiver,
+  terminalInletDiagnostic,
+  terminalModulePoint,
+  terminalModuleOutlet,
+} from "./terminal";
+import { terminalModuleCarriesImport } from "./imports";
 import {
   liquidContainment,
   receivingDiagnostic,
@@ -359,6 +365,34 @@ export function transportLiquids(
       0,
       p,
       p.outlet,
+    );
+  }
+  for (const definition of c.site.terminalModules) {
+    if (definition.handlingState !== "liquid") continue;
+    const contents = s.terminalModules[definition.id];
+    if (
+      !contents?.materialId ||
+      !contents.quantity ||
+      !terminalModuleCarriesImport(c, definition.id, contents.materialId)
+    )
+      continue;
+    const point = terminalModulePoint(c, definition);
+    const outlet = terminalModuleOutlet(c, definition);
+    admit(
+      {
+        id: "terminal:" + definition.id,
+        material: contents.materialId,
+        units: contents.quantity,
+        take: (n) => {
+          contents.quantity -= n;
+          if (!contents.quantity) contents.materialId = null;
+        },
+      },
+      targetAt(c, s, outlet, outlet.direction, true),
+      cfg.pipe.transfer,
+      0,
+      point,
+      outlet.direction,
     );
   }
   for (const pump of Object.values(s.pumps).sort((a, b) =>

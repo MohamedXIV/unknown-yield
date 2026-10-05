@@ -7,6 +7,18 @@ export const fixture = validateContent({
       id: "corrosion-resistant",
       nameKey: "containment.corrosion-resistant.name",
     },
+    {
+      id: "cryogenic-rated",
+      nameKey: "containment.cryogenic-rated.name",
+    },
+    {
+      id: "hazard-isolated",
+      nameKey: "containment.hazard-isolated.name",
+    },
+    {
+      id: "secure-chain",
+      nameKey: "containment.secure-chain.name",
+    },
   ],
   hazardClasses: [
     {
@@ -67,6 +79,12 @@ export const fixture = validateContent({
         capabilities: ["corrosion-resistant"],
         additionalCost: { pipe: 2, tank: 10, pump: 4 },
       },
+      {
+        id: "sealed-cold",
+        nameKey: "containment.profile.sealed-cold.name",
+        capabilities: ["cryogenic-rated", "hazard-isolated", "secure-chain"],
+        additionalCost: { pipe: 4, tank: 14, pump: 6 },
+      },
     ],
   },
   materials: [
@@ -126,6 +144,21 @@ export const fixture = validateContent({
       nameKey: "material.orbital-binder.name",
       color: "#9eb6d8",
       known: true,
+    },
+    {
+      id: "orbital-propellant",
+      nameKey: "material.orbital-propellant.name",
+      color: "#a8c4de",
+      known: true,
+      handlingState: "gas",
+    },
+    {
+      id: "orbital-coolant",
+      nameKey: "material.orbital-coolant.name",
+      color: "#9fd8e5",
+      known: true,
+      handlingState: "liquid",
+      requiredContainment: ["cryogenic-rated", "hazard-isolated", "secure-chain"],
     },
     {
       id: "matrix",
@@ -593,6 +626,7 @@ export const fixture = validateContent({
     terminalModules: [
       { id: "liquid-dock", nameKey: "terminal.module.liquid-dock.name", handlingState: "liquid", containmentCapabilities: ["corrosion-resistant"], capacity: 24, cost: 30, requiredTerminalCapabilityId: "liquid-outbound", inlet: { x: 1, y: 3, side: 1 } },
       { id: "gas-dock", nameKey: "terminal.module.gas-dock.name", handlingState: "gas", containmentCapabilities: [], capacity: 16, cost: 36, requiredTerminalCapabilityId: "gas-outbound", inlet: { x: 3, y: 1, side: 0 } },
+      { id: "cryo-dock", nameKey: "terminal.module.cryo-dock.name", handlingState: "liquid", containmentCapabilities: ["cryogenic-rated", "hazard-isolated", "secure-chain"], capacity: 8, cost: 42, requiredTerminalCapabilityId: "specialized-inbound", inlet: { x: 0, y: 1, side: 2 } },
     ],
     width: 80,
     height: 60,
@@ -677,6 +711,24 @@ export const fixture = validateContent({
         quantity: 6,
         fuelCost: 42,
       },
+      {
+        id: "orbital-propellant-cylinder",
+        nameKey: "import.orbital-propellant-cylinder.name",
+        briefKey: "import.orbital-propellant-cylinder.brief",
+        materialId: "orbital-propellant",
+        quantity: 4,
+        fuelCost: 32,
+        terminalModuleId: "gas-dock",
+      },
+      {
+        id: "orbital-coolant-canister",
+        nameKey: "import.orbital-coolant-canister.name",
+        briefKey: "import.orbital-coolant-canister.brief",
+        materialId: "orbital-coolant",
+        quantity: 4,
+        fuelCost: 36,
+        terminalModuleId: "cryo-dock",
+      },
     ],
     exchange: [
       {
@@ -722,6 +774,7 @@ export const fixture = validateContent({
       },
       { id: "liquid-outbound", nameKey: "terminal.capability.liquid-outbound.name" },
       { id: "gas-outbound", nameKey: "terminal.capability.gas-outbound.name" },
+      { id: "specialized-inbound", nameKey: "terminal.capability.specialized-inbound.name" },
     ],
     milestones: [
       {
@@ -738,6 +791,13 @@ export const fixture = validateContent({
       },
       { id: "liquid-study-certified", nameKey: "milestone.liquid-study-certified.name", hintKey: "milestone.liquid-study-certified.hint", requires: [{ type: "reaction-confirmed", reactionId: "liquefy-raw" }], unlockTerminalCapabilityIds: ["liquid-outbound"] },
       { id: "gas-study-certified", nameKey: "milestone.gas-study-certified.name", hintKey: "milestone.gas-study-certified.hint", requires: [{ type: "reaction-confirmed", reactionId: "vaporize-liquid-0" }], unlockTerminalCapabilityIds: ["gas-outbound"] },
+      {
+        id: "specialized-handling-certified",
+        nameKey: "milestone.specialized-handling-certified.name",
+        hintKey: "milestone.specialized-handling-certified.hint",
+        requires: [{ type: "milestone-completed", milestoneId: "sealed-study-certified" }],
+        unlockTerminalCapabilityIds: ["specialized-inbound"],
+      },
       {
         id: "resonance-survey-certified",
         nameKey: "milestone.resonance-survey-certified.name",

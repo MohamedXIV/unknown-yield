@@ -2036,7 +2036,7 @@ function GameClientInner() {
                     <span>
                       {t("ui.terminal.import.held", {
                         material: materialName(supply.materialId),
-                        quantity: snapshot.importStaging[supply.materialId] ?? 0,
+                        quantity: supply.held,
                       })}
                     </span>
                     <button
@@ -2052,10 +2052,7 @@ function GameClientInner() {
                     </button>
                     {!supply.eligible && supply.reason && (
                       <span>
-                        {t(
-                          "ui.terminal.import.result." +
-                            (supply.reason === "fuel" ? "fuel" : "capacity"),
-                        )}
+                        {t("ui.terminal.import.result." + supply.reason)}
                       </span>
                     )}
                   </article>

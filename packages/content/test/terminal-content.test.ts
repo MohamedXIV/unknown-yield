@@ -3,10 +3,21 @@ import { fixture, validateContent, enCatalog } from "../src/index";
 import { createContentStore, studioBundleFromStore } from "../src/studio";
 
 describe("physical terminal content", () => {
-  it("authors two protected edge docks and preserves them through Studio", () => {
-    expect(fixture.site.terminalModules).toHaveLength(2);
+  it("authors protected edge docks and preserves them through Studio", () => {
+    expect(fixture.site.terminalModules).toHaveLength(3);
     expect(fixture.site.terminalModules[0]).toMatchObject({ id: "liquid-dock", capacity: 24, cost: 30, inlet: { x: 1, y: 3, side: 1 } });
     expect(fixture.site.terminalModules[1]).toMatchObject({ id: "gas-dock", capacity: 16, cost: 36, inlet: { x: 3, y: 1, side: 0 } });
+    expect(fixture.site.terminalModules[2]).toMatchObject({
+      id: "cryo-dock",
+      handlingState: "liquid",
+      containmentCapabilities: [
+        "cryogenic-rated",
+        "hazard-isolated",
+        "secure-chain",
+      ],
+      capacity: 8,
+      inlet: { x: 0, y: 1, side: 2 },
+    });
     expect(studioBundleFromStore(createContentStore(fixture), fixture).content.site.terminalModules).toEqual(fixture.site.terminalModules);
   });
   it("rejects bad geometry, protection, references and self-blocking evidence", () => {

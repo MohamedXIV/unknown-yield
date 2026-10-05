@@ -1,5 +1,9 @@
 import type { Content } from "@site/content";
 import {
+  terminalModuleDefinition,
+  terminalModuleUnlocked,
+} from "./terminal";
+import {
   change,
   total,
   type CommandResult,
@@ -39,17 +43,71 @@ export function terminalImportOutlet(c: Content): Point & { direction: number } 
   };
 }
 
+function importDestination(
+  c: Content,
+  s: Save,
+  definition: Content["economy"]["imports"][number],
+) {
+  if (!definition.terminalModuleId) {
+    const held = s.terminalImports.staging[definition.materialId] ?? 0;
+    const used = total(s.terminalImports.staging);
+    return {
+      held,
+      reason:
+        used + definition.quantity > c.site.terminalShipmentCapacity
+          ? ("capacity" as const)
+          : null,
+      apply(units: number) {
+        change(s.terminalImports.staging, definition.materialId, units);
+      },
+    };
+  }
+  const module = terminalModuleDefinition(c, definition.terminalModuleId)!;
+  if (!terminalModuleUnlocked(c, s, module.id))
+    return { held: 0, reason: "locked" as const, apply() {} };
+  const contents = s.terminalModules[module.id];
+  if (!contents)
+    return { held: 0, reason: "module-missing" as const, apply() {} };
+  if (contents.materialId && contents.materialId !== definition.materialId)
+    return { held: 0, reason: "incompatible" as const, apply() {} };
+  return {
+    held:
+      contents.materialId === definition.materialId ? contents.quantity : 0,
+    reason:
+      contents.quantity + definition.quantity > module.capacity
+        ? ("capacity" as const)
+        : null,
+    apply(units: number) {
+      contents.materialId = definition.materialId;
+      contents.quantity += units;
+    },
+  };
+}
+
 export function importSupplyViews(c: Content, s: Save): ImportSupplyView[] {
-  const used = total(s.terminalImports.staging);
   return c.economy.imports.map((definition) => {
+    const destination = importDestination(c, s, definition);
     const reason =
-      s.fuel < definition.fuelCost
-        ? "fuel"
-        : used + definition.quantity > c.site.terminalShipmentCapacity
-          ? "capacity"
-          : null;
-    return { ...definition, eligible: reason === null, reason };
+      s.fuel < definition.fuelCost ? "fuel" : destination.reason;
+    return {
+      ...definition,
+      held: destination.held,
+      eligible: reason === null,
+      reason,
+    };
   });
+}
+
+export function terminalModuleCarriesImport(
+  c: Content,
+  moduleId: string,
+  materialId: string,
+): boolean {
+  return c.economy.imports.some(
+    (definition) =>
+      definition.terminalModuleId === moduleId &&
+      definition.materialId === materialId,
+  );
 }
 
 export function requestImportCommand(
@@ -71,22 +129,16 @@ export function requestImportCommand(
       message: "Not enough company fuel for import",
       messageKey: "ui.terminal.import.result.fuel",
     };
-  if (
-    total(s.terminalImports.staging) + definition.quantity >
-    c.site.terminalShipmentCapacity
-  )
+  const destination = importDestination(c, s, definition);
+  if (destination.reason)
     return {
       ok: false,
-      message: "Terminal import holding is full",
-      messageKey: "ui.terminal.import.result.capacity",
+      message: destination.reason,
+      messageKey: "ui.terminal.import.result." + destination.reason,
     };
   if (apply) {
     s.fuel -= definition.fuelCost;
-    change(
-      s.terminalImports.staging,
-      definition.materialId,
-      definition.quantity,
-    );
+    destination.apply(definition.quantity);
     change(
       s.terminalImports.received,
       definition.materialId,

@@ -258,7 +258,7 @@ export const contentSchema = z.object({
       .default([]),
     terminalModules: z.array(z.object({
       id, nameKey: localeKeySchema,
-      handlingState: z.enum(["liquid", "gas"]),
+      handlingState: z.enum(["solid", "liquid", "gas"]),
       containmentCapabilities: capabilities,
       capacity: positive, cost: positive,
       requiredTerminalCapabilityId: id,
@@ -326,6 +326,7 @@ export const contentSchema = z.object({
           materialId: id,
           quantity: positive,
           fuelCost: positive,
+          terminalModuleId: id.optional(),
         }),
       )
       .default([]),
@@ -695,10 +696,35 @@ function validateContentInternal(
     if (importIds.has(supply.id)) throw new Error("Duplicate import supply ID");
     importIds.add(supply.id);
     const material = c.materials.find((entry) => entry.id === supply.materialId);
-    if (!material || !material.known || material.handlingState !== "solid")
-      throw new Error("Import supply requires a known solid material");
-    if (supply.quantity > c.site.terminalShipmentCapacity)
-      throw new Error("Import supply exceeds terminal cargo capacity");
+    if (!material || !material.known)
+      throw new Error("Import supply requires a known material");
+    const module = supply.terminalModuleId
+      ? c.site.terminalModules.find((entry) => entry.id === supply.terminalModuleId)
+      : undefined;
+    if (supply.terminalModuleId && !module)
+      throw new Error("Import supply references missing terminal module");
+    if (module) {
+      if (
+        module.handlingState !== material.handlingState ||
+        !checkContainment(
+          c,
+          material.id,
+          [module.handlingState],
+          module.containmentCapabilities,
+        ).ok
+      )
+        throw new Error("Import supply terminal module cannot handle material");
+      if (supply.quantity > module.capacity)
+        throw new Error("Import supply exceeds terminal module capacity");
+    } else {
+      if (
+        material.handlingState !== "solid" ||
+        !checkContainment(c, material.id, ["solid"], c.site.dryContainment).ok
+      )
+        throw new Error("Import supply requires a compatible terminal module");
+      if (supply.quantity > c.site.terminalShipmentCapacity)
+        throw new Error("Import supply exceeds terminal cargo capacity");
+    }
     if (
       c.site.deposits.some((entry) => entry.material === supply.materialId) ||
       c.site.hiddenDeposits.some((entry) => entry.material === supply.materialId) ||
@@ -971,18 +997,22 @@ function validateContentInternal(
       throw new Error("Terminal handling unlock depends on blocked export");
   }
 
-  const moduleIds = new Set<string>(), moduleStates = new Set<string>(), moduleCells = new Set<string>();
+  const moduleIds = new Set<string>(), moduleCells = new Set<string>();
   for (const d of c.site.terminalModules) {
     const { x, y, side } = d.inlet, t = c.site.terminal;
     const cell = `${x},${y}`;
-    if (moduleIds.has(d.id) || moduleStates.has(d.handlingState) || moduleCells.has(cell)) throw Error("Duplicate terminal module slot");
-    moduleIds.add(d.id); moduleStates.add(d.handlingState); moduleCells.add(cell);
+    if (moduleIds.has(d.id) || moduleCells.has(cell)) throw Error("Duplicate terminal module slot");
+    moduleIds.add(d.id); moduleCells.add(cell);
     if (x >= t.width || y >= t.height || !(side === 0 ? x === t.width - 1 : side === 1 ? y === t.height - 1 : side === 2 ? x === 0 : y === 0)) throw Error("Invalid terminal inlet geometry");
     const outsideX = t.x + x + (side === 0 ? 1 : side === 2 ? -1 : 0);
     const outsideY = t.y + y + (side === 1 ? 1 : side === 3 ? -1 : 0);
     if (outsideX < 0 || outsideY < 0 || outsideX >= c.site.width || outsideY >= c.site.height) throw Error("Terminal inlet has no outside approach");
     if (d.nameKey !== `terminal.module.${d.id}.name`) throw Error("Localization key must match terminal module");
-    if (d.handlingState === "liquid" ? !c.liquidLogistics : !c.gasLogistics) throw Error("Terminal module requires logistics");
+    if (
+      (d.handlingState === "liquid" && !c.liquidLogistics) ||
+      (d.handlingState === "gas" && !c.gasLogistics)
+    )
+      throw Error("Terminal module requires logistics");
     const unlocker = capabilityUnlocker.get(d.requiredTerminalCapabilityId);
     if (!capabilityIds.has(d.requiredTerminalCapabilityId) || !unlocker) throw Error("Terminal module requires a capability unlock");
     for (const listing of c.economy.exchange) {
