@@ -173,13 +173,14 @@ it("completes the Phase 10 manufactured exploration loop in one persistent world
   command({ type: "setEnabled", machineId: collector, enabled: false });
 
   expect(
-    command({
+    sim.command({
       type: "sense",
       capabilityId: "resonance-probe",
       x: 57,
       y: 10,
     }),
-  ).toBeDefined();
+  ).toMatchObject({ ok: true });
+  audit(sim);
   expect(sim.serialize().discoveredDeposits).toContain("catalyst-seam-a");
   expect(sim.serialize().deposits["catalyst-seam-a"]).toBe(800);
   expect(JSON.stringify(sim.snapshot())).not.toContain("anomaly-d");
