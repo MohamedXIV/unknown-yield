@@ -6,7 +6,7 @@ describe("Phase 15 physical higher fuel classes", () => {
     expect(fixture.fuelClasses).toEqual([
       {
         id: "advanced-propellant",
-        nameKey: "fuel-class.advanced-propellant.name",
+        nameKey: "fuel.class.advanced-propellant.name",
         materialId: "orbital-propellant",
         terminalModuleId: "gas-dock",
         requiredMilestoneId: "gas-study-certified",
