@@ -839,7 +839,7 @@ export function applyCommand(
         const cost = undergroundLiquidCost(c, draft);
         if (!affordable(cost)) return fail("Not enough structural plates");
         if (!apply) return ok("Place underground liquid route", cost);
-        const id = issue("ul");
+        const id = issue("w");
         pay(cost);
         s.undergroundLiquids[id] = {
           id,
@@ -857,7 +857,7 @@ export function applyCommand(
       const cost = undergroundSolidCost(c, draft);
       if (!affordable(cost)) return fail("Not enough structural plates");
       if (!apply) return ok("Place underground solid route", cost);
-      const id = issue("us");
+      const id = issue("q");
       pay(cost);
       s.undergroundSolids[id] = {
         id,
