@@ -18,6 +18,25 @@ export const next = (p: Point, d: number) => ({
   x: p.x + vectors[d].x,
   y: p.y + vectors[d].y,
 });
+export const undergroundSpan = (a: Point, b: Point) =>
+  Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+export function undergroundDirection(a: Point, b: Point): number | null {
+  if (a.y === b.y && a.x !== b.x) return b.x > a.x ? 0 : 2;
+  if (a.x === b.x && a.y !== b.y) return b.y > a.y ? 1 : 3;
+  return null;
+}
+export function undergroundPortalRects(s: Save): Rect[] {
+  return [
+    ...Object.values(s.undergroundSolids).flatMap((route) => [
+      { ...route.entry, width: 1, height: 1 },
+      { ...route.exit, width: 1, height: 1 },
+    ]),
+    ...Object.values(s.undergroundLiquids).flatMap((route) => [
+      { ...route.entry, width: 1, height: 1 },
+      { ...route.exit, width: 1, height: 1 },
+    ]),
+  ];
+}
 export const contains = (r: Rect, p: Point) =>
   p.x >= r.x && p.y >= r.y && p.x < r.x + r.width && p.y < r.y + r.height;
 export const overlaps = (a: Rect, b: Rect) =>
@@ -63,6 +82,52 @@ export const bounds = (c: Content, r: Rect) =>
   r.y >= 0 &&
   r.x + r.width <= c.site.width &&
   r.y + r.height <= c.site.height;
+
+export function undergroundPlacementError(
+  c: Content,
+  s: Save,
+  entry: Point,
+  exit: Point,
+): string | null {
+  const direction = undergroundDirection(entry, exit);
+  if (direction === null)
+    return "Underground endpoints must share one cardinal axis";
+  if (undergroundSpan(entry, exit) < 2)
+    return "Underground span must cross at least one buried cell";
+  for (const point of [entry, exit]) {
+    const r = { ...point, width: 1, height: 1 };
+    if (!bounds(c, r)) return "Outside the site boundary";
+    if (
+      contains(c.site.terminal, point) ||
+      c.site.deposits.some((deposit) => contains(deposit, point)) ||
+      Object.values(s.factories).some((factory) => contains(factory, point)) ||
+      Object.values(s.machines).some((machine) =>
+        contains(
+          footprint(
+            machine,
+            c.machines.find((d) => d.id === machine.definitionId)!,
+          ),
+          point,
+        ),
+      ) ||
+      Object.values(s.storages).some((storage) =>
+        contains(
+          footprint(
+            storage,
+            c.storages.find((d) => d.id === storage.definitionId)!,
+          ),
+          point,
+        ),
+      ) ||
+      Object.hasOwn(s.belts, key(point)) ||
+      [...liquidRects(c, s), ...gasRects(c, s), ...undergroundPortalRects(s)].some(
+        (other) => contains(other, point),
+      )
+    )
+      return "Underground portal surface cell is occupied";
+  }
+  return null;
+}
 export function factoryError(c: Content, s: Save, r: Rect): string | null {
   if (!bounds(c, r)) return "Outside the site boundary";
   if (
@@ -104,9 +169,11 @@ export function factoryError(c: Content, s: Save, r: Rect): string | null {
       ),
     ) ||
     Object.values(s.belts).some((b) => contains(r, b)) ||
-    [...liquidRects(c, s), ...gasRects(c, s)].some((other) =>
-      overlaps(r, other),
-    )
+    [
+      ...liquidRects(c, s),
+      ...gasRects(c, s),
+      ...undergroundPortalRects(s),
+    ].some((other) => overlaps(r, other))
   )
     return "Space is already occupied";
   return null;
@@ -420,9 +487,11 @@ export function storageError(
       ),
     ) ||
     Object.values(s.belts).some((b) => contains(r, b)) ||
-    [...liquidRects(c, s), ...gasRects(c, s)].some((other) =>
-      overlaps(r, other),
-    )
+    [
+      ...liquidRects(c, s),
+      ...gasRects(c, s),
+      ...undergroundPortalRects(s),
+    ].some((other) => overlaps(r, other))
   )
     return "Space is already occupied";
   return null;
@@ -541,7 +610,13 @@ export function beltError(
     )
   )
     return "A structure occupies this cell";
-  if ([...liquidRects(c, s), ...gasRects(c, s)].some((r) => contains(r, p)))
+  if (
+    [
+      ...liquidRects(c, s),
+      ...gasRects(c, s),
+      ...undergroundPortalRects(s),
+    ].some((r) => contains(r, p))
+  )
     return "A structure occupies this cell";
   if (Object.hasOwn(s.belts, key(p)))
     return "A belt already occupies this cell";
@@ -592,9 +667,11 @@ export function liquidPlacementError(
       ),
     ) ||
     Object.values(s.belts).some((b) => contains(r, b)) ||
-    [...liquidRects(c, s), ...gasRects(c, s)].some((other) =>
-      overlaps(r, other),
-    )
+    [
+      ...liquidRects(c, s),
+      ...gasRects(c, s),
+      ...undergroundPortalRects(s),
+    ].some((other) => overlaps(r, other))
   )
     return "Space is already occupied";
   for (const f of Object.values(s.factories)) {
@@ -660,9 +737,11 @@ export function gasPlacementError(
       ),
     ) ||
     Object.values(s.belts).some((b) => contains(r, b)) ||
-    [...liquidRects(c, s), ...gasRects(c, s)].some((other) =>
-      overlaps(r, other),
-    )
+    [
+      ...liquidRects(c, s),
+      ...gasRects(c, s),
+      ...undergroundPortalRects(s),
+    ].some((other) => overlaps(r, other))
   )
     return "Space is already occupied";
   for (const f of Object.values(s.factories)) {
