@@ -5,7 +5,7 @@ import { terminalState } from "./terminal-helpers";
 it("exposes detached module views without undiscovered material or listings", () => {
   const sim = new Simulation(fixture),
     fresh = sim.snapshot();
-  expect(fresh.terminalModules).toHaveLength(2);
+  expect(fresh.terminalModules).toHaveLength(3);
   expect(fresh.terminalModules.every((m) => !m.installed && !m.unlocked)).toBe(
     true,
   );
@@ -20,6 +20,7 @@ it("exposes detached module views without undiscovered material or listings", ()
   ).toBe(true);
   const before = sim.serialize(),
     view = sim.snapshot();
-  view.terminalModules[1].contents.quantity = 999;
+  view.terminalModules.find((module) => module.id === "gas-dock")!.contents.quantity =
+    999;
   expect(sim.serialize()).toEqual(before);
 });

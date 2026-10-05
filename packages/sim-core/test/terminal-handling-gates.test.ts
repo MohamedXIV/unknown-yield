@@ -2,6 +2,7 @@ import { expect, it } from "vitest";
 import { fixture } from "@site/content";
 import { auditLedger } from "../src/ledger";
 import { refreshMilestones } from "../src/milestones";
+import { initializeKnownMarkets } from "../src/market";
 import { Simulation } from "../src/simulation";
 import { experimentEvidenceKey } from "../src/types";
 import { terminalState } from "./terminal-helpers";
@@ -24,6 +25,7 @@ function addConfirmedReaction(
     processConditionId: reaction.processConditionId ?? null,
     state: "confirmed",
   };
+  initializeKnownMarkets(fixture, state);
   refreshMilestones(fixture, state);
   refreshMilestones(fixture, state);
 }

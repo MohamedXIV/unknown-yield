@@ -1016,7 +1016,11 @@ describe("gas recurrence boundary", () => {
         ...fixture.site,
         terminal: { x: 35, y: 14, width: 4, height: 4 },
         terminalModules: fixture.site.terminalModules.map((d) =>
-          d.id === "gas-dock" ? { ...d, inlet: { x: 0, y: 1, side: 2 } } : d,
+          d.id === "gas-dock"
+            ? { ...d, inlet: { x: 0, y: 1, side: 2 } }
+            : d.id === "cryo-dock"
+              ? { ...d, inlet: { x: 1, y: 0, side: 3 } }
+              : d,
         ),
       },
     });
