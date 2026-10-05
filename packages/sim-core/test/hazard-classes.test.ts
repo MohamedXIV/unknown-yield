@@ -128,3 +128,109 @@ it("resolves class identity from authored data without changing trigger rules", 
     },
   });
 });
+
+
+function armedFerriteHazardLine() {
+  const sim = new Simulation(fixture);
+  const state = sim.serialize();
+  const prerequisite = fixture.reactions.find(
+    (reaction) => reaction.id === "heat-raw-sealed",
+  )!;
+  state.knowledge.push(prerequisite.id);
+  state.evidence[
+    experimentEvidenceKey(
+      prerequisite.operation,
+      prerequisite.input,
+      prerequisite.processConditionId ?? null,
+    )
+  ] = {
+    operationId: prerequisite.operation,
+    inputId: prerequisite.input,
+    processConditionId: prerequisite.processConditionId ?? null,
+    state: "confirmed",
+  };
+  initializeKnownMarkets(fixture, state);
+  expect(sim.load(state).ok).toBe(true);
+
+  const factoryId = build(sim, {
+    type: "placeFactory",
+    x: 24,
+    y: 23,
+    width: 10,
+    height: 10,
+  });
+  build(sim, {
+    type: "placePort",
+    factoryId,
+    x: 24,
+    y: 27,
+    direction: 0,
+  });
+  build(sim, {
+    type: "placeMachine",
+    definitionId: "extractor",
+    x: 18,
+    y: 26,
+    direction: 0,
+  });
+  const processorId = build(sim, {
+    type: "placeMachine",
+    definitionId: "oversealed-furnace",
+    x: 27,
+    y: 26,
+    direction: 0,
+  });
+  build(sim, {
+    type: "placeBelts",
+    points: Array.from({ length: 7 }, (_, index) => ({
+      x: 20 + index,
+      y: 27,
+    })),
+    direction: 0,
+  });
+  return { sim, processorId };
+}
+
+it("persists a conservative stranded-output consequence without deleting material", () => {
+  const { sim, processorId } = armedFerriteHazardLine();
+
+  for (
+    let tick = 0;
+    tick < 500 && !sim.serialize().machines[processorId].incident;
+    tick++
+  )
+    sim.step(fixture.tickMs);
+
+  const state = sim.serialize();
+  expect(state.machines[processorId]).toMatchObject({
+    incident: "slag-jam",
+    enabled: false,
+    incidentInventory: { residue: 1 },
+  });
+  expect(state.machines[processorId].output.residue ?? 0).toBe(0);
+  expect(state.flows.produced.residue).toBeGreaterThanOrEqual(1);
+
+  const ledger = auditLedger(fixture, state);
+  expect(ledger.ok, JSON.stringify(ledger.mismatches)).toBe(true);
+  expect(
+    ledger.rows.find((row) => row.material === "residue")?.machineIncidents,
+  ).toBeGreaterThanOrEqual(1);
+
+  const beforeRestart = sim.serialize();
+  expect(
+    sim.command({
+      type: "setEnabled",
+      machineId: processorId,
+      enabled: true,
+    }),
+  ).toMatchObject({
+    ok: false,
+    message: "Physical hazard consequence blocks restart",
+  });
+  expect(sim.serialize()).toEqual(beforeRestart);
+
+  const restored = new Simulation(fixture);
+  expect(restored.load(JSON.parse(JSON.stringify(state))).ok).toBe(true);
+  expect(restored.serialize()).toEqual(state);
+  expect(auditLedger(fixture, restored.serialize()).ok).toBe(true);
+});
