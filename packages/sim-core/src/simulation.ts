@@ -137,6 +137,28 @@ export class Simulation {
               : { initial: false }),
           };
         });
+    const hazardEvidence = s.hazardEvidence.map((hazardId) => {
+      const incident = hazardDefinition(c, hazardId)!;
+      const setup = c.machines.find(
+        (definition) =>
+          definition.role === "processor" &&
+          definition.operations.includes(incident.reaction.operation) &&
+          (definition.processConditionId ?? null) ===
+            (incident.reaction.processConditionId ?? null),
+      );
+      return {
+        id: incident.hazard.id,
+        classId: incident.classDefinition.id,
+        classNameKey: incident.classDefinition.nameKey,
+        nameKey: incident.hazard.nameKey,
+        textKey: incident.hazard.observationKey,
+        evidenceKey: incident.classDefinition.evidenceKey,
+        saferHintKey: incident.hazard.saferHintKey,
+        operationId: incident.reaction.operation,
+        inputId: incident.reaction.input,
+        setupNameKey: setup?.nameKey,
+      };
+    });
     const known = new Set(c.materials.filter((m) => m.known).map((m) => m.id));
     reactions.forEach((r) => {
       known.add(r.input);
@@ -251,6 +273,7 @@ export class Simulation {
       company: companyView(c, s),
       assistance: assistanceViews(c, s),
       knowledgeEntries,
+      hazardEvidence,
       machines: Object.values(s.machines).map((m) => {
         const d = c.machines.find((d) => d.id === m.definitionId)!;
         const r = footprint(m, d);
@@ -266,6 +289,8 @@ export class Simulation {
                 classNameKey: incident.classDefinition.nameKey,
                 nameKey: incident.hazard.nameKey,
                 textKey: incident.hazard.observationKey,
+                evidenceKey: incident.classDefinition.evidenceKey,
+                saferHintKey: incident.hazard.saferHintKey,
               }
             : null,
           nameKey: d.nameKey,

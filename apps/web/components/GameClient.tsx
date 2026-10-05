@@ -966,9 +966,14 @@ function GameClientInner() {
                     )}
                     {machine.incident && (
                       <div className="milestone">
-                        <small>INCIDENT LOCKOUT</small>
+                        <small>
+                          INCIDENT LOCKOUT · {t(machine.incident.classNameKey)}
+                        </small>
                         <h3>{t(machine.incident.nameKey)}</h3>
                         <p>{t(machine.incident.textKey)}</p>
+                        <p>{t(machine.incident.evidenceKey)}</p>
+                        <strong>SAFER NEXT TEST</strong>
+                        <p>{t(machine.incident.saferHintKey)}</p>
                       </div>
                     )}
                     <button
@@ -1517,6 +1522,33 @@ function GameClientInner() {
                   Known construction methods and your observed discoveries.
                   There is no complete recipe book.
                 </p>
+                {snapshot.hazardEvidence.map((entry) => {
+                  const operationKey = snapshot.operations.find(
+                    (op) => op.id === entry.operationId,
+                  )?.nameKey;
+                  const operationName = operationKey
+                    ? t(operationKey)
+                    : "Unknown operation";
+                  const setupName = entry.setupNameKey
+                    ? t(entry.setupNameKey)
+                    : null;
+                  return (
+                    <article className="observation" key={"hazard-" + entry.id}>
+                      <small>
+                        HAZARD EVIDENCE · {t(entry.classNameKey).toUpperCase()}
+                      </small>
+                      <h3>{t(entry.nameKey)}</h3>
+                      <p>{t(entry.textKey)}</p>
+                      <p>{t(entry.evidenceKey)}</p>
+                      <strong>SAFER NEXT TEST</strong>
+                      <p>{t(entry.saferHintKey)}</p>
+                      <span>
+                        {materialName(entry.inputId)} → {operationName}
+                        {setupName ? " · " + setupName : ""}
+                      </span>
+                    </article>
+                  );
+                })}
                 {snapshot.knowledgeEntries.map((entry) => {
                   const operationKey = snapshot.operations.find(
                     (op) => op.id === entry.operationId,

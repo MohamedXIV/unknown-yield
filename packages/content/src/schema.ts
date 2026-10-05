@@ -26,6 +26,7 @@ export const contentSchema = z.object({
       z.object({
         id,
         nameKey: localeKeySchema,
+        evidenceKey: localeKeySchema,
         machineEffect: z.literal("lockout"),
         strandedOutputUnits: count.default(0),
       }),
@@ -188,6 +189,7 @@ export const contentSchema = z.object({
             classId: id,
             nameKey: localeKeySchema,
             observationKey: localeKeySchema,
+            saferHintKey: localeKeySchema,
           })
           .optional(),
         known: z.boolean(),
@@ -436,7 +438,11 @@ function validateContentInternal(
     throw new Error("Invalid factory size");
   const hazardClassIds = new Set(c.hazardClasses.map((entry) => entry.id));
   for (const hazardClass of c.hazardClasses)
-    if (hazardClass.nameKey !== "hazard.class." + hazardClass.id + ".name")
+    if (
+      hazardClass.nameKey !== "hazard.class." + hazardClass.id + ".name" ||
+      hazardClass.evidenceKey !==
+        "hazard.class." + hazardClass.id + ".evidence"
+    )
       throw new Error("Localization key must match its hazard class");
 
   const matches = new Set<string>(),
@@ -466,7 +472,8 @@ function validateContentInternal(
       hazardIds.add(r.hazard.id);
       if (
         r.hazard.nameKey !== "hazard." + r.hazard.id + ".name" ||
-        r.hazard.observationKey !== "hazard." + r.hazard.id + ".observation"
+        r.hazard.observationKey !== "hazard." + r.hazard.id + ".observation" ||
+        r.hazard.saferHintKey !== "hazard." + r.hazard.id + ".safer-hint"
       )
         throw new Error("Localization key must match its hazard");
     }

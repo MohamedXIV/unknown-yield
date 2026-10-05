@@ -185,7 +185,11 @@ describe("content boundary", () => {
   it("validates authored deterministic hazard classes", () => {
     expect(fixture.hazardClasses).toEqual([
       expect.objectContaining({ id: "thermal-runaway", machineEffect: "lockout" }),
-      expect.objectContaining({ id: "pressure-expansion", machineEffect: "lockout" }),
+      expect.objectContaining({
+        id: "pressure-expansion",
+        evidenceKey: "hazard.class.pressure-expansion.evidence",
+        machineEffect: "lockout",
+      }),
       expect.objectContaining({ id: "corrosion", machineEffect: "lockout" }),
       expect.objectContaining({
         id: "instability",
@@ -234,6 +238,7 @@ describe("content boundary", () => {
       classId: "pressure-expansion",
       nameKey: "hazard.chamber-blowout.name",
       observationKey: "hazard.chamber-blowout.observation",
+      saferHintKey: "hazard.chamber-blowout.safer-hint",
     };
     expect(() => validateContent(c)).toThrow(/Duplicate hazard ID/);
   });

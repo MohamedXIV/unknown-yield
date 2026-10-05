@@ -26,7 +26,7 @@ export function contentKeys(c: Content): string[] {
     ...c.site.terminalModules.map((d) => d.nameKey),
     ...c.site.atmosphericSources.map((d) => d.nameKey),
     ...c.containmentCapabilities.map((d) => d.nameKey),
-    ...c.hazardClasses.map((d) => d.nameKey),
+    ...c.hazardClasses.flatMap((d) => [d.nameKey, d.evidenceKey]),
     ...(c.liquidLogistics?.containmentProfiles.map((p) => p.nameKey) ?? []),
     ...c.materials.map((m) => m.nameKey),
     ...c.operations.map((o) => o.nameKey),
@@ -36,7 +36,9 @@ export function contentKeys(c: Content): string[] {
     ...c.storages.map((s) => s.nameKey),
     ...c.reactions.map((r) => r.observationKey),
     ...c.reactions.flatMap((r) =>
-      r.hazard ? [r.hazard.nameKey, r.hazard.observationKey] : [],
+      r.hazard
+        ? [r.hazard.nameKey, r.hazard.observationKey, r.hazard.saferHintKey]
+        : [],
     ),
     ...c.economy.orders.flatMap((order) => [order.nameKey, order.briefKey]),
     ...c.economy.directives.flatMap((directive) => [
@@ -341,18 +343,34 @@ export const enCatalog: LocaleCatalog = {
   "reaction.heat-raw-oversealed.observation":
     "The oversealed chamber vitrifies the sample and trips a violent pressure release. The setup itself caused the failure.",
   "hazard.class.thermal-runaway.name": "Thermal runaway",
+  "hazard.class.thermal-runaway.evidence":
+    "Temperature rose faster than the process could shed heat, so the reaction accelerated itself.",
   "hazard.class.pressure-expansion.name": "Pressure expansion",
+  "hazard.class.pressure-expansion.evidence":
+    "Rapid expansion met excessive confinement; pressure had no safe path to dissipate.",
   "hazard.class.corrosion.name": "Corrosion",
+  "hazard.class.corrosion.evidence":
+    "Material attack concentrated at containment contact points rather than in the bulk process.",
   "hazard.class.instability.name": "Instability",
+  "hazard.class.instability.evidence":
+    "The charge changed phase unevenly under excessive confinement and solidified across the chamber path.",
   "hazard.class.contamination.name": "Contamination",
+  "hazard.class.contamination.evidence":
+    "Unwanted material crossed a process boundary and remained physically mixed with the affected line.",
   "hazard.chamber-blowout.name": "Chamber blowout",
   "hazard.chamber-blowout.observation":
     "The oversealed chamber vented violently and forced an automatic lockout. Processed material remains physically accounted for in the line; acknowledge the incident before restarting.",
+  "hazard.chamber-blowout.safer-hint":
+    "Reduce confinement. Use the Sealed furnace as the comparison setup before attempting the Oversealed furnace again.",
+  "reaction.heat-ferrite-sealed.observation":
+    "Ferrite heated under ordinary sealed confinement vitrifies without jamming the chamber.",
   "reaction.heat-ferrite-oversealed.observation":
     "Oversealed heating destabilized the ferrite charge into vitrified residue and jammed the chamber.",
   "hazard.slag-jam.name": "Vitrified slag jam",
   "hazard.slag-jam.observation":
     "The unstable ferrite batch vitrified inside the chamber. The residue remains physically trapped in the stopped machine until a later recovery operation clears it.",
+  "hazard.slag-jam.safer-hint":
+    "Compare the same ferrite under the Sealed furnace. If that trial stays stable, the extra confinement caused the jam.",
   "order.granules-procurement.name": "Orbital conductor allocation",
   "order.granules-procurement.brief":
     "Supply a bounded batch of the newly characterized conductor while the orbital allocation window is open.",

@@ -283,6 +283,7 @@ export type Save = {
   stock: Inventory;
   knowledge: string[];
   evidence: Record<string, ExperimentEvidence>;
+  hazardEvidence: string[];
   sensingObservations: Record<string, SensingObservation>;
   discoveredDeposits: string[];
   deposits: Inventory;
@@ -373,6 +374,14 @@ export type MachineHazardView = {
   classNameKey: string;
   nameKey: string;
   textKey: string;
+  evidenceKey: string;
+  saferHintKey: string;
+};
+export type HazardEvidenceView = MachineHazardView & {
+  id: string;
+  operationId: string;
+  inputId: string;
+  setupNameKey?: string;
 };
 export type MachineView = Omit<Machine, "job" | "incident"> & {
   job: { remaining: number } | null;
@@ -497,6 +506,7 @@ export type PlayerSnapshot = {
   company: CompanyView;
   assistance: AssistanceView[];
   knowledgeEntries: KnowledgeEntry[];
+  hazardEvidence: HazardEvidenceView[];
   observations: Observation[];
 };
 export const total = (inv: Inventory) =>
