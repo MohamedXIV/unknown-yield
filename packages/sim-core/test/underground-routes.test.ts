@@ -110,9 +110,9 @@ it("moves protected liquid through a contained buried span without occupying its
   ).toBe(true);
 
   const loaded = sim.serialize();
-  loaded.flows.produced["orbital-coolant"] = 2;
+  loaded.flows.produced["orbital-coolant"] = 1;
   loaded.pipes["9,20"].materialId = "orbital-coolant";
-  loaded.pipes["9,20"].quantity = 2;
+  loaded.pipes["9,20"].quantity = 1;
   expect(sim.load(loaded).ok).toBe(true);
   expect(auditLedger(fixture, sim.serialize()).ok).toBe(true);
 
@@ -120,7 +120,7 @@ it("moves protected liquid through a contained buried span without occupying its
   const inTransit = sim.serialize().undergroundLiquids[routeId];
   expect(inTransit).toMatchObject({
     materialId: "orbital-coolant",
-    quantity: 2,
+    quantity: 1,
     remainingSteps: 5,
     containmentProfileId: "sealed-cold",
   });
@@ -140,7 +140,7 @@ it("moves protected liquid through a contained buried span without occupying its
   });
   expect(sim.serialize().pipes["16,20"]).toMatchObject({
     materialId: "orbital-coolant",
-    quantity: 2,
+    quantity: 1,
   });
   expect(auditLedger(fixture, sim.serialize()).ok).toBe(true);
 });
@@ -160,13 +160,13 @@ it("rejects protected liquid when the buried route lacks required containment", 
   });
 
   const loaded = sim.serialize();
-  loaded.flows.produced["orbital-coolant"] = 2;
+  loaded.flows.produced["orbital-coolant"] = 1;
   loaded.pipes["9,22"].materialId = "orbital-coolant";
-  loaded.pipes["9,22"].quantity = 2;
+  loaded.pipes["9,22"].quantity = 1;
   expect(sim.load(loaded).ok).toBe(true);
 
   sim.step(cadence);
-  expect(sim.serialize().pipes["9,22"].quantity).toBe(2);
+  expect(sim.serialize().pipes["9,22"].quantity).toBe(1);
   expect(sim.serialize().undergroundLiquids[routeId]).toMatchObject({
     materialId: null,
     quantity: 0,
