@@ -15,11 +15,20 @@ import {
 import { key, next, socket, contains, footprint } from "./geometry";
 import { ensureMarket, exchangeDefinition } from "./market";
 import { recordDirectiveExperiment } from "./opportunities";
-import { settleTerminalExports } from "./terminal";
+import {
+  settleTerminalExports,
+  terminalModuleAt,
+  terminalModulePoint,
+  terminalModuleOutlet,
+  terminalReceiver,
+} from "./terminal";
 import { depositDefinition } from "./deposits";
 import { atmosphericSourceForRect } from "./atmosphere";
 import { applyReactionHazard } from "./hazards";
-import { terminalImportOutlet } from "./imports";
+import {
+  terminalImportOutlet,
+  terminalModuleCarriesImport,
+} from "./imports";
 export function recipe(c: Content, m: Machine) {
   const definition = c.machines.find((d) => d.id === m.definitionId);
   return c.reactions.find(
@@ -144,7 +153,19 @@ function dryReceiver(
   material: string,
   direction: number,
 ) {
-  if (contains(c.site.terminal, point))
+  if (contains(c.site.terminal, point)) {
+    const definition = terminalModuleAt(c, point, direction, "solid");
+    if (definition) {
+      const receiver = terminalReceiver(c, s, point, direction, "solid");
+      return receiver
+        ? {
+            capabilities: receiver.capabilities,
+            quantity: receiver.quantity,
+            capacity: receiver.capacity,
+            material: receiver.material,
+          }
+        : null;
+    }
     return {
       capabilities: c.site.dryContainment,
       quantity:
@@ -153,6 +174,7 @@ function dryReceiver(
         material === c.site.buildMaterial ? Infinity : c.site.stagingCapacity,
       material: null,
     };
+  }
   const b = s.belts[key(point)];
   if (b) {
     const inlet = (direction + 2) % 4,
@@ -285,6 +307,7 @@ export function transport(
     directions: number[];
     belt?: (typeof belts)[number];
     inventory?: Record<string, number>;
+    take?: () => void;
     emission?: string;
   };
   type Target = {
@@ -292,6 +315,7 @@ export function transport(
     capacity: number;
     inventory?: Record<string, number>;
     belt?: (typeof belts)[number];
+    put?: (material: string) => void;
     inlet: number;
   };
   const sources: Source[] = belts
@@ -340,6 +364,28 @@ export function transport(
         emission: key(socket(t, def, true)),
       });
   }
+  for (const definition of c.site.terminalModules) {
+    if (definition.handlingState !== "solid") continue;
+    const contents = s.terminalModules[definition.id];
+    if (
+      !contents?.materialId ||
+      !contents.quantity ||
+      !terminalModuleCarriesImport(c, definition.id, contents.materialId)
+    )
+      continue;
+    const point = terminalModulePoint(c, definition);
+    const outlet = terminalModuleOutlet(c, definition);
+    sources.push({
+      point,
+      material: contents.materialId,
+      directions: [outlet.direction],
+      take: () => {
+        contents.quantity--;
+        if (!contents.quantity) contents.materialId = null;
+      },
+      emission: key(outlet),
+    });
+  }
   const importedMaterial = Object.keys(s.terminalImports.staging)
     .sort()
     .find(
@@ -381,13 +427,33 @@ export function transport(
     )
       return null;
     // Terminal is checked before belts, preserving ordinary settlement order.
-    if (
-      p &&
-      contains(c.site.terminal, p) &&
-      !checkContainment(c, source.material, ["solid"], c.site.dryContainment).ok
-    )
-      return null;
-    if (p && contains(c.site.terminal, p))
+    if (p && contains(c.site.terminal, p)) {
+      const definition = terminalModuleAt(c, p, direction, "solid");
+      if (definition) {
+        const terminal = terminalReceiver(c, s, p, direction, "solid");
+        if (
+          !terminal ||
+          !checkContainment(
+            c,
+            source.material,
+            ["solid"],
+            terminal.capabilities,
+          ).ok ||
+          (terminal.material !== null && terminal.material !== source.material)
+        )
+          return null;
+        return {
+          id: terminal.id,
+          capacity: terminal.capacity - terminal.quantity,
+          put: (material) => terminal.put(material, 1),
+          inlet,
+        };
+      }
+      if (
+        !checkContainment(c, source.material, ["solid"], c.site.dryContainment)
+          .ok
+      )
+        return null;
       return source.material === c.site.buildMaterial
         ? { id: "stock", capacity: Infinity, inventory: s.stock, inlet }
         : {
@@ -396,6 +462,7 @@ export function transport(
             inventory: s.staging,
             inlet,
           };
+    }
     const b = s.belts[loc];
     if (
       b &&
@@ -523,7 +590,8 @@ export function transport(
       source.belt.cargo = null;
       if (source.belt.junction?.crossing)
         source.belt.junction.crossing.held = null;
-    } else change(source.inventory!, source.material, -1);
+    } else if (source.take) source.take();
+    else change(source.inventory!, source.material, -1);
   }
   for (const { source, target, direction } of moves) {
     if (target.belt) {
@@ -533,7 +601,8 @@ export function transport(
           c,
           target.belt,
         ).inlets.indexOf(target.inlet) as 0 | 1;
-    } else change(target.inventory!, source.material, 1);
+    } else if (target.put) target.put(source.material);
+    else change(target.inventory!, source.material, 1);
     if (source.belt)
       onMove?.({
         from: { x: source.point.x, y: source.point.y },

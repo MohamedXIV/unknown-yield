@@ -1,5 +1,11 @@
 import { checkContainment } from "@site/content";
-import { terminalReceiver, terminalInletDiagnostic } from "./terminal";
+import {
+  terminalReceiver,
+  terminalInletDiagnostic,
+  terminalModulePoint,
+  terminalModuleOutlet,
+} from "./terminal";
+import { terminalModuleCarriesImport } from "./imports";
 import { receivingDiagnostic, type TransportDiagnostic } from "./containment";
 import type { TransportMoveEvent } from "./production";
 import type { Content } from "@site/content";
@@ -331,6 +337,31 @@ export function transportGases(
       0,
       p,
       p.outlet,
+    );
+  }
+  for (const definition of c.site.terminalModules) {
+    if (definition.handlingState !== "gas") continue;
+    const contents = s.terminalModules[definition.id];
+    if (
+      !contents?.materialId ||
+      !contents.quantity ||
+      !terminalModuleCarriesImport(c, definition.id, contents.materialId)
+    )
+      continue;
+    const point = terminalModulePoint(c, definition);
+    const outlet = terminalModuleOutlet(c, definition);
+    admit(
+      {
+        id: "terminal:" + definition.id,
+        material: contents.materialId,
+        units: contents.quantity,
+        take: (n) => takeContents(contents, n),
+      },
+      targetAt(c, s, outlet, outlet.direction, true),
+      cfg.line.transfer,
+      0,
+      point,
+      outlet.direction,
     );
   }
   for (const pump of Object.values(s.compressors).sort((a, b) =>
