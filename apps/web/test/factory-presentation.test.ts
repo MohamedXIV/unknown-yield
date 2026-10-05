@@ -26,6 +26,7 @@ function factory(state: "stable" | "measuring"): FactoryView {
       { id: "p1", x: 20, y: 25, direction: 0, role: "input" },
       { id: "p2", x: 29, y: 25, direction: 0, role: "output" },
     ],
+    relocation: null,
     contract: {
       machineCount: 1,
       statusCounts: statusCounts(),
