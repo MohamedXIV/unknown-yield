@@ -48,3 +48,17 @@ The gate changes no save schema. It reuses the current Phase 13 schema and verif
 Ledger audits are required before discovery, after stockpiling, after the demand signal, after shipment staging/dispatch and after specialized import release.
 
 Exact-head automated evidence belongs on the Pull Request. This document does not claim unrun CI or browser evidence.
+
+
+## Accepted delivery evidence
+
+Phase 13 closed through PR #192, squash-merged to `main` as `a42e6e94a9f41588ddd4ecc19efea3829f8ddb42`.
+
+The exact PR head `60d7b0681d5cd961add8cd9a38a0536dbc96f904` passed GitHub Actions run `37278801662` with:
+
+- `npm test` — PASS;
+- `npm run typecheck` — PASS;
+- `npm run lint` — PASS;
+- `npm run build` — PASS.
+
+A final exact-head review found no unresolved review threads. No browser PASS is claimed: the exit change touched only the sim-core regression and documentation, with no Phaser, React gameplay UI, presentation/input or save/load UX change.
