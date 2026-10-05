@@ -1101,6 +1101,25 @@ function GameClientInner() {
                       buffer and cargo slot continues in the detailed
                       simulation.
                     </p>
+                    {factory.relocation && (
+                      <div className="milestone">
+                        <small>{t("ui.factory.relocation.hold")}</small>
+                        <h3>
+                          {factory.relocation.remainingTicks > 0
+                            ? t("ui.factory.relocation.downtime", {
+                                ticks: factory.relocation.remainingTicks,
+                              })
+                            : factory.relocation.connectionsRestored
+                              ? t("ui.factory.relocation.restored")
+                              : t("ui.factory.relocation.reconnect")}
+                        </h3>
+                        <p>
+                          {t("ui.factory.relocation.requirements", {
+                            count: factory.relocation.requiredConnections,
+                          })}
+                        </p>
+                      </div>
+                    )}
                     <h3>Shell reshape</h3>
                     <p className="hint">
                       Move one wall at a time around the existing interior.
@@ -1233,9 +1252,10 @@ function GameClientInner() {
                     </div>
                     <h3>Intact relocation</h3>
                     <p className="hint">
-                      Move the shell and its internal equipment together by one
-                      cell. External belts, pipes and cargo outside the wall
-                      stay at the source and are never dragged along.
+                      {t("ui.factory.relocation.move-hint", {
+                        fuel: snapshot.map.factoryRelocationFuelPerStep,
+                        ticks: snapshot.map.factoryRelocationDowntimeTicks,
+                      })}
                     </p>
                     <div className="button-row">
                       <button

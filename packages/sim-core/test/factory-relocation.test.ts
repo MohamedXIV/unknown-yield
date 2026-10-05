@@ -135,6 +135,10 @@ describe("intact factory relocation", () => {
     const pumpBefore = structuredClone(before.pumps[pumpId]);
     const compressorBefore = structuredClone(before.compressors[compressorId]);
 
+    const relocationCost =
+      (Math.abs(40 - before.factories[factoryId].x) +
+        Math.abs(40 - before.factories[factoryId].y)) *
+      fixture.site.factoryRelocationFuelPerStep;
     expect(
       sim.preview({
         type: "relocateFactory",
@@ -142,7 +146,7 @@ describe("intact factory relocation", () => {
         x: 40,
         y: 40,
       }),
-    ).toMatchObject({ ok: true, cost: 0 });
+    ).toMatchObject({ ok: true, cost: relocationCost });
     expect(sim.serialize()).toEqual(before);
 
     expect(
@@ -155,7 +159,7 @@ describe("intact factory relocation", () => {
     ).toMatchObject({
       ok: true,
       message: "Factory relocated",
-      cost: 0,
+      cost: relocationCost,
       id: factoryId,
     });
 

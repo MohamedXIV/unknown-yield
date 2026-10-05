@@ -9,6 +9,10 @@ import { exchangeDefinition } from "./market";
 import { applyAssistance, assistanceEligibility } from "./assistance";
 import { applySensingObservation } from "./sensing";
 import {
+  factoryConnectionRequirements,
+  factoryRelocationResumeError,
+} from "./factory-lifecycle";
+import {
   factoryError,
   factoryReshapeError,
   factoryRelocationError,
@@ -322,6 +326,13 @@ export function applyCommand(
       const kind = cmd.type === "placePressureVessel" ? "vessel" : "compressor",
         error = gasPlacementError(c, s, cmd, kind);
       if (error) return fail(error);
+      if (
+        kind === "compressor" &&
+        Object.values(s.factories).some(
+          (factory) => factory.relocation && contains(factory, cmd),
+        )
+      )
+        return fail("Finish factory relocation before adding equipment");
       const cost = cfg[kind].cost;
       if (!affordable(cost)) return fail("Not enough structural plates");
       if (!apply) return ok("Place gas structure", cost);
@@ -351,6 +362,14 @@ export function applyCommand(
         ? s.compressors[cmd.id]
         : undefined;
       if (!pump) return fail("Unknown compressor");
+      const factory = Object.values(s.factories).find((candidate) =>
+        contains(candidate, pump),
+      );
+      if (cmd.enabled && factory?.relocation) {
+        const error = factoryRelocationResumeError(c, s, factory);
+        if (error) return fail(error);
+        if (apply) delete factory.relocation;
+      }
       if (apply) pump.enabled = cmd.enabled;
       return ok("Compressor updated");
     }
@@ -435,6 +454,13 @@ export function applyCommand(
       const kind = cmd.type === "placeTank" ? "tank" : "pump",
         error = liquidPlacementError(c, s, cmd, kind);
       if (error) return fail(error);
+      if (
+        kind === "pump" &&
+        Object.values(s.factories).some(
+          (factory) => factory.relocation && contains(factory, cmd),
+        )
+      )
+        return fail("Finish factory relocation before adding equipment");
       const cost = liquidConstructionCost(c, kind, cmd.containmentProfileId);
       if (!affordable(cost)) return fail("Not enough structural plates");
       if (!apply) return ok("Place liquid structure", cost);
@@ -499,6 +525,14 @@ export function applyCommand(
           message: "Repair the pump before restarting",
           messageKey: "ui.recovery.repair-first",
         };
+      const factory = Object.values(s.factories).find((candidate) =>
+        contains(candidate, pump),
+      );
+      if (cmd.enabled && factory?.relocation) {
+        const error = factoryRelocationResumeError(c, s, factory);
+        if (error) return fail(error);
+        if (apply) delete factory.relocation;
+      }
       if (apply) pump.enabled = cmd.enabled;
       return ok("Pump updated");
     }
@@ -598,11 +632,15 @@ export function applyCommand(
       if (!factory) return fail("Unknown factory");
       const error = factoryRelocationError(c, s, factory, cmd);
       if (error) return fail(error);
-      if (!apply) return ok("Relocate factory");
-
       const dx = cmd.x - factory.x,
         dy = cmd.y - factory.y,
-        belts = Object.values(s.belts).filter((belt) =>
+        distance = Math.abs(dx) + Math.abs(dy),
+        fuelCost = distance * c.site.factoryRelocationFuelPerStep,
+        requirements = factoryConnectionRequirements(c, s, factory);
+      if (s.fuel < fuelCost) return fail("Not enough fuel for relocation");
+      if (!apply) return ok("Relocate factory", fuelCost);
+
+      const belts = Object.values(s.belts).filter((belt) =>
           contains(factory, belt),
         ),
         pipes = Object.values(s.pipes).filter((pipe) =>
@@ -635,6 +673,7 @@ export function applyCommand(
       for (const pipe of pipes) delete s.pipes[key(pipe)];
       for (const line of lines) delete s.pressureLines[key(line)];
 
+      s.fuel -= fuelCost;
       factory.x += dx;
       factory.y += dy;
       for (const port of factory.ports) {
@@ -669,7 +708,12 @@ export function applyCommand(
         item.x += dx;
         item.y += dy;
       }
-      return ok("Factory relocated", 0, factory.id);
+      factory.relocation = {
+        startedAt: s.tick,
+        readyAt: s.tick + c.site.factoryRelocationDowntimeTicks,
+        requirements,
+      };
+      return ok("Factory relocated", fuelCost, factory.id);
     }
     case "placeMachine": {
       const def = c.machines.find((d) => d.id === cmd.definitionId);
@@ -678,6 +722,11 @@ export function applyCommand(
         return fail("Capability locked by unconfirmed knowledge");
       const placement = machinePlacement(c, s, cmd);
       if (placement.error) return fail(placement.error);
+      if (
+        placement.factoryId &&
+        s.factories[placement.factoryId]?.relocation
+      )
+        return fail("Finish factory relocation before adding equipment");
       if (!affordable(def.cost)) return fail("Not enough structural plates");
       if (!apply) return ok("Place machine", def.cost);
       const id = issue("m");
@@ -882,6 +931,14 @@ export function applyCommand(
         recovering = cmd.enabled && machine.incident !== null;
       if (recovering && total(machine.incidentInventory) > 0)
         return fail("Physical hazard consequence blocks restart");
+      const factory = machine.factoryId
+        ? s.factories[machine.factoryId]
+        : undefined;
+      if (cmd.enabled && factory?.relocation) {
+        const error = factoryRelocationResumeError(c, s, factory);
+        if (error) return fail(error);
+        if (apply) delete factory.relocation;
+      }
       if (apply) {
         machine.enabled = cmd.enabled;
         if (cmd.enabled) machine.incident = null;
@@ -1073,6 +1130,12 @@ export function applyCommand(
       for (const f of Object.values(s.factories)) {
         const p = f.ports.find((p) => p.id === cmd.id);
         if (p) {
+          if (
+            f.relocation?.requirements.some(
+              (requirement) => requirement.portId === p.id,
+            )
+          )
+            return fail("Required relocation port must remain until restart");
           if (
             s.pressureLines[key(p)] ||
             Object.values(s.compressors).some((a) => key(a) === key(p)) ||

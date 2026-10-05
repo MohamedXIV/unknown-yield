@@ -1,6 +1,7 @@
 import type { Content } from "@site/content";
 import { contains, next } from "./geometry";
 import { status } from "./production";
+import { factoryConnectionsRestored } from "./factory-lifecycle";
 import {
   change,
   MACHINE_STATUSES,
@@ -57,6 +58,17 @@ export function factoryView(
       change(liquidInventory, p.materialId, p.quantity);
   return {
     ...factory,
+    relocation: factory.relocation
+      ? {
+          remainingTicks: Math.max(0, factory.relocation.readyAt - state.tick),
+          connectionsRestored: factoryConnectionsRestored(
+            content,
+            state,
+            factory,
+          ),
+          requiredConnections: factory.relocation.requirements.length,
+        }
+      : null,
     ports: factory.ports.map((port) => ({
       ...port,
       role: contains(factory, next(port, port.direction))

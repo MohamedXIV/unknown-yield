@@ -55,7 +55,20 @@ export function experimentEvidenceKey(
   return [operationId, inputId, processConditionId ?? "default"].join("/");
 }
 export type Port = Point & { id: string; direction: number };
-export type Factory = Rect & { id: string; ports: Port[] };
+export type FactoryConnectionKind = "solid" | "liquid" | "gas";
+export type FactoryRelocationState = {
+  startedAt: number;
+  readyAt: number;
+  requirements: {
+    portId: string;
+    kind: FactoryConnectionKind;
+  }[];
+};
+export type Factory = Rect & {
+  id: string;
+  ports: Port[];
+  relocation?: FactoryRelocationState;
+};
 export type FactoryPortView = Port & { role: "input" | "output" };
 export type FactoryThroughputRate = {
   materialId: string;
@@ -76,8 +89,13 @@ export type FactoryContractView = {
   statusCounts: Record<MachineStatus, number>;
   throughput: FactoryThroughputView;
 };
-export type FactoryView = Omit<Factory, "ports"> & {
+export type FactoryView = Omit<Factory, "ports" | "relocation"> & {
   ports: FactoryPortView[];
+  relocation: {
+    remainingTicks: number;
+    connectionsRestored: boolean;
+    requiredConnections: number;
+  } | null;
   contract: FactoryContractView;
 };
 export type Job = { remaining: number; reaction: string | null };
