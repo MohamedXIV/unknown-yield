@@ -173,6 +173,7 @@ const schema = z.object({
     z.literal(22),
     z.literal(23),
     z.literal(24),
+    z.literal(25),
   ]),
   contentVersion: z.string(),
   terminalModules: z
@@ -303,6 +304,7 @@ const schema = z.object({
       recoveryNetFuel: count,
       recoveryPackageId: safeId.nullable(),
       repaidSinceAssistanceFuel: count.default(0),
+      importAllocations: inventory.default({}),
     })
     .default({
       standing: "clear",
@@ -310,11 +312,12 @@ const schema = z.object({
       recoveryNetFuel: 0,
       recoveryPackageId: null,
       repaidSinceAssistanceFuel: 0,
+      importAllocations: {},
     }),
 });
 export function initialState(c: Content): Save {
   const state: Save = {
-    schemaVersion: 24,
+    schemaVersion: 25,
     terminalModules: {},
     contentVersion: c.version,
     tick: 0,
@@ -380,6 +383,7 @@ export function initialState(c: Content): Save {
       recoveryNetFuel: 0,
       recoveryPackageId: null,
       repaidSinceAssistanceFuel: 0,
+      importAllocations: {},
     },
   };
   initializeKnownMarkets(c, state);
@@ -418,6 +422,20 @@ export function parseSave(input: unknown, c: Content): Save {
     Object.keys(parsed.marketSignals).length
   )
     throw Error("Legacy schema cannot contain market signal history");
+  const rawCompany =
+    input && typeof input === "object"
+      ? (input as { company?: Record<string, unknown> }).company
+      : undefined;
+  if (
+    parsed.schemaVersion >= 25 &&
+    (!rawCompany || !Object.hasOwn(rawCompany, "importAllocations"))
+  )
+    throw Error("Missing company import allocation state");
+  if (
+    parsed.schemaVersion < 25 &&
+    Object.keys(parsed.company.importAllocations).length
+  )
+    throw Error("Legacy schema cannot contain import allocations");
   if (
     parsed.schemaVersion < 23 &&
     (Object.keys(parsed.terminalImports.staging).length ||
@@ -554,6 +572,7 @@ export function parseSave(input: unknown, c: Content): Save {
             recoveryNetFuel: 0,
             recoveryPackageId: c.economy.defaultAssistancePackageId ?? null,
             repaidSinceAssistanceFuel: 0,
+            importAllocations: {},
           }
         : {
             standing: "clear",
@@ -561,6 +580,7 @@ export function parseSave(input: unknown, c: Content): Save {
             recoveryNetFuel: 0,
             recoveryPackageId: null,
             repaidSinceAssistanceFuel: 0,
+            importAllocations: {},
           };
     s.schemaVersion = 11;
   }
@@ -587,6 +607,9 @@ export function parseSave(input: unknown, c: Content): Save {
   // Schema 23 predates authored demand-shock history. Earlier saves cannot
   // have consumed a bulletin, so migration starts with empty signal memory.
   if (s.schemaVersion === 23) s.schemaVersion = 24;
+  // Schema 24 predates company-owned import allocations. No historical
+  // directive could award one, so the exact migration is an empty record.
+  if (s.schemaVersion === 24) s.schemaVersion = 25;
   if (s.contentVersion !== c.version || s.remainder >= c.tickMs)
     throw new Error("Incompatible content or timing");
   if (
@@ -636,7 +659,10 @@ export function parseSave(input: unknown, c: Content): Save {
   for (const [id, state] of Object.entries(s.opportunities)) {
     const order = c.economy.orders.find((entry) => entry.id === id),
       directive = c.economy.directives.find((entry) => entry.id === id),
-      definition = order ?? directive;
+      propertyDirective = c.economy.propertyDirectives.find(
+        (entry) => entry.id === id,
+      ),
+      definition = order ?? directive ?? propertyDirective;
     if (!definition) throw new Error("Unknown company opportunity");
     const target = order ? order.quantity : 1;
     if (order) {
@@ -645,17 +671,39 @@ export function parseSave(input: unknown, c: Content): Save {
         !Object.hasOwn(s.market, order.materialId)
       )
         throw new Error("Ineligible corporate order state");
-    } else if (
-      !known.has(directive!.inputMaterialId) ||
-      !c.machines.some(
-        (machine) =>
-          machine.role === "processor" &&
-          machine.operations.includes(directive!.operationId) &&
-          machine.processConditionId === directive!.processConditionId &&
-          machineUnlocked(s, machine),
+    } else if (directive) {
+      if (
+        !known.has(directive.inputMaterialId) ||
+        !c.machines.some(
+          (machine) =>
+            machine.role === "processor" &&
+            machine.operations.includes(directive.operationId) &&
+            machine.processConditionId === directive.processConditionId &&
+            machineUnlocked(s, machine),
+        )
       )
-    )
-      throw new Error("Ineligible directive state");
+        throw new Error("Ineligible directive state");
+    } else if (propertyDirective) {
+      const capable = propertyDirective.solutionReactionIds.some(
+        (reactionId) => {
+          const reaction = c.reactions.find(
+            (entry) => entry.id === reactionId,
+          )!;
+          return (
+            known.has(reaction.input) &&
+            c.machines.some(
+              (machine) =>
+                machine.role === "processor" &&
+                machine.operations.includes(reaction.operation) &&
+                machine.processConditionId === reaction.processConditionId &&
+                machineUnlocked(s, machine),
+            )
+          );
+        },
+      );
+      if (!known.has(propertyDirective.targetMaterialId) || !capable)
+        throw new Error("Ineligible property directive state");
+    }
     if (
       state.offeredAt > s.tick ||
       state.expiresAt !== state.offeredAt + definition.durationTicks ||
@@ -681,16 +729,38 @@ export function parseSave(input: unknown, c: Content): Save {
         if (s.evidence[evidenceId]?.state !== "confirmed")
           throw new Error("Directive completion lacks confirmed evidence");
       }
+      if (
+        propertyDirective &&
+        !propertyDirective.solutionReactionIds.some((reactionId) =>
+          s.knowledge.includes(reactionId),
+        )
+      )
+        throw new Error("Property directive completion lacks solution evidence");
     } else {
       if (state.completedAt !== null)
         throw new Error("Incomplete company opportunity has completion time");
       if (
         (order && state.progress >= target) ||
-        (directive && state.progress !== 0)
+        ((directive || propertyDirective) && state.progress !== 0)
       )
         throw new Error("Invalid active company opportunity progress");
+      if (
+        propertyDirective &&
+        propertyDirective.solutionReactionIds.some((reactionId) =>
+          s.knowledge.includes(reactionId),
+        )
+      )
+        throw new Error("Solved property directive cannot remain active");
     }
   }
+  for (const [supplyId, allocations] of Object.entries(
+    s.company.importAllocations,
+  ))
+    if (
+      allocations <= 0 ||
+      !c.economy.imports.some((supply) => supply.id === supplyId)
+    )
+      throw new Error("Invalid company import allocation");
   if (s.company.standing === "clear") {
     if (
       s.debt !== 0 ||
