@@ -284,7 +284,14 @@ export type TerminalImportState = {
 };
 export type ImportSupplyView = Content["economy"]["imports"][number] & {
   eligible: boolean;
-  reason: "fuel" | "capacity" | null;
+  held: number;
+  reason:
+    | "fuel"
+    | "capacity"
+    | "locked"
+    | "module-missing"
+    | "incompatible"
+    | null;
 };
 export type TerminalModuleView = Content["site"]["terminalModules"][number] & {
   installed: boolean;

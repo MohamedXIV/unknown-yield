@@ -1,4 +1,8 @@
-import { checkContainment, type Content } from "@site/content";
+import {
+  checkContainment,
+  type Content,
+  type HandlingState,
+} from "@site/content";
 import { terminalCapabilityUnlocked, terminalCanExport } from "./milestones";
 import {
   amount,
@@ -128,11 +132,34 @@ export function moduleCommand(
   };
 }
 
+export function terminalModulePoint(
+  c: Content,
+  definition: Content["site"]["terminalModules"][number],
+): Point {
+  return {
+    x: c.site.terminal.x + definition.inlet.x,
+    y: c.site.terminal.y + definition.inlet.y,
+  };
+}
+export function terminalModuleOutlet(
+  c: Content,
+  definition: Content["site"]["terminalModules"][number],
+): Point & { direction: number } {
+  const point = terminalModulePoint(c, definition);
+  const direction = definition.inlet.side;
+  const delta = [
+    { x: 1, y: 0 },
+    { x: 0, y: 1 },
+    { x: -1, y: 0 },
+    { x: 0, y: -1 },
+  ][direction]!;
+  return { x: point.x + delta.x, y: point.y + delta.y, direction };
+}
 export function terminalModuleAt(
   c: Content,
   point: Point,
   direction: number,
-  state: "liquid" | "gas",
+  state: HandlingState,
 ) {
   return c.site.terminalModules.find(
     (d) =>
@@ -147,7 +174,7 @@ export function terminalReceiver(
   s: Save,
   point: Point,
   direction: number,
-  state: "liquid" | "gas",
+  state: HandlingState,
 ) {
   const d = terminalModuleAt(c, point, direction, state);
   const contents = d && s.terminalModules[d.id];
@@ -169,7 +196,7 @@ export function terminalInletDiagnostic(
   s: Save,
   point: Point,
   direction: number,
-  state: "liquid" | "gas",
+  state: HandlingState,
   materialId: string,
 ): TransportDiagnostic | null {
   if (!contains(c.site.terminal, point)) return null;
@@ -201,8 +228,8 @@ export function terminalInletDiagnostic(
 export function terminalMaterialQuantity(c: Content, s: Save, id: string): number {
   const material = c.materials.find((entry) => entry.id === id);
   if (!material) return 0;
-  if (material.handlingState === "solid") return amount(s.staging, id);
-  return c.site.terminalModules.reduce((sum, definition) => {
+  const staged = material.handlingState === "solid" ? amount(s.staging, id) : 0;
+  return staged + c.site.terminalModules.reduce((sum, definition) => {
     const contents = s.terminalModules[definition.id];
     return (
       sum +
@@ -306,11 +333,12 @@ function takeTerminalMaterial(
   units: number,
 ): void {
   const material = c.materials.find((entry) => entry.id === id)!;
-  if (material.handlingState === "solid") {
-    change(s.staging, id, -units);
-    return;
-  }
   let remaining = units;
+  if (material.handlingState === "solid") {
+    const staged = Math.min(amount(s.staging, id), remaining);
+    if (staged) change(s.staging, id, -staged);
+    remaining -= staged;
+  }
   for (const definition of c.site.terminalModules) {
     const contents = s.terminalModules[definition.id];
     if (contents?.materialId !== id || remaining === 0) continue;
