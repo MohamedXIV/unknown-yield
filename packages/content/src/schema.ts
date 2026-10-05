@@ -610,16 +610,16 @@ function validateContentInternal(
       throw new Error("Knowledge insight target material is missing");
     if (insight.textKey !== "knowledge.insight." + insight.id + ".text")
       throw new Error("Localization key must match knowledge insight");
-    if (insight.requires.type === "material-known") {
+    const requirement = insight.requires;
+    if (requirement.type === "material-known") {
       if (
-        insight.requires.materialId !== insight.materialId ||
-        !materials.has(insight.requires.materialId)
+        requirement.materialId !== insight.materialId ||
+        !materials.has(requirement.materialId)
       )
         throw new Error("Knowledge insight material evidence is invalid");
     } else {
-      const reaction = c.reactions.find(
-        (entry) => entry.id === insight.requires.reactionId,
-      );
+      const reactionId = requirement.reactionId;
+      const reaction = c.reactions.find((entry) => entry.id === reactionId);
       if (
         !reaction ||
         (reaction.input !== insight.materialId &&
