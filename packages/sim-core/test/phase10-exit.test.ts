@@ -153,6 +153,20 @@ it("completes the Phase 10 manufactured exploration loop in one persistent world
     0,
   );
 
+  // Phase 15 fuel progression reuses the evidence already earned in this
+  // exploration chain: gas certification powers deep extraction, while the
+  // resonance result certifies research coolant for the later Sinterer.
+  command({ type: "installTerminalModule", definitionId: "gas-dock" });
+  command({
+    type: "requestImport",
+    supplyId: "orbital-propellant-cylinder",
+  });
+  command({ type: "installTerminalModule", definitionId: "cryo-dock" });
+  command({
+    type: "requestImport",
+    supplyId: "orbital-coolant-canister",
+  });
+
   command({ type: "setEnabled", machineId: gasExtractor, enabled: false });
   command({ type: "setEnabled", machineId: liquefier, enabled: false });
   command({ type: "setPumpEnabled", id: pump, enabled: false });
