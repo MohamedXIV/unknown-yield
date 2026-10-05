@@ -55,10 +55,16 @@ export const contentSchema = z.object({
         sourceKind: z.enum(["atmosphere"]).optional(),
         processConditionId: id.optional(),
         unlock: z
-          .object({
-            reactionId: id,
-            hintKey: localeKeySchema,
-          })
+          .union([
+            z.object({
+              reactionId: id,
+              hintKey: localeKeySchema,
+            }),
+            z.object({
+              hazardEvidenceId: id,
+              hintKey: localeKeySchema,
+            }),
+          ])
           .optional(),
         inputContainment: capabilities,
         outputContainment: capabilities,
@@ -519,8 +525,18 @@ function validateContentInternal(
   }
   for (const m of c.machines) {
     if (m.unlock) {
-      if (!c.reactions.some((r) => r.id === m.unlock!.reactionId))
-        throw new Error("Missing machine unlock reaction");
+      if (
+        "reactionId" in m.unlock
+          ? !c.reactions.some((r) => r.id === m.unlock.reactionId)
+          : !c.reactions.some(
+              (r) => r.hazard?.id === m.unlock.hazardEvidenceId,
+            )
+      )
+        throw new Error(
+          "reactionId" in m.unlock
+            ? "Missing machine unlock reaction"
+            : "Missing machine unlock hazard evidence",
+        );
       if (m.unlock.hintKey !== "machine." + m.id + ".unlock-hint")
         throw new Error("Localization key must match its machine unlock");
     }

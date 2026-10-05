@@ -9,11 +9,13 @@ import type { Save } from "./types";
  * display-text or parallel unlock state.
  */
 export function machineUnlocked(
-  state: Pick<Save, "knowledge">,
+  state: Pick<Save, "knowledge"> & Partial<Pick<Save, "hazardEvidence">>,
   definition: MachineDefinition,
 ): boolean {
-  return (
-    definition.unlock === undefined ||
-    state.knowledge.includes(definition.unlock.reactionId)
-  );
+  if (!definition.unlock) return true;
+  return "reactionId" in definition.unlock
+    ? state.knowledge.includes(definition.unlock.reactionId)
+    : (state.hazardEvidence ?? []).includes(
+        definition.unlock.hazardEvidenceId,
+      );
 }

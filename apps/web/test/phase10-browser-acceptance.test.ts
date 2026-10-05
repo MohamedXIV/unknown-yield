@@ -313,6 +313,7 @@ browserIt(
         deep: { disabled: string | null } | null;
         atmosphere: { disabled: string | null } | null;
         sinterer: { disabled: string | null } | null;
+        relief: { disabled: string | null } | null;
       }>(`(() => {
         const button = (label) =>
           [...document.querySelectorAll('nav[aria-label="Build tools"] button')]
@@ -329,6 +330,7 @@ browserIt(
           deep: state("Deep extractor"),
           atmosphere: state("Atmospheric intake"),
           sinterer: state("Sinterer"),
+          relief: state("Relief furnace"),
         };
       })()`);
 
@@ -337,6 +339,7 @@ browserIt(
       expect(state.deep?.disabled).toBe("true");
       expect(state.atmosphere?.disabled).toBe("true");
       expect(state.sinterer?.disabled).toBe("false");
+      expect(state.relief?.disabled).toBe("true");
 
       await evaluate(`(() => {
         const entry = [...document.querySelectorAll('nav[aria-label="Build tools"] button')]
@@ -403,7 +406,9 @@ browserIt(
           document.body.textContent?.includes("SAFER NEXT TEST") === true &&
           document.body.textContent?.includes(
             "If that trial stays stable, the extra confinement caused the jam."
-          ) === true`,
+          ) === true &&
+          document.querySelector('button[aria-label="Relief furnace"]')
+            ?.getAttribute("aria-disabled") === "false"`,
       );
 
       await evaluate(`(() => {

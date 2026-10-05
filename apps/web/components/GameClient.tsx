@@ -87,6 +87,8 @@ const descriptions: Partial<Record<Tool, string>> = {
   "sealed-furnace": "Place inside a factory.",
   "oversealed-furnace":
     "Place inside a factory. This setup is intentionally experimental.",
+  "relief-furnace":
+    "Place inside a factory. Pressure-relief baffling is learned from a prior jam.",
   depot:
     "Place on clear ground. Belts move any material in and out until full.",
   belt: "Drag a ground path. Release to build. Click for one cell; R changes its direction.",
@@ -261,7 +263,8 @@ function GameClientInner() {
     if (
       tool !== "furnace" &&
       tool !== "sealed-furnace" &&
-      tool !== "oversealed-furnace"
+      tool !== "oversealed-furnace" &&
+      tool !== "relief-furnace"
     )
       return descriptions[tool];
     const key = snapshot.operations.find((o) => o.id === "heat")?.nameKey;
@@ -1985,6 +1988,7 @@ function GameClientInner() {
               "furnace",
               "sealed-furnace",
               "oversealed-furnace",
+              "relief-furnace",
               "belt",
               "port",
               "depot",
@@ -2016,7 +2020,9 @@ function GameClientInner() {
               <small>{TOOL_HOTKEYS[tool]}</small>
               <Glyph
                 type={
-                  tool === "sealed-furnace" || tool === "oversealed-furnace"
+                  tool === "sealed-furnace" ||
+                  tool === "oversealed-furnace" ||
+                  tool === "relief-furnace"
                     ? "furnace"
                     : tool === "deep-extractor"
                       ? "extractor"

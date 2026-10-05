@@ -4,8 +4,11 @@ import { machineUnlocked } from "../src/progression";
 
 describe("knowledge-gated capability identity", () => {
   const oversealed = fixture.machines.find(
-    (machine) => machine.id === "oversealed-furnace",
-  )!;
+      (machine) => machine.id === "oversealed-furnace",
+    )!,
+    relief = fixture.machines.find(
+      (machine) => machine.id === "relief-furnace",
+    )!;
 
   it("depends on confirmed reaction identity, not resources or localized hint wording", () => {
     const locked = {
@@ -33,5 +36,32 @@ describe("knowledge-gated capability identity", () => {
     expect(Object.keys({ knowledge: ["heat-raw-sealed"] })).toEqual([
       "knowledge",
     ]);
+  });
+
+  it("derives a safety capability only from observed hazard evidence", () => {
+    expect(machineUnlocked({ knowledge: [], hazardEvidence: [] }, relief)).toBe(
+      false,
+    );
+    expect(
+      machineUnlocked(
+        { knowledge: ["heat-ferrite-oversealed"], hazardEvidence: [] },
+        relief,
+      ),
+    ).toBe(false);
+    expect(
+      machineUnlocked(
+        { knowledge: [], hazardEvidence: ["slag-jam"] },
+        relief,
+      ),
+    ).toBe(true);
+
+    const renamedHint = structuredClone(relief);
+    renamedHint.unlock!.hintKey = "machine.relief-furnace.other-copy";
+    expect(
+      machineUnlocked(
+        { knowledge: [], hazardEvidence: ["slag-jam"] },
+        renamedHint,
+      ),
+    ).toBe(true);
   });
 });

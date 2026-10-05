@@ -218,6 +218,27 @@ describe("content boundary", () => {
     );
   });
 
+  it("validates hazard-evidence machine unlock references", () => {
+    const relief = fixture.machines.find(
+      (machine) => machine.id === "relief-furnace",
+    )!;
+    expect(relief.unlock).toEqual({
+      hazardEvidenceId: "slag-jam",
+      hintKey: "machine.relief-furnace.unlock-hint",
+    });
+
+    const missing = structuredClone(fixture);
+    missing.machines.find(
+      (machine) => machine.id === "relief-furnace",
+    )!.unlock = {
+      hazardEvidenceId: "missing-hazard",
+      hintKey: "machine.relief-furnace.unlock-hint",
+    };
+    expect(() => validateContent(missing)).toThrow(
+      /Missing machine unlock hazard evidence/,
+    );
+  });
+
   it("rejects hazards without an explicit process condition", () => {
     const c = structuredClone(fixture);
     const hazardous = c.reactions.find((r) => r.id === "heat-raw-oversealed")!;
