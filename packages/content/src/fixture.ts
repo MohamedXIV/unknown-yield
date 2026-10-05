@@ -311,6 +311,23 @@ export const fixture = validateContent({
       height: 2,
       cost: 30,
     },
+    {
+      id: "relief-furnace",
+      nameKey: "machine.relief-furnace.name",
+      role: "processor",
+      processConditionId: "relieved",
+      unlock: {
+        hazardEvidenceId: "slag-jam",
+        hintKey: "machine.relief-furnace.unlock-hint",
+      },
+      operations: ["heat"],
+      capacity: 12,
+      fuel: 3,
+      durationTicks: 32,
+      width: 2,
+      height: 2,
+      cost: 34,
+    },
   ],
   junctions: [
     {
@@ -458,6 +475,17 @@ export const fixture = validateContent({
       output: "residue",
       outputAmount: 1,
       observationKey: "reaction.heat-ferrite-sealed.observation",
+      known: false,
+    },
+    {
+      id: "heat-ferrite-relieved",
+      operation: "heat",
+      processConditionId: "relieved",
+      input: "ferrite",
+      inputAmount: 2,
+      output: "residue",
+      outputAmount: 1,
+      observationKey: "reaction.heat-ferrite-relieved.observation",
       known: false,
     },
     {

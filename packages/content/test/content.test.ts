@@ -20,7 +20,7 @@ describe("content boundary", () => {
   });
   it("accepts the complete tiny scenario", () => {
     const c = validateContent(fixture);
-    expect(c.machines).toHaveLength(12);
+    expect(c.machines).toHaveLength(13);
     expect(c.version).toBe("world-01-v13");
     expect(c.storages).toHaveLength(1);
     expect(c.storages[0]).toMatchObject({ id: "depot", capacity: 40 });
@@ -157,9 +157,12 @@ describe("content boundary", () => {
   });
   it("rejects missing or borrowed machine unlock references", () => {
     const missing = structuredClone(fixture);
-    missing.machines.find(
+    const missingUnlock = missing.machines.find(
       (m) => m.id === "oversealed-furnace",
-    )!.unlock!.reactionId = "missing-reaction";
+    )!.unlock!;
+    if (!("reactionId" in missingUnlock))
+      throw new Error("Expected reaction-gated oversealed furnace");
+    missingUnlock.reactionId = "missing-reaction";
     expect(() => validateContent(missing)).toThrow(/unlock reaction/i);
 
     const borrowed = structuredClone(fixture);
@@ -215,6 +218,27 @@ describe("content boundary", () => {
     )!.strandedOutputUnits = 2;
     expect(() => validateContent(excessive)).toThrow(
       /Hazard consequence exceeds reaction output/,
+    );
+  });
+
+  it("validates hazard-evidence machine unlock references", () => {
+    const relief = fixture.machines.find(
+      (machine) => machine.id === "relief-furnace",
+    )!;
+    expect(relief.unlock).toEqual({
+      hazardEvidenceId: "slag-jam",
+      hintKey: "machine.relief-furnace.unlock-hint",
+    });
+
+    const missing = structuredClone(fixture);
+    missing.machines.find(
+      (machine) => machine.id === "relief-furnace",
+    )!.unlock = {
+      hazardEvidenceId: "missing-hazard",
+      hintKey: "machine.relief-furnace.unlock-hint",
+    };
+    expect(() => validateContent(missing)).toThrow(
+      /Missing machine unlock hazard evidence/,
     );
   });
 

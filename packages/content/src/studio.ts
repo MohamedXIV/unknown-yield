@@ -46,7 +46,16 @@ const machineRow = (machine: Content["machines"][number]) => ({
   maxExtractionDepth: machine.maxExtractionDepth,
   sourceKind: empty(machine.sourceKind),
   processConditionId: empty(machine.processConditionId),
-  unlockReactionId: empty(machine.unlock?.reactionId),
+  unlockReactionId: empty(
+    machine.unlock && "reactionId" in machine.unlock
+      ? machine.unlock.reactionId
+      : undefined,
+  ),
+  unlockHazardEvidenceId: empty(
+    machine.unlock && "hazardEvidenceId" in machine.unlock
+      ? machine.unlock.hazardEvidenceId
+      : undefined,
+  ),
   unlockHintKey: empty(machine.unlock?.hintKey),
   operationsJson: JSON.stringify(machine.operations),
   inputContainmentJson: JSON.stringify(machine.inputContainment),
@@ -240,8 +249,23 @@ function candidateFromStore(store: Store, base: Content): unknown {
   ).map((id) => {
     const row = rawRow(store, "machines", id),
       label = "Machine " + id,
-      unlockReactionId = optionalText(row, "unlockReactionId", label),
-      unlockHintKey = optionalText(row, "unlockHintKey", label);
+      unlockReactionId = optionalText(
+        { unlockReactionId: row.unlockReactionId ?? "" },
+        "unlockReactionId",
+        label,
+      ),
+      unlockHazardEvidenceId = optionalText(
+        { unlockHazardEvidenceId: row.unlockHazardEvidenceId ?? "" },
+        "unlockHazardEvidenceId",
+        label,
+      ),
+      unlockHintKey = optionalText(
+        { unlockHintKey: row.unlockHintKey ?? "" },
+        "unlockHintKey",
+        label,
+      );
+    if (unlockReactionId && unlockHazardEvidenceId)
+      throw new Error(label + " has multiple unlock evidence sources");
     return {
       id,
       nameKey: stringCell(row, "nameKey", label),
@@ -267,12 +291,17 @@ function candidateFromStore(store: Store, base: Content): unknown {
       ...(optionalText(row, "processConditionId", label)
         ? { processConditionId: optionalText(row, "processConditionId", label) }
         : {}),
-      ...(unlockReactionId || unlockHintKey
+      ...(unlockReactionId || unlockHazardEvidenceId || unlockHintKey
         ? {
-            unlock: {
-              reactionId: unlockReactionId ?? "",
-              hintKey: unlockHintKey ?? "",
-            },
+            unlock: unlockHazardEvidenceId
+              ? {
+                  hazardEvidenceId: unlockHazardEvidenceId,
+                  hintKey: unlockHintKey ?? "",
+                }
+              : {
+                  reactionId: unlockReactionId ?? "",
+                  hintKey: unlockHintKey ?? "",
+                },
           }
         : {}),
       operations: parseOperations(row, label),
@@ -475,7 +504,11 @@ export function referencesTo(
 
   if (targetType === "reaction")
     for (const machine of content.machines)
-      if (machine.unlock?.reactionId === targetId)
+      if (
+        machine.unlock &&
+        "reactionId" in machine.unlock &&
+        machine.unlock.reactionId === targetId
+      )
         push("machine", machine.id, "unlock.reactionId");
 
   return refs.sort(

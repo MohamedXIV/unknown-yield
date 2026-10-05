@@ -329,6 +329,9 @@ export const enCatalog: LocaleCatalog = {
   "machine.oversealed-furnace.name": "Oversealed furnace",
   "machine.oversealed-furnace.unlock-hint":
     "a confirmed Heat result from a Sealed furnace",
+  "machine.relief-furnace.name": "Relief furnace",
+  "machine.relief-furnace.unlock-hint":
+    "observed Vitrified slag jam evidence from excessive confinement",
   "storage.depot.name": "Depot",
   "reaction.press-ferrite.observation":
     "Ferrite compacts into structural plates for local construction.",
@@ -364,6 +367,8 @@ export const enCatalog: LocaleCatalog = {
     "Reduce confinement. Use the Sealed furnace as the comparison setup before attempting the Oversealed furnace again.",
   "reaction.heat-ferrite-sealed.observation":
     "Ferrite heated under ordinary sealed confinement vitrifies without jamming the chamber.",
+  "reaction.heat-ferrite-relieved.observation":
+    "Controlled pressure relief lets the ferrite vitrify while keeping the chamber path open.",
   "reaction.heat-ferrite-oversealed.observation":
     "Oversealed heating destabilized the ferrite charge into vitrified residue and jammed the chamber.",
   "hazard.slag-jam.name": "Vitrified slag jam",

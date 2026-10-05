@@ -335,3 +335,72 @@ it("persists a conservative stranded-output consequence without deleting materia
   expect(recoveredReload.serialize().hazardEvidence).toEqual(["slag-jam"]);
   expect(auditLedger(fixture, recoveredReload.serialize()).ok).toBe(true);
 });
+
+
+it("unlocks an evidence-driven relief furnace that deterministically prevents the learned jam", () => {
+  const { sim } = armedFerriteHazardLine();
+
+  expect(
+    sim.preview({
+      type: "placeMachine",
+      definitionId: "relief-furnace",
+      x: 30,
+      y: 30,
+      direction: 0,
+    }),
+  ).toMatchObject({
+    ok: false,
+    message: "Capability locked by unconfirmed knowledge",
+  });
+
+  for (
+    let tick = 0;
+    tick < 500 && sim.serialize().hazardEvidence.length === 0;
+    tick++
+  )
+    sim.step(fixture.tickMs);
+
+  expect(sim.serialize().hazardEvidence).toContain("slag-jam");
+  expect(
+    sim.snapshot().definitions.find(
+      (definition) => definition.id === "relief-furnace",
+    )?.unlock,
+  ).toEqual({
+    unlocked: true,
+    hintKey: "machine.relief-furnace.unlock-hint",
+  });
+
+  const safeId = build(sim, {
+    type: "placeMachine",
+    definitionId: "relief-furnace",
+    x: 30,
+    y: 30,
+    direction: 0,
+  });
+  const staged = sim.serialize();
+  staged.deposits["ferrite-field"] -= 2;
+  staged.machines[safeId].input.ferrite = 2;
+  expect(sim.load(staged).ok).toBe(true);
+  expect(auditLedger(fixture, sim.serialize()).ok).toBe(true);
+
+  for (
+    let tick = 0;
+    tick < 200 &&
+    !sim.serialize().knowledge.includes("heat-ferrite-relieved");
+    tick++
+  ) {
+    sim.step(fixture.tickMs);
+    expect(auditLedger(fixture, sim.serialize()).ok).toBe(true);
+  }
+
+  expect(sim.serialize().knowledge).toContain("heat-ferrite-relieved");
+  expect(sim.serialize().machines[safeId]).toMatchObject({
+    incident: null,
+    incidentInventory: {},
+  });
+  expect(sim.serialize().machines[safeId].output.residue).toBeGreaterThanOrEqual(
+    1,
+  );
+  expect(sim.serialize().hazardEvidence).toEqual(["slag-jam"]);
+  expect(auditLedger(fixture, sim.serialize()).ok).toBe(true);
+});
