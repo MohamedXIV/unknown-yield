@@ -20,7 +20,7 @@ describe("content boundary", () => {
   });
   it("accepts the complete tiny scenario", () => {
     const c = validateContent(fixture);
-    expect(c.machines).toHaveLength(11);
+    expect(c.machines).toHaveLength(12);
     expect(c.version).toBe("world-01-v13");
     expect(c.storages).toHaveLength(1);
     expect(c.storages[0]).toMatchObject({ id: "depot", capacity: 40 });
@@ -28,8 +28,9 @@ describe("content boundary", () => {
     expect(c.site.sensingCapabilities.map((entry) => entry.id)).toEqual([
       "survey-scanner",
       "core-probe",
+      "resonance-probe",
     ]);
-    expect(c.site.surveySignals).toHaveLength(3);
+    expect(c.site.surveySignals).toHaveLength(4);
     expect(
       c.machines.find((machine) => machine.id === "deep-extractor"),
     ).toMatchObject({
