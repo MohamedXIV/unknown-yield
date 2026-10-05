@@ -185,6 +185,64 @@ it("completes the Phase 10 manufactured exploration loop in one persistent world
   expect(sim.serialize().deposits["catalyst-seam-a"]).toBe(800);
   expect(JSON.stringify(sim.snapshot())).not.toContain("anomaly-d");
 
+  // Exercise the distinct non-surface Phase 10 source in this same persistent world.
+  expect(JSON.stringify(sim.snapshot())).not.toContain("atmospheric-plume-a");
+  expect(
+    sim.command({
+      type: "sense",
+      capabilityId: "core-probe",
+      x: 70,
+      y: 26,
+    }),
+  ).toMatchObject({ ok: true });
+  audit(sim);
+  expect(sim.serialize().atmosphericSources["atmospheric-plume-a"]).toBe(600);
+
+  command({
+    type: "placeMachine",
+    definitionId: "atmospheric-intake",
+    x: 69,
+    y: 25,
+    direction: 2,
+  });
+  const atmosphereFactory = command({
+    type: "placeFactory",
+    x: 56,
+    y: 21,
+    width: 10,
+    height: 10,
+  });
+  command({
+    type: "placePort",
+    factoryId: atmosphereFactory,
+    x: 65,
+    y: 26,
+    direction: 2,
+  });
+  const atmosphereCollector = command({
+    type: "placeMachine",
+    definitionId: "gas-collector",
+    x: 62,
+    y: 25,
+    direction: 2,
+  });
+  command({ type: "placeCompressor", x: 68, y: 26, direction: 2 });
+  command({
+    type: "placePressureLines",
+    points: [
+      { x: 67, y: 26, inlet: 0, outlet: 2 },
+      { x: 66, y: 26, inlet: 0, outlet: 2 },
+      { x: 65, y: 26, inlet: 0, outlet: 2 },
+      { x: 64, y: 26, inlet: 0, outlet: 2 },
+    ],
+  });
+  tickUntil(
+    () => (sim.serialize().machines[atmosphereCollector].output.granules ?? 0) > 0,
+    360,
+  );
+  expect(sim.serialize().atmosphericSources["atmospheric-plume-a"]).toBeLessThan(600);
+  audit(sim);
+
   const catalystFactory = command({
     type: "placeFactory",
     x: 61,
