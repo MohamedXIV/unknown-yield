@@ -339,10 +339,28 @@ export const contentSchema = z.object({
           baseDemandBps: z.number().int().min(1000).max(20000),
           saturationPerUnitBps: z.number().int().positive().max(10000),
           recoveryPerMarketTickBps: z.number().int().positive().max(10000),
+          demandRecoveryPerMarketTickBps: z
+            .number()
+            .int()
+            .positive()
+            .max(10000)
+            .default(125),
           requiredTerminalCapabilityId: id.optional(),
         }),
       )
       .min(1),
+    marketShocks: z
+      .array(
+        z.object({
+          id,
+          nameKey: localeKeySchema,
+          briefKey: localeKeySchema,
+          materialId: id,
+          requiredReactionId: id,
+          targetDemandBps: z.number().int().min(1000).max(20000),
+        }),
+      )
+      .default([]),
     orders: z
       .array(
         z.object({
@@ -754,6 +772,26 @@ function validateContentInternal(
     )
   )
     throw new Error("Import-only material cannot be exchange-listed");
+  const shockIds = new Set<string>();
+  for (const shock of c.economy.marketShocks) {
+    if (shockIds.has(shock.id)) throw new Error("Duplicate market shock ID");
+    shockIds.add(shock.id);
+    const listing = c.economy.exchange.find(
+      (entry) => entry.materialId === shock.materialId,
+    );
+    const reaction = c.reactions.find(
+      (entry) => entry.id === shock.requiredReactionId,
+    );
+    if (!listing || !reaction || reaction.output !== shock.materialId)
+      throw new Error("Market shock requires a discovered listed output");
+    if (shock.targetDemandBps <= listing.baseDemandBps)
+      throw new Error("Market shock must raise demand above baseline");
+    if (
+      shock.nameKey !== "market-shock." + shock.id + ".name" ||
+      shock.briefKey !== "market-shock." + shock.id + ".brief"
+    )
+      throw new Error("Localization key must match market shock");
+  }
   const opportunityIds = new Set<string>(),
     directiveExperiments = new Set<string>();
   for (const order of c.economy.orders) {

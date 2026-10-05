@@ -172,6 +172,7 @@ const schema = z.object({
     z.literal(21),
     z.literal(22),
     z.literal(23),
+    z.literal(24),
   ]),
   contentVersion: z.string(),
   terminalModules: z
@@ -269,6 +270,12 @@ const schema = z.object({
       }),
     )
     .default({}),
+  marketShocks: z
+    .record(
+      safeId,
+      z.object({ triggeredAt: count }).strict(),
+    )
+    .default({}),
   opportunities: z
     .record(
       safeId,
@@ -307,7 +314,7 @@ const schema = z.object({
 });
 export function initialState(c: Content): Save {
   const state: Save = {
-    schemaVersion: 23,
+    schemaVersion: 24,
     terminalModules: {},
     contentVersion: c.version,
     tick: 0,
@@ -364,6 +371,7 @@ export function initialState(c: Content): Save {
       c.materials.filter((m) => m.known).map((m) => [m.id, "keep"]),
     ),
     market: {},
+    marketShocks: {},
     opportunities: {},
     milestones: {},
     company: {
@@ -404,6 +412,18 @@ export function parseSave(input: unknown, c: Content): Save {
       Object.keys(parsed.terminalImports.received).length)
   )
     throw Error("Legacy schema cannot contain terminal imports");
+  if (
+    parsed.schemaVersion >= 24 &&
+    (!input ||
+      typeof input !== "object" ||
+      !Object.hasOwn(input, "marketShocks"))
+  )
+    throw Error("Missing market shock history");
+  if (
+    parsed.schemaVersion < 24 &&
+    Object.keys(parsed.marketShocks).length
+  )
+    throw Error("Legacy schema cannot contain market shock history");
   if (parsed.schemaVersion < 18 && c.liquidLogistics?.pump.containmentFailure)
     throw Error("Incompatible pump recovery save schema");
   if (
@@ -564,6 +584,9 @@ export function parseSave(input: unknown, c: Content): Save {
   // Schema 22 predates physical off-world import holdings and their cumulative
   // material-source record. No import cargo existed, so migration is empty.
   if (s.schemaVersion === 22) s.schemaVersion = 23;
+  // Schema 23 predates one-shot market-shock history. Earlier saves cannot
+  // prove a historical trigger time, so migration keeps history empty.
+  if (s.schemaVersion === 23) s.schemaVersion = 24;
   if (s.contentVersion !== c.version || s.remainder >= c.tickMs)
     throw new Error("Incompatible content or timing");
   if (
@@ -599,6 +622,17 @@ export function parseSave(input: unknown, c: Content): Save {
     )
   )
     throw new Error("Invalid market state");
+  for (const [id, state] of Object.entries(s.marketShocks)) {
+    const definition = c.economy.marketShocks.find((entry) => entry.id === id);
+    if (
+      !definition ||
+      state.triggeredAt > s.tick ||
+      !s.knowledge.includes(definition.requiredReactionId) ||
+      !known.has(definition.materialId) ||
+      !Object.hasOwn(s.market, definition.materialId)
+    )
+      throw new Error("Invalid market shock history");
+  }
   for (const [id, state] of Object.entries(s.opportunities)) {
     const order = c.economy.orders.find((entry) => entry.id === id),
       directive = c.economy.directives.find((entry) => entry.id === id),

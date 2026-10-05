@@ -10,7 +10,12 @@ import {
 import { auditLedger } from "./ledger";
 import { machineUnlocked } from "./progression";
 import { hazardDefinition } from "./hazards";
-import { marketListings, recoverMarkets } from "./market";
+import {
+  marketBulletins,
+  marketListings,
+  recoverMarkets,
+  refreshMarketShocks,
+} from "./market";
 import { opportunityViews, refreshOpportunities } from "./opportunities";
 import { milestoneViews, refreshMilestones } from "./milestones";
 import { assistanceViews, companyView } from "./assistance";
@@ -114,8 +119,9 @@ export class Simulation {
         refreshMilestones(c, s);
       }
       if (s.tick % c.economy.marketEveryTicks === 0) {
-        refreshOpportunities(c, s);
         recoverMarkets(c, s);
+        refreshMarketShocks(c, s);
+        refreshOpportunities(c, s);
       }
       completeAndStart(c, s, false);
       this.factoryThroughput.observe(c, s);
@@ -292,6 +298,7 @@ export class Simulation {
       terminalModules: terminalModuleViews(c, s),
       policies: s.policies,
       exchange: marketListings(c, s),
+      marketBulletins: marketBulletins(c, s),
       opportunities: opportunityViews(c, s),
       milestones: milestoneViews(c, s),
       company: companyView(c, s),

@@ -41,6 +41,10 @@ export function contentKeys(c: Content): string[] {
         : [],
     ),
     ...c.economy.imports.flatMap((supply) => [supply.nameKey, supply.briefKey]),
+    ...c.economy.marketShocks.flatMap((shock) => [
+      shock.nameKey,
+      shock.briefKey,
+    ]),
     ...c.economy.orders.flatMap((order) => [order.nameKey, order.briefKey]),
     ...c.economy.directives.flatMap((directive) => [
       directive.nameKey,
@@ -454,12 +458,24 @@ export const enCatalog: LocaleCatalog = {
     "The unstable ferrite batch vitrified inside the chamber. The residue remains physically trapped in the stopped machine until a later recovery operation clears it.",
   "hazard.slag-jam.safer-hint":
     "Compare the same ferrite under the Sealed furnace. If that trial stays stable, the extra confinement caused the jam.",
+  "market-shock.matrix-resonance-program.name":
+    "Resonance materials program",
+  "market-shock.matrix-resonance-program.brief":
+    "The company has identified a resonant industrial application for the newly characterized matrix. Demand rises temporarily and then relaxes toward baseline.",
   "order.granules-procurement.name": "Orbital conductor allocation",
   "order.granules-procurement.brief":
     "Supply a bounded batch of the newly characterized conductor while the orbital allocation window is open.",
+  "order.matrix-resonance-allocation.name": "Resonant matrix allocation",
+  "order.matrix-resonance-allocation.brief":
+    "Supply a small physical batch of the newly characterized resonant matrix while the application program is active.",
   "directive.sealed-thermal-study.name": "Sealed thermal study",
   "directive.sealed-thermal-study.brief":
     "Run a sealed Heat trial on Veined ore and report the observed result. The company does not predict the output.",
+  "ui.terminal.market-bulletins.heading": "Company market bulletins",
+  "ui.terminal.market-bulletins.empty":
+    "No characterized material has triggered a new company application.",
+  "ui.terminal.market-bulletin.meta":
+    "{{material}} · demand {{demand}}%",
   "ui.terminal.opportunities.heading": "Corporate opportunities",
   "ui.terminal.opportunities.hint":
     "Ship requested materials to fulfill orders. Complete requested experiments to fulfill directives. Successful opportunities grant bonus fuel.",

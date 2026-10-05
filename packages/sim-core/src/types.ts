@@ -194,6 +194,17 @@ export type MarketState = {
   demandBps: number;
   saturationBps: number;
 };
+export type MarketShockState = {
+  triggeredAt: number;
+};
+export type MarketBulletinView = {
+  id: string;
+  nameKey: string;
+  briefKey: string;
+  materialId: string;
+  triggeredAt: number;
+  demandBps: number;
+};
 export type MarketListingView = MarketState & {
   materialId: string;
   compensationPerUnit: number;
@@ -336,6 +347,7 @@ export type Save = {
   terminalImports: TerminalImportState;
   policies: Record<string, "keep" | "export">;
   market: Record<string, MarketState>;
+  marketShocks: Record<string, MarketShockState>;
   opportunities: Record<string, OpportunityState>;
   milestones: Record<string, MilestoneState>;
   company: CompanyState;
@@ -551,6 +563,7 @@ export type PlayerSnapshot = {
   importOutlet: Point & { direction: number };
   policies: Record<string, "keep" | "export">;
   exchange: MarketListingView[];
+  marketBulletins: MarketBulletinView[];
   opportunities: OpportunityView[];
   milestones: MilestoneView[];
   company: CompanyView;
