@@ -162,6 +162,11 @@ const schema = z.discriminatedUnion("type", [
   }),
   z.object({ type: z.literal("rotateDivert"), beltId: z.string() }),
   z.object({ type: z.literal("switchDivert"), beltId: z.string() }),
+  z.object({
+    type: z.literal("setDivertRoute"),
+    beltId: z.string(),
+    route: z.enum(["primary", "alternate"]),
+  }),
   z.object({ type: z.literal("dismantle"), id: z.string() }),
   z.object({
     type: z.literal("setEnabled"),
@@ -901,6 +906,34 @@ export function applyCommand(
       const next = !belt.switched;
       if (apply) belt.switched = next;
       return ok(next ? "Flow switched" : "Flow restored");
+    }
+    case "setDivertRoute": {
+      const belt = Object.values(s.belts).find((b) => b.id === cmd.beltId);
+      if (!belt) return fail("Unknown belt");
+      if (belt.junction)
+        return {
+          ...fail("Use junction configuration"),
+          messageKey: "ui.junction.manual",
+        };
+      if (Object.values(s.factories).some((f) => wall(f, belt)))
+        return fail("Diverters cannot sit on factory walls");
+      if (cmd.route === "alternate" && belt.alternate === null)
+        return {
+          ...fail("No alternate exit to select"),
+          messageKey: "ui.diverter.no-alternate",
+        };
+      if (apply) belt.switched = cmd.route === "alternate";
+      return {
+        ...ok(
+          cmd.route === "alternate"
+            ? "Alternate feed selected"
+            : "Primary feed selected",
+        ),
+        messageKey:
+          cmd.route === "alternate"
+            ? "ui.diverter.route-alternate"
+            : "ui.diverter.route-primary",
+      };
     }
     case "recoverMachineIncident": {
       const machine = s.machines[cmd.machineId];

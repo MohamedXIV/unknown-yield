@@ -69,6 +69,18 @@ export function validateLocaleCoverage(
 }
 
 export const enCatalog: LocaleCatalog = {
+  "ui.diverter.heading": "District feed diverter",
+  "ui.diverter.none": "No alternate exit is configured.",
+  "ui.diverter.status":
+    "Alternate exit: {{direction}} · selected route: {{route}}.",
+  "ui.diverter.route-name.primary": "primary",
+  "ui.diverter.route-name.alternate": "alternate",
+  "ui.diverter.cycle": "Cycle alternate exit",
+  "ui.diverter.select-primary": "Select primary feed",
+  "ui.diverter.select-alternate": "Select alternate feed",
+  "ui.diverter.route-primary": "Primary feed selected",
+  "ui.diverter.route-alternate": "Alternate feed selected",
+  "ui.diverter.no-alternate": "Configure an alternate exit first",
   "ui.factory.relocation.hold": "Relocation hold",
   "ui.factory.relocation.downtime": "{{ticks}} ticks of downtime remaining",
   "ui.factory.relocation.restored": "External requirements restored",

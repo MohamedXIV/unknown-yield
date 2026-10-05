@@ -383,6 +383,11 @@ export type GameCommand =
     }
   | { type: "rotateDivert"; beltId: string }
   | { type: "switchDivert"; beltId: string }
+  | {
+      type: "setDivertRoute";
+      beltId: string;
+      route: "primary" | "alternate";
+    }
   | { type: "dismantle"; id: string }
   | { type: "recoverMachineIncident"; machineId: string }
   | { type: "setEnabled"; machineId: string; enabled: boolean }

@@ -306,6 +306,47 @@ function stable(view: FactoryThroughputView) {
   expect(view.outputs[0].unitsPerMinute).toBeGreaterThan(0);
 }
 
+describe("district route throughput invalidation", () => {
+  it("preserves certification on idempotent route selection and resets on a real route change", () => {
+    const { sim, factoryId } = makeLine(),
+      divert = sim.snapshot().belts.find(
+        (belt) => belt.x === 35 && belt.y === 27,
+      )!;
+    expect(divert).toBeDefined();
+    expect(
+      sim.command({ type: "rotateDivert", beltId: divert.id }).ok,
+    ).toBe(true);
+
+    const certified = certify(sim, factoryId);
+    expect(certified.state).toBe("stable");
+
+    const stateBefore = sim.serialize();
+    expect(
+      sim.command({
+        type: "setDivertRoute",
+        beltId: divert.id,
+        route: "primary",
+      }),
+    ).toMatchObject({ ok: true, message: "Primary feed selected" });
+    expect(sim.serialize()).toEqual(stateBefore);
+    expect(throughput(sim, factoryId)).toEqual(certified);
+
+    expect(
+      sim.command({
+        type: "setDivertRoute",
+        beltId: divert.id,
+        route: "alternate",
+      }),
+    ).toMatchObject({ ok: true, message: "Alternate feed selected" });
+    expect(throughput(sim, factoryId)).toEqual({
+      state: "measuring",
+      cycleTicks: null,
+      inputs: [],
+      outputs: [],
+    });
+  });
+});
+
 describe("stable factory throughput contract", () => {
   it("certifies through the partial-input wait in a multi-unit cycle", () => {
     const { sim, factoryId, processorId } = makeLine();
