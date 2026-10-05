@@ -94,6 +94,119 @@ function hazardSave() {
   return sim.serialize();
 }
 
+function phase12BrowserWorld() {
+  const sim = new Simulation(fixture);
+  const factoryId = build(sim, {
+    type: "placeFactory",
+    x: 24,
+    y: 33,
+    width: 10,
+    height: 10,
+  });
+  const factoryB = build(sim, {
+    type: "placeFactory",
+    x: 44,
+    y: 33,
+    width: 10,
+    height: 10,
+  });
+  build(sim, {
+    type: "placePort",
+    factoryId,
+    x: 33,
+    y: 37,
+    direction: 2,
+  });
+  build(sim, {
+    type: "placePort",
+    factoryId: factoryB,
+    x: 44,
+    y: 37,
+    direction: 0,
+  });
+  const machineId = build(sim, {
+    type: "placeMachine",
+    definitionId: "crusher",
+    x: 30,
+    y: 36,
+    direction: 2,
+  });
+  const machineB = build(sim, {
+    type: "placeMachine",
+    definitionId: "crusher",
+    x: 46,
+    y: 36,
+    direction: 0,
+  });
+  expect(
+    sim.command({
+      type: "setEnabled",
+      machineId,
+      enabled: false,
+    }).ok,
+  ).toBe(true);
+  expect(
+    sim.command({
+      type: "setEnabled",
+      machineId: machineB,
+      enabled: false,
+    }).ok,
+  ).toBe(true);
+
+  build(sim, {
+    type: "placeStorage",
+    definitionId: "depot",
+    x: 34,
+    y: 44,
+    direction: 0,
+  });
+  build(sim, {
+    type: "placeBelts",
+    points: [
+      { x: 37, y: 45 },
+      { x: 38, y: 45 },
+      { x: 39, y: 45 },
+      ...Array.from({ length: 8 }, (_, index) => ({
+        x: 39,
+        y: 44 - index,
+      })),
+    ],
+    direction: 0,
+  });
+  build(sim, {
+    type: "placeBelts",
+    points: Array.from({ length: 7 }, (_, index) => ({
+      x: 38 - index,
+      y: 37,
+    })),
+    direction: 2,
+  });
+  build(sim, {
+    type: "placeBelts",
+    points: Array.from({ length: 6 }, (_, index) => ({
+      x: 40 + index,
+      y: 37,
+    })),
+    direction: 0,
+  });
+  const diverterId = sim
+    .snapshot()
+    .belts.find((belt) => belt.x === 39 && belt.y === 37)!.id;
+  expect(
+    sim.command({ type: "rotateDivert", beltId: diverterId }).ok,
+  ).toBe(true);
+  expect(
+    sim.command({ type: "rotateDivert", beltId: diverterId }).ok,
+  ).toBe(true);
+
+  return {
+    save: sim.serialize(),
+    factoryId,
+    machineId,
+    diverterId,
+  };
+}
+
 function chromeExecutable(): string | null {
   const candidates = [
     process.env.CHROME_BIN,
@@ -296,6 +409,57 @@ browserIt(
           await sleep(100);
         }
         throw new Error("Browser condition timed out: " + expression);
+      };
+
+      const clickCell = async (x: number, y: number): Promise<void> => {
+        const point = await evaluate<{ x: number; y: number }>(`(() => {
+          const canvas = document.querySelector("canvas");
+          if (!canvas) throw new Error("Canvas missing");
+          const rect = canvas.getBoundingClientRect();
+          const X = 32, Y = 24;
+          const zoom = Math.min(rect.width / (36 * X), rect.height / (27 * Y));
+          const scrollX = 29 * X - rect.width / (2 * zoom);
+          const scrollY = 30 * Y - rect.height / (2 * zoom);
+          return {
+            x: rect.left + ((${x} + 0.5) * X - scrollX) * zoom,
+            y: rect.top + ((${y} + 0.5) * Y - scrollY) * zoom,
+          };
+        })()`);
+        await call("Input.dispatchMouseEvent", {
+          type: "mousePressed",
+          x: point.x,
+          y: point.y,
+          button: "left",
+          buttons: 1,
+          clickCount: 1,
+        });
+        await call("Input.dispatchMouseEvent", {
+          type: "mouseReleased",
+          x: point.x,
+          y: point.y,
+          button: "left",
+          buttons: 0,
+          clickCount: 1,
+        });
+      };
+
+      const pressKey = async (
+        key: string,
+        code: string,
+        windowsVirtualKeyCode: number,
+      ): Promise<void> => {
+        await call("Input.dispatchKeyEvent", {
+          type: "keyDown",
+          key,
+          code,
+          windowsVirtualKeyCode,
+        });
+        await call("Input.dispatchKeyEvent", {
+          type: "keyUp",
+          key,
+          code,
+          windowsVirtualKeyCode,
+        });
       };
 
       await call("Page.enable");
@@ -527,6 +691,189 @@ browserIt(
         hazardEvidence: ["slag-jam"],
       });
 
+      const phase12 = phase12BrowserWorld();
+      await evaluate(
+        `localStorage.setItem("industrial-site-save-v15", ${JSON.stringify(
+          JSON.stringify(phase12.save),
+        )})`,
+      );
+      await evaluate(`(() => {
+        const loadVisible = [...document.querySelectorAll("button")]
+          .some((button) => button.textContent?.includes("Load saved world"));
+        if (!loadVisible)
+          document.querySelector('button[aria-label="Game menu"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `[...document.querySelectorAll("button")]
+          .some((button) => button.textContent?.includes("Load saved world"))`,
+      );
+      await evaluate(`(() => {
+        [...document.querySelectorAll("button")]
+          .find((button) => button.textContent?.includes("Load saved world"))
+          ?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector('[role="status"]')
+          ?.textContent.includes("Site restored") === true`,
+      );
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Center camera"]')?.click();
+        return true;
+      })()`);
+      await sleep(150);
+
+      await clickCell(28, 37);
+      await waitForExpression(
+        `[...document.querySelectorAll("button")]
+          .some((button) => button.textContent?.includes("Move west"))`,
+      );
+      await evaluate(`(() => {
+        [...document.querySelectorAll("button")]
+          .find((button) => button.textContent?.includes("Move west"))
+          ?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector('[role="status"]')
+          ?.textContent.includes("Factory relocated") === true &&
+          document.body.textContent?.includes("Relocation hold") === true`,
+      );
+
+      await evaluate(`(() => {
+        [...document.querySelectorAll('nav[aria-label="Build tools"] button')]
+          .find((button) => button.getAttribute("aria-label") === "Belt")
+          ?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector('button[aria-label="Belt"]')
+          ?.getAttribute("aria-pressed") === "true"`,
+      );
+      await pressKey("r", "KeyR", 82);
+      await pressKey("r", "KeyR", 82);
+      await clickCell(33, 37);
+      await waitForExpression(
+        `document.querySelector('[role="status"]')
+          ?.textContent.includes("Belt path built") === true`,
+      );
+
+      await pressKey("Escape", "Escape", 27);
+      await clickCell(27, 37);
+      await waitForExpression(
+        `document.body.textContent?.includes("Relocation hold") === true`,
+      );
+      await waitForExpression(
+        `document.body.textContent?.includes("External requirements restored") === true`,
+        15000,
+      );
+      await evaluate(`(() => {
+        [...document.querySelectorAll("button.entity-row")]
+          .find((button) => button.textContent?.includes("Crusher"))
+          ?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `[...document.querySelectorAll("button")]
+          .some((button) => button.textContent?.includes("Enable automatic operation"))`,
+      );
+      await evaluate(`(() => {
+        [...document.querySelectorAll("button")]
+          .find((button) => button.textContent?.includes("Enable automatic operation"))
+          ?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector('[role="status"]')
+          ?.textContent.includes("Automatic operation enabled") === true`,
+      );
+
+      await clickCell(39, 37);
+      await waitForExpression(
+        `document.body.textContent?.includes("District feed diverter") === true &&
+          [...document.querySelectorAll("button")]
+            .some((button) => button.textContent?.includes("Select alternate feed"))`,
+      );
+      await evaluate(`(() => {
+        [...document.querySelectorAll("button")]
+          .find((button) => button.textContent?.includes("Select alternate feed"))
+          ?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector('[role="status"]')
+          ?.textContent.includes("Alternate feed selected") === true`,
+      );
+
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Game menu"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `[...document.querySelectorAll("button")]
+          .some((button) => button.textContent?.includes("Save world"))`,
+      );
+      await evaluate(`(() => {
+        [...document.querySelectorAll("button")]
+          .find((button) => button.textContent?.includes("Save world"))
+          ?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector('[role="status"]')
+          ?.textContent.includes("Field record saved on this device") === true`,
+      );
+
+      const phase12Saved = await evaluate<{
+        factory: {
+          x: number;
+          y: number;
+          relocation: unknown;
+        };
+        machine: { x: number; y: number; enabled: boolean };
+        reconnect: { direction: number } | null;
+        diverter: { switched: boolean };
+      }>(`(() => {
+        const save = JSON.parse(
+          localStorage.getItem("industrial-site-save-v15") ?? "null"
+        );
+        const factory = save.factories[${JSON.stringify(phase12.factoryId)}];
+        const machine = save.machines[${JSON.stringify(phase12.machineId)}];
+        const diverter = Object.values(save.belts)
+          .find((belt) => belt.id === ${JSON.stringify(phase12.diverterId)});
+        return {
+          factory: {
+            x: factory.x,
+            y: factory.y,
+            relocation: factory.relocation ?? null,
+          },
+          machine: {
+            x: machine.x,
+            y: machine.y,
+            enabled: machine.enabled,
+          },
+          reconnect: save.belts["33,37"]
+            ? { direction: save.belts["33,37"].direction }
+            : null,
+          diverter: { switched: diverter.switched },
+        };
+      })()`);
+      expect(phase12Saved).toEqual({
+        factory: {
+          x: 23,
+          y: 33,
+          relocation: null,
+        },
+        machine: {
+          x: 29,
+          y: 36,
+          enabled: true,
+        },
+        reconnect: { direction: 2 },
+        diverter: { switched: true },
+      });
+
       socket.close();
     } catch (error) {
       throw new Error(
@@ -540,5 +887,5 @@ browserIt(
       stop(server);
     }
   },
-  90000,
+  120000,
 );
