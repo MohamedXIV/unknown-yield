@@ -574,7 +574,7 @@ browserIt(
       const initialNotebook = await evaluate<string>(
         `document.querySelector(".context-panel")?.textContent ?? ""`,
       );
-      expect(initialNotebook).toContain("Open branch");
+      expect(initialNotebook).toContain("OPEN BRANCH");
       expect(initialNotebook).not.toContain("Magnetic ceramic");
       expect(initialNotebook).not.toContain("Catalyst powder");
       await evaluate(`(() => {
