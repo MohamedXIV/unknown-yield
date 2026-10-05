@@ -285,6 +285,7 @@ browserIt(
         (error instanceof Error ? error.message : String(error)) +
           "\nNext dev output:\n" +
           serverLog.slice(-8000),
+        { cause: error },
       );
     } finally {
       stop(browser);
