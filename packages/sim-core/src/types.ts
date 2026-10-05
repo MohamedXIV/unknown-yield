@@ -152,6 +152,23 @@ export type Belt = Point & {
   alternate: number | null;
   switched: boolean;
 };
+export type UndergroundSolidRoute = {
+  id: string;
+  entry: Point;
+  exit: Point;
+  direction: number;
+  cargo: { materialId: string; remainingSteps: number } | null;
+};
+export type UndergroundLiquidRoute = {
+  id: string;
+  entry: Point;
+  exit: Point;
+  direction: number;
+  containmentProfileId: string;
+  materialId: string | null;
+  quantity: number;
+  remainingSteps: number;
+};
 export type Storage = Point & {
   id: string;
   definitionId: string;
@@ -348,6 +365,8 @@ export type Save = {
   machines: Record<string, Machine>;
   factories: Record<string, Factory>;
   belts: Record<string, Belt>;
+  undergroundSolids: Record<string, UndergroundSolidRoute>;
+  undergroundLiquids: Record<string, UndergroundLiquidRoute>;
   pressureLines: Record<string, PressureLine>;
   pressureVessels: Record<string, PressureVessel>;
   compressors: Record<string, Compressor>;
@@ -416,6 +435,13 @@ export type GameCommand =
   | ({ type: "relocateFactory"; factoryId: string } & Point)
   | ({ type: "placePort"; factoryId: string; direction: number } & Point)
   | { type: "placeBelts"; points: Point[]; direction: number }
+  | { type: "placeUndergroundSolid"; entry: Point; exit: Point }
+  | {
+      type: "placeUndergroundLiquid";
+      entry: Point;
+      exit: Point;
+      containmentProfileId?: string;
+    }
   | {
       type: "configureJunction";
       beltId: string;
@@ -535,6 +561,8 @@ export type PlayerSnapshot = {
   machines: MachineView[];
   factories: FactoryView[];
   belts: Belt[];
+  undergroundSolids: UndergroundSolidRoute[];
+  undergroundLiquids: UndergroundLiquidRoute[];
   pressureLines: PressureLine[];
   pressureVessels: (PressureVessel & {
     width: number;

@@ -89,6 +89,8 @@ export type {
   Pump,
   LiquidContents,
   Belt,
+  UndergroundSolidRoute,
+  UndergroundLiquidRoute,
   Point,
   Rect,
 } from "./types";
@@ -133,3 +135,5 @@ export {
 } from "./assistance";
 
 export { beltArms } from "./junctions";
+
+export { advanceUndergroundRoutes, undergroundSolidCost, undergroundLiquidCost } from "./underground";
