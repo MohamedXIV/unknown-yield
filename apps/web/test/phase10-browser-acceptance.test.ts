@@ -789,6 +789,10 @@ browserIt(
           ?.textContent.includes("Automatic operation enabled") === true`,
       );
 
+      await pressKey("Escape", "Escape", 27);
+      await waitForExpression(
+        `document.querySelector(".context-panel") === null`,
+      );
       await evaluate(`(() => {
         document.querySelector('button[aria-label="Center camera"]')?.click();
         return true;
