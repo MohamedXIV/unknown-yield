@@ -626,8 +626,7 @@ export function applyCommand(
       if (s.fuel < fuelCost) return fail("Not enough fuel for relocation");
       if (!apply) return ok("Relocate factory", fuelCost);
 
-      const
-        belts = Object.values(s.belts).filter((belt) =>
+      const belts = Object.values(s.belts).filter((belt) =>
           contains(factory, belt),
         ),
         pipes = Object.values(s.pipes).filter((pipe) =>

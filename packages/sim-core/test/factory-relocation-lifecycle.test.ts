@@ -73,13 +73,41 @@ function lifecycleFactory() {
       outlet: 0,
     })),
   });
+  const pumpId = build(sim, {
+    type: "placePump",
+    containmentProfileId: "standard",
+    x: 30,
+    y: 30,
+    direction: 0,
+  });
+  const compressorId = build(sim, {
+    type: "placeCompressor",
+    x: 31,
+    y: 30,
+    direction: 0,
+  });
+  expect(
+    sim.command({
+      type: "setPumpEnabled",
+      id: pumpId,
+      enabled: false,
+    }).ok,
+  ).toBe(true);
+  expect(
+    sim.command({
+      type: "setCompressorEnabled",
+      id: compressorId,
+      enabled: false,
+    }).ok,
+  ).toBe(true);
 
-  return { sim, factoryId, machineId };
+  return { sim, factoryId, machineId, pumpId, compressorId };
 }
 
 describe("factory relocation lifecycle", () => {
   it("charges authored fuel, persists downtime and requires real reconnection before resume", () => {
-    const { sim, factoryId, machineId } = lifecycleFactory();
+    const { sim, factoryId, machineId, pumpId, compressorId } =
+      lifecycleFactory();
     const before = sim.serialize(),
       fuelBefore = before.fuel,
       stepCost = fixture.site.factoryRelocationFuelPerStep,
@@ -131,6 +159,26 @@ describe("factory relocation lifecycle", () => {
       restored.command({
         type: "setEnabled",
         machineId,
+        enabled: true,
+      }),
+    ).toMatchObject({
+      ok: false,
+      message: "Factory relocation downtime is still active",
+    });
+    expect(
+      restored.command({
+        type: "setPumpEnabled",
+        id: pumpId,
+        enabled: true,
+      }),
+    ).toMatchObject({
+      ok: false,
+      message: "Factory relocation downtime is still active",
+    });
+    expect(
+      restored.command({
+        type: "setCompressorEnabled",
+        id: compressorId,
         enabled: true,
       }),
     ).toMatchObject({
