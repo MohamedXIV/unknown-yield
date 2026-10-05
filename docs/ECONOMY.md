@@ -169,3 +169,12 @@ The Earth/company -> planet direction is now materialized as terminal cargo rath
 The first proof supply is **Orbital binder**. It is initially company-known, has no local deposit/source and is not exchange-listed, so it cannot be round-tripped directly for fuel. A Sinterer can consume the imported binder to discover Resonant matrix. This makes the import useful industrial feedstock while preserving the long-term possibility that other locally sourced materials can later replace off-world dependence.
 
 Import request is immediate once affordable because the strategic constraint is physical handling/capacity, not a waiting timer. The terminal holding is bounded by the same authored cargo-capacity dimension introduced in #132; a blocked or missing outlet therefore produces real backpressure at the company boundary rather than teleporting supplies into site stock.
+
+
+## Phase 13 — bidirectional terminal handling gates (#134)
+
+Terminal handling modules now use the same authored handling-state + containment-capability contract in both directions. A module may represent solid, liquid or gas cargo, and more specialized classes such as cryogenic, hazardous or secure custody are expressed as ordinary all-of containment capabilities rather than a parallel taxonomy.
+
+Off-world imports may name a required terminal module. Delivery is refused while that capability is locked, while the module is uninstalled, when another material occupies the single-material holding, or when capacity is exhausted. Accepted cargo enters the module's real persisted holding; it does not enter site stock or a second virtual import inventory. Import-only module cargo then exits through the same fixed edge port into an ordinary belt, pipe or pressure line. Incompatible downstream containment retains the cargo in the terminal module.
+
+The fixture proves three paths: Orbital binder through the bounded dry import holding and belt outlet, Orbital propellant through the existing gas dock, and Orbital coolant through a specialized liquid dock requiring cryogenic-rated + hazard-isolated + secure-chain containment. The latter can enter only a matching `sealed-cold` liquid path.

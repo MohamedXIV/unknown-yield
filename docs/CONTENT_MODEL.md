@@ -543,3 +543,12 @@ Current fixture world-01-v11 adds optional liquidLogistics.pump.containmentFailu
 `economy.imports` authors stable import-supply IDs with localized name/brief keys, one known solid material, quantity and company-fuel cost. The current proof deliberately validates import materials as **import-only at this progression point**: they cannot be an authored local deposit/hidden deposit/atmospheric source, cannot be a reaction output, and cannot also be a Materials Exchange listing. One authored request must also fit the terminal cargo-capacity bound.
 
 Runtime import holdings are save data, not content inventory. Save schema 23 persists `terminalImports.staging` (physical cargo still at the terminal) and `terminalImports.received` (cumulative off-world material source for ledger reconciliation). Schema 22 migrates exactly to empty import state because earlier saves had no imported material.
+
+
+### Phase 13 bidirectional terminal handling — #134
+
+`site.terminalModules[].handlingState` now accepts solid, liquid or gas. Multiple modules may share a handling state when their fixed terminal cells and stable IDs differ; containment capabilities distinguish ordinary and specialized handling. Liquid/gas modules still require their corresponding authored logistics substrate.
+
+`economy.imports[].terminalModuleId` optionally binds an import to one authored module. Omitting it is valid only for a known solid material compatible with the site's ordinary dry containment. A bound import must match the module's handling state and containment capabilities, and one authored delivery must fit the module capacity. Import materials remain import-only at this progression point and cannot also be exchange listings.
+
+Cryogenic, hazardous and secure cargo do not introduce new material states. They are represented by ordinary containment capabilities (`cryogenic-rated`, `hazard-isolated`, `secure-chain`) that compose with the existing solid/liquid/gas state and Phase 9 containment checks.
