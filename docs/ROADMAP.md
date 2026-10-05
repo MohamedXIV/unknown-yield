@@ -287,7 +287,7 @@ One persistent playable chain crosses at least two materially different handling
 
 ## Phase 10 — Industrial exploration and deep extraction
 
-**Epic:** GitHub Issue #101. **ACTIVE GAMEPLAY PHASE.** Children #114–#119; #114 is the first unblocked implementation issue.
+**Epic:** GitHub Issue #101. **COMPLETE** through #119 / PR #174, merged to `main` at `bb6eeb9938e68318bf0b696bfd40eeeb2d6b61df`. Children #114–#119 are complete.
 
 ### Question
 
@@ -309,7 +309,7 @@ The player manufactures an industrial capability, uses it to reveal a previously
 
 ## Phase 11 — Hazardous industrial science and recovery
 
-**Epic:** GitHub Issue #102. Planned after Phase 10. Children #120–#125.
+**Epic:** GitHub Issue #102. **ACTIVE GAMEPLAY PHASE.** Children #120–#125; #120 is the first unblocked implementation issue.
 
 ### Question
 
