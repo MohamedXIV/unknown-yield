@@ -261,6 +261,7 @@ describe("corporate assistance and recovery standing", () => {
       recoveryNetFuel: 0,
       recoveryPackageId: null,
       repaidSinceAssistanceFuel: 0,
+      importAllocations: {},
     });
   });
 
@@ -343,6 +344,7 @@ describe("corporate assistance and recovery standing", () => {
       recoveryNetFuel: 0,
       recoveryPackageId: "emergency-fuel",
       repaidSinceAssistanceFuel: 0,
+      importAllocations: {},
     };
     save.knowledge.push(reaction.id);
     save.evidence[
@@ -506,7 +508,7 @@ describe("corporate assistance and recovery standing", () => {
 
     const restored = new Simulation(historicalFixture);
     expect(restored.load(legacy).ok).toBe(true);
-    expect(restored.serialize().schemaVersion).toBe(24);
+    expect(restored.serialize().schemaVersion).toBe(25);
     expect(restored.snapshot()).toMatchObject({
       fuel: 0,
       debt: 20,

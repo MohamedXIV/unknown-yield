@@ -542,3 +542,12 @@ Market shocks are evaluated only on `economy.marketEveryTicks`, after ordinary m
 `recoverMarkets` now restores both dimensions independently: recent-supply saturation falls toward zero and demand moves toward the listing's authored baseline at the listing's authored demand-recovery rate. No randomness, wall-clock time or UI state participates.
 
 The player snapshot exposes only bulletins whose shock history exists and whose material is already company-known. Merely authoring a future shock does not reveal its material, application, text or listing.
+
+
+## Phase 13 property directives and import allocations — #136
+
+Property-directive truth is content-authored in sim-core. The save records only ordinary opportunity lifecycle state plus company-owned import-allocation counts; hidden acceptable `solutionReactionIds` never enter `OpportunityView`. Completion is driven by the same confirmed experiment event path as ordinary directives: when the confirmed reaction is one of the authored acceptable solutions and the offer is still active, completion is persisted once.
+
+Save schema 25 adds `company.importAllocations`. Schema 24 migrates exactly to an empty record because no earlier directive could award one. A schema-24 payload carrying a non-empty allocation record is rejected, and schema-25 payloads must explicitly contain the field. Save validation rejects non-positive counts, unknown supply IDs, completed property directives without confirmed acceptable reaction evidence, and active property directives whose solution has already been confirmed.
+
+An allocation changes only the payment source of `requestImport`. Admission still evaluates the physical destination first; a failed request cannot consume the allocation. A successful allocated request decrements the persisted count and feeds the existing import material-source ledger path with zero company-fuel cost.

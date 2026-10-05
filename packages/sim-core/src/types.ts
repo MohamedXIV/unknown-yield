@@ -235,6 +235,7 @@ export type CompanyState = {
   recoveryNetFuel: number;
   recoveryPackageId: string | null;
   repaidSinceAssistanceFuel: number;
+  importAllocations: Inventory;
 };
 export type AssistanceReason = "fuel-not-depleted" | "obligation-open" | null;
 export type AssistanceView = {
@@ -284,6 +285,17 @@ export type OpportunityView =
       operationId: string;
       inputMaterialId: string;
       setupNameKey?: string;
+    }
+  | {
+      id: string;
+      kind: "property-directive";
+      nameKey: string;
+      briefKey: string;
+      propertyKey: string;
+      rewardFuel: number;
+      rewardImportSupplyId?: string;
+      expiresAt: number;
+      targetMaterialId: string;
     };
 export type TerminalModuleContents = {
   materialId: string | null;
@@ -296,6 +308,7 @@ export type TerminalImportState = {
 export type ImportSupplyView = Content["economy"]["imports"][number] & {
   eligible: boolean;
   held: number;
+  allocations: number;
   reason:
     | "fuel"
     | "capacity"

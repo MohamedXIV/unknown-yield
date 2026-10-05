@@ -47,6 +47,11 @@ export function contentKeys(c: Content): string[] {
       directive.nameKey,
       directive.briefKey,
     ]),
+    ...c.economy.propertyDirectives.flatMap((directive) => [
+      directive.nameKey,
+      directive.briefKey,
+      directive.propertyKey,
+    ]),
     ...c.economy.assistancePackages.flatMap((assistance) => [
       assistance.nameKey,
       assistance.briefKey,
@@ -137,6 +142,8 @@ export const enCatalog: LocaleCatalog = {
   "ui.terminal.import.capacity": "{{used}} / {{capacity}} import cargo held",
   "ui.terminal.import.meta": "{{quantity}} units · {{cost}} fuel",
   "ui.terminal.import.held": "{{material}}: {{quantity}} held",
+  "ui.terminal.import.allocation":
+    "{{count}} company allocation available",
   "ui.terminal.import.request": "Request {{supply}}",
   "ui.terminal.import.outlet": "Dry import outlet: ({{x}}, {{y}}) toward {{side}}",
   "ui.terminal.import.result.unknown": "That import supply is unavailable",
@@ -468,6 +475,11 @@ export const enCatalog: LocaleCatalog = {
   "directive.sealed-thermal-study.name": "Sealed thermal study",
   "directive.sealed-thermal-study.brief":
     "Run a sealed Heat trial on Veined ore and report the observed result. The company does not predict the output.",
+  "directive.matrix-local-route.name": "Local matrix qualification",
+  "directive.matrix-local-route.brief":
+    "Demonstrate an alternate locally supplied process that produces the characterized resonant matrix. The company specifies the property target, not the recipe.",
+  "property.matrix-local-route.name":
+    "Stable resonant matrix from a locally sourced feed",
   "ui.terminal.market-bulletins.heading": "Company market bulletins",
   "ui.terminal.market-bulletins.hint":
     "Demand changes only from company-known applications and recovers on the slow market cadence. Bulletins are persistent history, not random price events.",
@@ -476,15 +488,19 @@ export const enCatalog: LocaleCatalog = {
     "{{material}} · demand {{direction}}{{delta}}%",
   "ui.terminal.opportunities.heading": "Corporate opportunities",
   "ui.terminal.opportunities.hint":
-    "Ship requested materials to fulfill orders. Complete requested experiments to fulfill directives. Successful opportunities grant bonus fuel.",
+    "Ship requested materials to fulfill orders. Directives can request an experiment or a property target without revealing the solution. Rewards may be fuel or a physical import allocation.",
   "ui.terminal.opportunity.order-meta": "CORPORATE ORDER · +{{reward}} fuel",
   "ui.terminal.opportunity.directive-meta":
     "SPECIAL DIRECTIVE · +{{reward}} fuel",
+  "ui.terminal.opportunity.property-meta":
+    "SPECIAL DIRECTIVE · import allocation: {{supply}}",
   "ui.terminal.opportunity.order-progress":
     "{{material}} · {{progress}}/{{quantity}} shipped",
   "ui.terminal.opportunity.directive-progress": "{{material}} → {{operation}}",
   "ui.terminal.opportunity.directive-progress-setup":
     "{{material}} → {{operation}} · {{setup}}",
+  "ui.terminal.opportunity.property-progress":
+    "{{material}} · target: {{property}}",
   "ui.terminal.opportunity.experiment-fallback": "Experiment",
   "ui.terminal.opportunities.empty": "No active corporate opportunity.",
   "assistance.legacy-emergency.name": "Emergency fuel allocation",

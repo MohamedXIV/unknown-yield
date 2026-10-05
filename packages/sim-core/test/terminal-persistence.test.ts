@@ -88,6 +88,7 @@ it("restores simultaneous dock holdings, upstream cargo and policies without rew
     recoveryPackageId: "emergency-fuel",
     recoveryNetFuel: 0,
     repaidSinceAssistanceFuel: 0,
+    importAllocations: {},
   };
   const sim = new Simulation(fixture),
     restored = new Simulation(fixture);

@@ -2,6 +2,7 @@ import type { Content } from "@site/content";
 import { machineUnlocked } from "./progression";
 import { companyKnowsMaterial, exchangeDefinition } from "./market";
 import {
+  change,
   experimentEvidenceKey,
   type OpportunityState,
   type OpportunityView,
@@ -10,9 +11,12 @@ import {
 
 type OrderDefinition = Content["economy"]["orders"][number];
 type DirectiveDefinition = Content["economy"]["directives"][number];
+type PropertyDirectiveDefinition =
+  Content["economy"]["propertyDirectives"][number];
 type OpportunityDefinition =
   | { kind: "order"; definition: OrderDefinition }
-  | { kind: "directive"; definition: DirectiveDefinition };
+  | { kind: "directive"; definition: DirectiveDefinition }
+  | { kind: "property-directive"; definition: PropertyDirectiveDefinition };
 
 function definitions(c: Content): OpportunityDefinition[] {
   return [
@@ -24,6 +28,10 @@ function definitions(c: Content): OpportunityDefinition[] {
       kind: "directive" as const,
       definition,
     })),
+    ...c.economy.propertyDirectives.map((definition) => ({
+      kind: "property-directive" as const,
+      definition,
+    })),
   ];
 }
 
@@ -32,6 +40,22 @@ function directiveEvidenceId(definition: DirectiveDefinition) {
     definition.operationId,
     definition.inputMaterialId,
     definition.processConditionId ?? null,
+  );
+}
+
+function reactionMachineAvailable(
+  c: Content,
+  s: Pick<Save, "knowledge">,
+  reactionId: string,
+): boolean {
+  const reaction = c.reactions.find((entry) => entry.id === reactionId);
+  if (!reaction || !companyKnowsMaterial(c, s, reaction.input)) return false;
+  return c.machines.some(
+    (machine) =>
+      machine.role === "processor" &&
+      machine.operations.includes(reaction.operation) &&
+      machine.processConditionId === reaction.processConditionId &&
+      machineUnlocked(s, machine),
   );
 }
 
@@ -62,24 +86,37 @@ function eligible(
       Object.hasOwn(s.market, definition.materialId)
     );
   }
+  if (entry.kind === "directive") {
+    const definition = entry.definition;
+    return (
+      companyKnowsMaterial(c, s, definition.inputMaterialId) &&
+      directiveCapability(c, s, definition) &&
+      !Object.hasOwn(s.evidence, directiveEvidenceId(definition))
+    );
+  }
   const definition = entry.definition;
   return (
-    companyKnowsMaterial(c, s, definition.inputMaterialId) &&
-    directiveCapability(c, s, definition) &&
-    !Object.hasOwn(s.evidence, directiveEvidenceId(definition))
+    companyKnowsMaterial(c, s, definition.targetMaterialId) &&
+    !definition.solutionReactionIds.some((id) => s.knowledge.includes(id)) &&
+    definition.solutionReactionIds.some((id) =>
+      reactionMachineAvailable(c, s, id),
+    )
   );
 }
 
 function complete(
-  s: Pick<Save, "tick" | "fuel">,
+  s: Pick<Save, "tick" | "fuel" | "company">,
   state: OpportunityState,
   rewardFuel: number,
   progress: number,
+  rewardImportSupplyId?: string,
 ) {
   state.status = "completed";
   state.progress = progress;
   state.completedAt = s.tick;
   s.fuel += rewardFuel;
+  if (rewardImportSupplyId)
+    change(s.company.importAllocations, rewardImportSupplyId, 1);
 }
 
 export function refreshOpportunities(
@@ -109,31 +146,55 @@ export function refreshOpportunities(
 
 export function recordDirectiveExperiment(
   c: Content,
-  s: Pick<Save, "tick" | "fuel" | "opportunities">,
+  s: Pick<Save, "tick" | "fuel" | "company" | "opportunities">,
   operationId: string,
   inputMaterialId: string,
   processConditionId: string | null,
 ): void {
-  const definition = c.economy.directives.find(
+  const reaction = c.reactions.find(
+    (entry) =>
+      entry.operation === operationId &&
+      entry.input === inputMaterialId &&
+      (entry.processConditionId ?? null) === processConditionId,
+  );
+  const ordinary = c.economy.directives.find(
     (entry) =>
       entry.operationId === operationId &&
       entry.inputMaterialId === inputMaterialId &&
       (entry.processConditionId ?? null) === processConditionId,
   );
-  if (!definition) return;
-  const state = s.opportunities[definition.id];
-  if (
-    !state ||
-    state.status !== "offered" ||
-    s.tick >= state.expiresAt
-  )
-    return;
-  complete(s, state, definition.rewardFuel, 1);
+  if (ordinary) {
+    const state = s.opportunities[ordinary.id];
+    if (
+      state &&
+      state.status === "offered" &&
+      s.tick < state.expiresAt
+    )
+      complete(s, state, ordinary.rewardFuel, 1);
+  }
+  if (!reaction) return;
+  for (const definition of c.economy.propertyDirectives) {
+    if (!definition.solutionReactionIds.includes(reaction.id)) continue;
+    const state = s.opportunities[definition.id];
+    if (
+      !state ||
+      state.status !== "offered" ||
+      s.tick >= state.expiresAt
+    )
+      continue;
+    complete(
+      s,
+      state,
+      definition.rewardFuel,
+      1,
+      definition.rewardImportSupplyId,
+    );
+  }
 }
 
 export function recordOrderExport(
   c: Content,
-  s: Pick<Save, "tick" | "fuel" | "opportunities">,
+  s: Pick<Save, "tick" | "fuel" | "company" | "opportunities">,
   materialId: string,
   units: number,
 ): void {
@@ -160,19 +221,12 @@ export function recordOrderExport(
 
 export function opportunityViews(
   c: Content,
-  s: Pick<
-    Save,
-    "tick" | "knowledge" | "opportunities"
-  >,
+  s: Pick<Save, "tick" | "knowledge" | "opportunities">,
 ): OpportunityView[] {
   const views: OpportunityView[] = [];
   for (const entry of definitions(c)) {
     const state = s.opportunities[entry.definition.id];
-    if (
-      !state ||
-      state.status !== "offered" ||
-      s.tick >= state.expiresAt
-    )
+    if (!state || state.status !== "offered" || s.tick >= state.expiresAt)
       continue;
     if (entry.kind === "order") {
       const definition = entry.definition;
@@ -186,6 +240,23 @@ export function opportunityViews(
         materialId: definition.materialId,
         quantity: definition.quantity,
         progress: state.progress,
+      });
+      continue;
+    }
+    if (entry.kind === "property-directive") {
+      const definition = entry.definition;
+      views.push({
+        id: definition.id,
+        kind: "property-directive",
+        nameKey: definition.nameKey,
+        briefKey: definition.briefKey,
+        propertyKey: definition.propertyKey,
+        rewardFuel: definition.rewardFuel,
+        ...(definition.rewardImportSupplyId
+          ? { rewardImportSupplyId: definition.rewardImportSupplyId }
+          : {}),
+        expiresAt: state.expiresAt,
+        targetMaterialId: definition.targetMaterialId,
       });
       continue;
     }

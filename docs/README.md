@@ -55,3 +55,5 @@ Prefer a small complete loop over broad half-built systems. New infrastructure m
 - [PHASE13_TERMINAL_HANDLING.md](PHASE13_TERMINAL_HANDLING.md) — Phase 13 #134 bidirectional terminal handling gates and specialized containment.
 
 - [PHASE13_MARKET_MEMORY.md](PHASE13_MARKET_MEMORY.md) — Phase 13 #135 discovery-created demand shocks and persistent market memory.
+
+- [PHASE13_PROPERTY_DIRECTIVES.md](PHASE13_PROPERTY_DIRECTIVES.md) — Phase 13 #136 hidden-solution property directives and physical import-allocation rewards.
