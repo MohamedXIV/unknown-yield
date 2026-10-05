@@ -424,6 +424,7 @@ describe("content boundary", () => {
     delete legacy.economy.demandShocks;
     delete legacy.economy.orders;
     delete legacy.economy.directives;
+    delete legacy.economy.propertyDirectives;
     delete legacy.economy.terminalCapabilities;
     delete legacy.economy.milestones;
     const legacySite = (
@@ -453,6 +454,7 @@ describe("content boundary", () => {
     expect(parsed.economy.demandShocks).toEqual([]);
     expect(parsed.economy.orders).toEqual([]);
     expect(parsed.economy.directives).toEqual([]);
+    expect(parsed.economy.propertyDirectives).toEqual([]);
     expect(parsed.economy.terminalCapabilities).toEqual([]);
     expect(parsed.economy.milestones).toEqual([]);
   });
