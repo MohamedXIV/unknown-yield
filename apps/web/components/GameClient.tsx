@@ -225,6 +225,20 @@ function GameClientInner() {
   };
   const exchangeFor = (id: string) =>
     snapshot.exchange.find((listing) => listing.materialId === id);
+  const terminalQuantity = (id: string) => {
+    const material = snapshot.materials.find((entry) => entry.id === id);
+    if (!material) return 0;
+    if (material.handlingState === "solid") return snapshot.staging[id] ?? 0;
+    return snapshot.terminalModules.reduce(
+      (sum, dock) =>
+        sum + (dock.contents.materialId === id ? dock.contents.quantity : 0),
+      0,
+    );
+  };
+  const shipmentSelected = Object.values(snapshot.shipmentManifest).reduce(
+    (sum, units) => sum + units,
+    0,
+  );
   const factoryPresentation = factory
       ? factoryContractPresentation(factory, materialName)
       : null,
@@ -1991,13 +2005,73 @@ function GameClientInner() {
                     </button>
                   </div>
                 ))}
+                <h3>{t("ui.terminal.shipment.heading")}</h3>
+                <p className="hint">{t("ui.terminal.shipment.hint")}</p>
+                <p>
+                  {t("ui.terminal.shipment.capacity", {
+                    selected: shipmentSelected,
+                    capacity: snapshot.map.terminalShipmentCapacity,
+                  })}
+                </p>
+                {snapshot.materials
+                  .filter((material) => exchangeFor(material.id))
+                  .map((material) => {
+                    const listing = exchangeFor(material.id)!;
+                    const available = terminalQuantity(material.id);
+                    const handlingLocked =
+                      listing.handling !== null && !listing.handling.unlocked;
+                    return (
+                      <div className="policy" key={"manifest-" + material.id}>
+                        <div>
+                          <i style={{ background: material.color }} />
+                          <span>
+                            {t(material.nameKey)}
+                            <small>{available} physically staged</small>
+                          </span>
+                        </div>
+                        <input
+                          type="number"
+                          min={0}
+                          max={Math.min(
+                            available,
+                            snapshot.map.terminalShipmentCapacity,
+                          )}
+                          step={1}
+                          disabled={handlingLocked || available === 0}
+                          aria-label={t("ui.terminal.shipment.quantity", {
+                            material: t(material.nameKey),
+                          })}
+                          value={snapshot.shipmentManifest[material.id] ?? 0}
+                          onChange={(e) =>
+                            act({
+                              type: "setShipmentQuantity",
+                              materialId: material.id,
+                              quantity: Math.max(
+                                0,
+                                Math.floor(Number(e.target.value) || 0),
+                              ),
+                            })
+                          }
+                        />
+                      </div>
+                    );
+                  })}
+                <button
+                  className="primary"
+                  disabled={shipmentSelected === 0}
+                  onClick={() => act({ type: "dispatchShipment" })}
+                >
+                  {t("ui.terminal.shipment.dispatch")}
+                </button>
                 <h3>Terminal staging & policies</h3>
                 <p className="hint">
-                  Exportable cargo stages at the terminal and ships per policy.
-                  Reserved{" "}
+                  Exportable cargo remains physical at the terminal. Use a
+                  manifest for exact one-off shipments, or keep legacy
+                  auto-export enabled for continuous flow. Both paths share the
+                  same cargo capacity and handling gates. Reserved{" "}
                   {materialName(snapshot.map.buildMaterial).toLowerCase()} fund
-                  construction. Staged exports repay obligations before
-                  allocating fuel.
+                  construction. Exports repay obligations before allocating
+                  fuel.
                 </p>
                 {snapshot.materials.map((m) => (
                   <div className="policy" key={m.id}>

@@ -46,3 +46,6 @@ The simulation owns gameplay truth. Phaser presents the world. React presents ga
 ### Scope is a feature
 
 Prefer a small complete loop over broad half-built systems. New infrastructure must justify itself against the current proof target.
+
+
+- [PHASE13_SHIPMENT_MANIFESTS.md](PHASE13_SHIPMENT_MANIFESTS.md) — Phase 13 #132 cargo manifests and shipment-capacity contract.

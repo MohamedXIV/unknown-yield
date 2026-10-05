@@ -110,9 +110,15 @@ it("bounds the final arrival and resumes after physical export frees capacity", 
   expect(auditLedger(fixture, s).ok).toBe(true);
   s.policies["liquid-0"] = "export";
   settleTerminalExports(fixture, s);
+  expect(s.flows.exported["liquid-0"]).toBe(
+    fixture.site.terminalShipmentCapacity,
+  );
+  const pipeBeforeResume = s.pipes["39,30"].quantity;
   transportLiquids(fixture, s);
-  expect(s.terminalModules["liquid-dock"].quantity).toBeGreaterThan(0);
-  expect(s.flows.exported["liquid-0"]).toBe(24);
+  expect(s.terminalModules["liquid-dock"].quantity).toBeGreaterThan(
+    24 - fixture.site.terminalShipmentCapacity,
+  );
+  expect(s.pipes["39,30"].quantity).toBeLessThan(pipeBeforeResume);
   expect(auditLedger(fixture, s).ok).toBe(true);
 });
 

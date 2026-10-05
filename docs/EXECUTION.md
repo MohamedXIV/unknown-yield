@@ -50,7 +50,10 @@ This document is intentionally procedural. Game/design truth lives in the domain
 - Phase 8 — art production pipeline — remains a **parallel planned track** and does not block gameplay execution.
 - Completed phase: **Phase 9 — material-state logistics and containment** (closed by #113 / PR #167, main `f8d3ac03aba006a0320b51c840441d2564f8a8b2`).
   - #108 liquid logistics ✓; #109 pressurized gas ✓; #110 authored containment ✓; #111 physical terminal handling ✓; #112 recoverable handling ✓; #113 integrated exit review ✓.
-- Current gameplay phase: **Phase 10 — industrial exploration and deep extraction (#101)**. **#114 is FIRST UNBLOCKED**; #115–#119 remain dependency-ordered behind it.
+- Completed phase: **Phase 10 — industrial exploration and deep extraction (#101)**.
+- Completed phase: **Phase 11 — hazardous science and recovery (#102)**.
+- Completed phase: **Phase 12 — factory lifecycle and reconfiguration (#103)**. #126–#129 landed; #130 and #131 closed not planned under their recorded evidence/user decisions, with no false integrated-exit PASS claim for #131.
+- Current gameplay phase: **Phase 13 — terminal and off-world exchange depth (#104)**. **#132 is FIRST UNBLOCKED**; #133–#138 remain dependency-ordered behind it.
 
 ## Phase 1.5 dependency graph
 

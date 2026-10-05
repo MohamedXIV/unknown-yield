@@ -110,6 +110,25 @@ export const enCatalog: LocaleCatalog = {
   "ui.containment.reason.terminal-module-locked":
     "Terminal handling trial not yet confirmed",
   "ui.terminal.module.staged": "held at dock",
+  "ui.terminal.shipment.heading": "Cargo manifest",
+  "ui.terminal.shipment.hint":
+    "Choose exact quantities from cargo already staged at the terminal. A manifest is intent only: the material stays in its physical staging or dock until dispatch.",
+  "ui.terminal.shipment.capacity": "{{selected}} / {{capacity}} cargo selected",
+  "ui.terminal.shipment.quantity": "{{material}} shipment quantity",
+  "ui.terminal.shipment.dispatch": "Dispatch selected cargo",
+  "ui.terminal.shipment.result.unknown": "Unknown material",
+  "ui.terminal.shipment.result.unaccepted":
+    "The company does not accept this material",
+  "ui.terminal.shipment.result.locked":
+    "Terminal handling is not certified for this cargo",
+  "ui.terminal.shipment.result.unavailable":
+    "Selected cargo is not physically available at the terminal",
+  "ui.terminal.shipment.result.capacity":
+    "The manifest exceeds terminal cargo capacity",
+  "ui.terminal.shipment.result.invalid": "Invalid shipment manifest",
+  "ui.terminal.shipment.result.empty": "Select cargo before dispatch",
+  "ui.terminal.shipment.result.selected": "Shipment manifest updated",
+  "ui.terminal.shipment.result.dispatched": "Shipment dispatched",
   "ui.direction.0": "east",
   "ui.direction.1": "south",
   "ui.direction.2": "west",
