@@ -1,6 +1,7 @@
 import { expect, it } from "vitest";
 import { fixture } from "@site/content";
 import { auditLedger } from "../src/ledger";
+import { machinePlacement } from "../src/geometry";
 import { Simulation } from "../src/simulation";
 import type { GameCommand } from "../src/types";
 
@@ -206,4 +207,25 @@ it("migrates schema 25 to empty underground route records and requires them in s
   };
   impossibleLegacy.nextId = 2;
   expect(new Simulation(fixture).load(impossibleLegacy).ok).toBe(false);
+});
+
+
+it("blocks extractor footprints from overlapping an existing underground portal", () => {
+  const sim = new Simulation(fixture);
+  const source = fixture.site.atmosphericSources[0];
+  build(sim, {
+    type: "placeUndergroundSolid",
+    entry: { x: source.x, y: source.y },
+    exit: { x: source.x - 2, y: source.y },
+  });
+  const state = sim.serialize();
+  state.atmosphericSources[source.id] = source.units;
+  expect(
+    machinePlacement(fixture, state, {
+      definitionId: "atmospheric-intake",
+      x: source.x,
+      y: source.y,
+      direction: 0,
+    }).error,
+  ).toBe("Space is already occupied");
 });
