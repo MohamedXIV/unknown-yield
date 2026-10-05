@@ -5,6 +5,7 @@ import { allDeposits, depositDefinition } from "./deposits";
 import { atmosphericSourceForRect } from "./atmosphere";
 import { footprint } from "./geometry";
 import { undergroundLiquidCost, undergroundSolidCost } from "./underground";
+import { elevatedSolidCost } from "./elevated";
 
 /**
  * Material ledger (Issues #3–#4).
@@ -49,6 +50,7 @@ export type LedgerRow = {
   belts: number;
   undergroundSolids: number;
   undergroundLiquids: number;
+  elevatedSolids: number;
   pressureLines: number;
   pressureVessels: number;
   pipes: number;
@@ -89,6 +91,7 @@ function blank(material: string): LedgerRow {
     belts: 0,
     undergroundSolids: 0,
     undergroundLiquids: 0,
+    elevatedSolids: 0,
     pressureLines: 0,
     pressureVessels: 0,
     pipes: 0,
@@ -170,6 +173,8 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
   for (const route of Object.values(s.undergroundLiquids ?? {}))
     if (route.materialId)
       row(route.materialId).undergroundLiquids += route.quantity;
+  for (const route of Object.values(s.elevatedSolids ?? {}))
+    if (route.cargo) row(route.cargo.materialId).elevatedSolids += 1;
 
   // Physical bulk storage contents.
   for (const t of Object.values(s.storages ?? {})) {
@@ -265,6 +270,10 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
     (sum, route) => sum + undergroundLiquidCost(c, route),
     0,
   );
+  embodied += Object.values(s.elevatedSolids ?? {}).reduce(
+    (sum, route) => sum + elevatedSolidCost(c, route),
+    0,
+  );
   if (embodied > 0) row(c.site.buildMaterial).embodied += embodied;
   for (const id of Object.keys(s.terminalModules ?? {}))
     row(c.site.buildMaterial).embodied +=
@@ -296,6 +305,7 @@ export function collectLedger(c: Content, s: Save): LedgerSnapshot {
       r.belts +
       r.undergroundSolids +
       r.undergroundLiquids +
+      r.elevatedSolids +
       r.pressureLines +
       r.pressureVessels +
       r.pipes +
