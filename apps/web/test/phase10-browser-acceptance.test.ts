@@ -4,11 +4,95 @@ import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
+import { fixture } from "@site/content";
+import {
+  Simulation,
+  experimentEvidenceKey,
+  initializeKnownMarkets,
+  type GameCommand,
+} from "@site/sim-core";
 import { expect, it } from "vitest";
 
 const browserIt = process.env.CI ? it : it.skip;
 const appUrl = "http://127.0.0.1:4010/";
 const debugPort = 9333;
+
+function build(sim: Simulation, command: GameCommand) {
+  const result = sim.command(command);
+  expect(result.ok, result.message).toBe(true);
+  return result.id!;
+}
+
+function hazardSave() {
+  const sim = new Simulation(fixture);
+  const state = sim.serialize();
+  const prerequisite = fixture.reactions.find(
+    (reaction) => reaction.id === "heat-raw-sealed",
+  )!;
+  state.knowledge.push(prerequisite.id);
+  state.evidence[
+    experimentEvidenceKey(
+      prerequisite.operation,
+      prerequisite.input,
+      prerequisite.processConditionId ?? null,
+    )
+  ] = {
+    operationId: prerequisite.operation,
+    inputId: prerequisite.input,
+    processConditionId: prerequisite.processConditionId ?? null,
+    state: "confirmed",
+  };
+  initializeKnownMarkets(fixture, state);
+  expect(sim.load(state).ok).toBe(true);
+
+  const factoryId = build(sim, {
+    type: "placeFactory",
+    x: 24,
+    y: 23,
+    width: 10,
+    height: 10,
+  });
+  build(sim, {
+    type: "placePort",
+    factoryId,
+    x: 24,
+    y: 27,
+    direction: 0,
+  });
+  build(sim, {
+    type: "placeMachine",
+    definitionId: "extractor",
+    x: 18,
+    y: 26,
+    direction: 0,
+  });
+  const processorId = build(sim, {
+    type: "placeMachine",
+    definitionId: "oversealed-furnace",
+    x: 27,
+    y: 26,
+    direction: 0,
+  });
+  build(sim, {
+    type: "placeBelts",
+    points: Array.from({ length: 7 }, (_, index) => ({
+      x: 20 + index,
+      y: 27,
+    })),
+    direction: 0,
+  });
+
+  for (
+    let tick = 0;
+    tick < 500 && !sim.serialize().machines[processorId].incident;
+    tick++
+  )
+    sim.step(fixture.tickMs);
+
+  expect(sim.serialize().machines[processorId].incident).toBe("slag-jam");
+  expect(sim.serialize().hazardEvidence).toEqual(["slag-jam"]);
+  return sim.serialize();
+}
 
 function chromeExecutable(): string | null {
   const candidates = [
@@ -277,6 +361,49 @@ browserIt(
       );
       await waitForExpression(
         `document.querySelector(".build-hint strong")?.textContent === "Sinterer"`,
+      );
+
+      const learned = hazardSave();
+      const beforeEvidence = await evaluate<string>(
+        `document.body.textContent ?? ""`,
+      );
+      expect(beforeEvidence).not.toContain("Vitrified slag jam");
+      expect(beforeEvidence).not.toContain("extra confinement caused the jam");
+
+      await evaluate(
+        `localStorage.setItem("industrial-site-save-v15", ${JSON.stringify(
+          JSON.stringify(learned),
+        )})`,
+      );
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Game menu"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `[...document.querySelectorAll("button")]
+          .some((button) => button.textContent?.includes("Load saved world"))`,
+      );
+      await evaluate(`(() => {
+        [...document.querySelectorAll("button")]
+          .find((button) => button.textContent?.includes("Load saved world"))
+          ?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector('[role="status"]')
+          ?.textContent.includes("Site restored") === true`,
+      );
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Knowledge notebook"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.body.textContent?.includes("Vitrified slag jam") === true &&
+          document.body.textContent?.includes("HAZARD EVIDENCE") === true &&
+          document.body.textContent?.includes("SAFER NEXT TEST") === true &&
+          document.body.textContent?.includes(
+            "If that trial stays stable, the extra confinement caused the jam."
+          ) === true`,
       );
 
       socket.close();
