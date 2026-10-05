@@ -1,0 +1,130 @@
+import { expect, it } from "vitest";
+import { fixture, validateContent } from "@site/content";
+import {
+  Simulation,
+  auditLedger,
+  experimentEvidenceKey,
+  hazardDefinition,
+  initializeKnownMarkets,
+  type GameCommand,
+} from "../src/index";
+
+function build(sim: Simulation, command: GameCommand) {
+  const result = sim.command(command);
+  expect(result.ok, result.message).toBe(true);
+  return result.id!;
+}
+
+function armedHazardLine() {
+  const sim = new Simulation(fixture);
+  const state = sim.serialize();
+  const prerequisite = fixture.reactions.find(
+    (reaction) => reaction.id === "heat-raw-sealed",
+  )!;
+  state.knowledge.push(prerequisite.id);
+  state.evidence[
+    experimentEvidenceKey(
+      prerequisite.operation,
+      prerequisite.input,
+      prerequisite.processConditionId ?? null,
+    )
+  ] = {
+    operationId: prerequisite.operation,
+    inputId: prerequisite.input,
+    processConditionId: prerequisite.processConditionId ?? null,
+    state: "confirmed",
+  };
+  initializeKnownMarkets(fixture, state);
+  expect(sim.load(state).ok).toBe(true);
+
+  const factoryId = build(sim, {
+    type: "placeFactory",
+    x: 24,
+    y: 33,
+    width: 10,
+    height: 10,
+  });
+  build(sim, {
+    type: "placePort",
+    factoryId,
+    x: 24,
+    y: 37,
+    direction: 0,
+  });
+  build(sim, {
+    type: "placeMachine",
+    definitionId: "extractor",
+    x: 18,
+    y: 36,
+    direction: 0,
+  });
+  const processorId = build(sim, {
+    type: "placeMachine",
+    definitionId: "oversealed-furnace",
+    x: 27,
+    y: 36,
+    direction: 0,
+  });
+  build(sim, {
+    type: "placeBelts",
+    points: Array.from({ length: 7 }, (_, index) => ({
+      x: 20 + index,
+      y: 37,
+    })),
+    direction: 0,
+  });
+  return { sim, processorId };
+}
+
+it("reproduces the same authored hazard class from the same authoritative state", () => {
+  const left = armedHazardLine();
+  const right = armedHazardLine();
+
+  const before = JSON.stringify(left.sim.snapshot());
+  expect(before).not.toContain("chamber-blowout");
+  expect(before).not.toContain("pressure-expansion");
+  expect(before).not.toContain("hazard.class.pressure-expansion");
+
+  for (let tick = 0; tick < 500; tick++) {
+    left.sim.step(fixture.tickMs);
+    right.sim.step(fixture.tickMs);
+    expect(right.sim.serialize()).toEqual(left.sim.serialize());
+    expect(auditLedger(fixture, left.sim.serialize()).ok).toBe(true);
+    if (left.sim.serialize().machines[left.processorId].incident) break;
+  }
+
+  expect(left.sim.serialize().machines[left.processorId].incident).toBe(
+    "chamber-blowout",
+  );
+  expect(
+    left.sim.snapshot().machines.find(
+      (machine) => machine.id === left.processorId,
+    )?.incident,
+  ).toEqual({
+    classId: "pressure-expansion",
+    classNameKey: "hazard.class.pressure-expansion.name",
+    nameKey: "hazard.chamber-blowout.name",
+    textKey: "hazard.chamber-blowout.observation",
+  });
+  expect(right.sim.serialize()).toEqual(left.sim.serialize());
+});
+
+it("resolves class identity from authored data without changing trigger rules", () => {
+  const draft = structuredClone(fixture);
+  draft.reactions.find(
+    (reaction) => reaction.id === "heat-raw-oversealed",
+  )!.hazard!.classId = "thermal-runaway";
+  const content = validateContent(draft);
+  const resolved = hazardDefinition(content, "chamber-blowout");
+
+  expect(resolved).toMatchObject({
+    hazard: {
+      id: "chamber-blowout",
+      classId: "thermal-runaway",
+    },
+    classDefinition: {
+      id: "thermal-runaway",
+      machineEffect: "lockout",
+    },
+  });
+});

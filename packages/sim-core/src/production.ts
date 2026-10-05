@@ -18,6 +18,7 @@ import { recordDirectiveExperiment } from "./opportunities";
 import { settleTerminalExports } from "./terminal";
 import { depositDefinition } from "./deposits";
 import { atmosphericSourceForRect } from "./atmosphere";
+import { applyReactionHazard } from "./hazards";
 export function recipe(c: Content, m: Machine) {
   const definition = c.machines.find((d) => d.id === m.definitionId);
   return c.reactions.find(
@@ -100,10 +101,7 @@ export function completeAndStart(
               : "keep";
           ensureMarket(c, s, material);
         }
-        if (r?.hazard) {
-          m.incident = r.hazard.id;
-          m.enabled = false;
-        }
+        if (r?.hazard) applyReactionHazard(c, m, r);
         m.job = null;
       }
     } else if (status(c, s, m) === "ready") {

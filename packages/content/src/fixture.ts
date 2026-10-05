@@ -8,6 +8,33 @@ export const fixture = validateContent({
       nameKey: "containment.corrosion-resistant.name",
     },
   ],
+  hazardClasses: [
+    {
+      id: "thermal-runaway",
+      nameKey: "hazard.class.thermal-runaway.name",
+      machineEffect: "lockout",
+    },
+    {
+      id: "pressure-expansion",
+      nameKey: "hazard.class.pressure-expansion.name",
+      machineEffect: "lockout",
+    },
+    {
+      id: "corrosion",
+      nameKey: "hazard.class.corrosion.name",
+      machineEffect: "lockout",
+    },
+    {
+      id: "instability",
+      nameKey: "hazard.class.instability.name",
+      machineEffect: "lockout",
+    },
+    {
+      id: "contamination",
+      nameKey: "hazard.class.contamination.name",
+      machineEffect: "lockout",
+    },
+  ],
   gasLogistics: {
     line: { capacity: 4, transfer: 1, cost: 3 },
     vessel: { capacity: 48, width: 2, height: 2, cost: 28 },
@@ -409,6 +436,7 @@ export const fixture = validateContent({
       observationKey: "reaction.heat-raw-oversealed.observation",
       hazard: {
         id: "chamber-blowout",
+        classId: "pressure-expansion",
         nameKey: "hazard.chamber-blowout.name",
         observationKey: "hazard.chamber-blowout.observation",
       },

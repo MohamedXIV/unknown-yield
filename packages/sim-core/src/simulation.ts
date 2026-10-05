@@ -9,6 +9,7 @@ import {
 } from "./production";
 import { auditLedger } from "./ledger";
 import { machineUnlocked } from "./progression";
+import { hazardDefinition } from "./hazards";
 import { marketListings, recoverMarkets } from "./market";
 import { opportunityViews, refreshOpportunities } from "./opportunities";
 import { milestoneViews, refreshMilestones } from "./milestones";
@@ -254,16 +255,17 @@ export class Simulation {
         const d = c.machines.find((d) => d.id === m.definitionId)!;
         const r = footprint(m, d);
         const incident = m.incident
-          ? c.reactions.find((reaction) => reaction.hazard?.id === m.incident)
-              ?.hazard
+          ? hazardDefinition(c, m.incident)
           : undefined;
         return {
           ...m,
           job: m.job ? { remaining: m.job.remaining } : null,
           incident: incident
             ? {
-                nameKey: incident.nameKey,
-                textKey: incident.observationKey,
+                classId: incident.classDefinition.id,
+                classNameKey: incident.classDefinition.nameKey,
+                nameKey: incident.hazard.nameKey,
+                textKey: incident.hazard.observationKey,
               }
             : null,
           nameKey: d.nameKey,

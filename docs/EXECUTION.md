@@ -202,7 +202,7 @@ GitHub Actions CI is intentionally budget-conscious: it runs the full `npm test`
 - Do not add Rust/WASM without benchmark/profiler evidence.
 - Completed phases are foundations, not active scope: extend their accepted contracts rather than reopening them casually.
 - Phase 7 performance work remains deferred until measured browser/scale evidence justifies reopening it; Phase 8 art work is parallel and explicitly selected only when needed.
-- Phase 10 is the active gameplay queue. Preserve #114 → #115 → #116 → #117 → #118 → #119 dependency order and do not pull Phase 11+ systems forward.
+- Phase 10 is complete through #119 / PR #174. Phase 11 is the active gameplay queue. Preserve #120 → #121 → #122 → #123 → #124 → #125 dependency order and do not pull Phase 12+ systems forward.
 
 ## Active/later phase epics
 
@@ -212,8 +212,9 @@ GitHub Actions CI is intentionally budget-conscious: it runs the full `npm test`
 - #12 — Materials Exchange and corporate progression — COMPLETE via #69–#73; exit gate #73 merged through PR #79 / `dcbe1a567cc26ab150f13e159d35bf50030ee570`
 - #80 — readable belts and controlled ground junctions — COMPLETE through #84 / PR #89.
 - #100 — Phase 9 material-state logistics and containment — COMPLETE through #113 / PR #167.
-- #101 — Phase 10 industrial exploration and deep extraction — ACTIVE; #114 FIRST UNBLOCKED, then #115–#119.
-- #102–#107 — Phases 11–16 — dependency-ordered later queues; none is implicitly active.
+- #101 — Phase 10 industrial exploration and deep extraction — COMPLETE through #119 / PR #174.
+- #102 — Phase 11 hazardous industrial science and recovery — ACTIVE; #120 FIRST UNBLOCKED, then #121–#125.
+- #103–#107 — Phases 12–16 — dependency-ordered later queues; none is implicitly active.
 - Phase 8 — art production pipeline — parallel planned track, selected explicitly when useful.
 - Completed Phase 7 baseline: **#90 — single-world simulation/snapshot baseline**, through PR #91. Evidence: PHASE7_BASELINE.md. Phase 7 remains deferred; #92 profiling completed through PR #93; 32-factory / 10ms joint-p95 budget FAILS. Evidence: PHASE7_PROFILING.md. Optimization #94 is complete through PR #95: shared connected topology indexing within each throughput observation; all dynamic recurrence checks retained. Browser costs remain a separate gate.
 
@@ -245,7 +246,7 @@ The roadmap now records Phases 9–16 for the major gameplay directions that wer
 - Phase 15 — content scale and expedition arc;
 - Phase 16 — production vertical slice.
 
-Canonical GitHub epics and children exist for Phase 9 #100 (#108–#113), Phase 10 #101 (#114–#119), Phase 11 #102 (#120–#125), Phase 12 #103 (#126–#131), Phase 13 #104 (#132–#138), Phase 14 #105 (#139–#144), Phase 15 #106 (#145–#152), and Phase 16 #107 (#153–#161). Phase 9 is complete through #113 / PR #167. Phase 10 / #101 is the active gameplay phase; #114 is FIRST UNBLOCKED. Later phases remain dependency-ordered planning/execution queues.
+Canonical GitHub epics and children exist for Phase 9 #100 (#108–#113), Phase 10 #101 (#114–#119), Phase 11 #102 (#120–#125), Phase 12 #103 (#126–#131), Phase 13 #104 (#132–#138), Phase 14 #105 (#139–#144), Phase 15 #106 (#145–#152), and Phase 16 #107 (#153–#161). Phase 9 is complete through #113 / PR #167. Phase 10 / #101 is complete through #119 / PR #174. Phase 11 / #102 is now active, beginning with #120. Later phases remain dependency-ordered planning/execution queues.
 
 Phase 7 remains deferred with its accepted unmet performance budget preserved. Phase 8 remains a parallel art-pipeline track and does not block Phase 10 gameplay work. Do not reopen completed foundations merely because later phases deepen discovery, company systems or logistics; extend the accepted contracts.
 

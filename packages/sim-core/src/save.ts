@@ -20,6 +20,7 @@ import {
 } from "./sensing";
 import { initializeKnownMarkets, exchangeDefinition } from "./market";
 import { machineUnlocked } from "./progression";
+import { hazardDefinition } from "./hazards";
 import { milestoneSatisfied, refreshMilestones } from "./milestones";
 import { assistanceDefinition } from "./assistance";
 import { depositDefinition, hiddenDepositDefinition } from "./deposits";
@@ -753,13 +754,14 @@ export function parseSave(input: unknown, c: Content): Save {
     if (!machineUnlocked(s, d))
       throw new Error("Machine locked by unconfirmed knowledge");
     if (m.incident) {
-      const hazard = c.reactions.find(
-        (r) =>
-          r.hazard?.id === m.incident &&
-          r.operation === m.operation &&
-          r.processConditionId === d.processConditionId,
-      );
-      if (!hazard || m.enabled || m.job)
+      const hazard = hazardDefinition(c, m.incident);
+      if (
+        !hazard ||
+        hazard.reaction.operation !== m.operation ||
+        hazard.reaction.processConditionId !== d.processConditionId ||
+        m.enabled ||
+        m.job
+      )
         throw new Error("Invalid machine incident state");
     }
     if (

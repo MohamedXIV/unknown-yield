@@ -367,9 +367,15 @@ export type GameCommand =
   | { type: "setPolicy"; materialId: string; policy: "keep" | "export" }
   | { type: "sense"; capabilityId: string; x: number; y: number }
   | { type: "assistance"; packageId?: string };
+export type MachineHazardView = {
+  classId: string;
+  classNameKey: string;
+  nameKey: string;
+  textKey: string;
+};
 export type MachineView = Omit<Machine, "job" | "incident"> & {
   job: { remaining: number } | null;
-  incident: { nameKey: string; textKey: string } | null;
+  incident: MachineHazardView | null;
   nameKey: string;
   role: "extractor" | "processor";
   width: number;

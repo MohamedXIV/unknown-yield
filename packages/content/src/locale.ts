@@ -26,6 +26,7 @@ export function contentKeys(c: Content): string[] {
     ...c.site.terminalModules.map((d) => d.nameKey),
     ...c.site.atmosphericSources.map((d) => d.nameKey),
     ...c.containmentCapabilities.map((d) => d.nameKey),
+    ...c.hazardClasses.map((d) => d.nameKey),
     ...(c.liquidLogistics?.containmentProfiles.map((p) => p.nameKey) ?? []),
     ...c.materials.map((m) => m.nameKey),
     ...c.operations.map((o) => o.nameKey),
@@ -339,6 +340,11 @@ export const enCatalog: LocaleCatalog = {
     "The catalytic stone binds into a resonant matrix with a stable export signature.",
   "reaction.heat-raw-oversealed.observation":
     "The oversealed chamber vitrifies the sample and trips a violent pressure release. The setup itself caused the failure.",
+  "hazard.class.thermal-runaway.name": "Thermal runaway",
+  "hazard.class.pressure-expansion.name": "Pressure expansion",
+  "hazard.class.corrosion.name": "Corrosion",
+  "hazard.class.instability.name": "Instability",
+  "hazard.class.contamination.name": "Contamination",
   "hazard.chamber-blowout.name": "Chamber blowout",
   "hazard.chamber-blowout.observation":
     "The oversealed chamber vented violently and forced an automatic lockout. Processed material remains physically accounted for in the line; acknowledge the incident before restarting.",

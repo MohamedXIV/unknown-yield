@@ -1,4 +1,9 @@
 export { Simulation } from "./simulation";
+export {
+  applyReactionHazard,
+  hazardClassDefinition,
+  hazardDefinition,
+} from "./hazards";
 export { collectLedger, auditLedger } from "./ledger";
 export {
   allDeposits,
