@@ -62,6 +62,21 @@ const factory = z.object({
   width: positive,
   height: positive,
   ports: z.array(port),
+  relocation: z
+    .object({
+      startedAt: count,
+      readyAt: count,
+      requirements: z.array(
+        z
+          .object({
+            portId: safeId,
+            kind: z.enum(["solid", "liquid", "gas"]),
+          })
+          .strict(),
+      ),
+    })
+    .strict()
+    .optional(),
 });
 const machine = z.object({
   ...point,
@@ -1031,6 +1046,37 @@ export function parseSave(input: unknown, c: Content): Save {
       )
     )
       throw new Error("Dry inventory handling state mismatch");
+  for (const f of Object.values(s.factories))
+    if (f.relocation) {
+      if (
+        f.relocation.startedAt > s.tick ||
+        f.relocation.readyAt < f.relocation.startedAt ||
+        new Set(
+          f.relocation.requirements.map(
+            (requirement) => requirement.portId + ":" + requirement.kind,
+          ),
+        ).size !== f.relocation.requirements.length ||
+        f.relocation.requirements.some(
+          (requirement) =>
+            !f.ports.some((port) => port.id === requirement.portId),
+        )
+      )
+        throw new Error("Invalid factory relocation state");
+      if (
+        Object.values(s.machines).some(
+          (machine) =>
+            machine.factoryId === f.id && (machine.enabled || machine.job),
+        ) ||
+        Object.values(s.pumps).some(
+          (pump) => contains(f, pump) && pump.enabled,
+        ) ||
+        Object.values(s.compressors).some(
+          (compressor) => contains(f, compressor) && compressor.enabled,
+        )
+      )
+        throw new Error("Relocating factory equipment must remain suspended");
+    }
+
   const protect = (
     inv: Record<string, number>,
     states: ("solid" | "liquid" | "gas")[],

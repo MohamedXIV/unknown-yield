@@ -1101,6 +1101,28 @@ function GameClientInner() {
                       buffer and cargo slot continues in the detailed
                       simulation.
                     </p>
+                    {factory.relocation && (
+                      <div className="milestone">
+                        <small>RELOCATION HOLD</small>
+                        <h3>
+                          {factory.relocation.remainingTicks > 0
+                            ? factory.relocation.remainingTicks +
+                              " ticks of downtime remaining"
+                            : factory.relocation.connectionsRestored
+                              ? "External requirements restored"
+                              : "Reconnect external logistics"}
+                        </h3>
+                        <p>
+                          {factory.relocation.requiredConnections} prior
+                          external connection
+                          {factory.relocation.requiredConnections === 1
+                            ? ""
+                            : "s"}{" "}
+                          must be restored before any internal equipment can
+                          restart.
+                        </p>
+                      </div>
+                    )}
                     <h3>Shell reshape</h3>
                     <p className="hint">
                       Move one wall at a time around the existing interior.
@@ -1233,9 +1255,12 @@ function GameClientInner() {
                     </div>
                     <h3>Intact relocation</h3>
                     <p className="hint">
-                      Move the shell and its internal equipment together by one
-                      cell. External belts, pipes and cargo outside the wall
-                      stay at the source and are never dragged along.
+                      Move the suspended shell and its internal equipment
+                      together by one cell. Each step costs{" "}
+                      {snapshot.map.factoryRelocationFuelPerStep} fuel and
+                      starts {snapshot.map.factoryRelocationDowntimeTicks} ticks
+                      of downtime. External logistics stay at the source and
+                      previously connected media must be rebuilt before resume.
                     </p>
                     <div className="button-row">
                       <button

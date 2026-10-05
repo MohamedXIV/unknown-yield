@@ -117,6 +117,8 @@ export function factoryReshapeError(
   factory: Factory,
   target: Rect,
 ): string | null {
+  if (factory.relocation)
+    return "Finish factory relocation before reshaping";
   if (!overlaps(factory, target))
     return "Factory reshape must overlap its existing footprint";
 
@@ -252,6 +254,8 @@ export function factoryRelocationError(
   factory: Factory,
   target: Point,
 ): string | null {
+  if (factory.relocation)
+    return "Finish factory relocation before moving again";
   if (target.x === factory.x && target.y === factory.y)
     return "Factory is already at the target location";
 
