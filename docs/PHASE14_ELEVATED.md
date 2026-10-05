@@ -86,4 +86,13 @@ The merge gate requires:
 - browser acceptance that the player can see and activate the elevated tool;
 - full repository npm test, typecheck, lint and build on the exact PR head.
 
-Do not claim browser or full-suite PASS before the corresponding automated evidence exists.
+Accepted evidence on PR #195 before closeout:
+- real-browser acceptance PASS for the gameplay toolbar/tool activation;
+- 89 test files PASS;
+- 465 tests PASS / 2 skipped;
+- typecheck PASS;
+- lint PASS;
+- build PASS;
+- GitGuardian PASS.
+
+The final merge still requires the same gates to remain green on the exact closing head.
