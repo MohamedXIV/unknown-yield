@@ -29,4 +29,4 @@ Factory-as-module composition is intentionally absent. #130 closed not-planned b
 
 ## Completion rule
 
-This document does not claim Phase 12 complete until the #131 exact head passes the repository full gate — tests including Chromium, typecheck, lint and build — and merges. After that, reconcile Epic #103 and activate only the approved Phase 13 queue.
+Phase 12 completed through #131 / PR #185. Exact head `a25bbcd1fbfc37ffd45b5c975f25b8a4f42c93db` passed the full repository gate — tests including the extended real-Chromium lifecycle acceptance, typecheck, lint and build — before squash merge `3ef14e7f0efbd4dcdf46bbb1889898ff1fd5c0bc`. Epic #103 is closed completed and Phase 13 / #104 is the active approved queue.

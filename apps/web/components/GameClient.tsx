@@ -1991,10 +1991,88 @@ function GameClientInner() {
                     </button>
                   </div>
                 ))}
+                <h3>{t("ui.terminal.shipment.heading")}</h3>
+                <p className="hint">
+                  {t("ui.terminal.shipment.hint")}
+                </p>
+                <div className="facts">
+                  <span>
+                    {t("ui.terminal.shipment.capacity")}
+                    <b>
+                      {snapshot.shipment.used}/{snapshot.shipment.capacity}
+                    </b>
+                  </span>
+                </div>
+                {snapshot.shipment.materials.length ? (
+                  snapshot.shipment.materials.map((line) => (
+                    <div className="policy" key={"shipment-" + line.materialId}>
+                      <div>
+                        <span>
+                          {materialName(line.materialId)}
+                          <small>
+                            {t("ui.terminal.shipment.available", {
+                              quantity: line.available,
+                              handling: t(
+                                "ui.terminal.shipment.handling." +
+                                  line.handlingState,
+                              ),
+                            })}
+                            {!line.canShip
+                              ? " · " + t("ui.terminal.shipment.locked")
+                              : ""}
+                          </small>
+                        </span>
+                      </div>
+                      <input
+                        aria-label={
+                          materialName(line.materialId) +
+                          " " +
+                          t("ui.terminal.shipment.quantity")
+                        }
+                        type="number"
+                        min={0}
+                        max={line.available}
+                        disabled={!line.canShip}
+                        value={line.selected}
+                        onChange={(event) =>
+                          act({
+                            type: "setShipmentManifestLine",
+                            materialId: line.materialId,
+                            quantity: Math.max(
+                              0,
+                              Math.floor(Number(event.target.value) || 0),
+                            ),
+                          })
+                        }
+                      />
+                    </div>
+                  ))
+                ) : (
+                  <p className="hint">
+                    {t("ui.terminal.shipment.no-listings")}
+                  </p>
+                )}
+                <div className="button-row">
+                  <button
+                    className="secondary"
+                    disabled={snapshot.shipment.used === 0}
+                    onClick={() => act({ type: "clearShipmentManifest" })}
+                  >
+                    {t("ui.terminal.shipment.clear")}
+                  </button>
+                  <button
+                    className="primary"
+                    disabled={snapshot.shipment.used === 0}
+                    onClick={() => act({ type: "dispatchShipment" })}
+                  >
+                    {t("ui.terminal.shipment.dispatch")}
+                  </button>
+                </div>
                 <h3>Terminal staging & policies</h3>
                 <p className="hint">
-                  Exportable cargo stages at the terminal and ships per policy.
-                  Reserved{" "}
+                  Exportable cargo remains physically staged at the terminal.
+                  Manifested units are reserved from auto-export until you
+                  dispatch or clear the manifest. Reserved{" "}
                   {materialName(snapshot.map.buildMaterial).toLowerCase()} fund
                   construction. Staged exports repay obligations before
                   allocating fuel.

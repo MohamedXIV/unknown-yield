@@ -69,6 +69,37 @@ export function validateLocaleCoverage(
 }
 
 export const enCatalog: LocaleCatalog = {
+  "ui.terminal.shipment.heading": "Shipment manifest",
+  "ui.terminal.shipment.hint":
+    "Reserve physically staged cargo for the next off-world shipment. Reserved units stay in their terminal staging or handling dock until dispatch.",
+  "ui.terminal.shipment.capacity": "Cargo capacity",
+  "ui.terminal.shipment.quantity": "manifest quantity",
+  "ui.terminal.shipment.available":
+    "{{quantity}} physically staged · {{handling}} handling",
+  "ui.terminal.shipment.handling.solid": "dry",
+  "ui.terminal.shipment.handling.liquid": "liquid",
+  "ui.terminal.shipment.handling.gas": "sealed gas",
+  "ui.terminal.shipment.locked": "handling capability locked",
+  "ui.terminal.shipment.no-listings":
+    "No characterized exchange cargo is available for a manifest.",
+  "ui.terminal.shipment.clear": "Clear manifest",
+  "ui.terminal.shipment.dispatch": "Dispatch shipment",
+  "ui.terminal.shipment.result.unknown":
+    "That material is not available to the exchange",
+  "ui.terminal.shipment.result.handling":
+    "Unlock the required terminal handling capability first",
+  "ui.terminal.shipment.result.available":
+    "The manifest cannot exceed physically staged cargo",
+  "ui.terminal.shipment.result.capacity":
+    "The manifest exceeds this shipment's cargo capacity",
+  "ui.terminal.shipment.result.updated": "Shipment manifest updated",
+  "ui.terminal.shipment.result.line-cleared": "Shipment line cleared",
+  "ui.terminal.shipment.result.cleared": "Shipment manifest cleared",
+  "ui.terminal.shipment.result.empty": "Shipment manifest is empty",
+  "ui.terminal.shipment.result.invalid":
+    "Shipment manifest is no longer physically valid",
+  "ui.terminal.shipment.result.dispatch": "Shipment ready to dispatch",
+  "ui.terminal.shipment.result.dispatched": "Shipment dispatched",
   "ui.diverter.heading": "District feed diverter",
   "ui.diverter.none": "No alternate exit is configured.",
   "ui.diverter.status":

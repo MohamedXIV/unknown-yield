@@ -333,7 +333,7 @@ A hazardous experiment can be reproduced under the same authored conditions, tea
 
 ## Phase 12 — Factory lifecycle and district reconfiguration
 
-**Epic:** GitHub Issue #103. **ACTIVE GAMEPLAY PHASE.** Children #126–#131. #126 is complete through PR #181, #127 through PR #182, #128 through PR #183 and #129 through PR #184; #130 closed not-planned after its evidence gate, and #131 is the active integrated exit gate.
+**Epic:** GitHub Issue #103. **COMPLETE** through #131 / PR #185, merged to `main` at `3ef14e7f0efbd4dcdf46bbb1889898ff1fd5c0bc`. #130 closed not-planned after its evidence gate; the integrated #131 exit gate passed full CI including real Chromium acceptance.
 
 ### Question
 
@@ -355,7 +355,7 @@ A populated factory can be suspended, moved or expanded under defined rules, rec
 
 ## Phase 13 — Terminal and off-world exchange depth
 
-**Epic:** GitHub Issue #104. Planned after Phase 12. Children #132–#138.
+**Epic:** GitHub Issue #104. **ACTIVE GAMEPLAY PHASE.** Children #132–#138; #132 is the first unblocked implementation issue.
 
 ### Question
 
