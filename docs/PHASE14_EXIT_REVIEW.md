@@ -88,17 +88,29 @@ The existing real-Chromium gameplay acceptance is extended to verify both accept
 
 This is an interaction/presentation gate only; authority remains in sim-core.
 
-## Exit decision
+## Accepted evidence
 
-Phase 14 is accepted if the exact closing PR head passes:
+Phase 14 is **accepted and complete**.
 
-- the integrated Phase 14 regression;
-- the real-browser acceptance;
-- full `npm test`;
-- `npm run typecheck`;
-- `npm run lint`;
-- `npm run build`;
-- security checks;
-- no unresolved blocking review threads.
+PR #196 exact closing head:
+
+`9a3ecf3c21b04a5db6a05afbe182e5ca2e6566bb`
+
+Squash merge on `main`:
+
+`04da68325c495f811e611c05ae436c4daec79aa2`
+
+Exact-head evidence:
+
+- integrated `phase14-exit.test.ts`: PASS;
+- real-Chromium `phase10-browser-acceptance.test.ts`: PASS with both **Underground belt** and **Elevated gantry** build tools;
+- 90 test files PASS;
+- 466 tests PASS / 2 skipped;
+- typecheck PASS;
+- lint PASS;
+- build PASS;
+- GitGuardian PASS;
+- RepoPilot exact-head merge readiness: `ready=true`, `blockers=[]`;
+- no unresolved review threads.
 
 Do not add #141–#143 modes merely to make the transport catalogue larger. Reopen those evidence gates only when later authored content demonstrates their distinct need.
