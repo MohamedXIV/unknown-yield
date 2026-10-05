@@ -379,7 +379,7 @@ A newly characterized material can create a new company opportunity; the player 
 
 ## Phase 14 — Layered and long-distance logistics
 
-**Epic:** GitHub Issue #105. Planned after Phase 13. Children #139–#144.
+**Epic:** GitHub Issue #105. **COMPLETE** through #144 / PR #196, merged to `main` at `04da68325c495f811e611c05ae436c4daec79aa2`. #139–#140 were accepted; #141–#143 closed not planned under evidence. Integrated evidence: [PHASE14_EXIT_REVIEW.md](PHASE14_EXIT_REVIEW.md).
 
 ### Question
 
@@ -405,7 +405,7 @@ At least two accepted advanced modes solve different measured layout/throughput 
 
 ## Phase 15 — Content scale and expedition arc
 
-**Epic:** GitHub Issue #106. Planned after Phase 14. Children #145–#152.
+**Epic:** GitHub Issue #106. **ACTIVE**, beginning with #145. Children #145–#152.
 
 ### Question
 
@@ -504,4 +504,4 @@ User chose to return to gameplay after #96 / PR #97 rather than continue snapsho
 
 Phase 7 performance work is deferred. The fixed 32-factory joint p95 <=10ms gate remains unmet (24.5777ms flowing / 19.6748ms backpressured); browser/device gates remain unverified. Keep existing evidence and correctness boundaries. Revisit when an actual browser-playability problem or an agreed feature scale requirement justifies it. Old NEXT recommendations in profiling docs are historical candidates, not active assignments.
 
-Roadmap expansion approved on 2026-10-02: Phases 9–16 capture the major post-foundation gameplay discussed but not represented by the earlier execution phases. Canonical epics #100–#107 and children #108–#161 form the canonical queue. Phases 9–13 are complete through their recorded exit decisions, most recently Phase 13 / #104 through #138 / PR #192. Phase 14 / #105 is the next dependency-ordered queue but is not started by this closeout; later phases remain planned work, not authorization to stack speculative implementations. Phase 7 remains deferred and Phase 8 remains a parallel art-production track.
+Roadmap expansion approved on 2026-10-02: Phases 9–16 capture the major post-foundation gameplay discussed but not represented by the earlier execution phases. Canonical epics #100–#107 and children #108–#161 form the canonical queue. Phases 9–14 are complete through their recorded exit decisions, most recently Phase 14 / #105 through #144 / PR #196. Phase 15 / #106 is the active dependency-ordered queue beginning with #145; Phase 16 remains later planned work, not authorization to stack speculative implementations. Phase 7 remains deferred and Phase 8 remains a parallel art-production track.
