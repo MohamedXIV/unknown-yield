@@ -1,17 +1,65 @@
 import { expect, it } from "vitest";
 import { fixture } from "@site/content";
-import {
-  Simulation,
-  ensureMarket,
-  experimentEvidenceKey,
-} from "../src/index";
+import { Simulation, type GameCommand } from "../src/index";
 
-const reaction = (id: string) =>
-  fixture.reactions.find((entry) => entry.id === id)!;
+function build(sim: Simulation, command: GameCommand) {
+  const result = sim.command(command);
+  expect(result.ok, result.message).toBe(true);
+  return result.id!;
+}
+
+function path(x: number, y: number, endX: number, endY: number) {
+  const points = [{ x, y }];
+  while (x !== endX) {
+    x += Math.sign(endX - x);
+    points.push({ x, y });
+  }
+  while (y !== endY) {
+    y += Math.sign(endY - y);
+    points.push({ x, y });
+  }
+  return { type: "placeBelts" as const, points, direction: 0 };
+}
+
+function ferriteHeatLine() {
+  const sim = new Simulation(fixture);
+  const factoryId = build(sim, {
+    type: "placeFactory",
+    x: 24,
+    y: 22,
+    width: 10,
+    height: 10,
+  });
+  for (const x of [24, 33])
+    build(sim, {
+      type: "placePort",
+      factoryId,
+      x,
+      y: 27,
+      direction: 0,
+    });
+
+  build(sim, {
+    type: "placeMachine",
+    definitionId: "extractor",
+    x: 18,
+    y: 26,
+    direction: 0,
+  });
+  const processorId = build(sim, {
+    type: "placeMachine",
+    definitionId: "furnace",
+    x: 27,
+    y: 26,
+    direction: 0,
+  });
+  build(sim, path(20, 27, 26, 27));
+  return { sim, processorId };
+}
 
 it("projects partial material knowledge without leaking hidden recipe truth", () => {
-  const simulation = new Simulation(fixture);
-  const initial = simulation.snapshot();
+  const { sim, processorId } = ferriteHeatLine();
+  const initial = sim.snapshot();
 
   expect(initial.knowledgeInsights.map((entry) => entry.id)).toEqual([
     "ferrite-capital",
@@ -20,30 +68,22 @@ it("projects partial material knowledge without leaking hidden recipe truth", ()
     "catalyst-choice",
   ]);
   expect(JSON.stringify(initial.knowledgeInsights)).not.toContain("reactionId");
-  expect(JSON.stringify(initial.knowledgeInsights)).not.toContain(
-    "ferrite-ceramic",
-  );
+  expect(JSON.stringify(initial)).not.toContain("ferrite-ceramic");
   expect(initial.materials.some((entry) => entry.id === "ferrite-ceramic")).toBe(
     false,
   );
 
-  const heatFerrite = reaction("heat-ferrite");
-  const hintedSave = simulation.serialize();
-  hintedSave.evidence[
-    experimentEvidenceKey(
-      heatFerrite.operation,
-      heatFerrite.input,
-      heatFerrite.processConditionId ?? null,
-    )
-  ] = {
-    operationId: heatFerrite.operation,
-    inputId: heatFerrite.input,
-    processConditionId: heatFerrite.processConditionId ?? null,
-    state: "hinted",
-  };
+  for (
+    let ticks = 0;
+    ticks < 500 && !sim.serialize().machines[processorId].job;
+    ticks++
+  )
+    sim.step(fixture.tickMs);
 
-  expect(simulation.load(hintedSave).ok).toBe(true);
-  const hinted = simulation.snapshot();
+  expect(sim.serialize().machines[processorId].job?.reaction).toBe(
+    "heat-ferrite",
+  );
+  const hinted = sim.snapshot();
   expect(
     hinted.knowledgeEntries.some(
       (entry) =>
@@ -62,25 +102,22 @@ it("projects partial material knowledge without leaking hidden recipe truth", ()
   ).toBe(false);
   expect(JSON.stringify(hinted)).not.toContain("ferrite-ceramic");
 
-  const confirmedSave = simulation.serialize();
-  confirmedSave.knowledge.push("heat-ferrite");
-  confirmedSave.evidence[
-    experimentEvidenceKey(
-      heatFerrite.operation,
-      heatFerrite.input,
-      heatFerrite.processConditionId ?? null,
-    )
-  ] = {
-    operationId: heatFerrite.operation,
-    inputId: heatFerrite.input,
-    processConditionId: heatFerrite.processConditionId ?? null,
-    state: "confirmed",
-  };
-  confirmedSave.policies["ferrite-ceramic"] = "export";
-  ensureMarket(fixture, confirmedSave, "ferrite-ceramic");
+  const hintedSave = sim.serialize();
+  const hintedRestored = new Simulation(fixture);
+  expect(hintedRestored.load(structuredClone(hintedSave)).ok).toBe(true);
+  expect(hintedRestored.snapshot().knowledgeInsights).toEqual(
+    hinted.knowledgeInsights,
+  );
 
-  expect(simulation.load(confirmedSave).ok).toBe(true);
-  const confirmed = simulation.snapshot();
+  for (
+    let ticks = 0;
+    ticks < 500 && !sim.serialize().knowledge.includes("heat-ferrite");
+    ticks++
+  )
+    sim.step(fixture.tickMs);
+
+  expect(sim.serialize().knowledge).toContain("heat-ferrite");
+  const confirmed = sim.snapshot();
   expect(
     confirmed.materials.some((entry) => entry.id === "ferrite-ceramic"),
   ).toBe(true);
@@ -101,7 +138,7 @@ it("projects partial material knowledge without leaking hidden recipe truth", ()
     "reactionId",
   );
 
-  const saved = simulation.serialize();
+  const saved = sim.serialize();
   const restored = new Simulation(fixture);
   expect(restored.load(structuredClone(saved)).ok).toBe(true);
   expect(restored.snapshot().knowledgeInsights).toEqual(
