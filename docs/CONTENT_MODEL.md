@@ -536,3 +536,10 @@ Matching Exchange listings use compensation base/floor 6/2 for liquid and 8/3 fo
 ## Phase 9 recoverable handling content — #112
 
 Current fixture world-01-v11 adds optional liquidLogistics.pump.containmentFailure: stable id, localized nameKey/descriptionKey, exposedProfileId, missingCapabilityId, trappedCapacity. Fixture pump-corrosion exposes Standard lacking corrosion-resistant, bounded to one unit. Validation requires legitimate references, an executable affected liquid source and protected pump/pipe/tank recovery profiles. Studio preserves the rule; no chemistry or hidden recipe changes. Rule absence retains ordinary refusal semantics.
+
+
+### Off-world import supplies (Phase 13 #133)
+
+`economy.imports` authors stable import-supply IDs with localized name/brief keys, one known solid material, quantity and company-fuel cost. The current proof deliberately validates import materials as **import-only at this progression point**: they cannot be an authored local deposit/hidden deposit/atmospheric source, cannot be a reaction output, and cannot also be a Materials Exchange listing. One authored request must also fit the terminal cargo-capacity bound.
+
+Runtime import holdings are save data, not content inventory. Save schema 23 persists `terminalImports.staging` (physical cargo still at the terminal) and `terminalImports.received` (cumulative off-world material source for ledger reconciliation). Schema 22 migrates exactly to empty import state because earlier saves had no imported material.

@@ -2005,6 +2005,61 @@ function GameClientInner() {
                     </button>
                   </div>
                 ))}
+                <h3>{t("ui.terminal.import.heading")}</h3>
+                <p className="hint">{t("ui.terminal.import.hint")}</p>
+                <p>
+                  {t("ui.terminal.import.capacity", {
+                    used: Object.values(snapshot.importStaging).reduce(
+                      (sum, units) => sum + units,
+                      0,
+                    ),
+                    capacity: snapshot.map.terminalShipmentCapacity,
+                  })}
+                </p>
+                <p className="hint">
+                  {t("ui.terminal.import.outlet", {
+                    x: snapshot.importOutlet.x,
+                    y: snapshot.importOutlet.y,
+                    side: t("ui.direction." + snapshot.importOutlet.direction),
+                  })}
+                </p>
+                {snapshot.importSupplies.map((supply) => (
+                  <article className="observation" key={supply.id}>
+                    <small>
+                      {t("ui.terminal.import.meta", {
+                        quantity: supply.quantity,
+                        cost: supply.fuelCost,
+                      })}
+                    </small>
+                    <h3>{t(supply.nameKey)}</h3>
+                    <p>{t(supply.briefKey)}</p>
+                    <span>
+                      {t("ui.terminal.import.held", {
+                        material: materialName(supply.materialId),
+                        quantity: snapshot.importStaging[supply.materialId] ?? 0,
+                      })}
+                    </span>
+                    <button
+                      className="secondary"
+                      disabled={!supply.eligible}
+                      onClick={() =>
+                        act({ type: "requestImport", supplyId: supply.id })
+                      }
+                    >
+                      {t("ui.terminal.import.request", {
+                        supply: t(supply.nameKey),
+                      })}
+                    </button>
+                    {!supply.eligible && supply.reason && (
+                      <span>
+                        {t(
+                          "ui.terminal.import.result." +
+                            (supply.reason === "fuel" ? "fuel" : "capacity"),
+                        )}
+                      </span>
+                    )}
+                  </article>
+                ))}
                 <h3>{t("ui.terminal.shipment.heading")}</h3>
                 <p className="hint">{t("ui.terminal.shipment.hint")}</p>
                 <p>

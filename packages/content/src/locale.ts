@@ -134,6 +134,7 @@ export const enCatalog: LocaleCatalog = {
     "Imports arrive into a bounded terminal holding area. Route them out through the dry import outlet; they never enter global stock.",
   "ui.terminal.import.capacity": "{{used}} / {{capacity}} import cargo held",
   "ui.terminal.import.meta": "{{quantity}} units · {{cost}} fuel",
+  "ui.terminal.import.held": "{{material}}: {{quantity}} held",
   "ui.terminal.import.request": "Request {{supply}}",
   "ui.terminal.import.outlet": "Dry import outlet: ({{x}}, {{y}}) toward {{side}}",
   "ui.terminal.import.result.unknown": "That import supply is unavailable",

@@ -68,3 +68,25 @@ it("bounds imports and releases them only through the physical dry outlet", () =
   expect(after.stock["orbital-binder"]).toBeUndefined();
   expect(auditLedger(fixture, after).ok).toBe(true);
 });
+
+
+it("migrates schema 22 to empty import state and requires state in schema 23", () => {
+  const sim = new Simulation(fixture);
+  const current = sim.serialize();
+  const legacy = structuredClone(current) as Record<string, unknown>;
+  legacy.schemaVersion = 22;
+  delete legacy.terminalImports;
+
+  const restored = new Simulation(fixture);
+  expect(restored.load(legacy).ok).toBe(true);
+  expect(restored.serialize().schemaVersion).toBe(23);
+  expect(restored.serialize().terminalImports).toEqual({
+    staging: {},
+    received: {},
+  });
+
+  const tampered = structuredClone(current) as Record<string, unknown>;
+  delete tampered.terminalImports;
+  expect(sim.load(tampered).ok).toBe(false);
+  expect(sim.serialize()).toEqual(current);
+});
