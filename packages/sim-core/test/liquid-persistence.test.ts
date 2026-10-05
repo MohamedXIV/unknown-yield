@@ -6,7 +6,7 @@ import { Simulation, auditLedger } from "../src/index";
 describe("liquid persistence foundation", () => {
   it("starts with explicit empty physical liquid locations in schema 15", () => {
     const sim = new Simulation(fixture);
-    expect(sim.serialize().schemaVersion).toBe(25);
+    expect(sim.serialize().schemaVersion).toBe(26);
     expect(sim.serialize().pipes).toEqual({});
     expect(sim.serialize().tanks).toEqual({});
     expect(sim.serialize().pumps).toEqual({});

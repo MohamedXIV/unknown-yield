@@ -14,7 +14,14 @@ import {
 } from "./containment";
 import type { TransportMoveEvent } from "./production";
 import type { Content } from "@site/content";
-import { key, next, socket, contains, footprint } from "./geometry";
+import {
+  key,
+  next,
+  socket,
+  contains,
+  footprint,
+  undergroundSpan,
+} from "./geometry";
 import {
   amount,
   change,
@@ -113,6 +120,32 @@ function targetAt(
   direction: number,
   pipeOnly = false,
 ): Target | null {
+  const underground = Object.values(s.undergroundLiquids).find(
+    (route) => key(route.entry) === key(point) && route.direction === direction,
+  );
+  if (underground)
+    return {
+      capabilities: liquidContainment(
+        c,
+        "pipe",
+        underground.containmentProfileId,
+      ),
+      id: "underground-liquid:" + underground.id,
+      material: underground.materialId,
+      quantity: underground.quantity,
+      capacity:
+        underground.quantity > 0
+          ? underground.quantity
+          : c.liquidLogistics!.pipe.capacity,
+      put: (material, n) => {
+        underground.materialId = material;
+        underground.quantity += n;
+        underground.remainingSteps = undergroundSpan(
+          underground.entry,
+          underground.exit,
+        );
+      },
+    };
   const pipe = s.pipes[key(point)];
   if (pipe)
     return pipe.inlet === (direction + 2) % 4
@@ -245,6 +278,27 @@ export function liquidDiagnostics(
         target,
       );
   }
+  for (const route of Object.values(s.undergroundLiquids))
+    if (
+      route.materialId &&
+      route.quantity > 0 &&
+      route.remainingSteps === 0
+    ) {
+      const target = targetAt(
+        c,
+        s,
+        next(route.exit, route.direction),
+        route.direction,
+      );
+      result[route.id] = receivingDiagnostic(
+        c,
+        route.materialId,
+        "liquid",
+        target?.capabilities ?? [],
+        target,
+        route.containmentProfileId,
+      );
+    }
   for (const p of Object.values(s.pumps)) {
     if (p.incident) {
       result[p.id] = {
@@ -349,6 +403,35 @@ export function transportLiquids(
         onMove?.({ from, direction, material: source.material, units: n });
     });
   };
+  for (const route of Object.values(s.undergroundLiquids).sort((a, b) =>
+    a.id.localeCompare(b.id),
+  )) {
+    if (
+      !route.materialId ||
+      !route.quantity ||
+      route.remainingSteps > 0
+    )
+      continue;
+    admit(
+      {
+        id: "underground-liquid:" + route.id,
+        material: route.materialId,
+        units: route.quantity,
+        take: (n) => {
+          route.quantity -= n;
+          if (!route.quantity) {
+            route.materialId = null;
+            route.remainingSteps = 0;
+          }
+        },
+      },
+      targetAt(c, s, next(route.exit, route.direction), route.direction),
+      cfg.pipe.transfer,
+      0,
+      route.exit,
+      route.direction,
+    );
+  }
   for (const p of Object.values(s.pipes).sort(
     (a, b) => a.y - b.y || a.x - b.x,
   )) {

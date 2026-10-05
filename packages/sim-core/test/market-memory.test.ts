@@ -90,7 +90,7 @@ it("persists bulletin memory and cannot replay it after save/load", () => {
   const sim = new Simulation(fixture);
   expect(sim.load(structuredClone(state)).ok).toBe(true);
   const restored = sim.serialize();
-  expect(restored.schemaVersion).toBe(25);
+  expect(restored.schemaVersion).toBe(26);
   expect(restored.marketSignals).toEqual(state.marketSignals);
   expect(sim.snapshot().marketBulletins).toHaveLength(1);
 
@@ -107,7 +107,7 @@ it("migrates schema 23 to empty bulletin history and rejects impossible legacy h
 
   const restored = new Simulation(fixture);
   expect(restored.load(legacy).ok).toBe(true);
-  expect(restored.serialize().schemaVersion).toBe(25);
+  expect(restored.serialize().schemaVersion).toBe(26);
   expect(restored.serialize().marketSignals).toEqual({});
 
   const impossible = structuredClone(current) as Record<string, unknown>;

@@ -135,7 +135,7 @@ it("migrates schema 24 to empty allocations and rejects future state in legacy s
 
   const restored = new Simulation(fixture);
   expect(restored.load(legacy).ok).toBe(true);
-  expect(restored.serialize().schemaVersion).toBe(25);
+  expect(restored.serialize().schemaVersion).toBe(26);
   expect(restored.serialize().company.importAllocations).toEqual({});
 
   const impossible = structuredClone(current) as Record<string, unknown>;

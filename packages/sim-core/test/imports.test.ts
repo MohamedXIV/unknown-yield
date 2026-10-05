@@ -79,7 +79,7 @@ it("migrates schema 22 to empty import state and requires it in the current sche
 
   const restored = new Simulation(fixture);
   expect(restored.load(legacy).ok).toBe(true);
-  expect(restored.serialize().schemaVersion).toBe(25);
+  expect(restored.serialize().schemaVersion).toBe(26);
   expect(restored.serialize().terminalImports).toEqual({
     staging: {},
     received: {},

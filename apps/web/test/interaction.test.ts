@@ -406,3 +406,60 @@ it("passes the selected profile across a liquid drag and rotation", () => {
     ).toMatchObject({ containmentProfileId: "lined" });
   }
 });
+
+
+it("builds, selects, and fingerprints underground routes without treating cargo as topology", () => {
+  const snapshot = new Simulation(fixture).snapshot();
+  expect(
+    buildCommand(
+      { ...DEFAULT_MODE, tool: "underground-solid" },
+      snapshot,
+      { x: 14, y: 12 },
+      { x: 10, y: 10 },
+    ),
+  ).toEqual({
+    type: "placeUndergroundSolid",
+    entry: { x: 10, y: 10 },
+    exit: { x: 14, y: 10 },
+  });
+  expect(
+    buildCommand(
+      {
+        ...DEFAULT_MODE,
+        tool: "underground-liquid",
+        containmentProfileId: "lined",
+      },
+      snapshot,
+      { x: 12, y: 16 },
+      { x: 10, y: 10 },
+    ),
+  ).toEqual({
+    type: "placeUndergroundLiquid",
+    entry: { x: 10, y: 10 },
+    exit: { x: 10, y: 16 },
+    containmentProfileId: "lined",
+  });
+
+  const sim = new Simulation(fixture);
+  const placed = sim.command({
+    type: "placeUndergroundSolid",
+    entry: { x: 10, y: 10 },
+    exit: { x: 15, y: 10 },
+  });
+  expect(placed.ok).toBe(true);
+  expect(hitTest(sim.snapshot(), { x: 10, y: 10 }, [])).toBe(placed.id);
+  expect(hitTest(sim.snapshot(), { x: 15, y: 10 }, [])).toBe(placed.id);
+
+  const base = sim.snapshot();
+  const key = structureKey(base);
+  const cargoOnly = structuredClone(base);
+  cargoOnly.undergroundSolids[0].cargo = {
+    materialId: "plates",
+    remainingSteps: 2,
+  };
+  expect(structureKey(cargoOnly)).toBe(key);
+
+  const movedPortal = structuredClone(base);
+  movedPortal.undergroundSolids[0].exit.x += 1;
+  expect(structureKey(movedPortal)).not.toBe(key);
+});

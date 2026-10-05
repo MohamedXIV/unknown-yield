@@ -22,6 +22,8 @@ import {
 import GameHost from "./GameHost";
 function Glyph({ type, size = 20 }: { type: string; size?: number }) {
   const paths: Record<string, string> = {
+    "underground-solid": "M3 7h5l2 5-2 5H3 M21 7h-5l-2 5 2 5h5 M8 12h8",
+    "underground-liquid": "M3 7h5l2 5-2 5H3 M21 7h-5l-2 5 2 5h5 M12 9c-2 3-3 4-3 6a3 3 0 0 0 6 0c0-2-1-3-3-6z",
     "pressure-line": "M3 8h18 M3 16h18 M8 5v14 M16 5v14",
     "pressure-vessel":
       "M8 3h8v2c5 1 5 17 0 18H8C3 22 3 6 8 5z M6 9h12 M6 17h12",
@@ -68,6 +70,8 @@ function Glyph({ type, size = 20 }: { type: string; size?: number }) {
   );
 }
 const genericNames: Record<string, string> = {
+  "underground-solid": "Underground belt",
+  "underground-liquid": "Underground pipe",
   select: "Inspect",
   factory: "Factory",
   belt: "Belt",
@@ -75,6 +79,10 @@ const genericNames: Record<string, string> = {
   demolish: "Dismantle",
 };
 const descriptions: Partial<Record<Tool, string>> = {
+  "underground-solid":
+    "Drag between two surface portals. One solid unit remains physically in transit until it reaches an unblocked exit.",
+  "underground-liquid":
+    "Drag between two surface portals. Uses the selected pipe containment profile and ordinary liquid transfer limits.",
   select:
     "Click equipment to inspect. Drag with the right mouse button to pan.",
   extractor:
@@ -192,6 +200,12 @@ function GameClientInner() {
     pipe = snapshot.pipes.find((p) => p.id === mode.selected),
     tank = snapshot.tanks.find((p) => p.id === mode.selected),
     pump = snapshot.pumps.find((p) => p.id === mode.selected),
+    undergroundSolid = snapshot.undergroundSolids.find(
+      (route) => route.id === mode.selected,
+    ),
+    undergroundLiquid = snapshot.undergroundLiquids.find(
+      (route) => route.id === mode.selected,
+    ),
     storage = snapshot.storages.find((t) => t.id === mode.selected),
     portFactory = snapshot.factories.find((f) =>
       f.ports.some((p) => p.id === mode.selected),
@@ -210,9 +224,19 @@ function GameClientInner() {
           ? snapshot.storageDefinitions.find(
               (d) => d.id === storage.definitionId,
             )!.containmentCapabilities
-          : belt
-            ? snapshot.map.beltContainment
-            : undefined;
+          : undergroundLiquid
+            ? [
+                ...new Set([
+                  ...snapshot.liquidLogistics!.pipe.containmentCapabilities,
+                  ...snapshot.liquidLogistics!.containmentProfiles.find(
+                    (profile) =>
+                      profile.id === undergroundLiquid.containmentProfileId,
+                  )!.capabilities,
+                ]),
+              ]
+            : undergroundSolid || belt
+              ? snapshot.map.beltContainment
+              : undefined;
   const capabilityNames = (ids: string[]) =>
     ids
       .map((id) =>
@@ -325,7 +349,14 @@ function GameClientInner() {
     (entry) => !entry.initial,
   ).length;
   const toolCost = (tool: Tool) =>
-    tool === "pressure-line"
+    tool === "underground-solid"
+      ? snapshot.map.beltCost
+      : tool === "underground-liquid"
+        ? (snapshot.liquidLogistics?.pipe.cost ?? 0) +
+          (snapshot.liquidLogistics?.containmentProfiles.find(
+            (p) => p.id === mode.containmentProfileId,
+          )?.additionalCost.pipe ?? 0)
+        : tool === "pressure-line"
       ? snapshot.gasLogistics?.line.cost
       : tool === "pressure-vessel"
         ? snapshot.gasLogistics?.vessel.cost
@@ -551,6 +582,52 @@ function GameClientInner() {
                         : null}
                     </p>
                   )}
+                {undergroundSolid && (
+                  <>
+                    <h2>Underground belt</h2>
+                    <p>
+                      {undergroundSolid.entry.x},{undergroundSolid.entry.y} →{" "}
+                      {undergroundSolid.exit.x},{undergroundSolid.exit.y}
+                    </p>
+                    <p>
+                      {undergroundSolid.cargo
+                        ? materialName(undergroundSolid.cargo.materialId) +
+                          " · " +
+                          undergroundSolid.cargo.remainingSteps +
+                          " buried steps remaining"
+                        : "Empty"}
+                    </p>
+                  </>
+                )}
+                {undergroundLiquid && (
+                  <>
+                    <h2>Underground pipe</h2>
+                    <p>
+                      {undergroundLiquid.entry.x},{undergroundLiquid.entry.y} →{" "}
+                      {undergroundLiquid.exit.x},{undergroundLiquid.exit.y}
+                    </p>
+                    <p>
+                      {t("ui.containment.profile")}:{" "}
+                      {t(
+                        snapshot.liquidLogistics!.containmentProfiles.find(
+                          (profile) =>
+                            profile.id ===
+                            undergroundLiquid.containmentProfileId,
+                        )!.nameKey,
+                      )}
+                    </p>
+                    <p>
+                      {undergroundLiquid.materialId
+                        ? materialName(undergroundLiquid.materialId) +
+                          " · " +
+                          undergroundLiquid.quantity +
+                          " · " +
+                          undergroundLiquid.remainingSteps +
+                          " buried steps remaining"
+                        : "Empty"}
+                    </p>
+                  </>
+                )}
                 {(pipe || tank || pump) && (
                   <>
                     <h2>
@@ -2406,6 +2483,7 @@ function GameClientInner() {
               "oversealed-furnace",
               "relief-furnace",
               "belt",
+              "underground-solid",
               "port",
               "depot",
               "liquefier",
@@ -2416,6 +2494,7 @@ function GameClientInner() {
               "vaporizer",
               "gas-collector",
               "pipe",
+              "underground-liquid",
               "tank",
               "pump",
               "demolish",
@@ -2456,7 +2535,11 @@ function GameClientInner() {
               ) : toolCost(tool) ? (
                 <em>
                   {toolCost(tool)}
-                  {tool === "factory" ? "/cell" : ""}
+                  {tool === "factory" ||
+                  tool === "underground-solid" ||
+                  tool === "underground-liquid"
+                    ? "/cell"
+                    : ""}
                 </em>
               ) : (
                 <em>—</em>
@@ -2464,7 +2547,7 @@ function GameClientInner() {
             </button>
           ))}
         </nav>
-        {["pipe", "tank", "pump"].includes(mode.tool) && (
+        {["pipe", "underground-liquid", "tank", "pump"].includes(mode.tool) && (
           <label>
             {t("ui.containment.profile")}
             <select

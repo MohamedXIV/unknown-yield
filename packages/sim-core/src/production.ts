@@ -12,7 +12,14 @@ import {
   type Machine,
   type Point,
 } from "./types";
-import { key, next, socket, contains, footprint } from "./geometry";
+import {
+  key,
+  next,
+  socket,
+  contains,
+  footprint,
+  undergroundSpan,
+} from "./geometry";
 import { ensureMarket, exchangeDefinition } from "./market";
 import { recordDirectiveExperiment } from "./opportunities";
 import {
@@ -175,6 +182,16 @@ function dryReceiver(
       material: null,
     };
   }
+  const underground = Object.values(s.undergroundSolids).find(
+    (route) => key(route.entry) === key(point) && route.direction === direction,
+  );
+  if (underground)
+    return {
+      capabilities: c.site.beltContainment,
+      quantity: underground.cargo ? 1 : 0,
+      capacity: 1,
+      material: underground.cargo?.materialId ?? null,
+    };
   const b = s.belts[key(point)];
   if (b) {
     const inlet = (direction + 2) % 4,
@@ -246,6 +263,24 @@ export function solidDiagnostics(
         );
       });
       result[b.id] = routes.find((d) => d.reason === "ready") ?? routes[0];
+    }
+  for (const route of Object.values(s.undergroundSolids))
+    if (route.cargo && route.cargo.remainingSteps === 0) {
+      const target = dryReceiver(
+        c,
+        s,
+        route.exit,
+        next(route.exit, route.direction),
+        route.cargo.materialId,
+        route.direction,
+      );
+      result[route.id] = receivingDiagnostic(
+        c,
+        route.cargo.materialId,
+        "solid",
+        target?.capabilities ?? [],
+        target,
+      );
     }
   for (const [records, definitions, field] of [
     [s.machines, c.machines, "output"],
@@ -330,6 +365,18 @@ export function transport(
             : arms.outlets;
       return { point: b, material: b.cargo!, directions, belt: b };
     });
+  for (const route of Object.values(s.undergroundSolids).sort((a, b) =>
+    a.id.localeCompare(b.id),
+  ))
+    if (route.cargo && route.cargo.remainingSteps === 0)
+      sources.push({
+        point: route.exit,
+        material: route.cargo.materialId,
+        directions: [route.direction],
+        take: () => {
+          route.cargo = null;
+        },
+      });
   // Emitters participate in the same admission arbitration as incoming belts.
   // Their ordinary priority remains after old belt cargo, as before.
   for (const m of Object.values(s.machines)) {
@@ -462,6 +509,38 @@ export function transport(
             inventory: s.staging,
             inlet,
           };
+    }
+    if (p) {
+      const underground = Object.values(s.undergroundSolids).find(
+        (route) =>
+          key(route.entry) === key(p) && route.direction === direction,
+      );
+      if (underground) {
+        if (
+          underground.cargo ||
+          !checkContainment(
+            c,
+            source.material,
+            ["solid"],
+            c.site.beltContainment,
+          ).ok
+        )
+          return null;
+        return {
+          id: "underground-solid:" + underground.id,
+          capacity: 1,
+          put: (material) => {
+            underground.cargo = {
+              materialId: material,
+              remainingSteps: undergroundSpan(
+                underground.entry,
+                underground.exit,
+              ),
+            };
+          },
+          inlet,
+        };
+      }
     }
     const b = s.belts[loc];
     if (

@@ -1,5 +1,9 @@
 import { liquidConstructionCost } from "./containment";
 import {
+  undergroundLiquidCost,
+  undergroundSolidCost,
+} from "./underground";
+import {
   dispatchShipmentCommand,
   moduleCommand,
   shipmentQuantityCommand,
@@ -36,6 +40,8 @@ import {
   next,
   inside,
   footprint,
+  undergroundDirection,
+  undergroundPlacementError,
 } from "./geometry";
 const coordinate = z.number().int().min(0).max(10000),
   direction = z.number().int().min(0).max(3),
@@ -157,6 +163,17 @@ const schema = z.discriminatedUnion("type", [
     type: z.literal("placeBelts"),
     points: z.array(z.object(point)).min(1).max(4800),
     direction,
+  }),
+  z.object({
+    type: z.literal("placeUndergroundSolid"),
+    entry: z.object(point),
+    exit: z.object(point),
+  }),
+  z.object({
+    type: z.literal("placeUndergroundLiquid"),
+    entry: z.object(point),
+    exit: z.object(point),
+    containmentProfileId: z.string().default("standard"),
   }),
   z.object({
     type: z.literal("configureJunction"),
@@ -800,6 +817,57 @@ export function applyCommand(
       f.ports.push({ id, x: cmd.x, y: cmd.y, direction: cmd.direction });
       return ok("Wall port placed", c.site.portCost, id);
     }
+    case "placeUndergroundSolid":
+    case "placeUndergroundLiquid": {
+      const error = undergroundPlacementError(c, s, cmd.entry, cmd.exit);
+      if (error) return fail(error);
+      const direction = undergroundDirection(cmd.entry, cmd.exit)!;
+      if (cmd.type === "placeUndergroundLiquid") {
+        const cfg = c.liquidLogistics;
+        if (!cfg) return fail("Liquid infrastructure is not authored");
+        if (
+          !cfg.containmentProfiles.some(
+            (profile) => profile.id === cmd.containmentProfileId,
+          )
+        )
+          return fail("Unknown liquid containment profile");
+        const draft = {
+          entry: cmd.entry,
+          exit: cmd.exit,
+          containmentProfileId: cmd.containmentProfileId,
+        };
+        const cost = undergroundLiquidCost(c, draft);
+        if (!affordable(cost)) return fail("Not enough structural plates");
+        if (!apply) return ok("Place underground liquid route", cost);
+        const id = issue("w");
+        pay(cost);
+        s.undergroundLiquids[id] = {
+          id,
+          entry: { ...cmd.entry },
+          exit: { ...cmd.exit },
+          direction,
+          containmentProfileId: cmd.containmentProfileId,
+          materialId: null,
+          quantity: 0,
+          remainingSteps: 0,
+        };
+        return ok("Underground liquid route placed", cost, id);
+      }
+      const draft = { entry: cmd.entry, exit: cmd.exit };
+      const cost = undergroundSolidCost(c, draft);
+      if (!affordable(cost)) return fail("Not enough structural plates");
+      if (!apply) return ok("Place underground solid route", cost);
+      const id = issue("q");
+      pay(cost);
+      s.undergroundSolids[id] = {
+        id,
+        entry: { ...cmd.entry },
+        exit: { ...cmd.exit },
+        direction,
+        cargo: null,
+      };
+      return ok("Underground solid route placed", cost, id);
+    }
     case "placeBelts": {
       const seen = new Set<string>();
       const segments = [];
@@ -1056,6 +1124,27 @@ export function applyCommand(
       };
     }
     case "dismantle": {
+      {
+        const solid = Object.hasOwn(s.undergroundSolids, cmd.id)
+            ? s.undergroundSolids[cmd.id]
+            : undefined,
+          liquid = Object.hasOwn(s.undergroundLiquids, cmd.id)
+            ? s.undergroundLiquids[cmd.id]
+            : undefined;
+        if (solid || liquid) {
+          if (solid?.cargo || (liquid?.quantity ?? 0) > 0)
+            return fail("Drain underground route contents before dismantling");
+          const cost = solid
+            ? undergroundSolidCost(c, solid)
+            : undergroundLiquidCost(c, liquid!);
+          if (apply) {
+            if (solid) delete s.undergroundSolids[cmd.id];
+            else delete s.undergroundLiquids[cmd.id];
+            change(s.stock, c.site.buildMaterial, cost);
+          }
+          return ok("Underground route reclaimed", cost);
+        }
+      }
       {
         const pipe = Object.values(s.pressureLines).find(
             (p) => p.id === cmd.id,

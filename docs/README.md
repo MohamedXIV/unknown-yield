@@ -61,3 +61,5 @@ Prefer a small complete loop over broad half-built systems. New infrastructure m
 - [PHASE13_STRATEGIC_STOCKPILES.md](PHASE13_STRATEGIC_STOCKPILES.md) — Phase 13 #137 physical stockpile and delayed demand-response proof.
 
 - [PHASE13_EXIT_REVIEW.md](PHASE13_EXIT_REVIEW.md) — Phase 13 #138 integrated terminal/off-world exchange acceptance gate.
+
+- [PHASE14_UNDERGROUND.md](PHASE14_UNDERGROUND.md) — Phase 14 #139 explicit underground solid/liquid route contract.

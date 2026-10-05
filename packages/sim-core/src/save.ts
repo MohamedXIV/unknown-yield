@@ -40,6 +40,9 @@ import {
   gasPlacementError,
   liquidPlacementError,
   footprint,
+  undergroundDirection,
+  undergroundPlacementError,
+  undergroundSpan,
 } from "./geometry";
 const count = z.number().int().nonnegative().max(1000000000),
   positive = count.positive();
@@ -144,6 +147,31 @@ const storage = z.object({
   direction,
   inventory,
 });
+const routePoint = z.object(point).strict();
+const undergroundSolid = z
+  .object({
+    id: safeId,
+    entry: routePoint,
+    exit: routePoint,
+    direction,
+    cargo: z
+      .object({ materialId: safeId, remainingSteps: count })
+      .strict()
+      .nullable(),
+  })
+  .strict();
+const undergroundLiquid = z
+  .object({
+    id: safeId,
+    entry: routePoint,
+    exit: routePoint,
+    direction,
+    containmentProfileId: safeId,
+    materialId: safeId.nullable(),
+    quantity: count,
+    remainingSteps: count,
+  })
+  .strict();
 const evidence = z.object({
   operationId: safeId,
   inputId: safeId,
@@ -174,6 +202,7 @@ const schema = z.object({
     z.literal(23),
     z.literal(24),
     z.literal(25),
+    z.literal(26),
   ]),
   contentVersion: z.string(),
   terminalModules: z
@@ -215,6 +244,8 @@ const schema = z.object({
   machines: z.record(safeId, machine),
   factories: z.record(safeId, factory),
   belts: z.record(z.string().regex(/^\d+,\d+$/), belt),
+  undergroundSolids: z.record(safeId, undergroundSolid).default({}),
+  undergroundLiquids: z.record(safeId, undergroundLiquid).default({}),
   storages: z.record(safeId, storage),
   pressureLines: z.record(z.string().regex(/^\d+,\d+$/), pipe).default({}),
   pressureVessels: z.record(safeId, tank).default({}),
@@ -317,7 +348,7 @@ const schema = z.object({
 });
 export function initialState(c: Content): Save {
   const state: Save = {
-    schemaVersion: 25,
+    schemaVersion: 26,
     terminalModules: {},
     contentVersion: c.version,
     tick: 0,
@@ -360,6 +391,8 @@ export function initialState(c: Content): Save {
     machines: {},
     factories: {},
     belts: {},
+    undergroundSolids: {},
+    undergroundLiquids: {},
     pressureLines: {},
     pressureVessels: {},
     compressors: {},
@@ -436,6 +469,20 @@ export function parseSave(input: unknown, c: Content): Save {
     Object.keys(parsed.company.importAllocations).length
   )
     throw Error("Legacy schema cannot contain import allocations");
+  if (
+    parsed.schemaVersion >= 26 &&
+    (!input ||
+      typeof input !== "object" ||
+      !Object.hasOwn(input, "undergroundSolids") ||
+      !Object.hasOwn(input, "undergroundLiquids"))
+  )
+    throw Error("Missing underground route state");
+  if (
+    parsed.schemaVersion < 26 &&
+    (Object.keys(parsed.undergroundSolids).length ||
+      Object.keys(parsed.undergroundLiquids).length)
+  )
+    throw Error("Legacy schema cannot contain underground routes");
   if (
     parsed.schemaVersion < 23 &&
     (Object.keys(parsed.terminalImports.staging).length ||
@@ -610,6 +657,9 @@ export function parseSave(input: unknown, c: Content): Save {
   // Schema 24 predates company-owned import allocations. No historical
   // directive could award one, so the exact migration is an empty record.
   if (s.schemaVersion === 24) s.schemaVersion = 25;
+  // Schema 25 predates underground transport. No buried cargo or route
+  // endpoints existed, so migration is exactly two empty route records.
+  if (s.schemaVersion === 25) s.schemaVersion = 26;
   if (s.contentVersion !== c.version || s.remainder >= c.tickMs)
     throw new Error("Incompatible content or timing");
   if (
@@ -1089,6 +1139,59 @@ export function parseSave(input: unknown, c: Content): Save {
     }
     stage.belts[location] = b;
   }
+  for (const [id, route] of Object.entries(s.undergroundSolids)) {
+    takeId(id, "q");
+    if (route.id !== id) throw new Error("Mismatched underground solid ID");
+    const direction = undergroundDirection(route.entry, route.exit);
+    if (direction === null || direction !== route.direction)
+      throw new Error("Invalid underground solid direction");
+    const error = undergroundPlacementError(c, stage, route.entry, route.exit);
+    if (error) throw new Error(error);
+    if (
+      route.cargo &&
+      (!known.has(route.cargo.materialId) ||
+        c.materials.find((m) => m.id === route.cargo!.materialId)
+          ?.handlingState !== "solid" ||
+        route.cargo.remainingSteps > undergroundSpan(route.entry, route.exit))
+    )
+      throw new Error("Invalid underground solid cargo");
+    stage.undergroundSolids[id] = route;
+  }
+  for (const [id, route] of Object.entries(s.undergroundLiquids)) {
+    takeId(id, "w");
+    if (route.id !== id) throw new Error("Mismatched underground liquid ID");
+    if (!c.liquidLogistics)
+      throw new Error("Liquid infrastructure is not authored");
+    if (
+      !c.liquidLogistics.containmentProfiles.some(
+        (profile) => profile.id === route.containmentProfileId,
+      )
+    )
+      throw new Error("Unknown liquid containment profile");
+    const direction = undergroundDirection(route.entry, route.exit);
+    if (direction === null || direction !== route.direction)
+      throw new Error("Invalid underground liquid direction");
+    const error = undergroundPlacementError(c, stage, route.entry, route.exit);
+    if (error) throw new Error(error);
+    if (
+      route.quantity > c.liquidLogistics.pipe.capacity ||
+      (route.quantity === 0) !== (route.materialId === null) ||
+      (route.quantity === 0 && route.remainingSteps !== 0) ||
+      route.remainingSteps > undergroundSpan(route.entry, route.exit) ||
+      (route.materialId !== null &&
+        (!known.has(route.materialId) ||
+          c.materials.find((m) => m.id === route.materialId)?.handlingState !==
+            "liquid" ||
+          !checkContainment(
+            c,
+            route.materialId,
+            ["liquid"],
+            liquidContainment(c, "pipe", route.containmentProfileId),
+          ).ok))
+    )
+      throw new Error("Invalid underground liquid cargo");
+    stage.undergroundLiquids[id] = route;
+  }
   for (const [id, t] of Object.entries(s.storages)) {
     takeId(id, "s");
     if (t.id !== id) throw new Error("Mismatched storage ID");
@@ -1247,6 +1350,20 @@ export function parseSave(input: unknown, c: Content): Save {
     );
   for (const b of Object.values(s.belts))
     if (b.cargo) protect({ [b.cargo]: 1 }, ["solid"], c.site.beltContainment);
+  for (const route of Object.values(s.undergroundSolids))
+    if (route.cargo)
+      protect(
+        { [route.cargo.materialId]: 1 },
+        ["solid"],
+        c.site.beltContainment,
+      );
+  for (const route of Object.values(s.undergroundLiquids))
+    if (route.materialId)
+      protect(
+        { [route.materialId]: route.quantity },
+        ["liquid"],
+        liquidContainment(c, "pipe", route.containmentProfileId),
+      );
   for (const m of Object.values(s.machines)) {
     const d = c.machines.find((d) => d.id === m.definitionId)!;
     protect(m.input, d.inputStates, d.inputContainment);
