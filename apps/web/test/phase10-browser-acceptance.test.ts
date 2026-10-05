@@ -478,6 +478,7 @@ browserIt(
         atmosphere: { disabled: string | null } | null;
         sinterer: { disabled: string | null } | null;
         relief: { disabled: string | null } | null;
+        elevated: { disabled: string | null } | null;
       }>(`(() => {
         const button = (label) =>
           [...document.querySelectorAll('nav[aria-label="Build tools"] button')]
@@ -495,6 +496,7 @@ browserIt(
           atmosphere: state("Atmospheric intake"),
           sinterer: state("Sinterer"),
           relief: state("Relief furnace"),
+          elevated: state("Elevated gantry"),
         };
       })()`);
 
@@ -504,6 +506,19 @@ browserIt(
       expect(state.atmosphere?.disabled).toBe("true");
       expect(state.sinterer?.disabled).toBe("false");
       expect(state.relief?.disabled).toBe("true");
+      expect(state.elevated?.disabled).toBe("false");
+
+      await evaluate(`(() => {
+        const entry = [...document.querySelectorAll('nav[aria-label="Build tools"] button')]
+          .find((button) => button.getAttribute("aria-label") === "Elevated gantry");
+        entry.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector('button[aria-label="Elevated gantry"]')
+          ?.getAttribute("aria-pressed") === "true" &&
+          document.querySelector(".build-hint strong")?.textContent === "Elevated gantry"`,
+      );
 
       await evaluate(`(() => {
         const entry = [...document.querySelectorAll('nav[aria-label="Build tools"] button')]
