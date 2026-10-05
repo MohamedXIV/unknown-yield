@@ -29,6 +29,7 @@ export function contentKeys(c: Content): string[] {
     ...c.hazardClasses.flatMap((d) => [d.nameKey, d.evidenceKey]),
     ...(c.liquidLogistics?.containmentProfiles.map((p) => p.nameKey) ?? []),
     ...c.materials.map((m) => m.nameKey),
+    ...c.fuelClasses.map((fuelClass) => fuelClass.nameKey),
     ...c.operations.map((o) => o.nameKey),
     ...c.machines.map((m) => m.nameKey),
     ...c.machines.flatMap((m) => (m.unlock ? [m.unlock.hintKey] : [])),
@@ -81,6 +82,11 @@ export const enCatalog: LocaleCatalog = {
   "ui.knowledge.insight.property": "Observed property",
   "ui.knowledge.insight.branch": "Open branch",
   "ui.knowledge.insight.opportunity": "Company opportunity",
+  "ui.machine.fuel.company": "Company fuel",
+  "ui.machine.fuel.terminal-held": "{{count}} units held at {{module}}",
+  "ui.machine.fuel.locked": "Fuel class not yet certified",
+  "fuel-class.advanced-propellant.name": "Advanced propellant",
+  "fuel-class.research-coolant.name": "Research-grade coolant",
   "ui.diverter.heading": "District feed diverter",
   "ui.diverter.none": "No alternate exit is configured.",
   "ui.diverter.status":
@@ -163,10 +169,10 @@ export const enCatalog: LocaleCatalog = {
     "A specialized off-world sintering feedstock unavailable from local extraction. It must leave the terminal through ordinary dry logistics.",
   "import.orbital-propellant-cylinder.name": "Orbital propellant cylinder",
   "import.orbital-propellant-cylinder.brief":
-    "A sealed gas supply delivered only through an installed authorized gas dock, then released into ordinary pressure logistics.",
+    "A sealed gas supply delivered through an authorized gas dock. Retain it at the dock to operate advanced equipment, or release it into ordinary pressure logistics.",
   "import.orbital-coolant-canister.name": "Secure cryogenic coolant",
   "import.orbital-coolant-canister.brief":
-    "A cryogenic, hazardous and secure-chain liquid that requires a matching protected terminal dock before delivery.",
+    "A cryogenic, hazardous and secure-chain liquid delivered through protected terminal handling. Research equipment consumes it directly from the secured dock reserve.",
   "ui.direction.0": "east",
   "ui.direction.1": "south",
   "ui.direction.2": "west",
