@@ -65,3 +65,5 @@ Prefer a small complete loop over broad half-built systems. New infrastructure m
 - [PHASE14_UNDERGROUND.md](PHASE14_UNDERGROUND.md) — Phase 14 #139 explicit underground solid/liquid route contract.
 
 - [PHASE14_ELEVATED.md](PHASE14_ELEVATED.md) — Phase 14 #140 support-constrained elevated solid gantry contract.
+
+- [PHASE14_EXIT_REVIEW.md](PHASE14_EXIT_REVIEW.md) — Phase 14 #144 integrated layered-logistics gate and #141–#143 evidence decisions.
