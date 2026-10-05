@@ -1933,16 +1933,30 @@ function GameClientInner() {
                           : null,
                       operationName = operation
                         ? t(operation.nameKey)
-                        : t("ui.terminal.opportunity.experiment-fallback");
+                        : t("ui.terminal.opportunity.experiment-fallback"),
+                      rewardSupply =
+                        opportunity.kind === "property-directive" &&
+                        opportunity.rewardImportSupplyId
+                          ? snapshot.importSupplies.find(
+                              (entry) =>
+                                entry.id === opportunity.rewardImportSupplyId,
+                            )
+                          : null;
                     return (
                       <article className="observation" key={opportunity.id}>
                         <small>
-                          {t(
-                            opportunity.kind === "order"
-                              ? "ui.terminal.opportunity.order-meta"
-                              : "ui.terminal.opportunity.directive-meta",
-                            { reward: opportunity.rewardFuel },
-                          )}
+                          {opportunity.kind === "order"
+                            ? t("ui.terminal.opportunity.order-meta", {
+                                reward: opportunity.rewardFuel,
+                              })
+                            : opportunity.kind === "property-directive" &&
+                                rewardSupply
+                              ? t("ui.terminal.opportunity.property-meta", {
+                                  supply: t(rewardSupply.nameKey),
+                                })
+                              : t("ui.terminal.opportunity.directive-meta", {
+                                  reward: opportunity.rewardFuel,
+                                })}
                         </small>
                         <h3>{t(opportunity.nameKey)}</h3>
                         <p>{t(opportunity.briefKey)}</p>
@@ -1953,26 +1967,36 @@ function GameClientInner() {
                                 progress: opportunity.progress,
                                 quantity: opportunity.quantity,
                               })
-                            : opportunity.setupNameKey
+                            : opportunity.kind === "property-directive"
                               ? t(
-                                  "ui.terminal.opportunity.directive-progress-setup",
+                                  "ui.terminal.opportunity.property-progress",
                                   {
                                     material: materialName(
-                                      opportunity.inputMaterialId,
+                                      opportunity.targetMaterialId,
                                     ),
-                                    operation: operationName,
-                                    setup: t(opportunity.setupNameKey),
+                                    property: t(opportunity.propertyKey),
                                   },
                                 )
-                              : t(
-                                  "ui.terminal.opportunity.directive-progress",
-                                  {
-                                    material: materialName(
-                                      opportunity.inputMaterialId,
-                                    ),
-                                    operation: operationName,
-                                  },
-                                )}
+                              : opportunity.setupNameKey
+                                ? t(
+                                    "ui.terminal.opportunity.directive-progress-setup",
+                                    {
+                                      material: materialName(
+                                        opportunity.inputMaterialId,
+                                      ),
+                                      operation: operationName,
+                                      setup: t(opportunity.setupNameKey),
+                                    },
+                                  )
+                                : t(
+                                    "ui.terminal.opportunity.directive-progress",
+                                    {
+                                      material: materialName(
+                                        opportunity.inputMaterialId,
+                                      ),
+                                      operation: operationName,
+                                    },
+                                  )}
                         </span>
                       </article>
                     );
@@ -2062,6 +2086,13 @@ function GameClientInner() {
                         quantity: supply.held,
                       })}
                     </span>
+                    {supply.allocations > 0 && (
+                      <span>
+                        {t("ui.terminal.import.allocation", {
+                          count: supply.allocations,
+                        })}
+                      </span>
+                    )}
                     <button
                       className="secondary"
                       disabled={!supply.eligible}
