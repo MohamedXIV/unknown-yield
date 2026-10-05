@@ -413,7 +413,7 @@ browserIt(
         return true;
       })()`);
 
-      await evaluate(`(() => {
+      const factoryPoint = await evaluate<{ x: number; y: number }>(`(() => {
         const canvas = document.querySelector("canvas");
         if (!canvas) throw new Error("Canvas missing");
         const rect = canvas.getBoundingClientRect();
@@ -423,22 +423,27 @@ browserIt(
         const scrollY = 30 * Y - rect.height / (2 * zoom);
         const worldX = 25.5 * X;
         const worldY = 24.5 * Y;
-        const clientX = rect.left + (worldX - scrollX) * zoom;
-        const clientY = rect.top + (worldY - scrollY) * zoom;
-        const base = {
-          bubbles: true,
-          cancelable: true,
-          clientX,
-          clientY,
-          button: 0,
-          pointerId: 1,
-          pointerType: "mouse",
-          isPrimary: true,
+        return {
+          x: rect.left + (worldX - scrollX) * zoom,
+          y: rect.top + (worldY - scrollY) * zoom,
         };
-        canvas.dispatchEvent(new PointerEvent("pointerdown", { ...base, buttons: 1 }));
-        canvas.dispatchEvent(new PointerEvent("pointerup", { ...base, buttons: 0 }));
-        return { clientX, clientY };
       })()`);
+      await call("Input.dispatchMouseEvent", {
+        type: "mousePressed",
+        x: factoryPoint.x,
+        y: factoryPoint.y,
+        button: "left",
+        buttons: 1,
+        clickCount: 1,
+      });
+      await call("Input.dispatchMouseEvent", {
+        type: "mouseReleased",
+        x: factoryPoint.x,
+        y: factoryPoint.y,
+        button: "left",
+        buttons: 0,
+        clickCount: 1,
+      });
       await waitForExpression(
         `[...document.querySelectorAll("button.entity-row")]
           .some((button) => button.textContent?.includes("Oversealed furnace"))`,

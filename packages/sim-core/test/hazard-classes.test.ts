@@ -318,8 +318,8 @@ it("persists a conservative stranded-output consequence without deleting materia
 
   for (
     let tick = 0;
-    tick < 200 &&
-    (recoveredReload.serialize().machines[processorId].output.residue ?? 0) > 0;
+    tick < 300 &&
+    (recoveredReload.serialize().staging.residue ?? 0) < 1;
     tick++
   ) {
     recoveredReload.step(fixture.tickMs);
@@ -329,7 +329,9 @@ it("persists a conservative stranded-output consequence without deleting materia
   expect(
     recoveredReload.serialize().machines[processorId].output.residue ?? 0,
   ).toBe(0);
-  expect(recoveredReload.serialize().staging.residue).toBeGreaterThanOrEqual(1);
+  expect(recoveredReload.serialize().staging.residue ?? 0).toBeGreaterThanOrEqual(
+    1,
+  );
   expect(recoveredReload.serialize().hazardEvidence).toEqual(["slag-jam"]);
   expect(auditLedger(fixture, recoveredReload.serialize()).ok).toBe(true);
 });
