@@ -478,6 +478,7 @@ browserIt(
         atmosphere: { disabled: string | null } | null;
         sinterer: { disabled: string | null } | null;
         relief: { disabled: string | null } | null;
+        underground: { disabled: string | null } | null;
         elevated: { disabled: string | null } | null;
       }>(`(() => {
         const button = (label) =>
@@ -496,6 +497,7 @@ browserIt(
           atmosphere: state("Atmospheric intake"),
           sinterer: state("Sinterer"),
           relief: state("Relief furnace"),
+          underground: state("Underground belt"),
           elevated: state("Elevated gantry"),
         };
       })()`);
@@ -506,7 +508,20 @@ browserIt(
       expect(state.atmosphere?.disabled).toBe("true");
       expect(state.sinterer?.disabled).toBe("false");
       expect(state.relief?.disabled).toBe("true");
+      expect(state.underground?.disabled).toBe("false");
       expect(state.elevated?.disabled).toBe("false");
+
+      await evaluate(`(() => {
+        const entry = [...document.querySelectorAll('nav[aria-label="Build tools"] button')]
+          .find((button) => button.getAttribute("aria-label") === "Underground belt");
+        entry.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector('button[aria-label="Underground belt"]')
+          ?.getAttribute("aria-pressed") === "true" &&
+          document.querySelector(".build-hint strong")?.textContent === "Underground belt"`,
+      );
 
       await evaluate(`(() => {
         const entry = [...document.querySelectorAll('nav[aria-label="Build tools"] button')]
