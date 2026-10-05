@@ -55,8 +55,25 @@ export function experimentEvidenceKey(
   return [operationId, inputId, processConditionId ?? "default"].join("/");
 }
 export type Port = Point & { id: string; direction: number };
-export type Factory = Rect & { id: string; ports: Port[] };
+export type FactoryConnectionKind = "solid" | "liquid" | "gas";
+export type FactoryRelocationRequirement = {
+  portId: string;
+  kind: FactoryConnectionKind;
+};
+export type FactoryRelocation = {
+  remainingTicks: number;
+  requirements: FactoryRelocationRequirement[];
+};
+export type Factory = Rect & {
+  id: string;
+  ports: Port[];
+  relocation: FactoryRelocation | null;
+};
 export type FactoryPortView = Port & { role: "input" | "output" };
+export type FactoryRelocationView = {
+  remainingTicks: number;
+  missingConnections: FactoryRelocationRequirement[];
+};
 export type FactoryThroughputRate = {
   materialId: string;
   units: number;
@@ -76,8 +93,9 @@ export type FactoryContractView = {
   statusCounts: Record<MachineStatus, number>;
   throughput: FactoryThroughputView;
 };
-export type FactoryView = Omit<Factory, "ports"> & {
+export type FactoryView = Omit<Factory, "ports" | "relocation"> & {
   ports: FactoryPortView[];
+  relocation: FactoryRelocationView | null;
   contract: FactoryContractView;
 };
 export type Job = { remaining: number; reaction: string | null };
@@ -354,6 +372,7 @@ export type GameCommand =
   | ({ type: "placeFactory" } & Rect)
   | ({ type: "reshapeFactory"; factoryId: string } & Rect)
   | ({ type: "relocateFactory"; factoryId: string } & Point)
+  | { type: "commissionFactoryRelocation"; factoryId: string }
   | ({ type: "placePort"; factoryId: string; direction: number } & Point)
   | { type: "placeBelts"; points: Point[]; direction: number }
   | {

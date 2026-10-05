@@ -273,6 +273,8 @@ export const contentSchema = z.object({
     factoryMin: positive,
     factoryMax: positive,
     factoryCellCost: positive,
+    factoryRelocationCostPerCell: positive.default(1),
+    factoryRelocationDowntimeTicks: positive.default(30),
     beltCost: positive,
     portCost: positive,
     transportEveryTicks: positive,

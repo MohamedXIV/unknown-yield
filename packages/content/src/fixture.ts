@@ -585,6 +585,8 @@ export const fixture = validateContent({
     factoryMin: 6,
     factoryMax: 20,
     factoryCellCost: 1,
+    factoryRelocationCostPerCell: 1,
+    factoryRelocationDowntimeTicks: 30,
     beltCost: 1,
     portCost: 2,
     transportEveryTicks: 3,
