@@ -45,6 +45,17 @@ export const contentSchema = z.object({
     )
     .min(1),
   operations: z.array(z.object({ id, nameKey: localeKeySchema })).min(1),
+  fuelClasses: z
+    .array(
+      z.object({
+        id,
+        nameKey: localeKeySchema,
+        materialId: id,
+        terminalModuleId: id,
+        requiredMilestoneId: id,
+      }),
+    )
+    .default([]),
   machines: z
     .array(
       z.object({
@@ -54,6 +65,7 @@ export const contentSchema = z.object({
         maxExtractionDepth: count.default(0),
         sourceKind: z.enum(["atmosphere"]).optional(),
         processConditionId: id.optional(),
+        fuelClassId: id.optional(),
         unlock: z
           .union([
             z.object({
@@ -499,6 +511,7 @@ function validateContentInternal(
     c.hazardClasses,
     c.materials,
     c.operations,
+    c.fuelClasses,
     c.machines,
     c.storages,
     c.junctions,
@@ -628,7 +641,10 @@ function validateContentInternal(
         throw new Error("Knowledge insight reaction evidence is invalid");
     }
   }
+  const fuelClassIds = new Set(c.fuelClasses.map((entry) => entry.id));
   for (const m of c.machines) {
+    if (m.fuelClassId && !fuelClassIds.has(m.fuelClassId))
+      throw new Error("Machine references missing fuel class");
     if (m.unlock) {
       const unlock = m.unlock;
       if (
@@ -992,6 +1008,36 @@ function validateContentInternal(
   const milestoneIds = new Set(c.economy.milestones.map((m) => m.id));
   if (milestoneIds.size !== c.economy.milestones.length)
     throw new Error("Duplicate milestone ID");
+
+  for (const fuelClass of c.fuelClasses) {
+    const material = c.materials.find(
+      (entry) => entry.id === fuelClass.materialId,
+    );
+    const module = c.site.terminalModules.find(
+      (entry) => entry.id === fuelClass.terminalModuleId,
+    );
+    const supply = c.economy.imports.find(
+      (entry) =>
+        entry.materialId === fuelClass.materialId &&
+        entry.terminalModuleId === fuelClass.terminalModuleId,
+    );
+    if (!material || !module || !supply)
+      throw new Error("Fuel class requires a physical imported terminal supply");
+    if (!milestoneIds.has(fuelClass.requiredMilestoneId))
+      throw new Error("Fuel class references missing milestone");
+    if (
+      module.handlingState !== material.handlingState ||
+      !checkContainment(
+        c,
+        material.id,
+        [module.handlingState],
+        module.containmentCapabilities,
+      ).ok
+    )
+      throw new Error("Fuel class terminal module cannot protect its material");
+    if (fuelClass.nameKey !== "fuel-class." + fuelClass.id + ".name")
+      throw new Error("Localization key must match fuel class");
+  }
 
   const sensingCapabilityIds = new Set<string>();
   for (const capability of c.site.sensingCapabilities) {
