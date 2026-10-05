@@ -41,9 +41,9 @@ it("completes the Phase 10 manufactured exploration loop in one persistent world
   const factory = command({
     type: "placeFactory",
     x: 23,
-    y: 33,
+    y: 34,
     width: 17,
-    height: 10,
+    height: 7,
   });
   command({ type: "placePort", factoryId: factory, x: 23, y: 36, direction: 0 });
   const sealedExtractor = command({
@@ -78,19 +78,19 @@ it("completes the Phase 10 manufactured exploration loop in one persistent world
   command({ type: "setEnabled", machineId: sealedExtractor, enabled: false });
   command({ type: "setEnabled", machineId: sealedFurnace, enabled: false });
 
-  command({ type: "placePort", factoryId: factory, x: 23, y: 40, direction: 0 });
+  command({ type: "placePort", factoryId: factory, x: 23, y: 39, direction: 0 });
   const gasExtractor = command({
     type: "placeMachine",
     definitionId: "extractor",
     x: 15,
-    y: 39,
+    y: 38,
     direction: 0,
   });
   command({
     type: "placeBelts",
     points: Array.from({ length: 8 }, (_, index) => ({
       x: 17 + index,
-      y: 40,
+      y: 39,
     })),
     direction: 0,
   });
@@ -98,59 +98,48 @@ it("completes the Phase 10 manufactured exploration loop in one persistent world
     type: "placeMachine",
     definitionId: "liquefier",
     x: 25,
-    y: 39,
+    y: 38,
     direction: 0,
   });
   const pump = command({
     type: "placePump",
     containmentProfileId: "lined",
     x: 27,
-    y: 40,
+    y: 39,
     direction: 0,
   });
   command({
     type: "placePipes",
     containmentProfileId: "lined",
-    points: [{ x: 28, y: 40, inlet: 2, outlet: 0 }],
+    points: [{ x: 28, y: 39, inlet: 2, outlet: 0 }],
   });
   const vaporizer = command({
     type: "placeMachine",
     definitionId: "vaporizer",
     x: 29,
-    y: 39,
+    y: 38,
     direction: 0,
   });
   const feed = command({
     type: "placeCompressor",
     x: 31,
-    y: 40,
-    direction: 0,
-  });
-  command({
-    type: "placePressureLines",
-    points: [{ x: 32, y: 40, inlet: 2, outlet: 0 }],
-  });
-  command({
-    type: "placePressureVessel",
-    x: 33,
     y: 39,
     direction: 0,
   });
-  const outlet = command({
-    type: "placeCompressor",
-    x: 35,
-    y: 40,
-    direction: 0,
-  });
   command({
     type: "placePressureLines",
-    points: [{ x: 36, y: 40, inlet: 2, outlet: 0 }],
+    points: [32, 33, 34, 35, 36].map((x) => ({
+      x,
+      y: 39,
+      inlet: 2,
+      outlet: 0,
+    })),
   });
   const collector = command({
     type: "placeMachine",
     definitionId: "gas-collector",
     x: 37,
-    y: 39,
+    y: 38,
     direction: 0,
   });
 
@@ -169,7 +158,6 @@ it("completes the Phase 10 manufactured exploration loop in one persistent world
   command({ type: "setPumpEnabled", id: pump, enabled: false });
   command({ type: "setEnabled", machineId: vaporizer, enabled: false });
   command({ type: "setCompressorEnabled", id: feed, enabled: false });
-  command({ type: "setCompressorEnabled", id: outlet, enabled: false });
   command({ type: "setEnabled", machineId: collector, enabled: false });
 
   expect(
