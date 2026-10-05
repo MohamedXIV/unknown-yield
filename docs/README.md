@@ -69,3 +69,5 @@ Prefer a small complete loop over broad half-built systems. New infrastructure m
 - [PHASE14_EXIT_REVIEW.md](PHASE14_EXIT_REVIEW.md) — Phase 14 #144 integrated layered-logistics gate and #141–#143 evidence decisions.
 
 - [PHASE15_MATERIAL_FAMILIES.md](PHASE15_MATERIAL_FAMILIES.md) — Phase 15 #145 representative differentiated material-family contract.
+
+- [PHASE15_KNOWLEDGE_GRAPH.md](PHASE15_KNOWLEDGE_GRAPH.md) — Phase 15 #146 evidence-gated partial knowledge graph without recipe spoilers.
