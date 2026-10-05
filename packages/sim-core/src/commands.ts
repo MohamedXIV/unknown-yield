@@ -1125,8 +1125,12 @@ export function applyCommand(
     }
     case "dismantle": {
       {
-        const solid = s.undergroundSolids[cmd.id],
-          liquid = s.undergroundLiquids[cmd.id];
+        const solid = Object.hasOwn(s.undergroundSolids, cmd.id)
+            ? s.undergroundSolids[cmd.id]
+            : undefined,
+          liquid = Object.hasOwn(s.undergroundLiquids, cmd.id)
+            ? s.undergroundLiquids[cmd.id]
+            : undefined;
         if (solid || liquid) {
           if (solid?.cargo || (liquid?.quantity ?? 0) > 0)
             return fail("Drain underground route contents before dismantling");
