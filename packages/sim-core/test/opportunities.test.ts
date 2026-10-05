@@ -286,7 +286,7 @@ describe("Corporate Orders and Special Directives", () => {
 
     const restored = new Simulation(content);
     expect(restored.load(JSON.parse(JSON.stringify(partial))).ok).toBe(true);
-    expect(restored.serialize().schemaVersion).toBe(26);
+    expect(restored.serialize().schemaVersion).toBe(27);
     expect(restored.serialize().opportunities).toEqual(partial.opportunities);
 
     const legacy = JSON.parse(
@@ -296,7 +296,7 @@ describe("Corporate Orders and Special Directives", () => {
     delete legacy.opportunities;
     const migrated = new Simulation(historicalFixture);
     expect(migrated.load(legacy).ok).toBe(true);
-    expect(migrated.serialize().schemaVersion).toBe(26);
+    expect(migrated.serialize().schemaVersion).toBe(27);
     expect(migrated.serialize().opportunities).toEqual({});
   });
 });
