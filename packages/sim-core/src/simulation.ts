@@ -44,13 +44,32 @@ export class Simulation {
     this.state = initialState(this.content);
   }
   command(input: unknown): CommandResult {
-    const result = applyCommand(this.content, this.state, input, true);
+    const commandInput =
+        typeof input === "object" && input !== null
+          ? (input as Record<string, unknown>)
+          : null,
+      commandType =
+        commandInput && "type" in commandInput ? String(commandInput.type) : "",
+      divertSelectionBefore =
+        commandType === "setDivertRoute" &&
+        typeof commandInput?.beltId === "string"
+          ? Object.values(this.state.belts).find(
+              (belt) => belt.id === commandInput.beltId,
+            )?.switched
+          : undefined,
+      requestedDivertSelection =
+        commandType === "setDivertRoute"
+          ? commandInput?.route === "alternate"
+          : undefined,
+      result = applyCommand(this.content, this.state, input, true);
     if (result.ok) {
-      const commandType =
-        typeof input === "object" && input !== null && "type" in input
-          ? String(input.type)
-          : "";
-      if (commandType === "sense") {
+      if (
+        commandType === "setDivertRoute" &&
+        divertSelectionBefore === requestedDivertSelection
+      ) {
+        // Idempotent district automation must not erase otherwise valid
+        // throughput certificates when authoritative routing did not change.
+      } else if (commandType === "sense") {
         // Sensing changes knowledge only; it must not disturb production
         // throughput measurement state.
       } else if (
