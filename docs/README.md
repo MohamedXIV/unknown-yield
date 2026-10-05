@@ -57,3 +57,5 @@ Prefer a small complete loop over broad half-built systems. New infrastructure m
 - [PHASE13_MARKET_MEMORY.md](PHASE13_MARKET_MEMORY.md) — Phase 13 #135 discovery-created demand shocks and persistent market memory.
 
 - [PHASE13_PROPERTY_DIRECTIVES.md](PHASE13_PROPERTY_DIRECTIVES.md) — Phase 13 #136 hidden-solution property directives and physical import-allocation rewards.
+
+- [PHASE13_STRATEGIC_STOCKPILES.md](PHASE13_STRATEGIC_STOCKPILES.md) — Phase 13 #137 physical stockpile and delayed demand-response proof.
