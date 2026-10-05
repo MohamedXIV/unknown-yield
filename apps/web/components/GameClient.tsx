@@ -221,6 +221,9 @@ function GameClientInner() {
   const selectedDefinition = machine
     ? snapshot.definitions.find((d) => d.id === machine.definitionId)
     : undefined;
+  const selectedFuelClass = machine?.fuelClassId
+    ? snapshot.fuelClasses.find((entry) => entry.id === machine.fuelClassId)
+    : undefined;
   const selectedCapabilities = pressureLine
     ? snapshot.gasLogistics!.line.containmentCapabilities
     : pressureVessel
@@ -286,6 +289,25 @@ function GameClientInner() {
       snapshot.storageDefinitions.find((d) => d.id === tool)?.nameKey;
     return key ? t(key) : (genericNames[tool] ?? tool);
   };
+  const withFuelRequirement = (
+    tool: Tool,
+    description: string | undefined,
+  ) => {
+    const definition = snapshot.definitions.find((entry) => entry.id === tool);
+    const fuelClass = definition?.fuelClassId
+      ? snapshot.fuelClasses.find((entry) => entry.id === definition.fuelClassId)
+      : undefined;
+    return fuelClass
+      ? (description ?? "") +
+          " Operating fuel: " +
+          t(fuelClass.nameKey) +
+          " · " +
+          definition!.fuel +
+          " unit" +
+          (definition!.fuel === 1 ? "" : "s") +
+          " per batch."
+      : description;
+  };
   // Furnace descriptions name their operation, which is content data.
   const toolDescription = (tool: Tool) => {
     if (
@@ -301,7 +323,8 @@ function GameClientInner() {
       return t("ui.gas." + tool + ".description");
     if (["pipe", "tank", "pump", "liquefier", "precipitator"].includes(tool))
       return t("ui.liquid." + tool + ".description");
-    if (tool === "sinterer") return t("ui.machine.sinterer.description");
+    if (tool === "sinterer")
+      return withFuelRequirement(tool, t("ui.machine.sinterer.description"));
     const unlock = unlockFor(tool);
     if (unlock && !unlock.unlocked)
       return "Locked · Requires " + t(unlock.hintKey) + ".";
@@ -311,7 +334,7 @@ function GameClientInner() {
       tool !== "oversealed-furnace" &&
       tool !== "relief-furnace"
     )
-      return descriptions[tool];
+      return withFuelRequirement(tool, descriptions[tool]);
     const key = snapshot.operations.find((o) => o.id === "heat")?.nameKey;
     const base =
       descriptions[tool] +
@@ -1054,12 +1077,32 @@ function GameClientInner() {
                     </div>
                     <div className="facts">
                       <span>
-                        Fuel / batch<b>{machine.fuelCost}</b>
+                        {selectedFuelClass
+                          ? t(selectedFuelClass.nameKey)
+                          : t("ui.machine.fuel.company")}{" "}
+                        / batch
+                        <b>{machine.fuelCost}</b>
                       </span>
                       <span>
                         Batch time<b>{machine.durationMs / 1000}s</b>
                       </span>
                     </div>
+                    {selectedFuelClass && (
+                      <p className="hint">
+                        {t("ui.machine.fuel.terminal-held", {
+                          count: selectedFuelClass.held,
+                          module: t(
+                            snapshot.terminalModules.find(
+                              (entry) =>
+                                entry.id === selectedFuelClass.terminalModuleId,
+                            )?.nameKey ?? selectedFuelClass.terminalModuleId,
+                          ),
+                        })}
+                        {!selectedFuelClass.unlocked
+                          ? " · " + t("ui.machine.fuel.locked")
+                          : ""}
+                      </p>
+                    )}
                     {machine.operation && (
                       <label className="operation-label">
                         Operation
