@@ -62,7 +62,7 @@ it("physically stockpiles production before a later order, then releases it thro
   const draft = structuredClone(fixture);
   // Slow only the company cadence so real production can build inventory
   // before the first opportunity evaluation.
-  draft.economy.marketEveryTicks = 400;
+  draft.economy.marketEveryTicks = 600;
   const content = validateContent(draft);
   const sim = new Simulation(content);
   unlockGranuleHandling(sim, content);
@@ -112,10 +112,16 @@ it("physically stockpiles production before a later order, then releases it thro
   for (let y = 29; y >= 21; y--) toDepot.push({ x: 9, y });
   build(sim, { type: "placeBelts", points: toDepot, direction: 0 });
 
-  // Tick 350 is deliberately before the first market/opportunity cadence at
-  // tick 400. Production is real, but there is still no company order.
-  sim.step(content.tickMs * 350);
-  expect(sim.serialize().tick).toBe(350);
+  // Wait for a real four-unit stockpile, but never cross the first
+  // market/opportunity cadence at tick 600. This proves production/storage
+  // causally precedes the company signal without depending on one fragile
+  // fixed throughput timestamp.
+  while (
+    (storageInventory(sim).granules ?? 0) < 4 &&
+    sim.serialize().tick < content.economy.marketEveryTicks - 10
+  )
+    sim.step(content.tickMs * 10);
+  expect(sim.serialize().tick).toBeLessThan(content.economy.marketEveryTicks);
   expect(storageInventory(sim).granules ?? 0).toBeGreaterThanOrEqual(4);
   expect(sim.serialize().opportunities["granules-procurement"]).toBeUndefined();
   expect(sim.serialize().flows.exported.granules ?? 0).toBe(0);
@@ -132,9 +138,12 @@ it("physically stockpiles production before a later order, then releases it thro
     sim.command({ type: "setEnabled", machineId: crusherId, enabled: false }).ok,
   ).toBe(true);
 
-  sim.step(content.tickMs * 50);
+  sim.step(
+    content.tickMs *
+      (content.economy.marketEveryTicks - sim.serialize().tick),
+  );
   const offered = sim.serialize().opportunities["granules-procurement"];
-  expect(sim.serialize().tick).toBe(400);
+  expect(sim.serialize().tick).toBe(content.economy.marketEveryTicks);
   expect(offered).toMatchObject({ status: "offered", progress: 0 });
   const heldAtOffer = storageInventory(sim).granules ?? 0;
   expect(heldAtOffer).toBeGreaterThanOrEqual(4);
