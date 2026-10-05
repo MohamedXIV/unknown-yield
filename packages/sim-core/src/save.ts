@@ -36,6 +36,7 @@ import {
   storageError,
   wall,
   key,
+  contains,
   gasPlacementError,
   liquidPlacementError,
   footprint,
