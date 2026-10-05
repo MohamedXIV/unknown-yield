@@ -421,6 +421,7 @@ describe("content boundary", () => {
     };
     legacy.version = "world-01-v6";
     delete legacy.economy.imports;
+    delete legacy.economy.demandShocks;
     delete legacy.economy.orders;
     delete legacy.economy.directives;
     delete legacy.economy.terminalCapabilities;
@@ -449,6 +450,7 @@ describe("content boundary", () => {
     const parsed = validateContent(legacy);
     expect(parsed.version).toBe("world-01-v6");
     expect(parsed.economy.imports).toEqual([]);
+    expect(parsed.economy.demandShocks).toEqual([]);
     expect(parsed.economy.orders).toEqual([]);
     expect(parsed.economy.directives).toEqual([]);
     expect(parsed.economy.terminalCapabilities).toEqual([]);
