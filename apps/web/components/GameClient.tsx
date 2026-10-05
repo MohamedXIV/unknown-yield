@@ -81,6 +81,8 @@ const descriptions: Partial<Record<Tool, string>> = {
     "Place entirely on a surface deposit. The arrow marks its output belt cell.",
   "deep-extractor":
     "Reach discovered deep deposits that the basic extractor cannot access. Uses more fuel per extraction batch.",
+  sinterer:
+    "Place inside a factory. Feed discovered solid inputs by belt; output leaves by belt.",
   factory: "Drag a rectangle, 6–20 cells per side. Click for a 6×6 factory.",
   crusher: "Place inside a factory. Cyan is input; gold is output.",
   furnace: "Place inside a factory.",
@@ -1916,6 +1918,7 @@ function GameClientInner() {
               "extractor",
               "deep-extractor",
               "atmospheric-intake",
+              "sinterer",
               "factory",
               "crusher",
               "furnace",
@@ -1958,7 +1961,9 @@ function GameClientInner() {
                       ? "extractor"
                       : tool === "atmospheric-intake"
                         ? "compressor"
-                        : tool
+                        : tool === "sinterer"
+                          ? "furnace"
+                          : tool
                 }
                 size={25}
               />

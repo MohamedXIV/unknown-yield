@@ -1,6 +1,6 @@
 # Phase 10 integrated exit review — #119
 
-Status: AUTOMATED INTEGRATION IMPLEMENTED; browser acceptance is not yet claimed.
+Status: AUTOMATED INTEGRATION + CI BROWSER ACCEPTANCE IMPLEMENTED; exact-head CI remains the merge gate.
 
 ## Exit contract
 
@@ -23,6 +23,8 @@ The scenario first manufactures the sealed-Heat result required by the accepted 
 
 Before that unlock, the catalyst seam is absent from both snapshot and raw save. The exact resonance probe at the authored signal then materializes the source. A deep extractor physically removes catalyst units, belts carry them into a Sinterer, and the hidden Sinter result produces resonant matrix. Matrix becomes visible/useful only after the real reaction is confirmed.
 
+The same persistent world also exercises the distinct #117 non-surface source: the core probe identifies the authored atmospheric plume, an Atmospheric intake removes finite source units, and the captured gas crosses the real compressor/pressure-line path into a Gas collector. This prevents the Phase 10 gate from passing while the accepted atmospheric acquisition shape is broken.
+
 The material ledger is audited after every accepted command and every simulation tick. Generic discarded flow must remain empty. The completed expedition is serialized, restored into a second simulation, and both worlds are advanced for 60 ticks with exact serialized-future equality and conservation checks.
 
 ## Verification boundary
@@ -36,4 +38,8 @@ npm run lint
 npm run build
 ```
 
-Browser acceptance is a separate #119 requirement because the issue explicitly asks for it. No browser/visual evidence is recorded as PASS until a real playable session verifies the Phase 10 interaction path. A browser-only gate must not rewrite the deterministic domain evidence above.
+Browser acceptance is a separate #119 requirement because the issue explicitly asks for it. `apps/web/test/phase10-browser-acceptance.test.ts` runs only in CI, starts the real Next player app, launches a real headless Chrome/Chromium instance through the Chrome DevTools Protocol, and verifies the player-facing Phase 10 wiring.
+
+The browser gate requires a Phaser canvas, Deep extractor and Atmospheric intake visibly locked in a fresh world, the correct prerequisite notice when a locked Deep extractor is clicked, and the Sinterer present and selectable from the build toolbar. This specifically guards the integration gap found during #119 review where the Sinterer existed in sim/content but had no player build-tool wiring.
+
+The browser check deliberately does not duplicate authoritative production/progression inside presentation code. The deterministic domain scenario above owns the full manufacturing, discovery, extraction, conservation and save/load proof; Chromium owns the player-facing wiring proof.

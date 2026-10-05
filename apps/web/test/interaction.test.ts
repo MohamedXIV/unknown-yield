@@ -81,6 +81,25 @@ it("maps the atmospheric intake to a distinct machine build command", () => {
   });
 });
 
+it("maps the Sinterer to the authored machine definition", () => {
+  expect(TOOL_HOTKEYS.sinterer).toBe("N");
+  const s = new Simulation(fixture).snapshot();
+  expect(
+    buildCommand(
+      { ...DEFAULT_MODE, tool: "sinterer" },
+      s,
+      { x: 63, y: 9 },
+      null,
+    ),
+  ).toEqual({
+    type: "placeMachine",
+    definitionId: "sinterer",
+    x: 63,
+    y: 9,
+    direction: 0,
+  });
+});
+
 it("maps the deep extractor to a distinct machine build command", () => {
   expect(TOOL_HOTKEYS["deep-extractor"]).toBe("0");
   const s = new Simulation(fixture).snapshot();
