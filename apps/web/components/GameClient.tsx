@@ -1231,6 +1231,66 @@ function GameClientInner() {
                         Trim south
                       </button>
                     </div>
+                    <h3>Intact relocation</h3>
+                    <p className="hint">
+                      Move the shell and its internal equipment together by one
+                      cell. External belts, pipes and cargo outside the wall
+                      stay at the source and are never dragged along.
+                    </p>
+                    <div className="button-row">
+                      <button
+                        className="secondary"
+                        onClick={() =>
+                          act({
+                            type: "relocateFactory",
+                            factoryId: factory.id,
+                            x: factory.x - 1,
+                            y: factory.y,
+                          })
+                        }
+                      >
+                        Move west
+                      </button>
+                      <button
+                        className="secondary"
+                        onClick={() =>
+                          act({
+                            type: "relocateFactory",
+                            factoryId: factory.id,
+                            x: factory.x + 1,
+                            y: factory.y,
+                          })
+                        }
+                      >
+                        Move east
+                      </button>
+                      <button
+                        className="secondary"
+                        onClick={() =>
+                          act({
+                            type: "relocateFactory",
+                            factoryId: factory.id,
+                            x: factory.x,
+                            y: factory.y - 1,
+                          })
+                        }
+                      >
+                        Move north
+                      </button>
+                      <button
+                        className="secondary"
+                        onClick={() =>
+                          act({
+                            type: "relocateFactory",
+                            factoryId: factory.id,
+                            x: factory.x,
+                            y: factory.y + 1,
+                          })
+                        }
+                      >
+                        Move south
+                      </button>
+                    </div>
                     <h3>External contract</h3>
                     {factoryPresentation && (
                       <div

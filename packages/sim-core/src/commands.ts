@@ -11,6 +11,7 @@ import { applySensingObservation } from "./sensing";
 import {
   factoryError,
   factoryReshapeError,
+  factoryRelocationError,
   machinePlacement,
   portError,
   beltError,
@@ -24,6 +25,8 @@ import {
   liquidRects,
   overlaps,
   next,
+  inside,
+  footprint,
 } from "./geometry";
 const coordinate = z.number().int().min(0).max(10000),
   direction = z.number().int().min(0).max(3),
@@ -113,6 +116,11 @@ const schema = z.discriminatedUnion("type", [
     ...point,
     width: z.number().int().positive(),
     height: z.number().int().positive(),
+  }),
+  z.object({
+    type: z.literal("relocateFactory"),
+    factoryId: z.string(),
+    ...point,
   }),
   z.object({
     type: z.literal("placeMachine"),
@@ -582,6 +590,86 @@ export function applyCommand(
       factory.width = cmd.width;
       factory.height = cmd.height;
       return ok("Factory shell reshaped", cost, factory.id);
+    }
+    case "relocateFactory": {
+      const factory = Object.hasOwn(s.factories, cmd.factoryId)
+        ? s.factories[cmd.factoryId]
+        : undefined;
+      if (!factory) return fail("Unknown factory");
+      const error = factoryRelocationError(c, s, factory, cmd);
+      if (error) return fail(error);
+      if (!apply) return ok("Relocate factory");
+
+      const dx = cmd.x - factory.x,
+        dy = cmd.y - factory.y,
+        belts = Object.values(s.belts).filter((belt) =>
+          contains(factory, belt),
+        ),
+        pipes = Object.values(s.pipes).filter((pipe) =>
+          contains(factory, pipe),
+        ),
+        lines = Object.values(s.pressureLines).filter((line) =>
+          contains(factory, line),
+        ),
+        machines = Object.values(s.machines).filter(
+          (machine) => machine.factoryId === factory.id,
+        ),
+        pumps = Object.values(s.pumps).filter((pump) =>
+          contains(factory, pump),
+        ),
+        tanks = c.liquidLogistics
+          ? Object.values(s.tanks).filter((tank) =>
+              inside(factory, footprint(tank, c.liquidLogistics!.tank)),
+            )
+          : [],
+        compressors = Object.values(s.compressors).filter((compressor) =>
+          contains(factory, compressor),
+        ),
+        vessels = c.gasLogistics
+          ? Object.values(s.pressureVessels).filter((vessel) =>
+              inside(factory, footprint(vessel, c.gasLogistics!.vessel)),
+            )
+          : [];
+
+      for (const belt of belts) delete s.belts[key(belt)];
+      for (const pipe of pipes) delete s.pipes[key(pipe)];
+      for (const line of lines) delete s.pressureLines[key(line)];
+
+      factory.x += dx;
+      factory.y += dy;
+      for (const port of factory.ports) {
+        port.x += dx;
+        port.y += dy;
+      }
+      for (const machine of machines) {
+        machine.x += dx;
+        machine.y += dy;
+      }
+      for (const belt of belts) {
+        belt.x += dx;
+        belt.y += dy;
+        s.belts[key(belt)] = belt;
+      }
+      for (const pipe of pipes) {
+        pipe.x += dx;
+        pipe.y += dy;
+        s.pipes[key(pipe)] = pipe;
+      }
+      for (const line of lines) {
+        line.x += dx;
+        line.y += dy;
+        s.pressureLines[key(line)] = line;
+      }
+      for (const item of [
+        ...pumps,
+        ...tanks,
+        ...compressors,
+        ...vessels,
+      ]) {
+        item.x += dx;
+        item.y += dy;
+      }
+      return ok("Factory relocated", 0, factory.id);
     }
     case "placeMachine": {
       const def = c.machines.find((d) => d.id === cmd.definitionId);
