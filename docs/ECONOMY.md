@@ -187,3 +187,14 @@ The Materials Exchange now has explicit authored demand shocks instead of arbitr
 On the ordinary slow market cadence, saturation first recovers toward zero, then a newly eligible shock is applied exactly once and recorded in persisted `marketSignals`. Demand subsequently moves deterministically back toward the listing's authored baseline by `demandRecoveryPerMarketTickBps`; the bulletin history remains even after demand normalizes. Repeated save/load therefore cannot replay a shock or forget why demand moved.
 
 The Phase 13 fixture uses the first confirmed `sinter-orbital-binder` matrix result to reveal the already-authored Resonant matrix listing, offer a bounded Matrix procurement order, and issue an **Orbital resonance application identified** bulletin that raises demand from 100% to 150% before slow recovery. Discovering the alternate catalyst route does not falsely claim that specific application.
+
+
+## Phase 13 — property and experimental Special Directives (#136)
+
+Special Directives now have a second authored form for **needs whose solution should remain the player's problem**. A property directive names a company-facing target material plus a localized property/quality goal, but its acceptable reaction IDs stay authoritative-only and are never copied into the player snapshot. Eligibility requires the target material to be company-known and at least one still-unconfirmed acceptable route to be physically executable with an unlocked machine.
+
+The accepted fixture proves this with `matrix-local-route`. The company can already know Resonant matrix through the off-world Orbital binder route, then ask for a **local stable route** without saying “use catalyst” or naming `sinter-catalyst`. Confirming one authored acceptable reaction while the offer is active completes the directive exactly once.
+
+Rewards are no longer fuel-only. A property directive may award fuel and/or one persisted import allocation. The fixture awards one `orbital-coolant-canister` allocation. Claiming that allocation still goes through the existing terminal handling command and its physical capability/install/identity/capacity gates; a failed claim preserves the allocation. A successful claim consumes exactly one allocation, costs zero fuel, and materializes the same conserved physical import cargo as an ordinary paid request.
+
+The generic `propertyKey` is presentation semantics such as purity, stability, prototype fitness or another company-observable quality. It does not add a hidden numeric “quality meter” or reveal the reaction chosen to satisfy it. New quality breadth should remain content-driven until a real simulation property requires a separate conserved/derived state.

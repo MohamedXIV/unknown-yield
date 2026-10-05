@@ -552,3 +552,21 @@ Runtime import holdings are save data, not content inventory. Save schema 23 per
 `economy.imports[].terminalModuleId` optionally binds an import to one authored module. Omitting it is valid only for a known solid material compatible with the site's ordinary dry containment. A bound import must match the module's handling state and containment capabilities, and one authored delivery must fit the module capacity. Import materials remain import-only at this progression point and cannot also be exchange listings.
 
 Cryogenic, hazardous and secure cargo do not introduce new material states. They are represented by ordinary containment capabilities (`cryogenic-rated`, `hazard-isolated`, `secure-chain`) that compose with the existing solid/liquid/gas state and Phase 9 containment checks.
+
+
+### Phase 13 property directives — #136
+
+`economy.propertyDirectives` authors:
+- stable directive identity + localized name/brief;
+- a localized `propertyKey` describing the company-facing target quality/property;
+- one known target material;
+- one or more hidden acceptable `solutionReactionIds`;
+- duration;
+- optional fuel reward;
+- optional import-supply reward.
+
+At least one reward is required. Every acceptable reaction must begin unconfirmed and must produce the target material. Duplicate solutions, missing reward supplies and identity collisions with Orders/ordinary Directives are invalid. Presentation keys follow `directive.<id>.*` and `property.<id>.name`.
+
+The acceptable reaction list is **not presentation data**. Player views expose the target material/property and reward only; they do not contain solution IDs, hidden inputs or recipes. This lets purity/stability/prototype-style needs remain authored semantic goals while the player chooses the industrial route that satisfies them.
+
+Import rewards create persisted company allocations keyed by authored import-supply ID. They do not embed material quantities in opportunity state and do not bypass terminal logistics.
