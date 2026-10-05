@@ -67,3 +67,5 @@ Prefer a small complete loop over broad half-built systems. New infrastructure m
 - [PHASE14_ELEVATED.md](PHASE14_ELEVATED.md) — Phase 14 #140 support-constrained elevated solid gantry contract.
 
 - [PHASE14_EXIT_REVIEW.md](PHASE14_EXIT_REVIEW.md) — Phase 14 #144 integrated layered-logistics gate and #141–#143 evidence decisions.
+
+- [PHASE15_MATERIAL_FAMILIES.md](PHASE15_MATERIAL_FAMILIES.md) — Phase 15 #145 representative differentiated material-family contract.
