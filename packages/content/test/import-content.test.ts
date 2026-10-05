@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { fixture, validateContent } from "../src";
+import { contentKeys, fixture, validateContent } from "../src";
 
 it("authors an import-only specialized solid supply", () => {
   const content = validateContent(fixture);
@@ -11,6 +11,12 @@ it("authors an import-only specialized solid supply", () => {
       fuelCost: 42,
     }),
   ]);
+  expect(contentKeys(content)).toEqual(
+    expect.arrayContaining([
+      "import.orbital-binder-crate.name",
+      "import.orbital-binder-crate.brief",
+    ]),
+  );
   expect(
     content.reactions.some((reaction) => reaction.output === "orbital-binder"),
   ).toBe(false);

@@ -40,6 +40,7 @@ export function contentKeys(c: Content): string[] {
         ? [r.hazard.nameKey, r.hazard.observationKey, r.hazard.saferHintKey]
         : [],
     ),
+    ...c.economy.imports.flatMap((supply) => [supply.nameKey, supply.briefKey]),
     ...c.economy.orders.flatMap((order) => [order.nameKey, order.briefKey]),
     ...c.economy.directives.flatMap((directive) => [
       directive.nameKey,
