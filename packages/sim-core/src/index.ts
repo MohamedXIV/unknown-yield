@@ -91,6 +91,7 @@ export type {
   Belt,
   UndergroundSolidRoute,
   UndergroundLiquidRoute,
+  ElevatedSolidRoute,
   Point,
   Rect,
 } from "./types";
@@ -137,3 +138,6 @@ export {
 export { beltArms } from "./junctions";
 
 export { advanceUndergroundRoutes, undergroundSolidCost, undergroundLiquidCost } from "./underground";
+
+export { advanceElevatedRoutes, elevatedSolidCost } from "./elevated";
+export { cardinalSpan, elevatedDeckPoints, elevatedSupportPoints } from "./geometry";
