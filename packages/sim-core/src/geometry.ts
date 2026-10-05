@@ -527,9 +527,11 @@ export function machinePlacement(
       ),
     ) ||
     Object.values(s.belts).some((b) => contains(r, b)) ||
-    [...liquidRects(c, s), ...gasRects(c, s)].some((other) =>
-      overlaps(r, other),
-    )
+    [
+      ...liquidRects(c, s),
+      ...gasRects(c, s),
+      ...undergroundPortalRects(s),
+    ].some((other) => overlaps(r, other))
   )
     return fail("Space is already occupied");
   if (d.role === "extractor") {
