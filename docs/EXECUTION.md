@@ -53,7 +53,7 @@ This document is intentionally procedural. Game/design truth lives in the domain
 - Completed phase: **Phase 10 — industrial exploration and deep extraction (#101)**.
 - Completed phase: **Phase 11 — hazardous science and recovery (#102)**.
 - Completed phase: **Phase 12 — factory lifecycle and reconfiguration (#103)**. #126–#129 landed; #130 and #131 closed not planned under their recorded evidence/user decisions, with no false integrated-exit PASS claim for #131.
-- Completed phase: **Phase 13 — terminal and off-world exchange depth (#104)** (closed after #138 / PR #192, main `a42e6e94a9f41588ddd4ecc19efea3829f8ddb42`). #132–#138 are complete; integrated evidence: [PHASE13_EXIT_REVIEW.md](PHASE13_EXIT_REVIEW.md). Current gameplay phase: **Phase 14 — layered and long-distance logistics (#105)**. #139 underground routes and #140 elevated gantries are accepted; **#141–#143 closed NOT PLANNED after their evidence gates**. **#144 integrated exit review is ACTIVE**.
+- Completed phase: **Phase 13 — terminal and off-world exchange depth (#104)** (closed after #138 / PR #192, main `a42e6e94a9f41588ddd4ecc19efea3829f8ddb42`). #132–#138 are complete; integrated evidence: [PHASE13_EXIT_REVIEW.md](PHASE13_EXIT_REVIEW.md). Current gameplay phase: **Phase 14 — layered and long-distance logistics (#105)**. #139 underground routes and #140 elevated gantries are accepted; **#141–#143 closed NOT PLANNED after their evidence gates**. **#144 integrated exit review is ACTIVE in PR #196**.
 
 ## Phase 1.5 dependency graph
 
@@ -219,7 +219,7 @@ GitHub Actions CI is intentionally budget-conscious: it runs the full `npm test`
 - #102 — Phase 11 hazardous industrial science and recovery — COMPLETE through #125 / PR #180.
 - #103 — Phase 12 factory lifecycle and district reconfiguration — COMPLETE; #126–#129 landed, while #130 and #131 closed NOT PLANNED under their recorded evidence/decisions.
 - #104 — Phase 13 terminal and off-world exchange depth — COMPLETE through #138 / PR #192 / `a42e6e94a9f41588ddd4ecc19efea3829f8ddb42`.
-- #105 — Phase 14 layered and long-distance logistics — ACTIVE; #139–#140 accepted, #141–#143 CLOSED NOT PLANNED under evidence. #144 integrated exit review is ACTIVE.\n- #106–#107 — Phases 15–16 — dependency-ordered later queues; neither is implicitly active.
+- #105 — Phase 14 layered and long-distance logistics — ACTIVE; #139–#140 accepted, #141–#143 CLOSED NOT PLANNED under evidence. #144 integrated exit review is ACTIVE in PR #196.\n- #106–#107 — Phases 15–16 — dependency-ordered later queues; neither is implicitly active.
 - Phase 8 — art production pipeline — parallel planned track, selected explicitly when useful.
 - Completed Phase 7 baseline: **#90 — single-world simulation/snapshot baseline**, through PR #91. Evidence: PHASE7_BASELINE.md. Phase 7 remains deferred; #92 profiling completed through PR #93; 32-factory / 10ms joint-p95 budget FAILS. Evidence: PHASE7_PROFILING.md. Optimization #94 is complete through PR #95: shared connected topology indexing within each throughput observation; all dynamic recurrence checks retained. Browser costs remain a separate gate.
 
