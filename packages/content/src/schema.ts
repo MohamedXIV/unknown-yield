@@ -1016,13 +1016,8 @@ function validateContentInternal(
     const module = c.site.terminalModules.find(
       (entry) => entry.id === fuelClass.terminalModuleId,
     );
-    const supply = c.economy.imports.find(
-      (entry) =>
-        entry.materialId === fuelClass.materialId &&
-        entry.terminalModuleId === fuelClass.terminalModuleId,
-    );
-    if (!material || !module || !supply)
-      throw new Error("Fuel class requires a physical imported terminal supply");
+    if (!material || !module)
+      throw new Error("Fuel class requires a physical terminal reservoir");
     if (!milestoneIds.has(fuelClass.requiredMilestoneId))
       throw new Error("Fuel class references missing milestone");
     if (
