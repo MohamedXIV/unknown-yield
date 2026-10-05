@@ -1,5 +1,5 @@
 import type { Content } from "@site/content";
-import { change, type Machine } from "./types";
+import { change, type Machine, type Save } from "./types";
 
 export type HazardReaction = Content["reactions"][number];
 export type HazardInstance = NonNullable<HazardReaction["hazard"]>;
@@ -48,6 +48,7 @@ export function hazardDefinition(
  */
 export function applyReactionHazard(
   content: Content,
+  state: Save,
   machine: Machine,
   reaction: HazardReaction,
 ): void {
@@ -58,6 +59,8 @@ export function applyReactionHazard(
   );
   if (!classDefinition)
     throw new Error("Reaction references an unknown hazard class");
+  if (!state.hazardEvidence.includes(reaction.hazard.id))
+    state.hazardEvidence.push(reaction.hazard.id);
 
   switch (classDefinition.machineEffect) {
     case "lockout": {

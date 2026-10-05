@@ -101,7 +101,7 @@ export function completeAndStart(
               : "keep";
           ensureMarket(c, s, material);
         }
-        if (r?.hazard) applyReactionHazard(c, m, r);
+        if (r?.hazard) applyReactionHazard(c, s, m, r);
         m.job = null;
       }
     } else if (status(c, s, m) === "ready") {

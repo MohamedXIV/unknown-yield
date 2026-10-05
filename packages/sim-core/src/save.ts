@@ -172,6 +172,7 @@ const schema = z.object({
   stock: inventory,
   knowledge: z.array(safeId),
   evidence: z.record(z.string().min(1), evidence).default({}),
+  hazardEvidence: z.array(safeId).default([]),
   sensingObservations: z
     .record(
       z.string().min(1),
@@ -312,6 +313,7 @@ export function initialState(c: Content): Save {
           ];
         }),
     ),
+    hazardEvidence: [],
     sensingObservations: {},
     discoveredDeposits: [],
     // Hidden deposits are deliberately absent until discovery so raw saves do
@@ -511,6 +513,15 @@ export function parseSave(input: unknown, c: Content): Save {
     c.reactions.some((r) => r.known && !s.knowledge.includes(r.id))
   )
     throw new Error("Invalid knowledge");
+  if (
+    new Set(s.hazardEvidence).size !== s.hazardEvidence.length ||
+    s.hazardEvidence.some((hazardId) => {
+      const hazard = hazardDefinition(c, hazardId);
+      return !hazard || !s.knowledge.includes(hazard.reaction.id);
+    })
+  )
+    throw new Error("Invalid hazard evidence");
+
   const known = new Set(c.materials.filter((m) => m.known).map((m) => m.id));
   c.reactions
     .filter((r) => s.knowledge.includes(r.id))

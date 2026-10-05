@@ -105,6 +105,20 @@ it("reproduces the same authored hazard class from the same authoritative state"
     classNameKey: "hazard.class.pressure-expansion.name",
     nameKey: "hazard.chamber-blowout.name",
     textKey: "hazard.chamber-blowout.observation",
+    evidenceKey: "hazard.class.pressure-expansion.evidence",
+    saferHintKey: "hazard.chamber-blowout.safer-hint",
+  });
+  expect(left.sim.snapshot().hazardEvidence).toContainEqual({
+    id: "chamber-blowout",
+    classId: "pressure-expansion",
+    classNameKey: "hazard.class.pressure-expansion.name",
+    nameKey: "hazard.chamber-blowout.name",
+    textKey: "hazard.chamber-blowout.observation",
+    evidenceKey: "hazard.class.pressure-expansion.evidence",
+    saferHintKey: "hazard.chamber-blowout.safer-hint",
+    operationId: "heat",
+    inputId: "raw",
+    setupNameKey: "machine.oversealed-furnace.name",
   });
   expect(right.sim.serialize()).toEqual(left.sim.serialize());
 });
@@ -202,6 +216,7 @@ it("persists a conservative stranded-output consequence without deleting materia
     sim.step(fixture.tickMs);
 
   const state = sim.serialize();
+  expect(state.hazardEvidence).toEqual(["slag-jam"]);
   expect(state.machines[processorId]).toMatchObject({
     incident: "slag-jam",
     enabled: false,
@@ -242,5 +257,19 @@ it("persists a conservative stranded-output consequence without deleting materia
   const restored = new Simulation(fixture);
   expect(restored.load(JSON.parse(JSON.stringify(state))).ok).toBe(true);
   expect(restored.serialize()).toEqual(state);
+  expect(restored.snapshot().hazardEvidence).toContainEqual(
+    expect.objectContaining({
+      id: "slag-jam",
+      classId: "instability",
+      evidenceKey: "hazard.class.instability.evidence",
+      saferHintKey: "hazard.slag-jam.safer-hint",
+      operationId: "heat",
+      inputId: "ferrite",
+      setupNameKey: "machine.oversealed-furnace.name",
+    }),
+  );
+  expect(
+    JSON.stringify(restored.snapshot().hazardEvidence),
+  ).not.toContain("heat-ferrite-sealed");
   expect(auditLedger(fixture, restored.serialize()).ok).toBe(true);
 });

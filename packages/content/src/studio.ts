@@ -73,6 +73,7 @@ const reactionRow = (reaction: Content["reactions"][number]) => ({
   hazardClassId: empty(reaction.hazard?.classId),
   hazardNameKey: empty(reaction.hazard?.nameKey),
   hazardObservationKey: empty(reaction.hazard?.observationKey),
+  hazardSaferHintKey: empty(reaction.hazard?.saferHintKey),
   known: reaction.known,
 });
 
@@ -314,7 +315,12 @@ function candidateFromStore(store: Store, base: Content): unknown {
         label,
       ),
       hazardNameKey = optionalText(row, "hazardNameKey", label),
-      hazardObservationKey = optionalText(row, "hazardObservationKey", label);
+      hazardObservationKey = optionalText(row, "hazardObservationKey", label),
+      hazardSaferHintKey = optionalText(
+        { hazardSaferHintKey: row.hazardSaferHintKey ?? "" },
+        "hazardSaferHintKey",
+        label,
+      );
     return {
       id,
       operation: stringCell(row, "operation", label),
@@ -326,16 +332,23 @@ function candidateFromStore(store: Store, base: Content): unknown {
       output: stringCell(row, "output", label),
       outputAmount: numberCell(row, "outputAmount", label),
       observationKey: stringCell(row, "observationKey", label),
-      ...(hazardId || hazardClassId || hazardNameKey || hazardObservationKey
-        ? {
-            hazard: {
-              id: hazardId ?? "",
-              classId: hazardClassId ?? "",
-              nameKey: hazardNameKey ?? "",
-              observationKey: hazardObservationKey ?? "",
-            },
-          }
-        : {}),
+      ...(
+        hazardId ||
+        hazardClassId ||
+        hazardNameKey ||
+        hazardObservationKey ||
+        hazardSaferHintKey
+          ? {
+              hazard: {
+                id: hazardId ?? "",
+                classId: hazardClassId ?? "",
+                nameKey: hazardNameKey ?? "",
+                observationKey: hazardObservationKey ?? "",
+                saferHintKey: hazardSaferHintKey ?? "",
+              },
+            }
+          : {}
+      ),
       known: booleanCell(row, "known", label),
     };
   });

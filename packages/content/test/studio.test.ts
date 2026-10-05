@@ -35,6 +35,9 @@ describe("Content Studio authoring core", () => {
     expect(
       store.getCell("reactions", "heat-raw-oversealed", "hazardClassId"),
     ).toBe("pressure-expansion");
+    expect(
+      store.getCell("reactions", "heat-raw-oversealed", "hazardSaferHintKey"),
+    ).toBe("hazard.chamber-blowout.safer-hint");
 
     expect(hasStudioEntity(store, "material", "raw")).toBe(true);
     expect(referencesTo(fixture, "material", "gas-0")).toContainEqual({

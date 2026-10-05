@@ -309,7 +309,7 @@ The player manufactures an industrial capability, uses it to reveal a previously
 
 ## Phase 11 — Hazardous industrial science and recovery
 
-**Epic:** GitHub Issue #102. **ACTIVE GAMEPLAY PHASE.** Children #120–#125. #120 is complete through PR #175; #121 is the active dependency-ready child.
+**Epic:** GitHub Issue #102. **ACTIVE GAMEPLAY PHASE.** Children #120–#125. #120 is complete through PR #175 and #121 through PR #176; #122 is the active dependency-ready child.
 
 ### Question
 
