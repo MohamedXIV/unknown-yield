@@ -207,15 +207,15 @@ it("completes the Phase 10 manufactured exploration loop in one persistent world
   });
   const atmosphereFactory = command({
     type: "placeFactory",
-    x: 56,
-    y: 21,
-    width: 10,
-    height: 10,
+    x: 61,
+    y: 22,
+    width: 6,
+    height: 6,
   });
   command({
     type: "placePort",
     factoryId: atmosphereFactory,
-    x: 65,
+    x: 66,
     y: 26,
     direction: 2,
   });
