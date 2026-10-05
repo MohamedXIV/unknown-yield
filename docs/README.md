@@ -71,3 +71,5 @@ Prefer a small complete loop over broad half-built systems. New infrastructure m
 - [PHASE15_MATERIAL_FAMILIES.md](PHASE15_MATERIAL_FAMILIES.md) — Phase 15 #145 representative differentiated material-family contract.
 
 - [PHASE15_KNOWLEDGE_GRAPH.md](PHASE15_KNOWLEDGE_GRAPH.md) — Phase 15 #146 evidence-gated partial knowledge graph without recipe spoilers.
+
+- [PHASE15_FUEL_PROGRESSION.md](PHASE15_FUEL_PROGRESSION.md) — Phase 15 #147 physical advanced/research operating fuel classes.
