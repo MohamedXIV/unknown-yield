@@ -55,7 +55,7 @@ This document is intentionally procedural. Game/design truth lives in the domain
 - Completed phase: **Phase 12 — factory lifecycle and reconfiguration (#103)**. #126–#129 landed; #130 and #131 closed not planned under their recorded evidence/user decisions, with no false integrated-exit PASS claim for #131.
 - Completed phase: **Phase 13 — terminal and off-world exchange depth (#104)** (closed after #138 / PR #192, main `a42e6e94a9f41588ddd4ecc19efea3829f8ddb42`). #132–#138 are complete; integrated evidence: [PHASE13_EXIT_REVIEW.md](PHASE13_EXIT_REVIEW.md).
 - Completed phase: **Phase 14 — layered and long-distance logistics (#105)** (closed after #144 / PR #196, main `04da68325c495f811e611c05ae436c4daec79aa2`). #139 underground routes and #140 elevated gantries are accepted; #141–#143 closed NOT PLANNED after their evidence gates; integrated evidence: [PHASE14_EXIT_REVIEW.md](PHASE14_EXIT_REVIEW.md).
-- Completed phase: **Phase 15 — content scale and expedition arc (#106)** (closed after #152 / PR #205, main `d8d0de628b73f1cd291083437de5aa2a88b33804`). #145–#152 are complete; integrated evidence: [PHASE15_EXIT_REVIEW.md](PHASE15_EXIT_REVIEW.md). Current gameplay phase: **Phase 16 — production vertical slice (#107)**. **#153 is COMPLETE through PR #207; #154 production feedback is COMPLETE through PR #208 / main `748f2250f68640385c7df5e094ab48700a2476e3`; #155 contextual onboarding is ACTIVE**.
+- Completed phase: **Phase 15 — content scale and expedition arc (#106)** (closed after #152 / PR #205, main `d8d0de628b73f1cd291083437de5aa2a88b33804`). #145–#152 are complete; integrated evidence: [PHASE15_EXIT_REVIEW.md](PHASE15_EXIT_REVIEW.md). Current gameplay phase: **Phase 16 — production vertical slice (#107)**. **#153 is COMPLETE through PR #207; #154 is COMPLETE through PR #208; #155 contextual onboarding is COMPLETE through PR #209 / main `3c90ac7395f1f51e380a88a0fe7ff803f30bb6e3`; #156 production knowledge/inspector/terminal UX is ACTIVE**.
 
 ## Phase 1.5 dependency graph
 
@@ -223,7 +223,7 @@ GitHub Actions CI is intentionally budget-conscious: it runs the full `npm test`
 - #104 — Phase 13 terminal and off-world exchange depth — COMPLETE through #138 / PR #192 / `a42e6e94a9f41588ddd4ecc19efea3829f8ddb42`.
 - #105 — Phase 14 layered and long-distance logistics — COMPLETE through #144 / PR #196 / `04da68325c495f811e611c05ae436c4daec79aa2`; #139–#140 accepted, #141–#143 CLOSED NOT PLANNED under evidence.
 - #106 — Phase 15 content scale and expedition arc — COMPLETE through #152 / PR #205 / `d8d0de628b73f1cd291083437de5aa2a88b33804`.
-- #107 — Phase 16 production vertical slice — ACTIVE; #153–#154 COMPLETE, #155 contextual onboarding ACTIVE, #156–#161 remain dependency-ordered.
+- #107 — Phase 16 production vertical slice — ACTIVE; #153–#155 COMPLETE, #156 production knowledge/inspector/terminal UX ACTIVE, #157–#161 remain dependency-ordered.
 - Phase 8 — art production pipeline — parallel planned track, selected explicitly when useful.
 - Completed Phase 7 baseline: **#90 — single-world simulation/snapshot baseline**, through PR #91. Evidence: PHASE7_BASELINE.md. Phase 7 remains deferred; #92 profiling completed through PR #93; 32-factory / 10ms joint-p95 budget FAILS. Evidence: PHASE7_PROFILING.md. Optimization #94 is complete through PR #95: shared connected topology indexing within each throughput observation; all dynamic recurrence checks retained. Browser costs remain a separate gate.
 
