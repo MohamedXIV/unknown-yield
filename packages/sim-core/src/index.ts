@@ -31,6 +31,7 @@ export {
 export {
   createSensingObservation,
   sensingCapabilityUnlocked,
+  sensingCapabilityVisible,
   sensingObservationKey,
 } from "./sensing";
 export { factoryView } from "./factory-contract";
