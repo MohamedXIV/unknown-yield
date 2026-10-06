@@ -725,12 +725,20 @@ export const fixture = validateContent({
         range: 1,
         requiredMilestoneId: "resonance-survey-certified",
       },
+      {
+        id: "phase-probe",
+        nameKey: "sensing.capability.phase-probe.name",
+        mode: "probe",
+        range: 1,
+        requiredMilestoneId: "phase-lattice-certified",
+      },
     ],
     surveySignals: [
       { id: "anomaly-a", x: 46, y: 18, strength: 8, depth: 14 },
       { id: "anomaly-b", x: 62, y: 42, strength: 5, depth: 4 },
       { id: "anomaly-c", x: 70, y: 26, strength: 7, depth: 1 },
       { id: "anomaly-d", x: 57, y: 10, strength: 8, depth: 9 },
+      { id: "anomaly-e", x: 73, y: 50, strength: 9, depth: 18 },
     ],
     hiddenDeposits: [
       {
@@ -754,6 +762,17 @@ export const fixture = validateContent({
         units: 800,
         surveySignalId: "anomaly-d",
         requiredSensingCapabilityId: "resonance-probe",
+      },
+      {
+        id: "phase-lattice-seam-a",
+        material: "phase-lattice",
+        x: 70,
+        y: 47,
+        width: 6,
+        height: 6,
+        units: 480,
+        surveySignalId: "anomaly-e",
+        requiredSensingCapabilityId: "phase-probe",
       },
     ],
     atmosphericSources: [
@@ -1025,6 +1044,15 @@ export const fixture = validateContent({
         nameKey: "milestone.resonance-survey-certified.name",
         hintKey: "milestone.resonance-survey-certified.hint",
         requires: [{ type: "reaction-confirmed", reactionId: "collect-gas-0" }],
+        unlockTerminalCapabilityIds: [],
+      },
+      {
+        id: "phase-lattice-certified",
+        nameKey: "milestone.phase-lattice-certified.name",
+        hintKey: "milestone.phase-lattice-certified.hint",
+        requires: [
+          { type: "reaction-confirmed", reactionId: "sinter-resonance-seed" },
+        ],
         unlockTerminalCapabilityIds: [],
       },
     ],
