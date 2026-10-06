@@ -122,7 +122,7 @@ describe("authoritative production feedback", () => {
       direction: 0,
       cargo: "plates",
       alternate: null,
-      route: "primary",
+      switched: false,
     });
 
     expect(deriveFeedbackEvents(before, after)).toEqual([
