@@ -69,13 +69,13 @@ describe("Phase 15 targeted economy Studio authoring", () => {
       demandRecoveryPerMarketTickBps: 100,
       requiredTerminalCapabilityId: "",
     });
-    store.setRow("imports", "test-catalyst-crate", {
-      nameKey: "import.test-catalyst-crate.name",
-      briefKey: "import.test-catalyst-crate.brief",
-      materialId: "catalyst",
+    store.setRow("imports", "test-propellant-crate", {
+      nameKey: "import.test-propellant-crate.name",
+      briefKey: "import.test-propellant-crate.brief",
+      materialId: "orbital-propellant",
       quantity: 2,
       fuelCost: 10,
-      terminalModuleId: "",
+      terminalModuleId: "gas-dock",
       requiredOpportunityId: "",
     });
     store.setRow("orders", "test-catalyst-order", {
@@ -97,8 +97,8 @@ describe("Phase 15 targeted economy Studio authoring", () => {
       rewardImportSupplyId: "",
     });
     for (const [key, text] of [
-      ["import.test-catalyst-crate.name", "Catalyst test crate"],
-      ["import.test-catalyst-crate.brief", "A bounded authoring proof import."],
+      ["import.test-propellant-crate.name", "Propellant test crate"],
+      ["import.test-propellant-crate.brief", "A bounded authoring proof import."],
       ["order.test-catalyst-order.name", "Catalyst test order"],
       ["order.test-catalyst-order.brief", "A bounded authoring proof order."],
       ["directive.test-catalyst-study.name", "Catalyst test study"],
@@ -109,7 +109,7 @@ describe("Phase 15 targeted economy Studio authoring", () => {
 
     const parsed = parseStudioBundle(serializeStudioBundle(store, fixture));
     expect(parsed.content.economy.exchange.some((entry) => entry.materialId === "catalyst")).toBe(true);
-    expect(parsed.content.economy.imports.some((entry) => entry.id === "test-catalyst-crate")).toBe(true);
+    expect(parsed.content.economy.imports.some((entry) => entry.id === "test-propellant-crate")).toBe(true);
     expect(parsed.content.economy.orders.some((entry) => entry.id === "test-catalyst-order")).toBe(true);
     expect(
       parsed.content.economy.propertyDirectives.some(
