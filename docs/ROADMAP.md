@@ -428,7 +428,7 @@ A fresh expedition can progress through several qualitatively different industri
 
 ## Phase 16 — Production vertical slice
 
-**Epic:** GitHub Issue #107. **ACTIVE**. #153–#155 are complete; #156 production knowledge/inspector/terminal UX is the active dependency-ready child. Children #153–#161.
+**Epic:** GitHub Issue #107. **ACTIVE**. #153–#156 are complete; #157 representative content and balance slice is the active dependency-ready child. Children #153–#161.
 
 ### Question
 
