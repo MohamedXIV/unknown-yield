@@ -68,7 +68,7 @@ The seed is physically imported and locally sintered into Phase lattice.
 That reaction:
 
 - makes Phase lattice known;
-- completes Phase-lattice field calibration;
+- reveals the previously hidden Phase-lattice field-calibration milestone as completed;
 - reveals the previously hidden Phase probe;
 - unlocks Phase-quench equipment;
 - allows sensing of the previously hidden depth-18 Phase-lattice seam;
