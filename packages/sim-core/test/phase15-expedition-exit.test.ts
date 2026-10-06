@@ -68,6 +68,11 @@ it("plays a fresh Phase 15 expedition from ordinary industry into company-learne
     initial.sensingCapabilities.some((entry) => entry.id === "phase-probe"),
   ).toBe(false);
   expect(
+    initial.milestones.some(
+      (entry) => entry.id === "phase-lattice-certified",
+    ),
+  ).toBe(false);
+  expect(
     initial.importSupplies.some(
       (entry) => entry.id === "orbital-resonance-seed-crate",
     ),
@@ -648,6 +653,11 @@ it("plays a fresh Phase 15 expedition from ordinary industry into company-learne
       (entry) => entry.id === "phase-probe",
     ),
   ).toMatchObject({ unlocked: true });
+  expect(
+    sim.snapshot().milestones.find(
+      (entry) => entry.id === "phase-lattice-certified",
+    ),
+  ).toMatchObject({ completed: true });
   expect(
     sim.snapshot().definitions.find((entry) => entry.id === "phase-quencher")
       ?.unlock,
