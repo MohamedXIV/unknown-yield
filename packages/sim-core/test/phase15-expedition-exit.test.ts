@@ -33,6 +33,19 @@ function audit(sim: Simulation) {
   expect(sim.serialize().flows.discarded).toEqual({});
 }
 
+const inventoryTotal = (inventory: Record<string, number>) =>
+  Object.values(inventory).reduce((sum, amount) => sum + amount, 0);
+
+function machineDrained(sim: Simulation, id: string) {
+  const machine = sim.serialize().machines[id];
+  return (
+    machine.job === null &&
+    inventoryTotal(machine.input) === 0 &&
+    inventoryTotal(machine.output) === 0 &&
+    inventoryTotal(machine.incidentInventory) === 0
+  );
+}
+
 function tickUntil(
   sim: Simulation,
   predicate: () => boolean,
@@ -357,8 +370,47 @@ it("plays a fresh Phase 15 expedition from ordinary industry into company-learne
     )?.unlocked,
   ).toBe(true);
 
+  // Stop only the source first. The downstream chain stays live long enough
+  // to consume every physical unit already in flight, then its solved capital
+  // can be reclaimed for the next industrial district.
+  build(sim, {
+    type: "setEnabled",
+    machineId: gasExtractor,
+    enabled: false,
+  });
+  const gasFeedPoints = Array.from({ length: 8 }, (_, index) => ({
+    x: 17 + index,
+    y: 39,
+  }));
+  const pressurePoints = [32, 33, 34, 35, 36].map((x) => ({ x, y: 39 }));
+  tickUntil(
+    sim,
+    () =>
+      machineDrained(sim, gasExtractor) &&
+      machineDrained(sim, liquefier) &&
+      machineDrained(sim, vaporizer) &&
+      machineDrained(sim, collector) &&
+      gasFeedPoints.every((point) => {
+        const belt = Object.values(sim.serialize().belts).find(
+          (entry) => entry.x === point.x && entry.y === point.y,
+        );
+        return belt?.cargo === null;
+      }) &&
+      granuleExportPath.every((point) => {
+        const belt = Object.values(sim.serialize().belts).find(
+          (entry) => entry.x === point.x && entry.y === point.y,
+        );
+        return belt?.cargo === null;
+      }) &&
+      sim.serialize().pipes["28,39"].quantity === 0 &&
+      pressurePoints.every(
+        (point) => sim.serialize().pressureLines[point.x + "," + point.y].quantity === 0,
+      ),
+    700,
+    "the reactive gas line should drain before capital recovery",
+  );
+
   for (const command of [
-    { type: "setEnabled", machineId: gasExtractor, enabled: false },
     { type: "setEnabled", machineId: liquefier, enabled: false },
     { type: "setPumpEnabled", id: pump, enabled: false },
     { type: "setEnabled", machineId: vaporizer, enabled: false },
@@ -366,21 +418,17 @@ it("plays a fresh Phase 15 expedition from ordinary industry into company-learne
     { type: "setEnabled", machineId: collector, enabled: false },
   ] satisfies GameCommand[])
     build(sim, command);
-  tickUntil(
-    sim,
-    () =>
-      sim.serialize().machines[collector].job === null &&
-      (sim.serialize().machines[collector].output.granules ?? 0) === 0 &&
-      granuleExportPath.every((point) => {
-        const belt = Object.values(sim.serialize().belts).find(
-          (entry) => entry.x === point.x && entry.y === point.y,
-        );
-        return belt?.cargo === null;
-      }),
-    300,
-    "the temporary granules export corridor should drain",
-  );
-  for (const point of granuleExportPath) {
+
+  for (const id of [gasExtractor, liquefier, vaporizer, collector, pump, compressor])
+    expect(sim.command({ type: "dismantle", id }).ok).toBe(true);
+
+  const pipeId = sim.serialize().pipes["28,39"].id;
+  expect(sim.command({ type: "dismantle", id: pipeId }).ok).toBe(true);
+  for (const point of pressurePoints) {
+    const line = sim.serialize().pressureLines[point.x + "," + point.y];
+    expect(sim.command({ type: "dismantle", id: line.id }).ok).toBe(true);
+  }
+  for (const point of [...gasFeedPoints, ...granuleExportPath]) {
     const belt = Object.values(sim.serialize().belts).find(
       (entry) => entry.x === point.x && entry.y === point.y,
     )!;
@@ -504,35 +552,24 @@ it("plays a fresh Phase 15 expedition from ordinary industry into company-learne
     ),
   ).toBe(false);
 
-  const researchFactory = build(sim, {
-    type: "placeFactory",
-    x: 43,
-    y: 25,
-    width: 7,
-    height: 7,
-  });
+  // Reuse the solved catalyst Sinterer instead of building a second research
+  // factory. A temporary dry corridor connects the terminal import outlet to
+  // the existing catalyst feed belt.
+  tickUntil(
+    sim,
+    () =>
+      sim.serialize().machines[catalystSinterer].job === null &&
+      (sim.serialize().machines[catalystSinterer].input.catalyst ?? 0) < 2,
+    300,
+    "the catalyst Sinterer should be ready for company R&D feed",
+  );
+  const researchSinterer = catalystSinterer;
+  const researchImportPath = path(42, 28, 56, 10, 0);
+  build(sim, researchImportPath);
   build(sim, {
-    type: "placePort",
-    factoryId: researchFactory,
-    x: 43,
-    y: 28,
-    direction: 0,
-  });
-  const researchSinterer = build(sim, {
-    type: "placeMachine",
-    definitionId: "sinterer",
-    x: 45,
-    y: 27,
-    direction: 0,
-  });
-  build(sim, {
-    type: "placeBelts",
-    points: [
-      { x: 42, y: 28 },
-      { x: 43, y: 28 },
-      { x: 44, y: 28 },
-    ],
-    direction: 0,
+    type: "setEnabled",
+    machineId: researchSinterer,
+    enabled: true,
   });
 
   expect(
