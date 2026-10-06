@@ -65,7 +65,11 @@ export function deriveFeedbackEvents(
   for (const machine of next.machines) {
     const before = previousMachines.get(machine.id);
     const at = center(machine.x, machine.y, machine.width, machine.height);
-    if (before && before.status !== "processing" && machine.status === "processing")
+    if (
+      before &&
+      before.status !== "processing" &&
+      machine.status === "processing"
+    )
       push({ kind: "machine-start", id: machine.id, at });
     if (
       before &&
