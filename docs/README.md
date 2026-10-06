@@ -83,3 +83,6 @@ Prefer a small complete loop over broad half-built systems. New infrastructure m
 - [PHASE15_STUDIO_AUDIT.md](PHASE15_STUDIO_AUDIT.md) — Phase 15 #151 evidence-gated targeted economy authoring for Content Studio.
 
 - [PHASE15_EXIT_REVIEW.md](PHASE15_EXIT_REVIEW.md) — Phase 15 #152 fresh-expedition integrated exit gate.
+
+
+- [PHASE16_ART_VALIDATION.md](PHASE16_ART_VALIDATION.md) — Phase 16 #153 representative final-direction art asset contract.
