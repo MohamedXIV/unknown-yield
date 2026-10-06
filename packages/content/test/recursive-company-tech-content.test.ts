@@ -55,6 +55,7 @@ describe("Phase 15 recursive company technology content", () => {
     expect(probe).toMatchObject({
       mode: "probe",
       requiredMilestoneId: milestone.id,
+      hiddenUntilUnlocked: true,
     });
     expect(seam).toMatchObject({
       material: "phase-lattice",
