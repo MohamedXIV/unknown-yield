@@ -11,6 +11,8 @@ const statusCounts = (): Record<MachineStatus, number> => ({
   "needs-compatible-input": 0,
   "needs-input": 0,
   "output-full": 0,
+  "fuel-class-locked": 0,
+  "needs-special-fuel": 0,
   "needs-fuel": 0,
   ready: 0,
 });
