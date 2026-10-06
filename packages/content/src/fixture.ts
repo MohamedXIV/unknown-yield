@@ -731,6 +731,7 @@ export const fixture = validateContent({
         mode: "probe",
         range: 1,
         requiredMilestoneId: "phase-lattice-certified",
+        hiddenUntilUnlocked: true,
       },
     ],
     surveySignals: [
