@@ -81,3 +81,5 @@ Prefer a small complete loop over broad half-built systems. New infrastructure m
 - [PHASE15_PACING_BALANCE.md](PHASE15_PACING_BALANCE.md) — Phase 15 #150 measured diversification, pacing and fuel-loop balance gate.
 
 - [PHASE15_STUDIO_AUDIT.md](PHASE15_STUDIO_AUDIT.md) — Phase 15 #151 evidence-gated targeted economy authoring for Content Studio.
+
+- [PHASE15_EXIT_REVIEW.md](PHASE15_EXIT_REVIEW.md) — Phase 15 #152 fresh-expedition integrated exit gate.

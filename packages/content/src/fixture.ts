@@ -1158,6 +1158,7 @@ export const fixture = validateContent({
           { type: "reaction-confirmed", reactionId: "sinter-resonance-seed" },
         ],
         unlockTerminalCapabilityIds: [],
+        hiddenUntilCompleted: true,
       },
     ],
   },

@@ -99,23 +99,29 @@ export function milestoneViews(
   c: Content,
   s: Pick<Save, "milestones">,
 ): MilestoneView[] {
-  return c.economy.milestones.map((milestone) => ({
-    id: milestone.id,
-    nameKey: milestone.nameKey,
-    hintKey: milestone.hintKey,
-    completed: Object.hasOwn(s.milestones, milestone.id),
-    completedAt: s.milestones[milestone.id]?.completedAt ?? null,
-    unlockedTerminalCapabilities: milestone.unlockTerminalCapabilityIds.map(
-      (capabilityId) => {
-        const capability = c.economy.terminalCapabilities.find(
-          (entry) => entry.id === capabilityId,
-        )!;
-        return {
-          id: capability.id,
-          nameKey: capability.nameKey,
-          unlocked: terminalCapabilityUnlocked(c, s, capability.id),
-        };
-      },
-    ),
-  }));
+  return c.economy.milestones
+    .filter(
+      (milestone) =>
+        !milestone.hiddenUntilCompleted ||
+        Object.hasOwn(s.milestones, milestone.id),
+    )
+    .map((milestone) => ({
+      id: milestone.id,
+      nameKey: milestone.nameKey,
+      hintKey: milestone.hintKey,
+      completed: Object.hasOwn(s.milestones, milestone.id),
+      completedAt: s.milestones[milestone.id]?.completedAt ?? null,
+      unlockedTerminalCapabilities: milestone.unlockTerminalCapabilityIds.map(
+        (capabilityId) => {
+          const capability = c.economy.terminalCapabilities.find(
+            (entry) => entry.id === capabilityId,
+          )!;
+          return {
+            id: capability.id,
+            nameKey: capability.nameKey,
+            unlocked: terminalCapabilityUnlocked(c, s, capability.id),
+          };
+        },
+      ),
+    }));
 }
