@@ -1,4 +1,5 @@
 import { fixture } from "@site/content";
+import { finishBrowserMetric, startBrowserMetric } from "./performance";
 import {
   Simulation,
   type GameCommand,
@@ -11,7 +12,12 @@ export class Session {
   private sim = new Simulation(fixture);
   private last: number | null = null;
   private listeners = new Set<() => void>();
-  snapshot = () => this.sim.snapshot();
+  snapshot = () => {
+    const startedAt = startBrowserMetric();
+    const snapshot = this.sim.snapshot();
+    finishBrowserMetric("snapshot", startedAt);
+    return snapshot;
+  };
   subscribe = (fn: () => void) => {
     this.listeners.add(fn);
     return () => {
@@ -36,7 +42,9 @@ export class Session {
       return;
     }
     if (this.last !== null) {
+      const startedAt = startBrowserMetric();
       this.sim.step(Math.max(0, Math.min(250, now - this.last)));
+      finishBrowserMetric("simulation-step", startedAt);
       this.notify();
     }
     this.last = now;
