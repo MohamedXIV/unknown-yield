@@ -12,7 +12,8 @@ function legacyInitialSave(schemaVersion: (typeof supportedLegacySchemas)[number
   if (schemaVersion < 22) delete legacy.shipmentManifest;
   if (schemaVersion < 23) delete legacy.terminalImports;
   if (schemaVersion < 24) delete legacy.marketSignals;
-  if (schemaVersion < 25)\n    delete (legacy.company as Record<string, unknown>).importAllocations;
+  if (schemaVersion < 25)
+    delete (legacy.company as Record<string, unknown>).importAllocations;
   if (schemaVersion < 26) {
     delete legacy.undergroundSolids;
     delete legacy.undergroundLiquids;
