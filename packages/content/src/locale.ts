@@ -156,6 +156,8 @@ export const enCatalog: LocaleCatalog = {
   "ui.terminal.import.allocation":
     "{{count}} company allocation available",
   "ui.terminal.import.request": "Request {{supply}}",
+  "ui.terminal.opportunity.research-meta":
+    "COMPANY R&D · new off-world capability",
   "ui.terminal.import.outlet": "Dry import outlet: ({{x}}, {{y}}) toward {{side}}",
   "ui.terminal.import.result.unknown": "That import supply is unavailable",
   "ui.terminal.import.result.fuel": "Not enough company fuel for this import",
@@ -167,6 +169,9 @@ export const enCatalog: LocaleCatalog = {
   "import.orbital-binder-crate.name": "Orbital binder crate",
   "import.orbital-binder-crate.brief":
     "A specialized off-world sintering feedstock unavailable from local extraction. It must leave the terminal through ordinary dry logistics.",
+  "import.orbital-resonance-seed-crate.name": "Resonance seed crate",
+  "import.orbital-resonance-seed-crate.brief":
+    "A company-engineered resonance seed derived from expedition matrix data. It becomes available only after the orbital application study is completed and enters the site through ordinary dry import logistics.",
   "import.orbital-propellant-cylinder.name": "Orbital propellant cylinder",
   "import.orbital-propellant-cylinder.brief":
     "A sealed gas supply delivered through an authorized gas dock. Retain it at the dock to operate advanced equipment, or release it into ordinary pressure logistics.",
@@ -401,6 +406,8 @@ export const enCatalog: LocaleCatalog = {
   "material.catalyst.name": "Catalytic stone",
   "material.catalyst-powder.name": "Catalyst powder",
   "material.orbital-binder.name": "Orbital binder",
+  "material.orbital-resonance-seed.name": "Orbital resonance seed",
+  "material.phase-lattice.name": "Phase lattice",
   "material.orbital-propellant.name": "Orbital propellant",
   "material.orbital-coolant.name": "Orbital coolant",
   "material.matrix.name": "Resonant matrix",
@@ -460,6 +467,8 @@ export const enCatalog: LocaleCatalog = {
     "The off-world binder sinters into a resonant matrix. The feedstock is consumed physically and must be resupplied through the terminal.",
   "reaction.sinter-catalyst.observation":
     "The catalytic stone binds into a resonant matrix with a stable export signature.",
+  "reaction.sinter-resonance-seed.observation":
+    "The company resonance seed reorganizes under local sintering into a stable phase lattice.",
   "reaction.crush-catalyst.observation":
     "Mechanical milling yields a stable catalyst powder. It is less valuable than resonant matrix, but company demand is broad and slow to saturate.",
   "reaction.heat-raw-oversealed.observation":
@@ -513,6 +522,12 @@ export const enCatalog: LocaleCatalog = {
     "Demonstrate an alternate locally supplied process that produces the characterized resonant matrix. The company specifies the property target, not the recipe.",
   "property.matrix-local-route.name":
     "Stable resonant matrix from a locally sourced feed",
+  "directive.matrix-orbital-application.name":
+    "Orbital matrix application study",
+  "directive.matrix-orbital-application.brief":
+    "Now that the expedition has characterized a resonant matrix, company R&D wants one controlled binder-assisted reproduction to derive a new off-world capability.",
+  "property.matrix-orbital-application.name":
+    "Demonstrate the matrix in the company orbital-binder process",
   "ui.terminal.market-bulletins.heading": "Company market bulletins",
   "ui.terminal.market-bulletins.hint":
     "Demand changes only from company-known applications and recovers on the slow market cadence. Bulletins are persistent history, not random price events.",
