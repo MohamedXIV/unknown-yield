@@ -535,6 +535,13 @@ export const enCatalog: LocaleCatalog = {
   "order.matrix-procurement.name": "Resonant matrix qualification batch",
   "order.matrix-procurement.brief":
     "Supply a small matrix batch while orbital systems engineering evaluates the newly characterized resonant application.",
+  "order.magnetic-ceramic-procurement.name":
+    "Magnetic ceramic qualification lot",
+  "order.magnetic-ceramic-procurement.brief":
+    "Supply a small ceramic lot for a bounded company qualification window. The premium rewards keeping the alternate ferrite line available without turning its fast-saturating market into a permanent backbone.",
+  "order.catalyst-powder-reserve.name": "Catalyst powder reserve",
+  "order.catalyst-powder-reserve.brief":
+    "Supply a bounded powder reserve for steady maintenance demand. The premium rewards preserving the commodity branch instead of feeding every catalytic stone into resonance work.",
   "market.shock.resonance-orbital-application.name":
     "Orbital resonance application identified",
   "market.shock.resonance-orbital-application.brief":
