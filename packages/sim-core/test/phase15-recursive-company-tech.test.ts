@@ -66,6 +66,11 @@ it("turns player matrix discovery into company R&D and a deeper local phase seam
     ),
   ).toBe(false);
   expect(
+    sim.snapshot().milestones.some(
+      (entry) => entry.id === "phase-lattice-certified",
+    ),
+  ).toBe(false);
+  expect(
     sim.command({
       type: "sense",
       capabilityId: "phase-probe",
