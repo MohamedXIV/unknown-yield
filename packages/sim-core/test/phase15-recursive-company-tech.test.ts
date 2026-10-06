@@ -32,7 +32,7 @@ function confirm(save: ReturnType<Simulation["serialize"]>, reactionId: string) 
 }
 
 it("turns player matrix discovery into company R&D and a deeper local phase seam", () => {
-  let sim = new Simulation(fixture);
+  const sim = new Simulation(fixture);
   const seeded = sim.serialize();
   seeded.fuel = 500;
   for (const id of [
