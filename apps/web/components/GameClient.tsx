@@ -19,6 +19,7 @@ import {
   type WorldMode,
   type Tool,
 } from "../game/interaction";
+import { onboardingBeat, type OnboardingSignals } from "../game/onboarding";
 import GameHost from "./GameHost";
 function Glyph({ type, size = 20 }: { type: string; size?: number }) {
   const paths: Record<string, string> = {
@@ -121,6 +122,11 @@ function GameClientInner() {
     [guide, setGuide] = useState(true),
     [homeToken, setHomeToken] = useState(0),
     [confirmReset, setConfirmReset] = useState(false);
+  const [onboarding, setOnboarding] = useState<OnboardingSignals>({
+    knowledgeOpened: false,
+    terminalOpened: false,
+    factoryToggleCount: 0,
+  });
   useEffect(
     () => session.subscribe(() => setSnapshot(session.snapshot())),
     [session],
@@ -155,11 +161,18 @@ function GameClientInner() {
     setPanel(null);
   };
   const select = (id: string | null) => {
+    if (id === "terminal")
+      setOnboarding((state) => ({ ...state, terminalOpened: true }));
     setMode((m) => ({ ...m, selected: id }));
     setPanel(id === "terminal" ? "terminal" : id ? "selection" : null);
   };
-  const toggleFactory = (id: string) =>
+  const toggleFactory = (id: string) => {
+    setOnboarding((state) => ({
+      ...state,
+      factoryToggleCount: Math.min(2, state.factoryToggleCount + 1),
+    }));
     setMode((mode) => toggleFactoryOpen(mode, id));
+  };
   const act = (cmd: GameCommand) => {
     const result = session.command(cmd);
     setNotice(
@@ -412,6 +425,7 @@ function GameClientInner() {
     setPanel(null);
     setMode((m) => ({ ...m, selected: null }));
   };
+  const brief = onboardingBeat(snapshot, onboarding);
   return (
     <main className="game">
       <GameHost
@@ -455,6 +469,7 @@ function GameClientInner() {
             aria-label="Knowledge notebook"
             title="Knowledge"
             onClick={() => {
+              setOnboarding((state) => ({ ...state, knowledgeOpened: true }));
               setPanel(panel === "knowledge" ? null : "knowledge");
               setMode((m) => ({ ...m, tool: "select" }));
             }}
@@ -466,6 +481,7 @@ function GameClientInner() {
             aria-label="Company terminal"
             title="Company terminal"
             onClick={() => {
+              setOnboarding((state) => ({ ...state, terminalOpened: true }));
               setPanel(panel === "terminal" ? null : "terminal");
               setMode((m) => ({ ...m, tool: "select", selected: "terminal" }));
             }}
@@ -499,50 +515,30 @@ function GameClientInner() {
         </nav>
       </header>
       {guide && (
-        <aside className="field-guide">
+        <aside
+          className={"field-guide beat-" + brief.id}
+          data-onboarding-beat={brief.id}
+          aria-live="polite"
+        >
           <button
-            aria-label="Close build guide"
+            aria-label="Close field brief"
             onClick={() => setGuide(false)}
           >
             ×
           </button>
-          <small>ESTABLISH YOUR OPERATION</small>
-          <h2>
-            {snapshot.milestone
-              ? "The line is yours. Keep building."
-              : "Build a process. Discover a possibility."}
-          </h2>
-          <ol>
-            <li
-              className={
-                snapshot.machines.some((m) => m.role === "extractor")
-                  ? "done"
-                  : ""
-              }
-            >
-              Place an extractor over {materialName("ferrite").toLowerCase()}.
-            </li>
-            <li className={snapshot.factories.length ? "done" : ""}>
-              Draw a factory. Put a {toolName("crusher").toLowerCase()} inside.
-            </li>
-            <li className={snapshot.belts.length ? "done" : ""}>
-              Route belts through wall ports to the{" "}
-              {toolName("crusher").toLowerCase()}, then the terminal.
-            </li>
-            <li className={snapshot.milestone ? "done" : ""}>
-              Expand with local {materialName("plates").toLowerCase()}.
-              Experiment with {materialName("raw").toLowerCase()}.
-            </li>
-          </ol>
-          <p>
-            Everything runs automatically. Follow the input and output arrows.
-          </p>
+          <small>
+            {brief.eyebrow}
+            {brief.step ? " · " + brief.step + "/" + brief.total : ""}
+          </small>
+          <h2>{brief.title}</h2>
+          <p className="guide-body">{brief.body}</p>
+          <p>{brief.hint}</p>
         </aside>
       )}
       {!guide && (
         <button
           className="guide-toggle"
-          aria-label="Open build guide"
+          aria-label="Open field brief"
           onClick={() => setGuide(true)}
         >
           <Glyph type="help" size={16} />
