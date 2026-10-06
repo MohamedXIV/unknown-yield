@@ -73,3 +73,5 @@ Prefer a small complete loop over broad half-built systems. New infrastructure m
 - [PHASE15_KNOWLEDGE_GRAPH.md](PHASE15_KNOWLEDGE_GRAPH.md) — Phase 15 #146 evidence-gated partial knowledge graph without recipe spoilers.
 
 - [PHASE15_FUEL_PROGRESSION.md](PHASE15_FUEL_PROGRESSION.md) — Phase 15 #147 physical advanced/research operating fuel classes.
+
+- [PHASE15_RECURSIVE_COMPANY_TECH.md](PHASE15_RECURSIVE_COMPANY_TECH.md) — Phase 15 #148 player discovery → company R&D → imported capability → deeper local industry.
