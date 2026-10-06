@@ -75,6 +75,15 @@ function depotReleasePath() {
 
 it("closes Phase 13 through one conserved terminal and exchange workflow", () => {
   const draft = structuredClone(fixture);
+  // This historical Phase 13 acceptance gate predates Phase 15 operating
+  // fuels. Keep its Sinterer on the accepted company-fuel contract so this
+  // scenario continues to measure terminal/import/stockpile behavior rather
+  // than duplicating #147's dedicated fuel gate.
+  const historicalSinterer = draft.machines.find(
+    (entry) => entry.id === "sinterer",
+  )!;
+  delete historicalSinterer.fuelClassId;
+  historicalSinterer.fuel = 3;
   // Keep the company signal behind the physical production/stockpile setup and
   // make one full manifest/import allocation visibly capacity-bound.
   draft.economy.marketEveryTicks = 900;

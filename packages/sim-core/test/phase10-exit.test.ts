@@ -1,12 +1,19 @@
 import { expect, it } from "vitest";
-import { fixture } from "@site/content";
+import { fixture, validateContent } from "@site/content";
 import { Simulation, auditLedger, type GameCommand } from "../src/index";
 
+const phase10Fixture = validateContent({
+  ...structuredClone(fixture),
+  version: "phase10-exit-v1",
+  fuelClasses: [],
+  machines: fixture.machines.map(({ fuelClassId: _fuelClassId, ...machine }) => machine),
+});
+
 it("completes the Phase 10 manufactured exploration loop in one persistent world", () => {
-  const sim = new Simulation(fixture);
+  const sim = new Simulation(phase10Fixture);
 
   const audit = (current: Simulation) => {
-    const report = auditLedger(fixture, current.serialize());
+    const report = auditLedger(phase10Fixture, current.serialize());
     expect(report.mismatches).toEqual([]);
     expect(current.serialize().flows.discarded).toEqual({});
   };
@@ -21,7 +28,7 @@ it("completes the Phase 10 manufactured exploration loop in one persistent world
   const tickUntil = (predicate: () => boolean, maxTicks = 600) => {
     for (let tick = 0; tick < maxTicks; tick++) {
       if (predicate()) return;
-      sim.step(fixture.tickMs);
+      sim.step(phase10Fixture.tickMs);
       audit(sim);
     }
     expect(predicate()).toBe(true);
@@ -284,10 +291,10 @@ it("completes the Phase 10 manufactured exploration loop in one persistent world
   ).toBe(true);
   audit(sim);
 
-  const restored = new Simulation(fixture);
+  const restored = new Simulation(phase10Fixture);
   expect(restored.load(JSON.parse(JSON.stringify(sim.serialize()))).ok).toBe(true);
   for (let tick = 0; tick < 60; tick++) {
-    sim.step(fixture.tickMs);
+    sim.step(phase10Fixture.tickMs);
     restored.step(fixture.tickMs);
     audit(sim);
     audit(restored);

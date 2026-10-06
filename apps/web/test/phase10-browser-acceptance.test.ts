@@ -559,6 +559,10 @@ browserIt(
       await waitForExpression(
         `document.querySelector(".build-hint strong")?.textContent === "Sinterer"`,
       );
+      await waitForExpression(
+        `document.querySelector(".build-hint")?.textContent
+          ?.includes("Research-grade coolant") === true`,
+      );
 
       await evaluate(`(() => {
         document.querySelector('button[aria-label="Knowledge notebook"]')?.click();

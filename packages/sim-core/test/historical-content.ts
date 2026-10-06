@@ -3,6 +3,8 @@ import { fixture, validateContent } from "@site/content";
 export const historicalFixture = validateContent({
   ...structuredClone(fixture),
   version: "historical-fixture-v1",
+  fuelClasses: [],
+  machines: fixture.machines.map(({ fuelClassId: _fuelClassId, ...machine }) => machine),
   site: { ...fixture.site, terminalModules: [] },
   economy: {
     ...fixture.economy,

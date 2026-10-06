@@ -114,6 +114,8 @@ export const MACHINE_STATUSES = [
   "needs-compatible-input",
   "needs-input",
   "output-full",
+  "fuel-class-locked",
+  "needs-special-fuel",
   "needs-fuel",
   "ready",
 ] as const;
@@ -500,6 +502,7 @@ export type MachineView = Omit<Machine, "job" | "incident"> & {
   durationTicks: number;
   durationMs: number;
   fuelCost: number;
+  fuelClassId: string | null;
   status: MachineStatus;
   progress: number;
 };
@@ -512,6 +515,11 @@ export type AtmosphericSourceView = Omit<
 };
 export type MachineDefinitionView = Omit<MachineDefinition, "unlock"> & {
   unlock: { unlocked: boolean; hintKey: string } | null;
+};
+export type FuelClassView = Content["fuelClasses"][number] & {
+  unlocked: boolean;
+  terminalModuleInstalled: boolean;
+  held: number;
 };
 export type StorageView = Storage & {
   nameKey: string;
@@ -567,6 +575,7 @@ export type PlayerSnapshot = {
   deposits: (Content["site"]["deposits"][number] & { remaining: number })[];
   atmosphericSources: AtmosphericSourceView[];
   definitions: MachineDefinitionView[];
+  fuelClasses: FuelClassView[];
   storageDefinitions: StorageDefinition[];
   junctionDefinitions: Content["junctions"];
   operations: Content["operations"];

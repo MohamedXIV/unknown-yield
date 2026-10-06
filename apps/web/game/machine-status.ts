@@ -16,6 +16,8 @@ const labels: Record<MachineStatus, string> = {
   "needs-compatible-input": "Needs compatible input",
   "needs-input": "Needs input",
   "output-full": "Output full",
+  "fuel-class-locked": "Fuel class not certified",
+  "needs-special-fuel": "Special fuel unavailable",
   "needs-fuel": "Needs fuel",
   ready: "Ready",
 };

@@ -109,9 +109,16 @@ Terminal modules gate handling classes such as dry cargo, liquids, pressure gas,
 
 ## 10. Fuel classes
 
-Fuel classes are data-driven and should differ by capability and logistics, not merely color. A possible direction is ordinary industrial fuel, advanced sealed/cartridge fuel, and exotic/research-grade cells requiring specialized storage.
+Fuel classes are data-driven and differ by capability and logistics, not merely color.
 
-Higher fuel may power deep extraction, high-pressure processing, advanced transport or exotic machinery. Exact names/counts remain content decisions.
+The Phase 15 #147 implementation deliberately uses two models:
+
+- **ordinary company fuel** remains the abstract operating allocation credited by legal exports, orders/directives and assistance;
+- **higher operating fuels** are physical off-world materials delivered through specialized terminal modules and consumed by authored machines.
+
+The current representative classes are advanced propellant through sealed gas handling and research-grade coolant through protected cryogenic handling. Deep extraction and research sintering consume those physical supplies per batch. Their exact display names and balance values remain content decisions.
+
+Higher-fuel consumption is a defined material sink and participates in the conservation ledger. No separate utility distribution network is assumed yet; the terminal module is the authoritative reserve unless later evidence proves a dedicated transport system is warranted.
 
 ## 11. Corporate assistance
 

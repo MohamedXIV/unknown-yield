@@ -46,6 +46,7 @@ const machineRow = (machine: Content["machines"][number]) => ({
   maxExtractionDepth: machine.maxExtractionDepth,
   sourceKind: empty(machine.sourceKind),
   processConditionId: empty(machine.processConditionId),
+  fuelClassId: empty(machine.fuelClassId),
   unlockReactionId: empty(
     machine.unlock && "reactionId" in machine.unlock
       ? machine.unlock.reactionId
@@ -290,6 +291,19 @@ function candidateFromStore(store: Store, base: Content): unknown {
         : {}),
       ...(optionalText(row, "processConditionId", label)
         ? { processConditionId: optionalText(row, "processConditionId", label) }
+        : {}),
+      ...(optionalText(
+        { fuelClassId: row.fuelClassId ?? "" },
+        "fuelClassId",
+        label,
+      )
+        ? {
+            fuelClassId: optionalText(
+              { fuelClassId: row.fuelClassId ?? "" },
+              "fuelClassId",
+              label,
+            ),
+          }
         : {}),
       ...(unlockReactionId || unlockHazardEvidenceId || unlockHintKey
         ? {

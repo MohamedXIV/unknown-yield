@@ -36,6 +36,7 @@ import { sensingCapabilityUnlocked } from "./sensing";
 import { importSupplyViews, terminalImportOutlet } from "./imports";
 import { advanceUndergroundRoutes } from "./underground";
 import { advanceElevatedRoutes } from "./elevated";
+import { fuelClassViews } from "./fuel";
 import {
   experimentEvidenceKey,
   total,
@@ -293,6 +294,7 @@ export class Simulation {
             : null,
         };
       }),
+      fuelClasses: fuelClassViews(c, s),
       storageDefinitions: c.storages,
       containmentCapabilities: c.containmentCapabilities,
       transportDiagnostics: Object.fromEntries(
@@ -366,6 +368,7 @@ export class Simulation {
           durationTicks: d.durationTicks,
           durationMs: d.durationTicks * c.tickMs,
           fuelCost: d.fuel,
+          fuelClassId: d.fuelClassId ?? null,
           status: status(c, s, m),
           progress: m.job ? 1 - m.job.remaining / d.durationTicks : 0,
         };

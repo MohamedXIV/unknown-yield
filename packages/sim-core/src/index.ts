@@ -60,6 +60,7 @@ export type {
   ExperimentEvidence,
   KnowledgeEntry,
   KnowledgeInsightView,
+  FuelClassView,
   SensingCapabilityView,
   SensingDepthBand,
   SensingObservation,
@@ -142,3 +143,11 @@ export { advanceUndergroundRoutes, undergroundSolidCost, undergroundLiquidCost }
 
 export { advanceElevatedRoutes, elevatedSolidCost } from "./elevated";
 export { cardinalSpan, elevatedDeckPoints, elevatedSupportPoints } from "./geometry";
+export {
+  consumeMachineFuel,
+  fuelClassDefinition,
+  fuelClassHeld,
+  fuelClassUnlocked,
+  fuelClassViews,
+  machineFuelBlock,
+} from "./fuel";

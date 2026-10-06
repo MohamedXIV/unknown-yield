@@ -1,6 +1,6 @@
 import { validateContent } from "./schema";
 export const fixture = validateContent({
-  version: "world-01-v13",
+  version: "world-01-v14",
   tickMs: 100,
   containmentCapabilities: [
     {
@@ -179,6 +179,22 @@ export const fixture = validateContent({
       known: false,
     },
   ],
+  fuelClasses: [
+    {
+      id: "advanced-propellant",
+      nameKey: "fuel.class.advanced-propellant.name",
+      materialId: "orbital-propellant",
+      terminalModuleId: "gas-dock",
+      requiredMilestoneId: "gas-study-certified",
+    },
+    {
+      id: "research-coolant",
+      nameKey: "fuel.class.research-coolant.name",
+      materialId: "orbital-coolant",
+      terminalModuleId: "cryo-dock",
+      requiredMilestoneId: "resonance-survey-certified",
+    },
+  ],
   operations: [
     { id: "vaporize", nameKey: "operation.vaporize.name" },
     { id: "collect-gas", nameKey: "operation.collect-gas.name" },
@@ -265,13 +281,14 @@ export const fixture = validateContent({
       nameKey: "machine.deep-extractor.name",
       role: "extractor",
       maxExtractionDepth: 20,
+      fuelClassId: "advanced-propellant",
       unlock: {
         reactionId: "heat-raw-sealed",
         hintKey: "machine.deep-extractor.unlock-hint",
       },
       operations: [],
       capacity: 8,
-      fuel: 4,
+      fuel: 1,
       durationTicks: 30,
       width: 2,
       height: 2,
@@ -299,9 +316,10 @@ export const fixture = validateContent({
       id: "sinterer",
       nameKey: "machine.sinterer.name",
       role: "processor",
+      fuelClassId: "research-coolant",
       operations: ["sinter"],
       capacity: 12,
-      fuel: 3,
+      fuel: 1,
       durationTicks: 36,
       width: 2,
       height: 2,

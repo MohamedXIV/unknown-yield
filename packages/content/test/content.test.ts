@@ -21,7 +21,7 @@ describe("content boundary", () => {
   it("accepts the complete tiny scenario", () => {
     const c = validateContent(fixture);
     expect(c.machines).toHaveLength(13);
-    expect(c.version).toBe("world-01-v13");
+    expect(c.version).toBe("world-01-v14");
     expect(c.storages).toHaveLength(1);
     expect(c.storages[0]).toMatchObject({ id: "depot", capacity: 40 });
     expect(c.site.stagingCapacity).toBe(24);
@@ -37,7 +37,8 @@ describe("content boundary", () => {
     ).toMatchObject({
       role: "extractor",
       maxExtractionDepth: 20,
-      fuel: 4,
+      fuelClassId: "advanced-propellant",
+      fuel: 1,
       unlock: {
         reactionId: "heat-raw-sealed",
         hintKey: "machine.deep-extractor.unlock-hint",
@@ -415,6 +416,7 @@ describe("content boundary", () => {
   it("keeps pre-#70 world-01-v6 content additively compatible", () => {
     const legacy = structuredClone(fixture) as unknown as {
       version: string;
+      machines: Array<Record<string, unknown>>;
       economy: Record<string, unknown> & {
         exchange: Array<Record<string, unknown>>;
       };
@@ -439,6 +441,9 @@ describe("content boundary", () => {
       }
     ).site;
     legacySite.terminalModules = [];
+    // Higher fuel classes are Phase 15 content and did not exist in this historical fixture.
+    delete (legacy as unknown as { fuelClasses?: unknown }).fuelClasses;
+    for (const machine of legacy.machines) delete machine.fuelClassId;
     // These Phase 10 fields did not exist in the pre-#70 format; deleting
     // them proves the additive schema defaults rather than retaining modern
     // milestone references in a historical fixture.

@@ -37,6 +37,7 @@ import {
   terminalImportOutlet,
   terminalModuleCarriesImport,
 } from "./imports";
+import { consumeMachineFuel, machineFuelBlock } from "./fuel";
 export function recipe(c: Content, m: Machine) {
   const definition = c.machines.find((d) => d.id === m.definitionId);
   return c.reactions.find(
@@ -65,7 +66,8 @@ export function status(c: Content, s: Save, m: Machine): MachineStatus {
     return total(m.input) ? "needs-compatible-input" : "needs-input";
   if (total(m.output) + (r?.outputAmount ?? 1) > d.capacity)
     return "output-full";
-  if (s.fuel < d.fuel) return "needs-fuel";
+  const fuelBlock = machineFuelBlock(c, s, d);
+  if (fuelBlock) return fuelBlock;
   return "ready";
 }
 export function completeAndStart(
@@ -124,7 +126,7 @@ export function completeAndStart(
       }
     } else if (status(c, s, m) === "ready") {
       const r = recipe(c, m);
-      s.fuel -= d.fuel;
+      consumeMachineFuel(c, s, d);
       if (r) {
         change(m.input, r.input, -r.inputAmount);
         const id = experimentEvidenceKey(
