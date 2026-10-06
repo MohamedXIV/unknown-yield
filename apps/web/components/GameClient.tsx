@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { I18nextProvider, useTranslation } from "react-i18next";
 import { i18n } from "../game/i18n";
 import { machineStatusLabel } from "../game/machine-status";
@@ -27,6 +27,11 @@ import {
   terminalOverview,
   type KnowledgeFilter,
 } from "../game/production-ux";
+import {
+  finishBrowserMetric,
+  installBrowserPerformanceDiagnostics,
+  startBrowserMetric,
+} from "../game/performance";
 import GameHost from "./GameHost";
 function Glyph({ type, size = 20 }: { type: string; size?: number }) {
   const paths: Record<string, string> = {
@@ -117,6 +122,7 @@ const descriptions: Partial<Record<Tool, string>> = {
     "Click a structure to reclaim it and its contents. Stop active machines first.",
 };
 function GameClientInner() {
+  const uiRenderStartedAt = startBrowserMetric();
   const { t } = useTranslation();
   const [session] = useState(() => new Session()),
     [snapshot, setSnapshot] = useState(() => session.snapshot());
@@ -136,6 +142,10 @@ function GameClientInner() {
     terminalOpened: false,
     factoryToggleCount: 0,
   });
+  useLayoutEffect(() => {
+    finishBrowserMetric("ui-render-commit", uiRenderStartedAt);
+  });
+  useEffect(() => installBrowserPerformanceDiagnostics(), []);
   useEffect(
     () => session.subscribe(() => setSnapshot(session.snapshot())),
     [session],
