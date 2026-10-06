@@ -185,6 +185,7 @@ export const enCatalog: LocaleCatalog = {
   "sensing.capability.survey-scanner.name": "Survey scanner",
   "sensing.capability.core-probe.name": "Core probe",
   "sensing.capability.resonance-probe.name": "Resonance probe",
+  "sensing.capability.phase-probe.name": "Phase probe",
   "terminal.module.liquid-dock.name": "Lined liquid dock",
   "terminal.module.gas-dock.name": "Sealed gas dock",
   "terminal.module.cryo-dock.name": "Secure cryogenic dock",
@@ -203,6 +204,9 @@ export const enCatalog: LocaleCatalog = {
   "milestone.resonance-survey-certified.name": "Resonance survey capability",
   "milestone.resonance-survey-certified.hint":
     "Manufacture conductive granules through sealed gas collection to calibrate the resonance probe.",
+  "milestone.phase-lattice-certified.name": "Phase-lattice field calibration",
+  "milestone.phase-lattice-certified.hint":
+    "Confirm the company resonance seed under local sintering to calibrate a deeper phase probe.",
   "containment.corrosion-resistant.name": "Corrosion-resistant containment",
   "containment.cryogenic-rated.name": "Cryogenic-rated containment",
   "containment.hazard-isolated.name": "Hazard-isolated containment",
