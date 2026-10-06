@@ -416,6 +416,7 @@ describe("content boundary", () => {
   it("keeps pre-#70 world-01-v6 content additively compatible", () => {
     const legacy = structuredClone(fixture) as unknown as {
       version: string;
+      machines: Array<Record<string, unknown>>;
       economy: Record<string, unknown> & {
         exchange: Array<Record<string, unknown>>;
       };
