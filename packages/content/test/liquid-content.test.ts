@@ -12,6 +12,7 @@ describe("liquid handling content", () => {
               "gas-0",
               "orbital-coolant",
               "orbital-propellant",
+              "phase-suspension",
             ].includes(m.id),
         )
         .every((m) => m.handlingState === "solid"),
@@ -26,6 +27,8 @@ describe("liquid handling content", () => {
               "vaporizer",
               "gas-collector",
               "atmospheric-intake",
+              "phase-quencher",
+              "phase-stabilizer",
             ].includes(m.id),
         )
         .every(

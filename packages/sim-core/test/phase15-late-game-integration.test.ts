@@ -79,49 +79,75 @@ it("integrates late Phase lattice hazard, sealed-cold handling and underground l
     }).ok,
   ).toBe(true);
 
-  const factoryId = build(sim, {
+  const sourceFactoryId = build(sim, {
     type: "placeFactory",
-    x: 23,
-    y: 33,
-    width: 20,
+    x: 24,
+    y: 45,
+    width: 16,
     height: 10,
   });
-  expect(factoryId).toBeTruthy();
+  const targetFactoryId = build(sim, {
+    type: "placeFactory",
+    x: 48,
+    y: 45,
+    width: 12,
+    height: 10,
+  });
+  build(sim, {
+    type: "placePort",
+    factoryId: sourceFactoryId,
+    x: 39,
+    y: 49,
+    direction: 0,
+  });
+  build(sim, {
+    type: "placePort",
+    factoryId: targetFactoryId,
+    x: 48,
+    y: 49,
+    direction: 0,
+  });
 
   const quencherId = build(sim, {
     type: "placeMachine",
     definitionId: "phase-quencher",
-    x: 25,
-    y: 35,
+    x: 36,
+    y: 48,
     direction: 0,
   });
   const hazardId = build(sim, {
     type: "placeMachine",
     definitionId: "oversealed-furnace",
-    x: 25,
-    y: 39,
+    x: 26,
+    y: 48,
     direction: 0,
   });
-  const pumpId = build(sim, {
+  build(sim, {
     type: "placePump",
-    x: 27,
-    y: 36,
+    x: 38,
+    y: 49,
     direction: 0,
     containmentProfileId: "sealed-cold",
+  });
+  build(sim, {
+    type: "placePipes",
+    containmentProfileId: "sealed-cold",
+    points: [{ x: 39, y: 49, inlet: 2, outlet: 0 }],
   });
 
   const standardRoute = build(sim, {
     type: "placeUndergroundLiquid",
-    entry: { x: 28, y: 36 },
-    exit: { x: 34, y: 36 },
+    entry: { x: 40, y: 49 },
+    exit: { x: 47, y: 49 },
     containmentProfileId: "standard",
   });
 
-  // The buried middle span still frees the surface for another logistics layer.
+  // Only the portals occupy surface space. A normal route can cross the buried
+  // middle span without becoming part of the protected liquid route.
   expect(
     sim.command({
       type: "placeBelts",
-      points: [{ x: 31, y: 36 }],
+      points: [{ x: 43, y: 49 }],
       direction: 1,
     }).ok,
   ).toBe(true);
@@ -181,39 +207,44 @@ it("integrates late Phase lattice hazard, sealed-cold handling and underground l
   });
   auditOk(sim);
 
-  // A protected source pump cannot push the late-game liquid into a Standard
-  // buried route: the cargo remains at the machine instead of disappearing.
-  for (let tick = 0; tick < fixture.site.transportEveryTicks + 2; tick++)
+  // The protected pump may move the charge to the factory wall, but the
+  // Standard buried route refuses it. The unit remains physically held in the
+  // protected wall pipe rather than disappearing.
+  for (let tick = 0; tick < fixture.site.transportEveryTicks * 3 + 2; tick++)
     sim.step(fixture.tickMs);
-  expect(sim.serialize().machines[quencherId].output["phase-suspension"]).toBe(1);
+  expect(sim.serialize().machines[quencherId].output["phase-suspension"] ?? 0).toBe(
+    0,
+  );
+  expect(sim.serialize().pipes["39,49"]).toMatchObject({
+    materialId: "phase-suspension",
+    quantity: 1,
+    containmentProfileId: "sealed-cold",
+  });
   expect(sim.serialize().undergroundLiquids[standardRoute]).toMatchObject({
     materialId: null,
     quantity: 0,
   });
-  expect(
-    sim.snapshot().pumps.find((entry) => entry.id === pumpId)?.status,
-  ).toBe("incompatible");
   auditOk(sim);
 
   expect(sim.command({ type: "dismantle", id: standardRoute }).ok).toBe(true);
   const protectedRoute = build(sim, {
     type: "placeUndergroundLiquid",
-    entry: { x: 28, y: 36 },
-    exit: { x: 34, y: 36 },
+    entry: { x: 40, y: 49 },
+    exit: { x: 47, y: 49 },
     containmentProfileId: "sealed-cold",
   });
 
   const stabilizerId = build(sim, {
     type: "placeMachine",
     definitionId: "phase-stabilizer",
-    x: 36,
-    y: 35,
+    x: 49,
+    y: 48,
     direction: 0,
   });
   build(sim, {
     type: "placePipes",
     containmentProfileId: "sealed-cold",
-    points: [{ x: 35, y: 36, inlet: 2, outlet: 0 }],
+    points: [{ x: 48, y: 49, inlet: 2, outlet: 0 }],
   });
 
   // The protected route now admits the exact same physical liquid under the
