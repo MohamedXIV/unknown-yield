@@ -405,7 +405,7 @@ At least two accepted advanced modes solve different measured layout/throughput 
 
 ## Phase 15 — Content scale and expedition arc
 
-**Epic:** GitHub Issue #106. **ACTIVE**. #145–#149 are complete; #150 pacing/diversification balance is the active dependency-ready child. Children #145–#152.
+**Epic:** GitHub Issue #106. **ACTIVE**. #145–#150 are complete; #151 targeted Content Studio economy authoring is the active dependency-ready child. Children #145–#152.
 
 ### Question
 
