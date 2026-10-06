@@ -498,6 +498,7 @@ function GameClientInner() {
             title="Knowledge"
             onClick={() => {
               setOnboarding((state) => ({ ...state, knowledgeOpened: true }));
+              if (panel !== "knowledge") setKnowledgeFilter("all");
               setPanel(panel === "knowledge" ? null : "knowledge");
               setMode((m) => ({ ...m, tool: "select" }));
             }}
