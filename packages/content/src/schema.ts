@@ -371,6 +371,7 @@ export const contentSchema = z.object({
           quantity: positive,
           fuelCost: positive,
           terminalModuleId: id.optional(),
+          requiredOpportunityId: id.optional(),
         }),
       )
       .default([]),
@@ -801,8 +802,10 @@ function validateContentInternal(
     if (importIds.has(supply.id)) throw new Error("Duplicate import supply ID");
     importIds.add(supply.id);
     const material = c.materials.find((entry) => entry.id === supply.materialId);
-    if (!material || !material.known)
-      throw new Error("Import supply requires a known material");
+    if (!material || (!material.known && !supply.requiredOpportunityId))
+      throw new Error(
+        "Import supply requires an initially known material or company R&D gate",
+      );
     const module = supply.terminalModuleId
       ? c.site.terminalModules.find((entry) => entry.id === supply.terminalModuleId)
       : undefined;
@@ -952,13 +955,20 @@ function validateContentInternal(
       if (reaction.known)
         throw new Error("Property directive solution must begin unconfirmed");
     }
-    if (
-      directive.rewardImportSupplyId &&
-      !c.economy.imports.some(
+    if (directive.rewardImportSupplyId) {
+      const rewardSupply = c.economy.imports.find(
         (supply) => supply.id === directive.rewardImportSupplyId,
+      );
+      if (!rewardSupply)
+        throw new Error("Property directive reward import is missing");
+      if (
+        rewardSupply.requiredOpportunityId &&
+        rewardSupply.requiredOpportunityId !== directive.id
       )
-    )
-      throw new Error("Property directive reward import is missing");
+        throw new Error(
+          "Property directive cannot unlock another opportunity's R&D import",
+        );
+    }
     if (!directive.rewardFuel && !directive.rewardImportSupplyId)
       throw new Error("Property directive requires a reward");
     if (
@@ -968,7 +978,14 @@ function validateContentInternal(
     )
       throw new Error("Localization key must match property directive");
   }
-  const assistanceIds = new Set<string>();
+  for (const supply of c.economy.imports)
+    if (
+      supply.requiredOpportunityId &&
+      !opportunityIds.has(supply.requiredOpportunityId)
+    )
+      throw new Error("Import supply references missing company R&D opportunity");
+
+    const assistanceIds = new Set<string>();
   for (const assistance of c.economy.assistancePackages) {
     if (assistanceIds.has(assistance.id))
       throw new Error("Duplicate assistance package ID");
