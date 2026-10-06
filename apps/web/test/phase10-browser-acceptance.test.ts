@@ -585,8 +585,32 @@ browserIt(
       expect(initialNotebook).toContain("OPEN BRANCH");
       expect(initialNotebook).not.toContain("Magnetic ceramic");
       expect(initialNotebook).not.toContain("Catalyst powder");
+      expect(initialNotebook).toContain("EVIDENCE STATUS");
+      await evaluate(`(() => {
+        [...document.querySelectorAll('nav[aria-label="Notebook filters"] button')]
+          .find((button) => button.textContent === "Open")
+          ?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `[...document.querySelectorAll('nav[aria-label="Notebook filters"] button')]
+          .find((button) => button.textContent === "Open")
+          ?.getAttribute("aria-pressed") === "true"`,
+      );
       await evaluate(`(() => {
         document.querySelector('button[aria-label="Knowledge notebook"]')?.click();
+        document.querySelector('button[aria-label="Company terminal"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.body.textContent?.includes("COMPANY TERMINAL") === true &&
+          !!document.querySelector(".context-overview") &&
+          !!document.querySelector('nav[aria-label="Terminal sections"]') &&
+          !!document.querySelector("#terminal-shipment") &&
+          !!document.querySelector("#terminal-company")`,
+      );
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Company terminal"]')?.click();
         return true;
       })()`);
 
