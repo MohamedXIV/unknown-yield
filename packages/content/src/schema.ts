@@ -495,7 +495,7 @@ export const contentSchema = z.object({
             )
             .min(1),
           unlockTerminalCapabilityIds: z.array(id).default([]),
-          hiddenUntilCompleted: z.boolean().default(false),
+          hiddenUntilCompleted: z.boolean().optional(),
         }),
       )
       .default([]),
