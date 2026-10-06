@@ -61,6 +61,19 @@ it("turns player matrix discovery into company R&D and a deeper local phase seam
     ),
   ).toBe(false);
   expect(
+    sim.snapshot().sensingCapabilities.some(
+      (entry) => entry.id === "phase-probe",
+    ),
+  ).toBe(false);
+  expect(
+    sim.command({
+      type: "sense",
+      capabilityId: "phase-probe",
+      x: 73,
+      y: 50,
+    }),
+  ).toMatchObject({ ok: false, message: "Unknown sensing capability" });
+  expect(
     sim.command({
       type: "requestImport",
       supplyId: "orbital-resonance-seed-crate",
