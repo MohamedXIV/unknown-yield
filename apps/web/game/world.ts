@@ -22,6 +22,13 @@ import { machineStatusLabel } from "./machine-status";
 import { observationKey, unseenObservations } from "./observations";
 import { factoryContractPresentation } from "./factory-presentation";
 import { beltPresentations } from "./belt-presentation";
+import {
+  ART_CAMERA,
+  artAsset,
+  preloadRepresentativeArt,
+  representativeMachineAsset,
+  type ArtAssetId,
+} from "./art-assets";
 export type WorldControls = {
   setSnapshot(s: PlayerSnapshot): void;
   setMode(mode: WorldMode): void;
@@ -36,8 +43,8 @@ export type WorldActions = {
   rotate(): void;
   toggleFactory(id: string): void;
 };
-const X = 32,
-  Y = 24;
+const X = ART_CAMERA.cellWidth,
+  Y = ART_CAMERA.cellHeight;
 const color = (value: string) => parseInt(value.slice(1), 16);
 const editing = () => {
   const el = document.activeElement;
@@ -70,6 +77,28 @@ export function createWorld(
     private dirty = true;
     private seenDiscoveries = new Set(initial.observations.map(observationKey));
     private notices: Phaser.GameObjects.Text[] = [];
+    preload() {
+      preloadRepresentativeArt(this.load);
+    }
+    private artImage(
+      id: ArtAssetId,
+      x: number,
+      y: number,
+      width: number,
+      height: number,
+      rotation = 0,
+      alpha = 1,
+    ) {
+      const asset = artAsset(id);
+      const image = this.add
+        .image(x, y, asset.textureKey)
+        .setOrigin(asset.anchor.x, asset.anchor.y)
+        .setDisplaySize(width, height)
+        .setRotation(rotation)
+        .setAlpha(alpha);
+      this.structures.add(image);
+      return image;
+    }
     private text(x: number, y: number, t: string, size = 10, c = "#c4c7b0") {
       return this.add
         .text(x, y, t, {
@@ -112,6 +141,17 @@ export function createWorld(
       ground
         .fillStyle(0x3a4233)
         .fillRect(0, 0, snapshot.map.width * X, snapshot.map.height * Y);
+      const terrain = artAsset("terrain-basalt");
+      this.add
+        .tileSprite(
+          0,
+          0,
+          snapshot.map.width * X,
+          snapshot.map.height * Y,
+          terrain.textureKey,
+        )
+        .setOrigin(0)
+        .setAlpha(0.14);
       let seed = 131;
       const rand = () => {
         seed = (seed * 1664525 + 1013904223) >>> 0;
@@ -147,6 +187,18 @@ export function createWorld(
           ground
             .lineStyle(1, 0xe0c590, 0.45)
             .lineBetween(x - w / 3, y - w / 2, x + w, y + 2);
+        }
+        if (d.material === "ferrite") {
+          const asset = artAsset("deposit-ferrite");
+          this.add
+            .image(
+              (d.x + d.width / 2) * X,
+              (d.y + d.height * 0.75) * Y,
+              asset.textureKey,
+            )
+            .setOrigin(asset.anchor.x, asset.anchor.y)
+            .setDisplaySize(d.width * X + 28, d.height * Y + 22)
+            .setAlpha(0.72);
         }
         this.text(
           (d.x + d.width / 2) * X,
@@ -418,6 +470,15 @@ export function createWorld(
             5,
           );
           this.arrow(g, cx, cy, direction, tint, 4);
+          this.artImage(
+            "logistics-underground",
+            cx,
+            cy + 4,
+            X,
+            Y + 4,
+            direction * (Math.PI / 2),
+            0.86,
+          );
         }
       };
       for (const route of snapshot.undergroundSolids)
@@ -453,6 +514,15 @@ export function createWorld(
           g.fillStyle(0x535d50, 0.95).fillRect(x - 5, groundY + 3, 10, 6);
         }
         this.arrow(g, ex, ey, route.direction, 0xe1cc8f, 4);
+        this.artImage(
+          "logistics-elevated",
+          (sx + ex) / 2,
+          (sy + ey) / 2 + 17,
+          Math.max(96, span * X),
+          48,
+          route.entry.x === route.exit.x ? Math.PI / 2 : 0,
+          0.72,
+        );
       }
 
       const beltViews = beltPresentations(snapshot);
@@ -505,6 +575,17 @@ export function createWorld(
           }
         }
         g.fillStyle(0x171f1a).fillCircle(cx, cy, 4);
+        if (!view.junction) {
+          this.artImage(
+            "logistics-belt",
+            cx,
+            cy,
+            X,
+            Y,
+            (b.direction ?? 0) * (Math.PI / 2),
+            0.58,
+          );
+        }
         if (view.junction) {
           // Inward arrows distinguish merger/splitter roles without color.
           for (const side of view.inlets) {
@@ -588,6 +669,15 @@ export function createWorld(
       }
       const t = snapshot.map.terminal;
       this.box(g, t, 0x9a9f86, 0x565f4c, 18);
+      this.artImage(
+        "terminal-core",
+        (t.x + t.width / 2) * X,
+        (t.y + t.height) * Y + 4,
+        t.width * X + 20,
+        t.height * Y + 46,
+        0,
+        0.88,
+      );
       for (const d of snapshot.terminalModules) {
         const px = (t.x + d.inlet.x + 0.5) * X,
           py = (t.y + d.inlet.y + 0.5) * Y;
@@ -707,7 +797,18 @@ export function createWorld(
           10,
         );
         const x = (m.x + m.width / 2) * X,
-          y = (m.y + m.height / 2) * Y;
+          y = (m.y + m.height / 2) * Y,
+          representativeArt = representativeMachineAsset(m.definitionId);
+        if (representativeArt)
+          this.artImage(
+            representativeArt,
+            x,
+            (m.y + m.height) * Y + 3,
+            m.width * X + 26,
+            m.height * Y + 38,
+            m.direction * (Math.PI / 2),
+            0.88,
+          );
         if (m.definitionId === "atmospheric-intake") {
           g.lineStyle(5, 0x66786f).strokeCircle(x, y - 24, 17);
           for (let i = 0; i < 4; i++) {
@@ -740,6 +841,16 @@ export function createWorld(
           g.fillStyle(0xd79950).fillRect(x - 11, y - 13, 18, 12);
           g.fillStyle(0x687358).fillRect(x + 19, y - 46, 11, 37);
         }
+        if (m.incident)
+          this.artImage(
+            "effect-scorch",
+            x,
+            (m.y + m.height / 2) * Y,
+            m.width * X + 12,
+            m.height * Y + 6,
+            0,
+            0.78,
+          );
         const def = snapshot.definitions.find((d) => d.id === m.definitionId)!;
         const output = socket(m, def, true),
           input = socket(m, def, false);
@@ -913,6 +1024,15 @@ export function createWorld(
         }
         if (p.containmentProfileId !== "standard")
           g.lineStyle(2, 0xe5c481).strokeCircle(cx, cy, 8);
+        this.artImage(
+          "logistics-pipe",
+          cx,
+          cy,
+          X,
+          Y,
+          p.outlet * (Math.PI / 2),
+          0.62,
+        );
         this.arrow(g, cx, cy, p.outlet, 0xa9dce3, 4);
       }
       for (const t of snapshot.tanks) {
@@ -972,6 +1092,15 @@ export function createWorld(
           h = f.height * Y;
         if (!mode.openFactories.includes(f.id)) {
           this.box(g, f, 0x69765f, 0x44513f, 15);
+          this.artImage(
+            "factory-shell",
+            x + w / 2,
+            y + h + 5,
+            w + 16,
+            h + 42,
+            0,
+            0.82,
+          );
           for (let i = 12; i < h; i += 14)
             g.lineStyle(2, 0x354933, 0.4).lineBetween(
               x + 8,
