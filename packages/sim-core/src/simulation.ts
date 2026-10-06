@@ -11,6 +11,7 @@ import { auditLedger } from "./ledger";
 import { machineUnlocked } from "./progression";
 import { hazardDefinition } from "./hazards";
 import {
+  companyKnowsMaterial,
   marketBulletins,
   marketListings,
   recoverMarkets,
@@ -191,11 +192,11 @@ export class Simulation {
         setupNameKey: setup?.nameKey,
       };
     });
-    const known = new Set(c.materials.filter((m) => m.known).map((m) => m.id));
-    reactions.forEach((r) => {
-      known.add(r.input);
-      known.add(r.output);
-    });
+    const known = new Set(
+      c.materials
+        .filter((material) => companyKnowsMaterial(c, s, material.id))
+        .map((material) => material.id),
+    );
     const knowledgeInsights = c.knowledgeInsights.flatMap((insight) => {
       if (!known.has(insight.materialId)) return [];
       const requirement = insight.requires;
