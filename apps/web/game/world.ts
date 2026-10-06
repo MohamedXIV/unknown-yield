@@ -31,6 +31,11 @@ import {
 } from "./art-assets";
 import { deriveFeedbackEvents, type FeedbackEvent } from "./feedback";
 import { IndustrialFeedbackAudio } from "./audio-feedback";
+import {
+  finishBrowserMetric,
+  recordBrowserMetric,
+  startBrowserMetric,
+} from "./performance";
 export type WorldControls = {
   setSnapshot(s: PlayerSnapshot): void;
   setMode(mode: WorldMode): void;
@@ -1254,6 +1259,8 @@ export function createWorld(
     }
     update(_time: number, delta: number) {
       if (!this.dynamic) return;
+      recordBrowserMetric("frame-interval", delta);
+      const dynamicDrawStartedAt = startBrowserMetric();
       if (this.dirty) {
         this.rebuild();
         this.refresh();
@@ -1385,9 +1392,15 @@ export function createWorld(
       const ghost = this.ghost;
       ghost.clear();
       this.tooltip.setVisible(false);
-      if (!this.hover || mode.tool === "select") return;
+      if (!this.hover || mode.tool === "select") {
+        finishBrowserMetric("world-dynamic-draw", dynamicDrawStartedAt);
+        return;
+      }
       const command = buildCommand(mode, snapshot, this.hover, this.anchor);
-      if (!command) return;
+      if (!command) {
+        finishBrowserMetric("world-dynamic-draw", dynamicDrawStartedAt);
+        return;
+      }
       const result = actions.preview(command),
         tint = result.ok ? 0xbdd79f : 0xe79b7c;
       ghost.fillStyle(tint, 0.2).lineStyle(2, tint, 0.8);
@@ -1546,6 +1559,7 @@ export function createWorld(
             (result.cost ? " · " + result.cost + " " + this.buildUnit() : ""),
         )
         .setColor(result.ok ? "#d3e4ba" : "#f0ba9a");
+      finishBrowserMetric("world-dynamic-draw", dynamicDrawStartedAt);
     }
   }
   const game = new Phaser.Game({
@@ -1564,6 +1578,7 @@ export function createWorld(
   });
   return {
     setSnapshot: (s) => {
+      const startedAt = startBrowserMetric();
       const events = deriveFeedbackEvents(snapshot, s);
       snapshot = s;
       const k = computeStructureKey(s);
@@ -1573,6 +1588,7 @@ export function createWorld(
       }
       scene?.feedback(events);
       scene?.refresh();
+      finishBrowserMetric("world-sync", startedAt);
     },
     setMode: (m) => {
       const rebuild = mode.openFactories.join() !== m.openFactories.join();
