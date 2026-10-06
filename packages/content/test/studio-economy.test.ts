@@ -30,8 +30,8 @@ describe("Phase 15 targeted economy Studio authoring", () => {
     store.setCell(
       "propertyDirectives",
       "matrix-local-route",
-      "solutionReactionIdsJson",
-      JSON.stringify(["sinter-catalyst", "sinter-orbital-binder"]),
+      "durationTicks",
+      11000,
     );
 
     const parsed = parseStudioBundle(serializeStudioBundle(store, fixture));
@@ -53,8 +53,8 @@ describe("Phase 15 targeted economy Studio authoring", () => {
     expect(
       parsed.content.economy.propertyDirectives.find(
         (entry) => entry.id === "matrix-local-route",
-      )?.solutionReactionIds,
-    ).toEqual(["sinter-catalyst", "sinter-orbital-binder"]);
+      )?.durationTicks,
+    ).toBe(11000);
   });
 
   it("authors new economy records without replacing untouched economy tables", () => {
@@ -90,7 +90,7 @@ describe("Phase 15 targeted economy Studio authoring", () => {
       nameKey: "directive.test-catalyst-study.name",
       briefKey: "directive.test-catalyst-study.brief",
       propertyKey: "property.test-catalyst-study.name",
-      targetMaterialId: "catalyst",
+      targetMaterialId: "catalyst-powder",
       solutionReactionIdsJson: JSON.stringify(["crush-catalyst"]),
       durationTicks: 3000,
       rewardFuel: 0,
