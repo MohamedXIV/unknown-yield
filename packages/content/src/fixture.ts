@@ -1075,6 +1075,15 @@ export const fixture = validateContent({
         durationTicks: 8000,
         rewardFuel: 30,
       },
+      {
+        id: "phase-ceramic-demonstration",
+        nameKey: "order.phase-ceramic-demonstration.name",
+        briefKey: "order.phase-ceramic-demonstration.brief",
+        materialId: "phase-ceramic",
+        quantity: 4,
+        durationTicks: 12000,
+        rewardFuel: 36,
+      },
     ],
     directives: [
       {
