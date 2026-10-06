@@ -1075,6 +1075,24 @@ export const fixture = validateContent({
         durationTicks: 8000,
         rewardFuel: 30,
       },
+      {
+        id: "magnetic-ceramic-procurement",
+        nameKey: "order.magnetic-ceramic-procurement.name",
+        briefKey: "order.magnetic-ceramic-procurement.brief",
+        materialId: "ferrite-ceramic",
+        quantity: 2,
+        durationTicks: 7000,
+        rewardFuel: 12,
+      },
+      {
+        id: "catalyst-powder-reserve",
+        nameKey: "order.catalyst-powder-reserve.name",
+        briefKey: "order.catalyst-powder-reserve.brief",
+        materialId: "catalyst-powder",
+        quantity: 4,
+        durationTicks: 9000,
+        rewardFuel: 16,
+      },
     ],
     directives: [
       {
