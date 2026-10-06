@@ -55,7 +55,6 @@ it("integrates late Phase lattice hazard, sealed-cold handling and underground l
     "vaporize-liquid-0",
   ])
     confirm(prior, id);
-  prior.flows.produced["phase-lattice"] = 2;
   initializeKnownMarkets(fixture, prior);
   expect(sim.load(prior).ok).toBe(true);
 
@@ -128,6 +127,7 @@ it("integrates late Phase lattice hazard, sealed-cold handling and underground l
   ).toBe(true);
 
   const staged = sim.serialize();
+  staged.flows.produced["phase-lattice"] = 2;
   staged.machines[quencherId].input["phase-lattice"] = 1;
   staged.machines[hazardId].input["phase-lattice"] = 1;
   expect(sim.load(staged).ok).toBe(true);
