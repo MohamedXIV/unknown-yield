@@ -105,7 +105,15 @@ it("plays a fresh Phase 15 expedition from ordinary industry into company-learne
     direction: 0,
   });
   build(sim, path(20, 27, 26, 27));
-  build(sim, path(29, 27, 37, 27, 0));
+  const ferriteExportPath = Array.from({ length: 9 }, (_, index) => ({
+    x: 29 + index,
+    y: 27,
+  }));
+  build(sim, {
+    type: "placeBelts",
+    points: ferriteExportPath,
+    direction: 0,
+  });
 
   tickUntil(
     sim,
@@ -141,6 +149,27 @@ it("plays a fresh Phase 15 expedition from ordinary industry into company-learne
     machineId: ferriteFurnace,
     enabled: false,
   });
+  tickUntil(
+    sim,
+    () =>
+      sim.serialize().machines[ferriteFurnace].job === null &&
+      (sim.serialize().machines[ferriteFurnace].output["ferrite-ceramic"] ?? 0) ===
+        0 &&
+      ferriteExportPath.every((point) => {
+        const belt = Object.values(sim.serialize().belts).find(
+          (entry) => entry.x === point.x && entry.y === point.y,
+        );
+        return belt?.cargo === null;
+      }),
+    300,
+    "the temporary ferrite export corridor should drain",
+  );
+  for (const point of ferriteExportPath) {
+    const belt = Object.values(sim.serialize().belts).find(
+      (entry) => entry.x === point.x && entry.y === point.y,
+    )!;
+    expect(sim.command({ type: "dismantle", id: belt.id }).ok).toBe(true);
+  }
   audit(sim);
 
   // Era 2 — the reactive family crosses solid -> corrosive liquid -> gas and
@@ -337,6 +366,26 @@ it("plays a fresh Phase 15 expedition from ordinary industry into company-learne
     { type: "setEnabled", machineId: collector, enabled: false },
   ] satisfies GameCommand[])
     build(sim, command);
+  tickUntil(
+    sim,
+    () =>
+      sim.serialize().machines[collector].job === null &&
+      (sim.serialize().machines[collector].output.granules ?? 0) === 0 &&
+      granuleExportPath.every((point) => {
+        const belt = Object.values(sim.serialize().belts).find(
+          (entry) => entry.x === point.x && entry.y === point.y,
+        );
+        return belt?.cargo === null;
+      }),
+    300,
+    "the temporary granules export corridor should drain",
+  );
+  for (const point of granuleExportPath) {
+    const belt = Object.values(sim.serialize().belts).find(
+      (entry) => entry.x === point.x && entry.y === point.y,
+    )!;
+    expect(sim.command({ type: "dismantle", id: belt.id }).ok).toBe(true);
+  }
   audit(sim);
 
   // Era 3 — physical higher fuel classes gate deep extraction and sintering.
