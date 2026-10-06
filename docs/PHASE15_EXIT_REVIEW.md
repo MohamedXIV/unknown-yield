@@ -120,17 +120,29 @@ Final Phase technology survives save/load and deterministic continuation.
 
 No material is created by milestone, R&D or sensing state. Those systems only expose capabilities; all industrial feedstock remains physical.
 
-## Exit decision
+## Accepted evidence
 
-Phase 15 may be marked complete only when PR #205 exact head passes:
+Phase 15 is **accepted and complete** through #152 / PR #205.
 
-- the fresh expedition regression;
-- all existing Phase 15 focused regressions;
-- full `npm test`;
-- `npm run typecheck`;
-- `npm run lint`;
-- `npm run build`;
-- security checks;
-- no unresolved blocking review threads.
+Exact closing head:
 
-Until those gates pass, this document records the intended exit contract, not a PASS claim.
+`2f530ababb282c3e6d4046c5a5e9ce0cd6491fdb`
+
+Squash merge on `main`:
+
+`d8d0de628b73f1cd291083437de5aa2a88b33804`
+
+Exact-head evidence:
+
+- fresh `phase15-expedition-exit.test.ts`: PASS;
+- focused recursive-company-tech regression: PASS;
+- 104 / 104 test files PASS;
+- 502 tests PASS / 2 skipped;
+- typecheck PASS;
+- lint PASS;
+- build PASS;
+- GitGuardian PASS;
+- RepoPilot exact-head merge readiness: `ready=true`, `blockers=[]`;
+- no unresolved review threads.
+
+The fresh gate also exposed and fixed a real spoiler: the Phase-lattice milestone is now omitted from player-facing milestone views until it has completed.
