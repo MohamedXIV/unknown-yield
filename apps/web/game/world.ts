@@ -29,6 +29,8 @@ import {
   representativeMachineAsset,
   type ArtAssetId,
 } from "./art-assets";
+import { deriveFeedbackEvents, type FeedbackEvent } from "./feedback";
+import { IndustrialFeedbackAudio } from "./audio-feedback";
 export type WorldControls = {
   setSnapshot(s: PlayerSnapshot): void;
   setMode(mode: WorldMode): void;
@@ -59,6 +61,7 @@ export function createWorld(
   actions: WorldActions,
   initialMode: WorldMode = DEFAULT_MODE,
 ): WorldControls {
+  const feedbackAudio = new IndustrialFeedbackAudio();
   let snapshot = initial,
     mode = initialMode,
     scene: Site | undefined,
@@ -247,6 +250,7 @@ export function createWorld(
         this.hover = this.cell(p);
       });
       this.input.on("pointerdown", (p: Phaser.Input.Pointer) => {
+        void feedbackAudio.enable();
         if (!p.leftButtonDown()) return;
         this.hover = this.cell(p);
         this.anchor = this.hover;
@@ -289,6 +293,7 @@ export function createWorld(
       );
       const down = (e: KeyboardEvent) => {
         if (editing()) return;
+        void feedbackAudio.enable();
         const k = e.key.toLowerCase();
         this.keys.add(k);
         if (
@@ -356,6 +361,40 @@ export function createWorld(
     }
     markDirty() {
       this.dirty = true;
+    }
+    feedback(events: readonly FeedbackEvent[]) {
+      if (!events.length) return;
+      feedbackAudio.play(events);
+      const visual = {
+        "machine-start": { tint: 0xa9cf8a, radius: 14, duration: 480 },
+        "logistics-flow": { tint: 0xb9c7a0, radius: 10, duration: 360 },
+        discovery: { tint: 0xd8d79a, radius: 22, duration: 850 },
+        warning: { tint: 0xe5ad75, radius: 18, duration: 700 },
+        hazard: { tint: 0xe57865, radius: 24, duration: 900 },
+      } as const;
+      for (const event of events) {
+        if (!event.at) continue;
+        const cue = visual[event.kind],
+          x = event.at.x * X,
+          y = event.at.y * Y,
+          pulse = this.add.graphics().setDepth(940);
+        pulse
+          .lineStyle(event.kind === "hazard" ? 4 : 2, cue.tint, 0.95)
+          .strokeCircle(x, y, cue.radius);
+        if (event.kind === "warning" || event.kind === "hazard")
+          pulse
+            .lineStyle(1, cue.tint, 0.65)
+            .strokeCircle(x, y, Math.max(5, cue.radius - 7));
+        this.tweens.add({
+          targets: pulse,
+          scaleX: event.kind === "discovery" ? 2.4 : 1.9,
+          scaleY: event.kind === "discovery" ? 2.4 : 1.9,
+          alpha: 0,
+          duration: cue.duration,
+          ease: "Quad.easeOut",
+          onComplete: () => pulse.destroy(),
+        });
+      }
     }
     arrow(
       g: Phaser.GameObjects.Graphics,
@@ -1525,12 +1564,14 @@ export function createWorld(
   });
   return {
     setSnapshot: (s) => {
+      const events = deriveFeedbackEvents(snapshot, s);
       snapshot = s;
       const k = computeStructureKey(s);
       if (k !== structureKey) {
         structureKey = k;
         scene?.markDirty();
       }
+      scene?.feedback(events);
       scene?.refresh();
     },
     setMode: (m) => {
@@ -1542,6 +1583,7 @@ export function createWorld(
     destroy: () => {
       if (!destroyed) {
         destroyed = true;
+        feedbackAudio.destroy();
         scene = undefined;
         game.destroy(true);
       }
