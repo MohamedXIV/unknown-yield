@@ -387,7 +387,8 @@ it("plays a fresh Phase 15 expedition from ordinary industry into company-learne
     sim,
     () =>
       machineDrained(sim, gasExtractor) &&
-      machineDrained(sim, liquefier) &&
+      sim.serialize().machines[liquefier].job === null &&
+      inventoryTotal(sim.serialize().machines[liquefier].output) === 0 &&
       machineDrained(sim, vaporizer) &&
       machineDrained(sim, collector) &&
       gasFeedPoints.every((point) => {
@@ -419,7 +420,10 @@ it("plays a fresh Phase 15 expedition from ordinary industry into company-learne
   ] satisfies GameCommand[])
     build(sim, command);
 
-  for (const id of [gasExtractor, liquefier, vaporizer, collector, pump, compressor])
+  // The liquefier may retain one raw unit, which is real inventory below its
+  // two-unit batch size. Keep that solved machine intact rather than deleting
+  // or teleporting the remainder.
+  for (const id of [gasExtractor, vaporizer, collector, pump, compressor])
     expect(sim.command({ type: "dismantle", id }).ok).toBe(true);
 
   const pipeId = sim.serialize().pipes["28,39"].id;
@@ -531,6 +535,15 @@ it("plays a fresh Phase 15 expedition from ordinary industry into company-learne
   expect(sim.snapshot().materials.some((entry) => entry.id === "matrix")).toBe(
     true,
   );
+  tickUntil(
+    sim,
+    () =>
+      sim.serialize().machines[deepExtractor].job === null &&
+      inventoryTotal(sim.serialize().machines[deepExtractor].output) === 0,
+    300,
+    "the catalyst Deep extractor should finish and release its output",
+  );
+  expect(sim.command({ type: "dismantle", id: deepExtractor }).ok).toBe(true);
   audit(sim);
 
   // Era 4 — that player discovery creates company R&D which returns a hidden
