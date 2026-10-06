@@ -19,16 +19,25 @@ export function exchangeDefinition(c: Content, materialId: string) {
 
 export function companyKnowsMaterial(
   c: Content,
-  s: Pick<Save, "knowledge">,
+  s: Pick<Save, "knowledge"> & Partial<Pick<Save, "opportunities">>,
   materialId: string,
 ): boolean {
   const material = c.materials.find((entry) => entry.id === materialId);
   if (!material) return false;
   if (material.known) return true;
-  return c.reactions.some(
-    (reaction) =>
-      s.knowledge.includes(reaction.id) &&
-      (reaction.input === materialId || reaction.output === materialId),
+  if (
+    c.reactions.some(
+      (reaction) =>
+        s.knowledge.includes(reaction.id) &&
+        (reaction.input === materialId || reaction.output === materialId),
+    )
+  )
+    return true;
+  return c.economy.imports.some(
+    (supply) =>
+      supply.materialId === materialId &&
+      !!supply.requiredOpportunityId &&
+      s.opportunities?.[supply.requiredOpportunityId]?.status === "completed",
   );
 }
 

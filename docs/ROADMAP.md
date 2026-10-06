@@ -405,7 +405,7 @@ At least two accepted advanced modes solve different measured layout/throughput 
 
 ## Phase 15 — Content scale and expedition arc
 
-**Epic:** GitHub Issue #106. **ACTIVE**. #145 is complete through PR #198; #146 is complete through PR #199; #147 is the active dependency-ready child. Children #145–#152.
+**Epic:** GitHub Issue #106. **ACTIVE**. #145–#147 are complete; #148 recursive company technology is the active dependency-ready child. Children #145–#152.
 
 ### Question
 

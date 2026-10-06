@@ -30,8 +30,9 @@ describe("content boundary", () => {
       "survey-scanner",
       "core-probe",
       "resonance-probe",
+      "phase-probe",
     ]);
-    expect(c.site.surveySignals).toHaveLength(4);
+    expect(c.site.surveySignals).toHaveLength(5);
     expect(
       c.machines.find((machine) => machine.id === "deep-extractor"),
     ).toMatchObject({

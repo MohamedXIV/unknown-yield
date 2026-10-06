@@ -158,6 +158,12 @@ export const fixture = validateContent({
       known: true,
     },
     {
+      id: "orbital-resonance-seed",
+      nameKey: "material.orbital-resonance-seed.name",
+      color: "#a99be0",
+      known: false,
+    },
+    {
       id: "orbital-propellant",
       nameKey: "material.orbital-propellant.name",
       color: "#a8c4de",
@@ -176,6 +182,12 @@ export const fixture = validateContent({
       id: "matrix",
       nameKey: "material.matrix.name",
       color: "#8fd1c8",
+      known: false,
+    },
+    {
+      id: "phase-lattice",
+      nameKey: "material.phase-lattice.name",
+      color: "#79d7c8",
       known: false,
     },
   ],
@@ -539,6 +551,16 @@ export const fixture = validateContent({
       known: false,
     },
     {
+      id: "sinter-resonance-seed",
+      operation: "sinter",
+      input: "orbital-resonance-seed",
+      inputAmount: 1,
+      output: "phase-lattice",
+      outputAmount: 1,
+      observationKey: "reaction.sinter-resonance-seed.observation",
+      known: false,
+    },
+    {
       id: "crush-catalyst",
       operation: "crush",
       input: "catalyst",
@@ -703,12 +725,21 @@ export const fixture = validateContent({
         range: 1,
         requiredMilestoneId: "resonance-survey-certified",
       },
+      {
+        id: "phase-probe",
+        nameKey: "sensing.capability.phase-probe.name",
+        mode: "probe",
+        range: 1,
+        requiredMilestoneId: "phase-lattice-certified",
+        hiddenUntilUnlocked: true,
+      },
     ],
     surveySignals: [
       { id: "anomaly-a", x: 46, y: 18, strength: 8, depth: 14 },
       { id: "anomaly-b", x: 62, y: 42, strength: 5, depth: 4 },
       { id: "anomaly-c", x: 70, y: 26, strength: 7, depth: 1 },
       { id: "anomaly-d", x: 57, y: 10, strength: 8, depth: 9 },
+      { id: "anomaly-e", x: 73, y: 50, strength: 9, depth: 18 },
     ],
     hiddenDeposits: [
       {
@@ -732,6 +763,17 @@ export const fixture = validateContent({
         units: 800,
         surveySignalId: "anomaly-d",
         requiredSensingCapabilityId: "resonance-probe",
+      },
+      {
+        id: "phase-lattice-seam-a",
+        material: "phase-lattice",
+        x: 70,
+        y: 47,
+        width: 6,
+        height: 6,
+        units: 480,
+        surveySignalId: "anomaly-e",
+        requiredSensingCapabilityId: "phase-probe",
       },
     ],
     atmosphericSources: [
@@ -842,6 +884,15 @@ export const fixture = validateContent({
         fuelCost: 42,
       },
       {
+        id: "orbital-resonance-seed-crate",
+        nameKey: "import.orbital-resonance-seed-crate.name",
+        briefKey: "import.orbital-resonance-seed-crate.brief",
+        materialId: "orbital-resonance-seed",
+        quantity: 2,
+        fuelCost: 64,
+        requiredOpportunityId: "matrix-orbital-application",
+      },
+      {
         id: "orbital-propellant-cylinder",
         nameKey: "import.orbital-propellant-cylinder.name",
         briefKey: "import.orbital-propellant-cylinder.brief",
@@ -946,6 +997,17 @@ export const fixture = validateContent({
         rewardFuel: 0,
         rewardImportSupplyId: "orbital-coolant-canister",
       },
+      {
+        id: "matrix-orbital-application",
+        nameKey: "directive.matrix-orbital-application.name",
+        briefKey: "directive.matrix-orbital-application.brief",
+        propertyKey: "property.matrix-orbital-application.name",
+        targetMaterialId: "matrix",
+        solutionReactionIds: ["sinter-orbital-binder"],
+        durationTicks: 10000,
+        rewardFuel: 0,
+        rewardImportSupplyId: "orbital-resonance-seed-crate",
+      },
     ],
     terminalCapabilities: [
       {
@@ -983,6 +1045,15 @@ export const fixture = validateContent({
         nameKey: "milestone.resonance-survey-certified.name",
         hintKey: "milestone.resonance-survey-certified.hint",
         requires: [{ type: "reaction-confirmed", reactionId: "collect-gas-0" }],
+        unlockTerminalCapabilityIds: [],
+      },
+      {
+        id: "phase-lattice-certified",
+        nameKey: "milestone.phase-lattice-certified.name",
+        hintKey: "milestone.phase-lattice-certified.hint",
+        requires: [
+          { type: "reaction-confirmed", reactionId: "sinter-resonance-seed" },
+        ],
         unlockTerminalCapabilityIds: [],
       },
     ],

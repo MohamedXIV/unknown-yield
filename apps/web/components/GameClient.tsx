@@ -2123,9 +2123,12 @@ function GameClientInner() {
                               ? t("ui.terminal.opportunity.property-meta", {
                                   supply: t(rewardSupply.nameKey),
                                 })
-                              : t("ui.terminal.opportunity.directive-meta", {
-                                  reward: opportunity.rewardFuel,
-                                })}
+                              : opportunity.kind === "property-directive" &&
+                                  opportunity.rewardImportSupplyId
+                                ? t("ui.terminal.opportunity.research-meta")
+                                : t("ui.terminal.opportunity.directive-meta", {
+                                    reward: opportunity.rewardFuel,
+                                  })}
                         </small>
                         <h3>{t(opportunity.nameKey)}</h3>
                         <p>{t(opportunity.briefKey)}</p>

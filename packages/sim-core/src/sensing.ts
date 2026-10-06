@@ -21,6 +21,13 @@ export function sensingCapabilityUnlocked(
   );
 }
 
+export function sensingCapabilityVisible(
+  state: Save,
+  capability: SensingCapability,
+) {
+  return !capability.hiddenUntilUnlocked || sensingCapabilityUnlocked(state, capability);
+}
+
 export function createSensingObservation(
   content: Content,
   capability: SensingCapability,
@@ -83,7 +90,7 @@ export function applySensingObservation(
   const capability = content.site.sensingCapabilities.find(
     (entry) => entry.id === capabilityId,
   );
-  if (!capability)
+  if (!capability || !sensingCapabilityVisible(state, capability))
     return { ok: false as const, message: "Unknown sensing capability" };
   if (!sensingCapabilityUnlocked(state, capability))
     return { ok: false as const, message: "Sensing capability is locked" };

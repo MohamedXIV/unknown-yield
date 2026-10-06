@@ -11,6 +11,7 @@ import { auditLedger } from "./ledger";
 import { machineUnlocked } from "./progression";
 import { hazardDefinition } from "./hazards";
 import {
+  companyKnowsMaterial,
   marketBulletins,
   marketListings,
   recoverMarkets,
@@ -32,7 +33,7 @@ import { terminalModuleViews } from "./terminal";
 import { footprint } from "./geometry";
 import { factoryView } from "./factory-contract";
 import { FactoryThroughputMonitor } from "./factory-throughput";
-import { sensingCapabilityUnlocked } from "./sensing";
+import { sensingCapabilityUnlocked, sensingCapabilityVisible } from "./sensing";
 import { importSupplyViews, terminalImportOutlet } from "./imports";
 import { advanceUndergroundRoutes } from "./underground";
 import { advanceElevatedRoutes } from "./elevated";
@@ -191,11 +192,11 @@ export class Simulation {
         setupNameKey: setup?.nameKey,
       };
     });
-    const known = new Set(c.materials.filter((m) => m.known).map((m) => m.id));
-    reactions.forEach((r) => {
-      known.add(r.input);
-      known.add(r.output);
-    });
+    const known = new Set(
+      c.materials
+        .filter((material) => companyKnowsMaterial(c, s, material.id))
+        .map((material) => material.id),
+    );
     const knowledgeInsights = c.knowledgeInsights.flatMap((insight) => {
       if (!known.has(insight.materialId)) return [];
       const requirement = insight.requires;
@@ -240,13 +241,15 @@ export class Simulation {
       exported: s.exported,
       milestone: s.exported >= c.economy.milestoneExports,
       map: publicMap,
-      sensingCapabilities: c.site.sensingCapabilities.map((capability) => ({
-        id: capability.id,
-        nameKey: capability.nameKey,
-        mode: capability.mode,
-        range: capability.range,
-        unlocked: sensingCapabilityUnlocked(s, capability),
-      })),
+      sensingCapabilities: c.site.sensingCapabilities
+        .filter((capability) => sensingCapabilityVisible(s, capability))
+        .map((capability) => ({
+          id: capability.id,
+          nameKey: capability.nameKey,
+          mode: capability.mode,
+          range: capability.range,
+          unlocked: sensingCapabilityUnlocked(s, capability),
+        })),
       sensingObservations: Object.entries(s.sensingObservations)
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([, observation]) => observation),

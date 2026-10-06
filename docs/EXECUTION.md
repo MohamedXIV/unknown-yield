@@ -54,7 +54,7 @@ This document is intentionally procedural. Game/design truth lives in the domain
 - Completed phase: **Phase 11 — hazardous science and recovery (#102)**.
 - Completed phase: **Phase 12 — factory lifecycle and reconfiguration (#103)**. #126–#129 landed; #130 and #131 closed not planned under their recorded evidence/user decisions, with no false integrated-exit PASS claim for #131.
 - Completed phase: **Phase 13 — terminal and off-world exchange depth (#104)** (closed after #138 / PR #192, main `a42e6e94a9f41588ddd4ecc19efea3829f8ddb42`). #132–#138 are complete; integrated evidence: [PHASE13_EXIT_REVIEW.md](PHASE13_EXIT_REVIEW.md).
-- Completed phase: **Phase 14 — layered and long-distance logistics (#105)** (closed after #144 / PR #196, main `04da68325c495f811e611c05ae436c4daec79aa2`). #139 underground routes and #140 elevated gantries are accepted; #141–#143 closed NOT PLANNED after their evidence gates; integrated evidence: [PHASE14_EXIT_REVIEW.md](PHASE14_EXIT_REVIEW.md). Current gameplay phase: **Phase 15 — content scale and expedition arc (#106)**. **#145 differentiated material families is COMPLETE through PR #198 / main `3086e5559168807d4693132977667fdcd5795117`; #146 partial knowledge graph is COMPLETE through PR #199 / main `df05177448bbbd20e725acb20089e96b166877d3`; #147 advanced/research fuel progression is ACTIVE**.
+- Completed phase: **Phase 14 — layered and long-distance logistics (#105)** (closed after #144 / PR #196, main `04da68325c495f811e611c05ae436c4daec79aa2`). #139 underground routes and #140 elevated gantries are accepted; #141–#143 closed NOT PLANNED after their evidence gates; integrated evidence: [PHASE14_EXIT_REVIEW.md](PHASE14_EXIT_REVIEW.md). Current gameplay phase: **Phase 15 — content scale and expedition arc (#106)**. **#145 is COMPLETE through PR #198; #146 is COMPLETE through PR #199; #147 advanced/research fuel progression is COMPLETE through PR #200 / main `4095e4fe970494492d1b2e35096d0b644d3ec7c5`; #148 recursive company technology is ACTIVE**.
 
 ## Phase 1.5 dependency graph
 
@@ -206,7 +206,7 @@ GitHub Actions CI is intentionally budget-conscious: it runs the full `npm test`
 - Do not add Rust/WASM without benchmark/profiler evidence.
 - Completed phases are foundations, not active scope: extend their accepted contracts rather than reopening them casually.
 - Phase 7 performance work remains deferred until measured browser/scale evidence justifies reopening it; Phase 8 art work is parallel and explicitly selected only when needed.
-- Phase 10 is complete through #119 / PR #174, Phase 11 through #125 / PR #180, Phase 12 is complete under its recorded decisions, Phase 13 through #138 / PR #192, and Phase 14 through #144 / PR #196. Phase 15 / #106 is active; #145–#146 are complete, #147 is active, and #148–#152 remain dependency-ordered.
+- Phase 10 is complete through #119 / PR #174, Phase 11 through #125 / PR #180, Phase 12 is complete under its recorded decisions, Phase 13 through #138 / PR #192, and Phase 14 through #144 / PR #196. Phase 15 / #106 is active; #145–#147 are complete, #148 is active, and #149–#152 remain dependency-ordered.
 
 ## Active/later phase epics
 
@@ -221,7 +221,7 @@ GitHub Actions CI is intentionally budget-conscious: it runs the full `npm test`
 - #103 — Phase 12 factory lifecycle and district reconfiguration — COMPLETE; #126–#129 landed, while #130 and #131 closed NOT PLANNED under their recorded evidence/decisions.
 - #104 — Phase 13 terminal and off-world exchange depth — COMPLETE through #138 / PR #192 / `a42e6e94a9f41588ddd4ecc19efea3829f8ddb42`.
 - #105 — Phase 14 layered and long-distance logistics — COMPLETE through #144 / PR #196 / `04da68325c495f811e611c05ae436c4daec79aa2`; #139–#140 accepted, #141–#143 CLOSED NOT PLANNED under evidence.
-- #106 — Phase 15 content scale and expedition arc — ACTIVE; #145 COMPLETE through PR #198, #146 COMPLETE through PR #199, #147 advanced/research fuel progression ACTIVE, #148–#152 remain dependency-ordered.
+- #106 — Phase 15 content scale and expedition arc — ACTIVE; #145–#147 COMPLETE, #148 recursive company technology ACTIVE, #149–#152 remain dependency-ordered.
 - #107 — Phase 16 production vertical slice — dependency-ordered later queue.
 - Phase 8 — art production pipeline — parallel planned track, selected explicitly when useful.
 - Completed Phase 7 baseline: **#90 — single-world simulation/snapshot baseline**, through PR #91. Evidence: PHASE7_BASELINE.md. Phase 7 remains deferred; #92 profiling completed through PR #93; 32-factory / 10ms joint-p95 budget FAILS. Evidence: PHASE7_PROFILING.md. Optimization #94 is complete through PR #95: shared connected topology indexing within each throughput observation; all dynamic recurrence checks retained. Browser costs remain a separate gate.

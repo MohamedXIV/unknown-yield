@@ -16,6 +16,16 @@ export function importSupplyDefinition(c: Content, id: string) {
   return c.economy.imports.find((entry) => entry.id === id);
 }
 
+export function importSupplyUnlocked(
+  s: Pick<Save, "opportunities">,
+  definition: Content["economy"]["imports"][number],
+): boolean {
+  return (
+    !definition.requiredOpportunityId ||
+    s.opportunities[definition.requiredOpportunityId]?.status === "completed"
+  );
+}
+
 export function terminalImportOutlet(c: Content): Point & { direction: number } {
   const terminal = c.site.terminal;
   if (terminal.x + terminal.width < c.site.width)
@@ -85,21 +95,23 @@ function importDestination(
 }
 
 export function importSupplyViews(c: Content, s: Save): ImportSupplyView[] {
-  return c.economy.imports.map((definition) => {
-    const destination = importDestination(c, s, definition);
-    const allocations = s.company.importAllocations[definition.id] ?? 0;
-    const reason =
-      !allocations && s.fuel < definition.fuelCost
-        ? "fuel"
-        : destination.reason;
-    return {
-      ...definition,
-      held: destination.held,
-      allocations,
-      eligible: reason === null,
-      reason,
-    };
-  });
+  return c.economy.imports
+    .filter((definition) => importSupplyUnlocked(s, definition))
+    .map((definition) => {
+      const destination = importDestination(c, s, definition);
+      const allocations = s.company.importAllocations[definition.id] ?? 0;
+      const reason =
+        !allocations && s.fuel < definition.fuelCost
+          ? "fuel"
+          : destination.reason;
+      return {
+        ...definition,
+        held: destination.held,
+        allocations,
+        eligible: reason === null,
+        reason,
+      };
+    });
 }
 
 export function terminalModuleCarriesImport(
@@ -121,7 +133,7 @@ export function requestImportCommand(
   apply: boolean,
 ): CommandResult {
   const definition = importSupplyDefinition(c, id);
-  if (!definition)
+  if (!definition || !importSupplyUnlocked(s, definition))
     return {
       ok: false,
       message: "Unknown import supply",
