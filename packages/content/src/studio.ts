@@ -11,7 +11,14 @@ export type StudioBundle = {
 };
 
 export type StudioEntityKind =
-  "material" | "operation" | "machine" | "reaction";
+  | "material"
+  | "operation"
+  | "machine"
+  | "reaction"
+  | "exchange"
+  | "import"
+  | "order"
+  | "property-directive";
 
 export type StudioReference = {
   targetType: StudioEntityKind;
@@ -21,18 +28,34 @@ export type StudioReference = {
     | "machine"
     | "site"
     | "deposit"
-    | "atmospheric-source";
+    | "atmospheric-source"
+    | "exchange"
+    | "import"
+    | "order"
+    | "property-directive";
   sourceId: string;
   field: string;
 };
 
-type StudioTable = "materials" | "operations" | "machines" | "reactions";
+type StudioTable =
+  | "materials"
+  | "operations"
+  | "machines"
+  | "reactions"
+  | "exchange"
+  | "imports"
+  | "orders"
+  | "propertyDirectives";
 
 const entityTable: Record<StudioEntityKind, StudioTable> = {
   material: "materials",
   operation: "operations",
   machine: "machines",
   reaction: "reactions",
+  exchange: "exchange",
+  import: "imports",
+  order: "orders",
+  "property-directive": "propertyDirectives",
 };
 
 const sortedEntries = <T>(record: Record<string, T>) =>
@@ -87,6 +110,48 @@ const reactionRow = (reaction: Content["reactions"][number]) => ({
   known: reaction.known,
 });
 
+const exchangeRow = (listing: Content["economy"]["exchange"][number]) => ({
+  baseCompensation: listing.baseCompensation,
+  floorCompensation: listing.floorCompensation,
+  baseDemandBps: listing.baseDemandBps,
+  saturationPerUnitBps: listing.saturationPerUnitBps,
+  recoveryPerMarketTickBps: listing.recoveryPerMarketTickBps,
+  demandRecoveryPerMarketTickBps: listing.demandRecoveryPerMarketTickBps,
+  requiredTerminalCapabilityId: empty(listing.requiredTerminalCapabilityId),
+});
+
+const importRow = (supply: Content["economy"]["imports"][number]) => ({
+  nameKey: supply.nameKey,
+  briefKey: supply.briefKey,
+  materialId: supply.materialId,
+  quantity: supply.quantity,
+  fuelCost: supply.fuelCost,
+  terminalModuleId: empty(supply.terminalModuleId),
+  requiredOpportunityId: empty(supply.requiredOpportunityId),
+});
+
+const orderRow = (order: Content["economy"]["orders"][number]) => ({
+  nameKey: order.nameKey,
+  briefKey: order.briefKey,
+  materialId: order.materialId,
+  quantity: order.quantity,
+  durationTicks: order.durationTicks,
+  rewardFuel: order.rewardFuel,
+});
+
+const propertyDirectiveRow = (
+  directive: Content["economy"]["propertyDirectives"][number],
+) => ({
+  nameKey: directive.nameKey,
+  briefKey: directive.briefKey,
+  propertyKey: directive.propertyKey,
+  targetMaterialId: directive.targetMaterialId,
+  solutionReactionIdsJson: JSON.stringify(directive.solutionReactionIds),
+  durationTicks: directive.durationTicks,
+  rewardFuel: directive.rewardFuel,
+  rewardImportSupplyId: empty(directive.rewardImportSupplyId),
+});
+
 export function createContentStore(
   content: Content,
   catalog: LocaleCatalog = enCatalog,
@@ -124,6 +189,36 @@ export function createContentStore(
       "reactions",
       Object.fromEntries(
         content.reactions.map((row) => [row.id, reactionRow(row)]),
+      ),
+    )
+    .setTable(
+      "exchange",
+      Object.fromEntries(
+        content.economy.exchange.map((row) => [
+          row.materialId,
+          exchangeRow(row),
+        ]),
+      ),
+    )
+    .setTable(
+      "imports",
+      Object.fromEntries(
+        content.economy.imports.map((row) => [row.id, importRow(row)]),
+      ),
+    )
+    .setTable(
+      "orders",
+      Object.fromEntries(
+        content.economy.orders.map((row) => [row.id, orderRow(row)]),
+      ),
+    )
+    .setTable(
+      "propertyDirectives",
+      Object.fromEntries(
+        content.economy.propertyDirectives.map((row) => [
+          row.id,
+          propertyDirectiveRow(row),
+        ]),
       ),
     )
     .setTable(
@@ -174,20 +269,31 @@ function optionalText(
   return value || undefined;
 }
 
-function parseOperations(
-  row: Record<string, unknown>,
+function parseStringArray(
+  source: string,
   label: string,
+  field: string,
 ): string[] {
-  const source = stringCell(row, "operationsJson", label);
   let value: unknown;
   try {
     value = JSON.parse(source);
   } catch {
-    throw new Error(label + " operations must be valid JSON");
+    throw new Error(label + " " + field + " must be valid JSON");
   }
   if (!Array.isArray(value) || value.some((entry) => typeof entry !== "string"))
-    throw new Error(label + " operations must be a JSON string array");
+    throw new Error(label + " " + field + " must be a JSON string array");
   return value;
+}
+
+function parseOperations(
+  row: Record<string, unknown>,
+  label: string,
+): string[] {
+  return parseStringArray(
+    stringCell(row, "operationsJson", label),
+    label,
+    "operations",
+  );
 }
 
 function orderedIds(
@@ -396,6 +502,120 @@ function candidateFromStore(store: Store, base: Content): unknown {
     };
   });
 
+  const exchange = orderedIds(
+    store,
+    "exchange",
+    base.economy.exchange.map((row) => row.materialId),
+  ).map((materialId) => {
+    const row = rawRow(store, "exchange", materialId),
+      label = "Exchange listing " + materialId;
+    return {
+      materialId,
+      baseCompensation: numberCell(row, "baseCompensation", label),
+      floorCompensation: numberCell(row, "floorCompensation", label),
+      baseDemandBps: numberCell(row, "baseDemandBps", label),
+      saturationPerUnitBps: numberCell(row, "saturationPerUnitBps", label),
+      recoveryPerMarketTickBps: numberCell(
+        row,
+        "recoveryPerMarketTickBps",
+        label,
+      ),
+      demandRecoveryPerMarketTickBps: numberCell(
+        row,
+        "demandRecoveryPerMarketTickBps",
+        label,
+      ),
+      ...(optionalText(row, "requiredTerminalCapabilityId", label)
+        ? {
+            requiredTerminalCapabilityId: optionalText(
+              row,
+              "requiredTerminalCapabilityId",
+              label,
+            ),
+          }
+        : {}),
+    };
+  });
+
+  const imports = orderedIds(
+    store,
+    "imports",
+    base.economy.imports.map((row) => row.id),
+  ).map((id) => {
+    const row = rawRow(store, "imports", id),
+      label = "Import " + id;
+    return {
+      id,
+      nameKey: stringCell(row, "nameKey", label),
+      briefKey: stringCell(row, "briefKey", label),
+      materialId: stringCell(row, "materialId", label),
+      quantity: numberCell(row, "quantity", label),
+      fuelCost: numberCell(row, "fuelCost", label),
+      ...(optionalText(row, "terminalModuleId", label)
+        ? { terminalModuleId: optionalText(row, "terminalModuleId", label) }
+        : {}),
+      ...(optionalText(row, "requiredOpportunityId", label)
+        ? {
+            requiredOpportunityId: optionalText(
+              row,
+              "requiredOpportunityId",
+              label,
+            ),
+          }
+        : {}),
+    };
+  });
+
+  const orders = orderedIds(
+    store,
+    "orders",
+    base.economy.orders.map((row) => row.id),
+  ).map((id) => {
+    const row = rawRow(store, "orders", id),
+      label = "Order " + id;
+    return {
+      id,
+      nameKey: stringCell(row, "nameKey", label),
+      briefKey: stringCell(row, "briefKey", label),
+      materialId: stringCell(row, "materialId", label),
+      quantity: numberCell(row, "quantity", label),
+      durationTicks: numberCell(row, "durationTicks", label),
+      rewardFuel: numberCell(row, "rewardFuel", label),
+    };
+  });
+
+  const propertyDirectives = orderedIds(
+    store,
+    "propertyDirectives",
+    base.economy.propertyDirectives.map((row) => row.id),
+  ).map((id) => {
+    const row = rawRow(store, "propertyDirectives", id),
+      label = "Property directive " + id;
+    return {
+      id,
+      nameKey: stringCell(row, "nameKey", label),
+      briefKey: stringCell(row, "briefKey", label),
+      propertyKey: stringCell(row, "propertyKey", label),
+      targetMaterialId: stringCell(row, "targetMaterialId", label),
+      solutionReactionIds: parseStringArray(
+        stringCell(row, "solutionReactionIdsJson", label),
+        label,
+        "solution reactions",
+      ),
+      durationTicks: numberCell(row, "durationTicks", label),
+      rewardFuel: numberCell(row, "rewardFuel", label),
+      ...(optionalText(row, "rewardImportSupplyId", label)
+        ? {
+            rewardImportSupplyId: optionalText(
+              row,
+              "rewardImportSupplyId",
+              label,
+            ),
+          }
+        : {}),
+    };
+  });
+
   return {
     ...base,
     version: stringCell(meta, "version", "Content metadata"),
@@ -404,6 +624,13 @@ function candidateFromStore(store: Store, base: Content): unknown {
     operations,
     machines,
     reactions,
+    economy: {
+      ...base.economy,
+      imports,
+      exchange,
+      orders,
+      propertyDirectives,
+    },
   };
 }
 
@@ -505,6 +732,17 @@ export function referencesTo(
       if (reaction.input === targetId) push("reaction", reaction.id, "input");
       if (reaction.output === targetId) push("reaction", reaction.id, "output");
     }
+    if (content.economy.exchange.some((entry) => entry.materialId === targetId))
+      push("exchange", targetId, "materialId");
+    for (const supply of content.economy.imports)
+      if (supply.materialId === targetId)
+        push("import", supply.id, "materialId");
+    for (const order of content.economy.orders)
+      if (order.materialId === targetId)
+        push("order", order.id, "materialId");
+    for (const directive of content.economy.propertyDirectives)
+      if (directive.targetMaterialId === targetId)
+        push("property-directive", directive.id, "targetMaterialId");
   }
 
   if (targetType === "operation") {
@@ -516,7 +754,7 @@ export function referencesTo(
         push("reaction", reaction.id, "operation");
   }
 
-  if (targetType === "reaction")
+  if (targetType === "reaction") {
     for (const machine of content.machines)
       if (
         machine.unlock &&
@@ -524,6 +762,14 @@ export function referencesTo(
         machine.unlock.reactionId === targetId
       )
         push("machine", machine.id, "unlock.reactionId");
+    for (const directive of content.economy.propertyDirectives)
+      if (directive.solutionReactionIds.includes(targetId))
+        push(
+          "property-directive",
+          directive.id,
+          "solutionReactionIds",
+        );
+  }
 
   return refs.sort(
     (a, b) =>
