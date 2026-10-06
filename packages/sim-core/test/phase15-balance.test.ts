@@ -102,7 +102,7 @@ it("does not let the late Phase ceramic chain become a sustained self-funding fu
 it("keeps one-shot company bonuses as diversification prompts rather than repeatable fuel income", () => {
   expect(
     fixture.economy.orders.map((entry) => entry.materialId).sort(),
-  ).toEqual(["granules", "matrix"]);
+  ).toEqual(["granules", "matrix", "phase-ceramic"]);
   expect(
     fixture.economy.propertyDirectives.every(
       (entry) => entry.rewardFuel === 0 && !!entry.rewardImportSupplyId,
