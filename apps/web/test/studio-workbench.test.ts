@@ -121,4 +121,42 @@ describe("Studio workbench helpers", () => {
     );
     expect(humanizeStudioId("oversealed-furnace")).toBe("Oversealed Furnace");
   });
+
+  it("creates and deletes targeted economy entities with owned locale keys", () => {
+    const store = createContentStore(fixture, enCatalog);
+
+    expect(createStudioEntity(store, "exchange", "catalyst")).toBe("catalyst");
+    expect(studioRow(store, "exchange", "catalyst")).toMatchObject({
+      baseCompensation: 8,
+      floorCompensation: 4,
+    });
+
+    createStudioEntity(store, "import", "sample-crate");
+    expect(studioRow(store, "import", "sample-crate")).toMatchObject({
+      nameKey: "import.sample-crate.name",
+      briefKey: "import.sample-crate.brief",
+      quantity: 1,
+    });
+    expect(studioLocaleText(store, "import.sample-crate.name")).toBe(
+      "Sample Crate",
+    );
+
+    createStudioEntity(store, "order", "sample-order");
+    expect(studioLocaleText(store, "order.sample-order.brief")).toContain(
+      "Describe",
+    );
+
+    createStudioEntity(store, "property-directive", "sample-study");
+    expect(studioRow(store, "property-directive", "sample-study")).toMatchObject({
+      nameKey: "directive.sample-study.name",
+      briefKey: "directive.sample-study.brief",
+      propertyKey: "property.sample-study.name",
+    });
+
+    deleteStudioEntity(store, "property-directive", "sample-study");
+    expect(store.hasRow("propertyDirectives", "sample-study")).toBe(false);
+    expect(store.hasRow("locale", "directive.sample-study.name")).toBe(false);
+    expect(store.hasRow("locale", "property.sample-study.name")).toBe(false);
+  });
+
 });
