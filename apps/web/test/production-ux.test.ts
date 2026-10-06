@@ -38,8 +38,9 @@ describe("production context UX", () => {
   });
 
   it("prioritizes physical terminal cargo and manifest state", () => {
-    const base = new Simulation(fixture).snapshot(),
-      materialId = base.exchange[0].materialId,
+    const base = new Simulation(fixture).snapshot();
+    expect(base.exchange.length).toBeGreaterThan(0);
+    const materialId = base.exchange[0]!.materialId,
       staged = structuredClone(base);
 
     staged.staging[materialId] = 4;
