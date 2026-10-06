@@ -6,13 +6,13 @@ const supportedLegacySchemas = [21, 22, 23, 24, 25, 26] as const;
 
 function legacyInitialSave(schemaVersion: (typeof supportedLegacySchemas)[number]) {
   const current = new Simulation(fixture).serialize();
-  const legacy = structuredClone(current) as unknown as Record<string, any>;
+  const legacy = structuredClone(current) as unknown as Record<string, unknown>;
   legacy.schemaVersion = schemaVersion;
 
   if (schemaVersion < 22) delete legacy.shipmentManifest;
   if (schemaVersion < 23) delete legacy.terminalImports;
   if (schemaVersion < 24) delete legacy.marketSignals;
-  if (schemaVersion < 25) delete legacy.company.importAllocations;
+  if (schemaVersion < 25)\n    delete (legacy.company as Record<string, unknown>).importAllocations;
   if (schemaVersion < 26) {
     delete legacy.undergroundSolids;
     delete legacy.undergroundLiquids;
