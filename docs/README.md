@@ -77,3 +77,5 @@ Prefer a small complete loop over broad half-built systems. New infrastructure m
 - [PHASE15_RECURSIVE_COMPANY_TECH.md](PHASE15_RECURSIVE_COMPANY_TECH.md) — Phase 15 #148 player discovery → company R&D → imported capability → deeper local industry.
 
 - [PHASE15_LATE_GAME_INTEGRATION.md](PHASE15_LATE_GAME_INTEGRATION.md) — Phase 15 #149 advanced hazard, containment and layered-logistics content integration.
+
+- [PHASE15_PACING_BALANCE.md](PHASE15_PACING_BALANCE.md) — Phase 15 #150 measured diversification, pacing and fuel-loop balance gate.
