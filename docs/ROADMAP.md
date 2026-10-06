@@ -505,4 +505,6 @@ User chose to return to gameplay after #96 / PR #97 rather than continue snapsho
 Phase 7 performance work is deferred. The fixed 32-factory joint p95 <=10ms gate remains unmet (24.5777ms flowing / 19.6748ms backpressured); browser/device gates remain unverified. Keep existing evidence and correctness boundaries. Revisit when an actual browser-playability problem or an agreed feature scale requirement justifies it. Old NEXT recommendations in profiling docs are historical candidates, not active assignments.
 
 Roadmap expansion approved on 2026-10-02: Phases 9–16 capture the major post-foundation gameplay discussed but not represented by the earlier execution phases. Canonical epics #100–#107 and children #108–#161 form the canonical queue. Phases 9–15 are complete through their recorded exit decisions, most recently Phase 15 / #106 through #152 / PR #205. Phase 16 / #107 is the active dependency-ordered queue beginning with #153. Phase 7 remains deferred and Phase 8 remains a parallel art-production track.
-\n\n- [PHASE16_SAVE_COMPATIBILITY.md](PHASE16_SAVE_COMPATIBILITY.md) — Phase 16 #158 supported save/content compatibility and atomic migration boundary.\n
+
+
+- [PHASE16_SAVE_COMPATIBILITY.md](PHASE16_SAVE_COMPATIBILITY.md) — Phase 16 #158 supported save/content compatibility and atomic migration boundary.
