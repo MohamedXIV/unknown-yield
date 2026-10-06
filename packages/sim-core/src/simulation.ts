@@ -1,5 +1,5 @@
 import { validateSimulationContent, type Content } from "@site/content";
-import { initialState, parseSave } from "./save";
+import { CURRENT_SAVE_SCHEMA_VERSION, initialState, parseSave } from "./save";
 import { applyCommand } from "./commands";
 import {
   completeAndStart,
@@ -437,7 +437,7 @@ export class Simulation {
       return {
         ok: false,
         message:
-          "Save rejected (requires schema 18): " +
+          `Save rejected (requires schema ${CURRENT_SAVE_SCHEMA_VERSION}): ` +
           (error instanceof Error ? error.message : "Invalid data"),
       };
     }

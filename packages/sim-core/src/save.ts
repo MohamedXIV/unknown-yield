@@ -50,6 +50,8 @@ import {
   cardinalSpan,
   elevatedPlacementError,
 } from "./geometry";
+export const CURRENT_SAVE_SCHEMA_VERSION = 27;
+
 const count = z.number().int().nonnegative().max(1000000000),
   positive = count.positive();
 const safeId = z
@@ -357,7 +359,7 @@ const schema = z.object({
 });
 export function initialState(c: Content): Save {
   const state: Save = {
-    schemaVersion: 27,
+    schemaVersion: CURRENT_SAVE_SCHEMA_VERSION,
     terminalModules: {},
     contentVersion: c.version,
     tick: 0,
