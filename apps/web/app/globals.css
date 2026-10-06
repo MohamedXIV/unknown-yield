@@ -255,6 +255,21 @@ a {
   padding-top: 10px;
   margin: 11px 0 0;
 }
+.field-guide .guide-body {
+  margin: 0;
+  padding: 0;
+  border-top: 0;
+  color: #b5c4a4;
+  font-size: 11px;
+}
+.field-guide.beat-recovery {
+  border-color: #b4775f88;
+  background: #2b211ddb;
+}
+.field-guide.beat-recovery small {
+  color: #e5a078;
+}
+
 .guide-toggle {
   position: absolute;
   left: 20px;
