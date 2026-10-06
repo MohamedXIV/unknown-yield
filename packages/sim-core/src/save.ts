@@ -18,7 +18,11 @@ import {
   sensingCapabilityUnlocked,
   sensingObservationKey,
 } from "./sensing";
-import { initializeKnownMarkets, exchangeDefinition } from "./market";
+import {
+  companyKnowsMaterial,
+  initializeKnownMarkets,
+  exchangeDefinition,
+} from "./market";
 import { machineUnlocked } from "./progression";
 import { hazardDefinition } from "./hazards";
 import { milestoneSatisfied, refreshMilestones } from "./milestones";
@@ -695,13 +699,11 @@ export function parseSave(input: unknown, c: Content): Save {
   )
     throw new Error("Invalid hazard evidence");
 
-  const known = new Set(c.materials.filter((m) => m.known).map((m) => m.id));
-  c.reactions
-    .filter((r) => s.knowledge.includes(r.id))
-    .forEach((r) => {
-      known.add(r.input);
-      known.add(r.output);
-    });
+  const known = new Set(
+    c.materials
+      .filter((material) => companyKnowsMaterial(c, s, material.id))
+      .map((material) => material.id),
+  );
   const expectedMarkets = c.economy.exchange
     .filter((listing) => known.has(listing.materialId))
     .map((listing) => listing.materialId)
@@ -823,12 +825,16 @@ export function parseSave(input: unknown, c: Content): Save {
   }
   for (const [supplyId, allocations] of Object.entries(
     s.company.importAllocations,
-  ))
+  )) {
+    const supply = c.economy.imports.find((entry) => entry.id === supplyId);
     if (
       allocations <= 0 ||
-      !c.economy.imports.some((supply) => supply.id === supplyId)
+      !supply ||
+      (supply.requiredOpportunityId &&
+        s.opportunities[supply.requiredOpportunityId]?.status !== "completed")
     )
       throw new Error("Invalid company import allocation");
+  }
   if (s.company.standing === "clear") {
     if (
       s.debt !== 0 ||
