@@ -444,7 +444,9 @@ function GameClientInner() {
     terminalSummary = terminalOverview(snapshot),
     inspectorSummary = selectionOverview(snapshot, mode.selected);
   const overview = (
-    entry: ReturnType<typeof selectionOverview> | ReturnType<typeof terminalOverview>,
+    entry:
+      | ReturnType<typeof selectionOverview>
+      | ReturnType<typeof terminalOverview>,
   ) => (
     <section className={"context-overview tone-" + entry.tone}>
       <small>{entry.eyebrow}</small>
@@ -599,11 +601,7 @@ function GameClientInner() {
             </button>
           </div>
           <div className="context-body">
-            {panel === "selection" && (
-              <>
-                {overview(inspectorSummary)}
-              </> 
-            )}
+            {panel === "selection" && overview(inspectorSummary)}
             {panel === "knowledge" && (
               <>
                 {overview({
