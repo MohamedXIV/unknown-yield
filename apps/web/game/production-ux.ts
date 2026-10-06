@@ -233,17 +233,6 @@ export function selectionOverview(
     };
   }
 
-  const diagnostic = snapshot.transportDiagnostics[selectedId];
-  if (diagnostic && diagnostic.reason !== "ok")
-    return {
-      tone: "warn",
-      eyebrow: "ROUTE DIAGNOSTIC",
-      title: diagnostic.reason.replaceAll("-", " "),
-      detail: diagnostic.missingContainment?.length
-        ? "This route is missing required containment. The detailed requirement is shown below."
-        : "The simulation has an explicit reason for this blockage. Inspect the route details below.",
-    };
-
   const pump = snapshot.pumps.find((entry) => entry.id === selectedId);
   if (pump?.incident)
     return {
@@ -251,6 +240,17 @@ export function selectionOverview(
       eyebrow: "CONTAINED FAILURE",
       title: "Pump recovery required",
       detail: "Drain or reclaim the trapped material, then repair the equipment before restarting it.",
+    };
+
+  const diagnostic = snapshot.transportDiagnostics[selectedId];
+  if (diagnostic && diagnostic.reason !== "ready")
+    return {
+      tone: "warn",
+      eyebrow: "ROUTE DIAGNOSTIC",
+      title: diagnostic.reason.replaceAll("-", " "),
+      detail: diagnostic.missingContainment?.length
+        ? "This route is missing required containment. The detailed requirement is shown below."
+        : "The simulation has an explicit reason for this blockage. Inspect the route details below.",
     };
 
   return {
