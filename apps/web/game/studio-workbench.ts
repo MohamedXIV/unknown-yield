@@ -1,6 +1,14 @@
 import { createContentStore } from "@site/content/studio";
 
-export type StudioKind = "material" | "operation" | "machine" | "reaction";
+export type StudioKind =
+  | "material"
+  | "operation"
+  | "machine"
+  | "reaction"
+  | "exchange"
+  | "import"
+  | "order"
+  | "property-directive";
 export type ContentStore = ReturnType<typeof createContentStore>;
 
 const tables: Record<StudioKind, string> = {
@@ -8,6 +16,10 @@ const tables: Record<StudioKind, string> = {
   operation: "operations",
   machine: "machines",
   reaction: "reactions",
+  exchange: "exchange",
+  import: "imports",
+  order: "orders",
+  "property-directive": "propertyDirectives",
 };
 
 const idPattern = /^[a-z][a-z0-9-]*$/;
@@ -69,6 +81,11 @@ function entityLocaleKeys(
     add(row.hazardNameKey);
     add(row.hazardObservationKey);
   }
+  if (kind === "import" || kind === "order" || kind === "property-directive") {
+    add(row.nameKey);
+    add(row.briefKey);
+  }
+  if (kind === "property-directive") add(row.propertyKey);
   return keys;
 }
 
@@ -79,6 +96,13 @@ export function studioEntityLabel(
 ) {
   const row = studioRow(store, kind, id);
   if (kind === "reaction") return humanizeStudioId(id);
+  if (kind === "exchange") {
+    const material = studioRow(store, "material", id);
+    return (
+      studioLocaleText(store, String(material.nameKey ?? "")) ||
+      humanizeStudioId(id)
+    );
+  }
   return (
     studioLocaleText(store, String(row.nameKey ?? "")) || humanizeStudioId(id)
   );
@@ -150,6 +174,68 @@ export function createStudioEntity(
     });
     store.setRow("locale", observationKey, {
       text: "Describe the observed result for " + label + ".",
+    });
+  }
+  if (kind === "exchange") {
+    if (!store.hasRow("materials", cleanId))
+      throw new Error("Exchange listing material does not exist: " + cleanId);
+    store.setRow("exchange", cleanId, {
+      baseCompensation: 8,
+      floorCompensation: 4,
+      baseDemandBps: 10000,
+      saturationPerUnitBps: 1000,
+      recoveryPerMarketTickBps: 250,
+      demandRecoveryPerMarketTickBps: 100,
+      requiredTerminalCapabilityId: "",
+    });
+  }
+  if (kind === "import") {
+    const nameKey = "import." + cleanId + ".name",
+      briefKey = "import." + cleanId + ".brief";
+    store.setRow("imports", cleanId, {
+      nameKey,
+      briefKey,
+      materialId: "",
+      quantity: 1,
+      fuelCost: 1,
+      terminalModuleId: "",
+      requiredOpportunityId: "",
+    });
+    store.setRow("locale", nameKey, { text: label });
+    store.setRow("locale", briefKey, { text: "Describe this off-world supply." });
+  }
+  if (kind === "order") {
+    const nameKey = "order." + cleanId + ".name",
+      briefKey = "order." + cleanId + ".brief";
+    store.setRow("orders", cleanId, {
+      nameKey,
+      briefKey,
+      materialId: "",
+      quantity: 1,
+      durationTicks: 1000,
+      rewardFuel: 1,
+    });
+    store.setRow("locale", nameKey, { text: label });
+    store.setRow("locale", briefKey, { text: "Describe this procurement order." });
+  }
+  if (kind === "property-directive") {
+    const nameKey = "directive." + cleanId + ".name",
+      briefKey = "directive." + cleanId + ".brief",
+      propertyKey = "property." + cleanId + ".name";
+    store.setRow("propertyDirectives", cleanId, {
+      nameKey,
+      briefKey,
+      propertyKey,
+      targetMaterialId: "",
+      solutionReactionIdsJson: "[]",
+      durationTicks: 1000,
+      rewardFuel: 0,
+      rewardImportSupplyId: "",
+    });
+    store.setRow("locale", nameKey, { text: label });
+    store.setRow("locale", briefKey, { text: "Describe the company need." });
+    store.setRow("locale", propertyKey, {
+      text: "Describe the required material property.",
     });
   }
 
