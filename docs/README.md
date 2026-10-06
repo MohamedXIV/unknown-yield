@@ -75,3 +75,5 @@ Prefer a small complete loop over broad half-built systems. New infrastructure m
 - [PHASE15_FUEL_PROGRESSION.md](PHASE15_FUEL_PROGRESSION.md) — Phase 15 #147 physical advanced/research operating fuel classes.
 
 - [PHASE15_RECURSIVE_COMPANY_TECH.md](PHASE15_RECURSIVE_COMPANY_TECH.md) — Phase 15 #148 player discovery → company R&D → imported capability → deeper local industry.
+
+- [PHASE15_LATE_GAME_INTEGRATION.md](PHASE15_LATE_GAME_INTEGRATION.md) — Phase 15 #149 advanced hazard, containment and layered-logistics content integration.

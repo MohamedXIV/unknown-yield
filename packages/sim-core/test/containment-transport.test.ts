@@ -139,6 +139,20 @@ describe("containment admission", () => {
       m.inputContainment = ["corrosion-resistant"];
       m.outputContainment = ["corrosion-resistant"];
     }
+    draft.machines.find(
+      (machine) => machine.id === "phase-quencher",
+    )!.outputContainment = [
+      "cryogenic-rated",
+      "hazard-isolated",
+      "secure-chain",
+    ];
+    draft.machines.find(
+      (machine) => machine.id === "phase-stabilizer",
+    )!.inputContainment = [
+      "cryogenic-rated",
+      "hazard-isolated",
+      "secure-chain",
+    ];
     for (const d of draft.site.terminalModules)
       d.containmentCapabilities = [
         ...new Set(

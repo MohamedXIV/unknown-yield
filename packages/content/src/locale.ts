@@ -412,6 +412,8 @@ export const enCatalog: LocaleCatalog = {
   "material.orbital-binder.name": "Orbital binder",
   "material.orbital-resonance-seed.name": "Orbital resonance seed",
   "material.phase-lattice.name": "Phase lattice",
+  "material.phase-suspension.name": "Phase suspension",
+  "material.phase-ceramic.name": "Stabilized phase ceramic",
   "material.orbital-propellant.name": "Orbital propellant",
   "material.orbital-coolant.name": "Orbital coolant",
   "material.matrix.name": "Resonant matrix",
@@ -434,6 +436,8 @@ export const enCatalog: LocaleCatalog = {
   "operation.crush.name": "Crush",
   "operation.heat.name": "Heat",
   "operation.sinter.name": "Sinter",
+  "operation.phase-quench.name": "Phase quench",
+  "operation.phase-stabilize.name": "Phase stabilize",
   "machine.extractor.name": "Extractor",
   "machine.deep-extractor.name": "Deep extractor",
   "machine.deep-extractor.unlock-hint":
@@ -447,6 +451,12 @@ export const enCatalog: LocaleCatalog = {
   "machine.sinterer.name": "Sinterer",
   "ui.machine.sinterer.description":
     "Place inside a factory. Feed discovered solid inputs by belt; output leaves by belt.",
+  "machine.phase-quencher.name": "Phase quencher",
+  "machine.phase-quencher.unlock-hint":
+    "a confirmed local Phase lattice result",
+  "machine.phase-stabilizer.name": "Phase stabilizer",
+  "machine.phase-stabilizer.unlock-hint":
+    "a confirmed Phase quench result",
   "machine.crusher.name": "Crusher",
   "machine.furnace.name": "Furnace",
   "machine.sealed-furnace.name": "Sealed furnace",
@@ -473,6 +483,10 @@ export const enCatalog: LocaleCatalog = {
     "The catalytic stone binds into a resonant matrix with a stable export signature.",
   "reaction.sinter-resonance-seed.observation":
     "The company resonance seed reorganizes under local sintering into a stable phase lattice.",
+  "reaction.phase-quench-lattice.observation":
+    "Controlled cryogenic quenching opens the lattice into a mobile phase suspension. The suspension remains stable only inside sealed cold-chain containment.",
+  "reaction.phase-stabilize-suspension.observation":
+    "Protected stabilization collapses the suspension into a durable phase ceramic suitable for off-world qualification.",
   "reaction.crush-catalyst.observation":
     "Mechanical milling yields a stable catalyst powder. It is less valuable than resonant matrix, but company demand is broad and slow to saturate.",
   "reaction.heat-raw-oversealed.observation":
@@ -503,6 +517,13 @@ export const enCatalog: LocaleCatalog = {
     "Controlled pressure relief lets the ferrite vitrify while keeping the chamber path open.",
   "reaction.heat-ferrite-oversealed.observation":
     "Oversealed heating destabilized the ferrite charge into vitrified residue and jammed the chamber.",
+  "reaction.heat-phase-lattice-oversealed.observation":
+    "Oversealed heating sheared the Phase lattice into trapped residue and locked the chamber.",
+  "hazard.phase-shear-lock.name": "Phase shear lock",
+  "hazard.phase-shear-lock.observation":
+    "The confined lattice collapsed unevenly and vitrified across the chamber path. The trapped residue remains inside the stopped machine until recovery.",
+  "hazard.phase-shear-lock.safer-hint":
+    "Do not force Phase lattice through an oversealed thermal route. Use controlled cryogenic quenching and protected liquid handling instead.",
   "hazard.slag-jam.name": "Vitrified slag jam",
   "hazard.slag-jam.observation":
     "The unstable ferrite batch vitrified inside the chamber. The residue remains physically trapped in the stopped machine until a later recovery operation clears it.",
