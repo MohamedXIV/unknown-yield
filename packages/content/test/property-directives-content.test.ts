@@ -3,14 +3,18 @@ import { contentKeys, fixture, validateContent } from "../src";
 
 it("authors a property directive without exposing its solution through presentation keys", () => {
   const content = validateContent(fixture);
-  expect(content.economy.propertyDirectives).toEqual([
+  expect(
+    content.economy.propertyDirectives.find(
+      (entry) => entry.id === "matrix-local-route",
+    ),
+  ).toEqual(
     expect.objectContaining({
       id: "matrix-local-route",
       targetMaterialId: "matrix",
       solutionReactionIds: ["sinter-catalyst"],
       rewardImportSupplyId: "orbital-coolant-canister",
     }),
-  ]);
+  );
   expect(contentKeys(content)).toEqual(
     expect.arrayContaining([
       "directive.matrix-local-route.name",
