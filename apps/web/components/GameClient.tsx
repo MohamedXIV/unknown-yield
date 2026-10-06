@@ -20,6 +20,13 @@ import {
   type Tool,
 } from "../game/interaction";
 import { onboardingBeat, type OnboardingSignals } from "../game/onboarding";
+import {
+  knowledgeOverview,
+  knowledgeVisible,
+  selectionOverview,
+  terminalOverview,
+  type KnowledgeFilter,
+} from "../game/production-ux";
 import GameHost from "./GameHost";
 function Glyph({ type, size = 20 }: { type: string; size?: number }) {
   const paths: Record<string, string> = {
@@ -116,7 +123,9 @@ function GameClientInner() {
   const [mode, setMode] = useState<WorldMode>(DEFAULT_MODE),
     [panel, setPanel] = useState<
       "selection" | "knowledge" | "terminal" | "menu" | null
-    >(null);
+    >(null),
+    [knowledgeFilter, setKnowledgeFilter] =
+      useState<KnowledgeFilter>("all");
   const [notice, setNotice] = useState<CommandResult | null>(null),
     [paused, setPaused] = useState(false),
     [guide, setGuide] = useState(true),
@@ -425,7 +434,26 @@ function GameClientInner() {
     setPanel(null);
     setMode((m) => ({ ...m, selected: null }));
   };
-  const brief = onboardingBeat(snapshot, onboarding);
+  const scrollContextTo = (id: string) =>
+    document.getElementById(id)?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  const brief = onboardingBeat(snapshot, onboarding),
+    notebookSummary = knowledgeOverview(snapshot),
+    terminalSummary = terminalOverview(snapshot),
+    inspectorSummary = selectionOverview(snapshot, mode.selected);
+  const overview = (
+    entry:
+      | ReturnType<typeof selectionOverview>
+      | ReturnType<typeof terminalOverview>,
+  ) => (
+    <section className={"context-overview tone-" + entry.tone}>
+      <small>{entry.eyebrow}</small>
+      <strong>{entry.title}</strong>
+      <p>{entry.detail}</p>
+    </section>
+  );
   return (
     <main className="game">
       <GameHost
@@ -470,6 +498,7 @@ function GameClientInner() {
             title="Knowledge"
             onClick={() => {
               setOnboarding((state) => ({ ...state, knowledgeOpened: true }));
+              if (panel !== "knowledge") setKnowledgeFilter("all");
               setPanel(panel === "knowledge" ? null : "knowledge");
               setMode((m) => ({ ...m, tool: "select" }));
             }}
@@ -573,6 +602,67 @@ function GameClientInner() {
             </button>
           </div>
           <div className="context-body">
+            {panel === "selection" && overview(inspectorSummary)}
+            {panel === "knowledge" && (
+              <>
+                {overview({
+                  tone:
+                    notebookSummary.hazards > 0
+                      ? "bad"
+                      : notebookSummary.open > 0
+                        ? "warn"
+                        : "calm",
+                  eyebrow: "EVIDENCE STATUS",
+                  title:
+                    notebookSummary.open +
+                    " open · " +
+                    notebookSummary.confirmed +
+                    " confirmed · " +
+                    notebookSummary.hazards +
+                    " hazards",
+                  detail:
+                    "Filter what you know without exposing the authored recipe graph. Unconfirmed outcomes stay unnamed.",
+                })}
+                <nav className="context-tabs" aria-label="Notebook filters">
+                  {(
+                    [
+                      ["all", "All"],
+                      ["open", "Open"],
+                      ["hazards", "Hazards"],
+                      ["confirmed", "Confirmed"],
+                    ] as const
+                  ).map(([id, label]) => (
+                    <button
+                      key={id}
+                      className={knowledgeFilter === id ? "active" : ""}
+                      aria-pressed={knowledgeFilter === id}
+                      onClick={() => setKnowledgeFilter(id)}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </nav>
+              </>
+            )}
+            {panel === "terminal" && (
+              <>
+                {overview(terminalSummary)}
+                <nav className="context-tabs" aria-label="Terminal sections">
+                  <button onClick={() => scrollContextTo("terminal-work")}>
+                    Work
+                  </button>
+                  <button onClick={() => scrollContextTo("terminal-handling")}>
+                    Handling
+                  </button>
+                  <button onClick={() => scrollContextTo("terminal-shipment")}>
+                    Shipment
+                  </button>
+                  <button onClick={() => scrollContextTo("terminal-company")}>
+                    Company
+                  </button>
+                </nav>
+              </>
+            )}
             {panel === "selection" && (
               <>
                 {selectedDefinition && (
@@ -1952,7 +2042,16 @@ function GameClientInner() {
                 {snapshot.knowledgeInsights.length > 0 && (
                   <>
                     <h3>{t("ui.knowledge.insights.heading")}</h3>
-                    {snapshot.knowledgeInsights.map((entry) => (
+                    {snapshot.knowledgeInsights
+                      .filter((entry) =>
+                        knowledgeVisible(
+                          knowledgeFilter,
+                          entry.kind === "branch"
+                            ? "insight-branch"
+                            : "insight-other",
+                        ),
+                      )
+                      .map((entry) => (
                       <article
                         className="observation"
                         key={"insight-" + entry.id}
@@ -1968,7 +2067,9 @@ function GameClientInner() {
                     ))}
                   </>
                 )}
-                {snapshot.hazardEvidence.map((entry) => {
+                {snapshot.hazardEvidence
+                  .filter(() => knowledgeVisible(knowledgeFilter, "hazard"))
+                  .map((entry) => {
                   const operationKey = snapshot.operations.find(
                     (op) => op.id === entry.operationId,
                   )?.nameKey;
@@ -1995,7 +2096,14 @@ function GameClientInner() {
                     </article>
                   );
                 })}
-                {snapshot.knowledgeEntries.map((entry) => {
+                {snapshot.knowledgeEntries
+                  .filter((entry) =>
+                    knowledgeVisible(
+                      knowledgeFilter,
+                      entry.state === "hinted" ? "hinted" : "confirmed",
+                    ),
+                  )
+                  .map((entry) => {
                   const operationKey = snapshot.operations.find(
                     (op) => op.id === entry.operationId,
                   )?.nameKey;
@@ -2086,7 +2194,7 @@ function GameClientInner() {
                     {t("ui.terminal.market-bulletins.empty")}
                   </p>
                 )}
-                <h3>{t("ui.terminal.opportunities.heading")}</h3>
+                <h3 id="terminal-work">{t("ui.terminal.opportunities.heading")}</h3>
                 <p className="hint">{t("ui.terminal.opportunities.hint")}</p>
                 {snapshot.opportunities.length ? (
                   snapshot.opportunities.map((opportunity) => {
@@ -2172,7 +2280,7 @@ function GameClientInner() {
                 ) : (
                   <p className="hint">{t("ui.terminal.opportunities.empty")}</p>
                 )}
-                <h3>{t("ui.terminal.module.heading")}</h3>
+                <h3 id="terminal-handling">{t("ui.terminal.module.heading")}</h3>
                 {snapshot.terminalModules.map((d) => (
                   <div className="opportunity" key={d.id}>
                     <h4>{t(d.nameKey)}</h4>
@@ -2279,7 +2387,7 @@ function GameClientInner() {
                     )}
                   </article>
                 ))}
-                <h3>{t("ui.terminal.shipment.heading")}</h3>
+                <h3 id="terminal-shipment">{t("ui.terminal.shipment.heading")}</h3>
                 <p className="hint">{t("ui.terminal.shipment.hint")}</p>
                 <p>
                   {t("ui.terminal.shipment.capacity", {
@@ -2416,7 +2524,7 @@ function GameClientInner() {
                     </select>
                   </div>
                 ))}
-                <h3>{t("ui.terminal.assistance.heading")}</h3>
+                <h3 id="terminal-company">{t("ui.terminal.assistance.heading")}</h3>
                 <p className="hint">
                   {t(
                     snapshot.company.standing === "clear"

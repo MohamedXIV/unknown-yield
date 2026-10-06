@@ -324,7 +324,7 @@ a {
   position: absolute;
   right: 20px;
   top: 88px;
-  width: 306px;
+  width: 336px;
   max-height: calc(100dvh - 225px);
   border: 1px solid var(--line);
   border-radius: 5px;
@@ -360,6 +360,74 @@ a {
   font-weight: 400;
   margin: 6px 0 16px;
   line-height: 1.3;
+}
+.context-overview {
+  margin: 0 0 16px;
+  padding: 12px 13px;
+  border: 1px solid var(--line);
+  border-left-width: 3px;
+  border-radius: 4px;
+  background: #142018b8;
+}
+.context-overview > small {
+  display: block;
+  font: 8px var(--mono);
+  letter-spacing: 1.15px;
+  color: var(--muted);
+}
+.context-overview > strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+.context-overview > p {
+  margin: 6px 0 0;
+  color: #a9b99d;
+  font-size: 10px;
+  line-height: 1.55;
+}
+.context-overview.tone-good {
+  border-left-color: var(--green);
+}
+.context-overview.tone-warn {
+  border-left-color: var(--gold);
+  background: #2422189e;
+}
+.context-overview.tone-bad {
+  border-left-color: #c48668;
+  background: #2b201b9e;
+}
+.context-tabs {
+  display: flex;
+  gap: 4px;
+  margin: -3px 0 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.context-tabs::-webkit-scrollbar {
+  display: none;
+}
+.context-tabs button {
+  flex: 0 0 auto;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #17221a8f;
+  color: #9dad91;
+  font: 8px var(--mono);
+  letter-spacing: 0.45px;
+}
+.context-tabs button:hover,
+.context-tabs button.active,
+.context-tabs button[aria-pressed="true"] {
+  color: var(--gold);
+  border-color: #a999655c;
+  background: #39452f8a;
+}
+.context-body h3[id^="terminal-"] {
+  scroll-margin-top: 8px;
 }
 .eyebrow {
   font: 9px var(--mono);
