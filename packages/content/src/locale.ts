@@ -535,6 +535,10 @@ export const enCatalog: LocaleCatalog = {
   "order.matrix-procurement.name": "Resonant matrix qualification batch",
   "order.matrix-procurement.brief":
     "Supply a small matrix batch while orbital systems engineering evaluates the newly characterized resonant application.",
+  "order.phase-ceramic-demonstration.name":
+    "Stabilized phase material demonstration",
+  "order.phase-ceramic-demonstration.brief":
+    "Deliver one bounded lot of stabilized Phase ceramic to prove the expedition can turn company-learned Phase technology into controlled, exportable industry.",
   "market.shock.resonance-orbital-application.name":
     "Orbital resonance application identified",
   "market.shock.resonance-orbital-application.brief":
