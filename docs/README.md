@@ -88,3 +88,5 @@ Prefer a small complete loop over broad half-built systems. New infrastructure m
 - [PHASE16_ART_VALIDATION.md](PHASE16_ART_VALIDATION.md) — Phase 16 #153 representative final-direction art asset contract.
 
 - [PHASE16_FEEDBACK.md](PHASE16_FEEDBACK.md) — Phase 16 #154 authoritative machine/logistics/discovery/warning/hazard audio and FX contract.
+
+- [PHASE16_ONBOARDING.md](PHASE16_ONBOARDING.md) — Phase 16 #155 contextual observation/experimentation/automation onboarding contract.

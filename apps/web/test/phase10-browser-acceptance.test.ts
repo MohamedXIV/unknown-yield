@@ -470,6 +470,10 @@ browserIt(
           !!document.querySelector("canvas") &&
           !!document.querySelector('nav[aria-label="Build tools"]')`,
       );
+      await waitForExpression(
+        `document.querySelector('[data-onboarding-beat="camera-build"]')
+          ?.textContent?.includes("Read the site before you automate it.") === true`,
+      );
 
       const state = await evaluate<{
         canvas: boolean;
