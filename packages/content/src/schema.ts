@@ -244,6 +244,7 @@ export const contentSchema = z.object({
           mode: z.enum(["scan", "probe"]),
           range: positive,
           requiredMilestoneId: id.optional(),
+          hiddenUntilUnlocked: z.boolean().default(false),
         }),
       )
       .default([]),
