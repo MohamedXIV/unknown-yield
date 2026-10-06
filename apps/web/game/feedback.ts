@@ -92,17 +92,15 @@ export function deriveFeedbackEvents(
     previous.observations.map((observation) => observation.textKey),
   );
   for (const observation of next.observations)
-    if (!oldObservationKeys.has(observation.textKey))
+    if (
+      !oldObservationKeys.has(observation.textKey) &&
+      observation.observedAt
+    )
       push({
         kind: "discovery",
         id: observation.textKey,
-        ...(observation.observedAt ? { at: observation.observedAt } : {}),
+        at: observation.observedAt,
       });
-
-  const oldHazards = new Set(previous.hazardEvidence.map((entry) => entry.id));
-  for (const hazard of next.hazardEvidence)
-    if (!oldHazards.has(hazard.id))
-      push({ kind: "hazard", id: "evidence:" + hazard.id });
 
   const beforeFlow = logisticsActivity(previous);
   const afterFlow = logisticsActivity(next);
