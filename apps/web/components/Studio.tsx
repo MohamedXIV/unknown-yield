@@ -31,6 +31,10 @@ const tableFor: Record<StudioKind, string> = {
   operation: "operations",
   machine: "machines",
   reaction: "reactions",
+  exchange: "exchange",
+  import: "imports",
+  order: "orders",
+  "property-directive": "propertyDirectives",
 };
 
 const plural: Record<StudioKind, string> = {
@@ -38,9 +42,22 @@ const plural: Record<StudioKind, string> = {
   operation: "Operations",
   machine: "Machines",
   reaction: "Reactions",
+  exchange: "Exchange",
+  import: "Imports",
+  order: "Orders",
+  "property-directive": "Property directives",
 };
 
-const kinds: StudioKind[] = ["material", "operation", "machine", "reaction"];
+const kinds: StudioKind[] = [
+  "material",
+  "operation",
+  "machine",
+  "reaction",
+  "exchange",
+  "import",
+  "order",
+  "property-directive",
+];
 
 function errorText(error: unknown) {
   return error instanceof Error ? error.message : "Invalid Studio content";
@@ -499,6 +516,289 @@ export default function Studio() {
     );
   };
 
+
+  const materialSelect = (
+    value: string,
+    onChange: (value: string) => void,
+  ) => (
+    <select value={value} onChange={(event) => onChange(event.target.value)}>
+      <option value="">Choose material…</option>
+      {studioEntityIds(store, "material").map((id) => (
+        <option key={id} value={id}>
+          {studioEntityLabel(store, "material", id)} · {id}
+        </option>
+      ))}
+    </select>
+  );
+
+  const editExchange = () => {
+    if (!row || !selected) return null;
+    return (
+      <>
+        <p className="muted">
+          Listing for {studioEntityLabel(store, "material", selected)} · {selected}
+        </p>
+        <div className="studio-number-grid">
+          {[
+            ["baseCompensation", "Base compensation"],
+            ["floorCompensation", "Floor compensation"],
+            ["baseDemandBps", "Base demand bps"],
+            ["saturationPerUnitBps", "Saturation / unit bps"],
+            ["recoveryPerMarketTickBps", "Saturation recovery / market tick"],
+            ["demandRecoveryPerMarketTickBps", "Demand recovery / market tick"],
+          ].map(([field, label]) => (
+            <label className="studio-field" key={field}>
+              <span>{label}</span>
+              <input
+                type="number"
+                min={1}
+                value={Number(row[field])}
+                onChange={(event) =>
+                  touch(() =>
+                    store.setCell(
+                      "exchange",
+                      selected,
+                      field,
+                      Number(event.target.value),
+                    ),
+                  )
+                }
+              />
+            </label>
+          ))}
+        </div>
+        <label className="studio-field">
+          <span>Required terminal capability ID</span>
+          <input
+            value={String(row.requiredTerminalCapabilityId ?? "")}
+            onChange={(event) =>
+              touch(() =>
+                store.setCell(
+                  "exchange",
+                  selected,
+                  "requiredTerminalCapabilityId",
+                  event.target.value,
+                ),
+              )
+            }
+            placeholder="blank = ordinary outbound handling"
+          />
+        </label>
+      </>
+    );
+  };
+
+  const editImport = () => {
+    if (!row || !selected) return null;
+    return (
+      <>
+        {localeEditor(String(row.nameKey), "English name")}
+        {localeEditor(String(row.briefKey), "Company brief", true)}
+        <label className="studio-field">
+          <span>Imported material</span>
+          {materialSelect(String(row.materialId ?? ""), (value) =>
+            touch(() => store.setCell("imports", selected, "materialId", value)),
+          )}
+        </label>
+        <div className="studio-number-grid">
+          {[
+            ["quantity", "Quantity"],
+            ["fuelCost", "Fuel cost"],
+          ].map(([field, label]) => (
+            <label className="studio-field" key={field}>
+              <span>{label}</span>
+              <input
+                type="number"
+                min={1}
+                value={Number(row[field])}
+                onChange={(event) =>
+                  touch(() =>
+                    store.setCell(
+                      "imports",
+                      selected,
+                      field,
+                      Number(event.target.value),
+                    ),
+                  )
+                }
+              />
+            </label>
+          ))}
+        </div>
+        <label className="studio-field">
+          <span>Terminal module ID</span>
+          <input
+            value={String(row.terminalModuleId ?? "")}
+            onChange={(event) =>
+              touch(() =>
+                store.setCell(
+                  "imports",
+                  selected,
+                  "terminalModuleId",
+                  event.target.value,
+                ),
+              )
+            }
+            placeholder="blank = dry import staging"
+          />
+        </label>
+        <label className="studio-field">
+          <span>Required opportunity ID</span>
+          <input
+            value={String(row.requiredOpportunityId ?? "")}
+            onChange={(event) =>
+              touch(() =>
+                store.setCell(
+                  "imports",
+                  selected,
+                  "requiredOpportunityId",
+                  event.target.value,
+                ),
+              )
+            }
+            placeholder="blank = company-known supply"
+          />
+        </label>
+      </>
+    );
+  };
+
+  const editOrder = () => {
+    if (!row || !selected) return null;
+    return (
+      <>
+        {localeEditor(String(row.nameKey), "English name")}
+        {localeEditor(String(row.briefKey), "Company brief", true)}
+        <label className="studio-field">
+          <span>Requested material</span>
+          {materialSelect(String(row.materialId ?? ""), (value) =>
+            touch(() => store.setCell("orders", selected, "materialId", value)),
+          )}
+        </label>
+        <div className="studio-number-grid">
+          {[
+            ["quantity", "Quantity"],
+            ["durationTicks", "Duration ticks"],
+            ["rewardFuel", "Fuel reward"],
+          ].map(([field, label]) => (
+            <label className="studio-field" key={field}>
+              <span>{label}</span>
+              <input
+                type="number"
+                min={1}
+                value={Number(row[field])}
+                onChange={(event) =>
+                  touch(() =>
+                    store.setCell(
+                      "orders",
+                      selected,
+                      field,
+                      Number(event.target.value),
+                    ),
+                  )
+                }
+              />
+            </label>
+          ))}
+        </div>
+      </>
+    );
+  };
+
+  const editPropertyDirective = () => {
+    if (!row || !selected) return null;
+    return (
+      <>
+        {localeEditor(String(row.nameKey), "English name")}
+        {localeEditor(String(row.briefKey), "Company brief", true)}
+        {localeEditor(String(row.propertyKey), "Requested property", true)}
+        <label className="studio-field">
+          <span>Target material</span>
+          {materialSelect(String(row.targetMaterialId ?? ""), (value) =>
+            touch(() =>
+              store.setCell(
+                "propertyDirectives",
+                selected,
+                "targetMaterialId",
+                value,
+              ),
+            ),
+          )}
+        </label>
+        <label className="studio-field">
+          <span>Accepted solution reactions</span>
+          <input
+            value={commaList(row.solutionReactionIdsJson)}
+            onChange={(event) =>
+              touch(() => {
+                const values = event.target.value
+                  .split(",")
+                  .map((value) => value.trim())
+                  .filter(Boolean);
+                store.setCell(
+                  "propertyDirectives",
+                  selected,
+                  "solutionReactionIdsJson",
+                  JSON.stringify(values),
+                );
+              })
+            }
+            placeholder="reaction-id, another-reaction"
+          />
+          <small>Stable reaction IDs, comma-separated. These remain developer-only spoilers.</small>
+        </label>
+        <div className="studio-number-grid">
+          {[
+            ["durationTicks", "Duration ticks"],
+            ["rewardFuel", "Fuel reward"],
+          ].map(([field, label]) => (
+            <label className="studio-field" key={field}>
+              <span>{label}</span>
+              <input
+                type="number"
+                min={field === "rewardFuel" ? 0 : 1}
+                value={Number(row[field])}
+                onChange={(event) =>
+                  touch(() =>
+                    store.setCell(
+                      "propertyDirectives",
+                      selected,
+                      field,
+                      Number(event.target.value),
+                    ),
+                  )
+                }
+              />
+            </label>
+          ))}
+        </div>
+        <label className="studio-field">
+          <span>Import reward</span>
+          <select
+            value={String(row.rewardImportSupplyId ?? "")}
+            onChange={(event) =>
+              touch(() =>
+                store.setCell(
+                  "propertyDirectives",
+                  selected,
+                  "rewardImportSupplyId",
+                  event.target.value,
+                ),
+              )
+            }
+          >
+            <option value="">No physical import reward</option>
+            {studioEntityIds(store, "import").map((id) => (
+              <option key={id} value={id}>
+                {studioEntityLabel(store, "import", id)} · {id}
+              </option>
+            ))}
+          </select>
+        </label>
+      </>
+    );
+  };
+
   return (
     <main className="studio-page studio-workbench" data-revision={revision}>
       <header className="studio-topbar">
@@ -670,6 +970,10 @@ export default function Studio() {
                 {kind === "operation" && editOperation()}
                 {kind === "machine" && editMachine()}
                 {kind === "reaction" && editReaction()}
+                {kind === "exchange" && editExchange()}
+                {kind === "import" && editImport()}
+                {kind === "order" && editOrder()}
+                {kind === "property-directive" && editPropertyDirective()}
               </div>
             </>
           ) : (
