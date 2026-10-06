@@ -220,6 +220,13 @@ it("turns player matrix discovery into company R&D and a deeper local phase seam
   });
   sim.step(fixture.tickMs);
   expect(sim.serialize().machines[extractorId].job).not.toBeNull();
+  expect(
+    sim.command({
+      type: "setEnabled",
+      machineId: extractorId,
+      enabled: false,
+    }).ok,
+  ).toBe(true);
   sim.step(
     fixture.tickMs *
       fixture.machines.find((entry) => entry.id === "deep-extractor")!
