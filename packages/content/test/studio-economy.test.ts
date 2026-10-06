@@ -93,8 +93,8 @@ describe("Phase 15 targeted economy Studio authoring", () => {
       targetMaterialId: "catalyst-powder",
       solutionReactionIdsJson: JSON.stringify(["crush-catalyst"]),
       durationTicks: 3000,
-      rewardFuel: 0,
-      rewardImportSupplyId: "orbital-coolant-canister",
+      rewardFuel: 5,
+      rewardImportSupplyId: "",
     });
     for (const [key, text] of [
       ["import.test-catalyst-crate.name", "Catalyst test crate"],
