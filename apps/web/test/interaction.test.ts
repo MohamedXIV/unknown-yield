@@ -109,7 +109,9 @@ it("resolves global and contextual build shortcuts with submenu precedence", () 
   expect(buildContextShortcutForTool("acquisition", "extractor")).toBe("1");
   expect(buildContextShortcutForTool("acquisition", "deep-extractor")).toBe("2");
   expect(buildContextShortcutForTool("processing", "vaporizer")).toBe("5");
-  expect(buildContextToolForShortcut("thermal", "3")).toBe("oversealed-furnace");
+  expect(buildContextToolForShortcut("thermal", "3")).toBe(
+    "oversealed-furnace",
+  );
   expect(buildContextToolForShortcut("storage", "4")).toBeNull();
 
   expect(standaloneBuildToolForShortcut("X")).toBe("demolish");
@@ -131,8 +133,12 @@ it("resolves global and contextual build shortcuts with submenu precedence", () 
     kind: "context-tool",
     tool: "sealed-furnace",
   });
-  expect(resolveBuildShortcut("5", "thermal")).toEqual({ kind: "suppressed" });
-  expect(resolveBuildShortcut("x", "thermal")).toEqual({ kind: "suppressed" });
+  expect(resolveBuildShortcut("5", "thermal")).toEqual({
+    kind: "suppressed",
+  });
+  expect(resolveBuildShortcut("x", "thermal")).toEqual({
+    kind: "suppressed",
+  });
   expect(resolveBuildShortcut("r", "thermal")).toBeNull();
 });
 
