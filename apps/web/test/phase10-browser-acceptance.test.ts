@@ -1267,6 +1267,23 @@ browserIt(
           document.querySelector('[data-build-group="thermal"]')
             ?.getAttribute("aria-label") === "Sealed furnace group"`,
       );
+      const promotedPresentation = await evaluate<{
+        name: string | null;
+        cost: string | null;
+        locked: boolean;
+      }>(`(() => {
+        const button = document.querySelector('[data-build-group="thermal"]');
+        return {
+          name: button?.querySelector("span")?.textContent ?? null,
+          cost: button?.querySelector("em")?.textContent?.trim() ?? null,
+          locked: button?.classList.contains("locked") ?? false,
+        };
+      })()`);
+      expect(promotedPresentation).toEqual({
+        name: "Sealed furnace",
+        cost: "26",
+        locked: false,
+      });
       await evaluate(`(() => {
         document.querySelector('button[aria-label="Close panel"]')?.click();
         return true;
