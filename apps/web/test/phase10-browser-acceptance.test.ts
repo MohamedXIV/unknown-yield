@@ -528,9 +528,12 @@ browserIt(
           code,
           windowsVirtualKeyCode,
         });
-        // Leave ample headroom above the 360 ms product threshold so CI
-        // scheduling jitter cannot turn a deliberate hold into a short press.
-        await sleep(500);
+        // Wait on the browser event loop, not the Node test process. This
+        // guarantees the product's 360 ms hold timer gets its turn before keyup
+        // even when the browser main thread is busy under CI.
+        await evaluate<void>(
+          `new Promise((resolve) => setTimeout(resolve, 500))`,
+        );
         await call("Input.dispatchKeyEvent", {
           type: "keyUp",
           key,
