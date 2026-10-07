@@ -285,7 +285,7 @@ function GameClientInner() {
       },
     };
     setPreferences(next);
-    let saved = false;
+    let saved: boolean;
     try {
       saved = saveGamePreferences(window.localStorage, next);
     } catch {
