@@ -411,15 +411,17 @@ browserIt(
         throw new Error("Browser condition timed out: " + expression);
       };
 
-      const openBuildGroup = async (label: string): Promise<void> => {
+      const openBuildGroup = async (identity: string): Promise<void> => {
         await evaluate(`(async () => {
           const entry = [...document.querySelectorAll(
             'nav[aria-label="Build tools"] > .build-group > button',
-          )].find((button) => button.getAttribute("aria-label") === ${JSON.stringify(
-            label,
-          )});
+          )].find(
+            (button) =>
+              button.getAttribute("aria-label") === ${JSON.stringify(identity)} ||
+              button.getAttribute("data-build-group") === ${JSON.stringify(identity)},
+          );
           if (!entry) throw new Error("Build group missing: " + ${JSON.stringify(
-            label,
+            identity,
           )});
           entry.dispatchEvent(
             new PointerEvent("pointerdown", {
@@ -589,7 +591,7 @@ browserIt(
       }>(`(() => ({
         canvas: !!document.querySelector("canvas"),
         extractorGroup: !!document.querySelector(
-          'nav[aria-label="Build tools"] button[aria-label="Extractor group"]',
+          'nav[aria-label="Build tools"] [data-build-group="acquisition"]',
         ),
         groupShortcuts: [...document.querySelectorAll(
           'nav[aria-label="Build tools"] .build-group > button',
@@ -610,14 +612,14 @@ browserIt(
 
       await pressKey("5", "Digit5", 53);
       await waitForExpression(
-        `document.querySelector('button[aria-label="Belt group"]')
+        `document.querySelector('[data-build-group="solid-logistics"]')
           ?.getAttribute("aria-pressed") === "true" &&
           document.querySelector(".build-hint strong")?.textContent === "Belt"`,
       );
 
       await pressWithRepeat("3", "Digit3", 51);
       await waitForExpression(
-        `document.querySelector('button[aria-label="Crusher group"]')
+        `document.querySelector('[data-build-group="processing"]')
           ?.getAttribute("aria-pressed") === "true" &&
           document.querySelector(".build-submenu") === null &&
           document.querySelector(".build-hint strong")?.textContent === "Crusher"`,
@@ -625,7 +627,7 @@ browserIt(
 
       await holdKey("4", "Digit4", 52);
       await waitForExpression(
-        `document.querySelector('button[aria-label="Furnace group"]')
+        `document.querySelector('[data-build-group="thermal"]')
           ?.getAttribute("aria-expanded") === "true" &&
           document.querySelector('.build-submenu[aria-label="Furnace related tools"]') !== null &&
           document.querySelector('.build-submenu button[aria-label="Sealed furnace"]')
@@ -635,9 +637,9 @@ browserIt(
       await pressKey("1", "Digit1", 49);
       await waitForExpression(
         `document.querySelector(".build-submenu") === null &&
-          document.querySelector('button[aria-label="Furnace group"]')
+          document.querySelector('[data-build-group="thermal"]')
             ?.getAttribute("aria-pressed") === "true" &&
-          document.querySelector('button[aria-label="Extractor group"]')
+          document.querySelector('[data-build-group="acquisition"]')
             ?.getAttribute("aria-pressed") !== "true" &&
           document.querySelector(".build-hint strong")?.textContent === "Furnace"`,
       );
@@ -682,7 +684,7 @@ browserIt(
       };
 
       expect(
-        await submenuState("Extractor group", [
+        await submenuState("acquisition", [
           "Deep extractor",
           "Atmospheric intake",
         ]),
@@ -690,42 +692,42 @@ browserIt(
         "Deep extractor": "true",
         "Atmospheric intake": "true",
       });
-      expect(await submenuState("Crusher group", ["Sinterer"])).toEqual({
+      expect(await submenuState("processing", ["Sinterer"])).toEqual({
         Sinterer: "false",
       });
-      expect(await submenuState("Furnace group", ["Relief furnace"])).toEqual({
+      expect(await submenuState("thermal", ["Relief furnace"])).toEqual({
         "Relief furnace": "true",
       });
       expect(
-        await submenuState("Belt group", ["Underground belt", "Elevated gantry"]),
+        await submenuState("solid-logistics", ["Underground belt", "Elevated gantry"]),
       ).toEqual({
         "Underground belt": "false",
         "Elevated gantry": "false",
       });
 
-      await clickBuildTool("Belt group", "Underground belt");
+      await clickBuildTool("solid-logistics", "Underground belt");
       await waitForExpression(
-        `document.querySelector('button[aria-label="Belt group"]')
+        `document.querySelector('[data-build-group="solid-logistics"]')
           ?.getAttribute("aria-pressed") === "true" &&
           document.querySelector(".build-hint strong")?.textContent === "Underground belt"`,
       );
 
-      await clickBuildTool("Belt group", "Elevated gantry");
+      await clickBuildTool("solid-logistics", "Elevated gantry");
       await waitForExpression(
-        `document.querySelector('button[aria-label="Belt group"]')
+        `document.querySelector('[data-build-group="solid-logistics"]')
           ?.getAttribute("aria-pressed") === "true" &&
           document.querySelector(".build-hint strong")?.textContent === "Elevated gantry"`,
       );
 
-      await clickBuildTool("Extractor group", "Deep extractor");
+      await clickBuildTool("acquisition", "Deep extractor");
       await waitForExpression(
         `document.querySelector('[role="status"].toast.error')
           ?.textContent.includes("confirmed Heat result") === true`,
       );
 
-      await clickBuildTool("Crusher group", "Sinterer");
+      await clickBuildTool("processing", "Sinterer");
       await waitForExpression(
-        `document.querySelector('button[aria-label="Crusher group"]')
+        `document.querySelector('[data-build-group="processing"]')
           ?.getAttribute("aria-pressed") === "true"`,
       );
       await waitForExpression(
@@ -824,7 +826,7 @@ browserIt(
             "If that trial stays stable, the extra confinement caused the jam."
           ) === true`,
       );
-      await openBuildGroup("Furnace group");
+      await openBuildGroup("thermal");
       await waitForExpression(
         `document.querySelector('.build-submenu button[aria-label="Relief furnace"]')
           ?.getAttribute("aria-disabled") === "false"`,
@@ -996,13 +998,11 @@ browserIt(
           document.body.textContent?.includes("Relocation hold") === true`,
       );
 
-      await evaluate(`(() => {
-        document.querySelector('button[aria-label="Belt group"]')?.click();
-        return true;
-      })()`);
+      await clickBuildTool("solid-logistics", "Belt");
       await waitForExpression(
-        `document.querySelector('button[aria-label="Belt group"]')
-          ?.getAttribute("aria-pressed") === "true"`,
+        `document.querySelector('[data-build-group="solid-logistics"]')
+          ?.getAttribute("aria-pressed") === "true" &&
+          document.querySelector(".build-hint strong")?.textContent === "Belt"`,
       );
       await pressKey("r", "KeyR", 82);
       await pressKey("r", "KeyR", 82);
