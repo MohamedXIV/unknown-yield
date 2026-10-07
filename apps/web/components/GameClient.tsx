@@ -142,7 +142,12 @@ function GameClientInner() {
     [snapshot, setSnapshot] = useState(() => session.snapshot());
   const [mode, setMode] = useState<WorldMode>(DEFAULT_MODE),
     [panel, setPanel] = useState<
-      "selection" | "knowledge" | "terminal" | "configuration" | "menu" | null
+      | "selection"
+      | "knowledge"
+      | "terminal"
+      | "configuration"
+      | "menu"
+      | null
     >(null),
     [knowledgeFilter, setKnowledgeFilter] =
       useState<KnowledgeFilter>("all");
@@ -2822,8 +2827,8 @@ function GameClientInner() {
                       <small>
                         When enabled, the last child chosen from a build group
                         becomes that group&apos;s quick-selection tool. The
-                        promotion behavior is applied by the grouped-palette
-                        layer.
+                        grouped-palette layer consumes this preference in the
+                        promotion step.
                       </small>
                     </span>
                     <input
