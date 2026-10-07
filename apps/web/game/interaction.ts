@@ -177,7 +177,10 @@ export const STANDALONE_BUILD_SHORTCUTS = {
 
 export function buildGroupForShortcut(shortcut: string): ToolGroup | null {
   const normalized = shortcut.toLowerCase();
-  return TOOL_GROUPS.find((group) => group.shortcut.toLowerCase() === normalized) ?? null;
+  return (
+    TOOL_GROUPS.find((group) => group.shortcut.toLowerCase() === normalized) ??
+    null
+  );
 }
 
 export function buildContextShortcutForTool(
