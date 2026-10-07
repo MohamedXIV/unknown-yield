@@ -16,6 +16,8 @@ import {
   BUILD_PALETTE,
   DEFAULT_MODE,
   armBuildGroupHold,
+  buildContextShortcutForTool,
+  resolveBuildShortcut,
   TOOL_GROUPS,
   TOOL_HOTKEYS,
   toggleFactoryOpen,
@@ -144,6 +146,12 @@ function GameClientInner() {
     [openToolGroup, setOpenToolGroup] = useState<ToolGroupId | null>(null);
   const cancelGroupHold = useRef<(() => void) | null>(null);
   const suppressGroupClick = useRef<ToolGroupId | null>(null);
+  const keyboardGroupHold = useRef<{
+    groupId: ToolGroupId;
+    shortcut: string;
+    held: boolean;
+    cancel: () => void;
+  } | null>(null);
   const [onboarding, setOnboarding] = useState<OnboardingSignals>({
     knowledgeOpened: false,
     terminalOpened: false,
@@ -174,20 +182,10 @@ function GameClientInner() {
     const timer = setTimeout(() => setNotice(null), 6000);
     return () => clearTimeout(timer);
   }, [notice]);
-  useEffect(() => {
-    if (!openToolGroup) return;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      event.preventDefault();
-      event.stopPropagation();
-      setOpenToolGroup(null);
-    };
-    window.addEventListener("keydown", onKeyDown, true);
-    return () => window.removeEventListener("keydown", onKeyDown, true);
-  }, [openToolGroup]);
   useEffect(
     () => () => {
       cancelGroupHold.current?.();
+      keyboardGroupHold.current?.cancel();
     },
     [],
   );
@@ -492,6 +490,85 @@ function GameClientInner() {
     setTool(tool);
     if (!locked) setOpenToolGroup(null);
   };
+  useEffect(() => {
+    const editingInput = () => {
+      const element = document.activeElement;
+      return (
+        element instanceof HTMLElement &&
+        (element.matches("input,textarea,select") || element.isContentEditable)
+      );
+    };
+    const ownEvent = (event: KeyboardEvent) => {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (editingInput()) return;
+      const shortcut = event.key.toLowerCase();
+
+      if (openToolGroup && shortcut === "escape") {
+        ownEvent(event);
+        if (!event.repeat) setOpenToolGroup(null);
+        return;
+      }
+
+      const resolution = resolveBuildShortcut(shortcut, openToolGroup);
+      if (!resolution) return;
+
+      ownEvent(event);
+      if (event.repeat) return;
+
+      if (resolution.kind === "context-tool") {
+        chooseGroupTool(resolution.tool);
+        return;
+      }
+      if (resolution.kind === "suppressed") return;
+      if (resolution.kind === "standalone-tool") {
+        setOpenToolGroup(null);
+        setTool(resolution.tool);
+        return;
+      }
+
+      if (keyboardGroupHold.current) return;
+      const pending = {
+        groupId: resolution.groupId,
+        shortcut,
+        held: false,
+        cancel: () => {},
+      };
+      pending.cancel = armBuildGroupHold(resolution.groupId, (groupId) => {
+        pending.held = true;
+        setOpenToolGroup(groupId);
+      });
+      keyboardGroupHold.current = pending;
+    };
+    const onKeyUp = (event: KeyboardEvent) => {
+      const pending = keyboardGroupHold.current;
+      if (!pending || event.key.toLowerCase() !== pending.shortcut) return;
+
+      ownEvent(event);
+      pending.cancel();
+      keyboardGroupHold.current = null;
+      if (!pending.held) {
+        setOpenToolGroup(null);
+        setTool(groupFor(pending.groupId).defaultTool);
+      }
+    };
+    const onBlur = () => {
+      keyboardGroupHold.current?.cancel();
+      keyboardGroupHold.current = null;
+    };
+
+    window.addEventListener("keydown", onKeyDown, true);
+    window.addEventListener("keyup", onKeyUp, true);
+    window.addEventListener("blur", onBlur);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown, true);
+      window.removeEventListener("keyup", onKeyUp, true);
+      window.removeEventListener("blur", onBlur);
+    };
+  });
+
   const toolGlyph = (tool: Tool) =>
     tool === "sealed-furnace" ||
     tool === "oversealed-furnace" ||
