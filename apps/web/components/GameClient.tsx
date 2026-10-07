@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { I18nextProvider, useTranslation } from "react-i18next";
 import { i18n } from "../game/i18n";
 import { machineStatusLabel } from "../game/machine-status";
@@ -13,9 +13,12 @@ import type {
 } from "@site/sim-core";
 import { Session } from "../game/session";
 import {
+  BUILD_PALETTE,
   DEFAULT_MODE,
+  TOOL_GROUPS,
   TOOL_HOTKEYS,
   toggleFactoryOpen,
+  type ToolGroupId,
   type WorldMode,
   type Tool,
 } from "../game/interaction";
@@ -136,7 +139,10 @@ function GameClientInner() {
     [paused, setPaused] = useState(false),
     [guide, setGuide] = useState(true),
     [homeToken, setHomeToken] = useState(0),
-    [confirmReset, setConfirmReset] = useState(false);
+    [confirmReset, setConfirmReset] = useState(false),
+    [openToolGroup, setOpenToolGroup] = useState<ToolGroupId | null>(null);
+  const groupHoldTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const suppressGroupClick = useRef<ToolGroupId | null>(null);
   const [onboarding, setOnboarding] = useState<OnboardingSignals>({
     knowledgeOpened: false,
     terminalOpened: false,
@@ -167,6 +173,19 @@ function GameClientInner() {
     const timer = setTimeout(() => setNotice(null), 6000);
     return () => clearTimeout(timer);
   }, [notice]);
+  useEffect(() => {
+    if (!openToolGroup) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      event.stopPropagation();
+      setOpenToolGroup(null);
+    };
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
+  }, [openToolGroup]);
+  useEffect(() => setOpenToolGroup(null), [panel]);
+
   const unlockFor = (tool: Tool) =>
     snapshot.definitions.find((definition) => definition.id === tool)?.unlock;
   const toolLocked = (tool: Tool) => unlockFor(tool)?.unlocked === false;
@@ -440,6 +459,68 @@ function GameClientInner() {
                   : (snapshot.definitions.find((d) => d.id === tool)?.cost ??
                     snapshot.storageDefinitions.find((d) => d.id === tool)
                       ?.cost);
+  const groupFor = (id: ToolGroupId) =>
+    TOOL_GROUPS.find((group) => group.id === id)!;
+  const startGroupPress = (id: ToolGroupId) => {
+    if (groupHoldTimer.current) clearTimeout(groupHoldTimer.current);
+    suppressGroupClick.current = null;
+    groupHoldTimer.current = setTimeout(() => {
+      suppressGroupClick.current = id;
+      setOpenToolGroup(id);
+    }, 360);
+  };
+  const cancelGroupPress = () => {
+    if (groupHoldTimer.current) clearTimeout(groupHoldTimer.current);
+    groupHoldTimer.current = null;
+  };
+  const activateGroupPrimary = (id: ToolGroupId) => {
+    if (suppressGroupClick.current === id) {
+      suppressGroupClick.current = null;
+      return;
+    }
+    setOpenToolGroup(null);
+    setTool(groupFor(id).defaultTool);
+  };
+  const chooseGroupTool = (tool: Tool) => {
+    const locked = toolLocked(tool);
+    setTool(tool);
+    if (!locked) setOpenToolGroup(null);
+  };
+  const toolGlyph = (tool: Tool) =>
+    tool === "sealed-furnace" ||
+    tool === "oversealed-furnace" ||
+    tool === "relief-furnace"
+      ? "furnace"
+      : tool === "deep-extractor"
+        ? "extractor"
+        : tool === "atmospheric-intake"
+          ? "compressor"
+          : tool === "sinterer"
+            ? "furnace"
+            : tool;
+  const toolTile = (tool: Tool, shortcut: string | null) => (
+    <>
+      {shortcut && <small>{shortcut}</small>}
+      <Glyph type={toolGlyph(tool)} size={25} />
+      <span>{toolName(tool)}</span>
+      {toolLocked(tool) ? (
+        <em>LOCKED</em>
+      ) : toolCost(tool) ? (
+        <em>
+          {toolCost(tool)}
+          {tool === "factory" ||
+          tool === "underground-solid" ||
+          tool === "underground-liquid"
+            ? "/cell"
+            : tool === "elevated-solid"
+              ? "/deck cell + supports"
+              : ""}
+        </em>
+      ) : (
+        <em>—</em>
+      )}
+    </>
+  );
   const close = () => {
     setPanel(null);
     setMode((m) => ({ ...m, selected: null }));
@@ -2677,87 +2758,94 @@ function GameClientInner() {
             </button>
           </div>
         )}
+        {openToolGroup && (
+          <button
+            className="build-menu-scrim"
+            aria-label="Close build submenu"
+            onPointerDown={() => setOpenToolGroup(null)}
+          />
+        )}
         <nav className="build-bar" aria-label="Build tools">
-          {(
-            [
-              "select",
-              "extractor",
-              "deep-extractor",
-              "atmospheric-intake",
-              "sinterer",
-              "factory",
-              "crusher",
-              "furnace",
-              "sealed-furnace",
-              "oversealed-furnace",
-              "relief-furnace",
-              "belt",
-              "underground-solid",
-              "elevated-solid",
-              "port",
-              "depot",
-              "liquefier",
-              "precipitator",
-              "pressure-line",
-              "pressure-vessel",
-              "compressor",
-              "vaporizer",
-              "gas-collector",
-              "pipe",
-              "underground-liquid",
-              "tank",
-              "pump",
-              "demolish",
-            ] as Tool[]
-          ).map((tool) => (
-            <button
-              key={tool}
-              className={
-                (mode.tool === tool ? "active " : "") +
-                (toolLocked(tool) ? "locked" : "")
-              }
-              aria-label={toolName(tool)}
-              aria-pressed={mode.tool === tool}
-              aria-disabled={toolLocked(tool)}
-              title={toolDescription(tool)}
-              onClick={() => setTool(tool)}
-            >
-              <small>{TOOL_HOTKEYS[tool]}</small>
-              <Glyph
-                type={
-                  tool === "sealed-furnace" ||
-                  tool === "oversealed-furnace" ||
-                  tool === "relief-furnace"
-                    ? "furnace"
-                    : tool === "deep-extractor"
-                      ? "extractor"
-                      : tool === "atmospheric-intake"
-                        ? "compressor"
-                        : tool === "sinterer"
-                          ? "furnace"
-                          : tool
-                }
-                size={25}
-              />
-              <span>{toolName(tool)}</span>
-              {toolLocked(tool) ? (
-                <em>LOCKED</em>
-              ) : toolCost(tool) ? (
-                <em>
-                  {toolCost(tool)}
-                  {tool === "factory" ||
-                  tool === "underground-solid" ||
-                  tool === "underground-liquid"
-                    ? "/cell"
-                    : tool === "elevated-solid"
-                      ? "/deck cell + supports"
-                    : ""}
-                </em>
-              ) : (
-                <em>—</em>
-              )}
-            </button>
-          ))}
+          {BUILD_PALETTE.map((entry) => {
+            if (entry.kind === "tool") {
+              const tool = entry.tool;
+              return (
+                <button
+                  key={tool}
+                  className={
+                    (mode.tool === tool ? "active " : "") +
+                    (toolLocked(tool) ? "locked" : "")
+                  }
+                  aria-label={toolName(tool)}
+                  aria-pressed={mode.tool === tool}
+                  aria-disabled={toolLocked(tool)}
+                  title={toolDescription(tool)}
+                  onClick={() => {
+                    setOpenToolGroup(null);
+                    setTool(tool);
+                  }}
+                >
+                  {toolTile(tool, TOOL_HOTKEYS[tool])}
+                </button>
+              );
+            }
+
+            const group = groupFor(entry.groupId);
+            const primary = group.defaultTool;
+            const open = openToolGroup === group.id;
+            return (
+              <div className="build-group" key={group.id}>
+                {open && (
+                  <div
+                    className="build-submenu"
+                    role="menu"
+                    aria-label={toolName(primary) + " related tools"}
+                  >
+                    {group.tools.map((tool) => (
+                      <button
+                        key={tool}
+                        role="menuitem"
+                        className={
+                          (mode.tool === tool ? "active " : "") +
+                          (toolLocked(tool) ? "locked" : "")
+                        }
+                        aria-label={toolName(tool)}
+                        aria-disabled={toolLocked(tool)}
+                        title={toolDescription(tool)}
+                        onClick={() => chooseGroupTool(tool)}
+                      >
+                        {toolTile(tool, null)}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <button
+                  className={
+                    (mode.tool === primary ? "active " : "") +
+                    (toolLocked(primary) ? "locked" : "") +
+                    "group-primary"
+                  }
+                  aria-label={toolName(primary) + " group"}
+                  aria-expanded={open}
+                  aria-haspopup="menu"
+                  aria-pressed={mode.tool === primary}
+                  aria-disabled={toolLocked(primary)}
+                  title={toolDescription(primary) + " · Hold for related tools"}
+                  onPointerDown={(event) => {
+                    if (event.pointerType === "mouse" && event.button !== 0) return;
+                    startGroupPress(group.id);
+                  }}
+                  onPointerUp={cancelGroupPress}
+                  onPointerCancel={cancelGroupPress}
+                  onPointerLeave={cancelGroupPress}
+                  onClick={() => activateGroupPrimary(group.id)}
+                >
+                  {toolTile(primary, group.shortcut)}
+                  <i className="group-marker" aria-hidden="true">▲</i>
+                </button>
+              </div>
+            );
+          })}
         </nav>
         {["pipe", "underground-liquid", "tank", "pump"].includes(mode.tool) && (
           <label>
