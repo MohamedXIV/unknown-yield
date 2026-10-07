@@ -619,18 +619,31 @@ browserIt(
       const initialState = await evaluate<{
         canvas: boolean;
         extractorGroup: boolean;
+        topLevelEntries: number;
+        groupedEntries: number;
+        standaloneLabels: Array<string | null>;
         groupShortcuts: Array<string | null>;
-      }>(`(() => ({
-        canvas: !!document.querySelector("canvas"),
-        extractorGroup: !!document.querySelector(
-          'nav[aria-label="Build tools"] [data-build-group="acquisition"]',
-        ),
-        groupShortcuts: [...document.querySelectorAll(
-          'nav[aria-label="Build tools"] .build-group > button',
-        )].map((button) => button.getAttribute("aria-keyshortcuts")),
-      }))()`);
+      }>(`(() => {
+        const toolbar = document.querySelector('nav[aria-label="Build tools"]');
+        return {
+          canvas: !!document.querySelector("canvas"),
+          extractorGroup: !!document.querySelector(
+            'nav[aria-label="Build tools"] [data-build-group="acquisition"]',
+          ),
+          topLevelEntries: toolbar?.children.length ?? 0,
+          groupedEntries: toolbar?.querySelectorAll(":scope > .build-group").length ?? 0,
+          standaloneLabels: [...(toolbar?.querySelectorAll(":scope > button") ?? [])]
+            .map((button) => button.getAttribute("aria-label")),
+          groupShortcuts: [...document.querySelectorAll(
+            'nav[aria-label="Build tools"] .build-group > button',
+          )].map((button) => button.getAttribute("aria-keyshortcuts")),
+        };
+      })()`);
       expect(initialState.canvas).toBe(true);
       expect(initialState.extractorGroup).toBe(true);
+      expect(initialState.topLevelEntries).toBe(10);
+      expect(initialState.groupedEntries).toBe(8);
+      expect(initialState.standaloneLabels).toEqual(["Inspect", "Demolish"]);
       expect(initialState.groupShortcuts).toEqual([
         "1",
         "2",
