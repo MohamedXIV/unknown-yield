@@ -4,8 +4,12 @@ import {
   buildCommand,
   hitTest,
   structureKey,
+  BUILD_PALETTE,
   DEFAULT_MODE,
+  TOOL_GROUPS,
   TOOL_HOTKEYS,
+  buildPaletteTools,
+  toolGroupFor,
   toggleFactoryOpen,
 } from "../game/interaction";
 import { Simulation } from "@site/sim-core";
@@ -62,6 +66,33 @@ it("keeps toolbar hotkeys stable and maps the depot tool to placeStorage", () =>
     direction: 1,
   });
 });
+
+it("defines a complete deterministic grouped build palette", () => {
+  const legacyTools = Object.keys(TOOL_HOTKEYS).sort();
+  const paletteTools = buildPaletteTools();
+
+  expect([...paletteTools].sort()).toEqual(legacyTools);
+  expect(new Set(paletteTools).size).toBe(paletteTools.length);
+  expect(BUILD_PALETTE).toHaveLength(10);
+
+  const groupIds = TOOL_GROUPS.map((group) => group.id);
+  const groupShortcuts = TOOL_GROUPS.map((group) => group.shortcut);
+  expect(new Set(groupIds).size).toBe(groupIds.length);
+  expect(new Set(groupShortcuts).size).toBe(groupShortcuts.length);
+
+  for (const group of TOOL_GROUPS) {
+    expect(group.tools).toContain(group.defaultTool);
+    for (const tool of group.tools) expect(toolGroupFor(tool)?.id).toBe(group.id);
+  }
+
+  expect(toolGroupFor("select")).toBeNull();
+  expect(toolGroupFor("demolish")).toBeNull();
+  expect(toolGroupFor("extractor")?.id).toBe("acquisition");
+  expect(toolGroupFor("furnace")?.id).toBe("thermal");
+  expect(toolGroupFor("belt")?.id).toBe("solid-logistics");
+  expect(toolGroupFor("tank")?.id).toBe("storage");
+});
+
 it("maps the atmospheric intake to a distinct machine build command", () => {
   expect(TOOL_HOTKEYS["atmospheric-intake"]).toBe("K");
   const s = new Simulation(fixture).snapshot();
