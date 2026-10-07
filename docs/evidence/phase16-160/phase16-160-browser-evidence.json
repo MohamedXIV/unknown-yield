@@ -6,7 +6,8 @@
   "testedBaseSha": "8beaab2583420af7fb0e9ab6852e6e2365c42df6",
   "sourceDelta": [
     "apps/web/app/icon.svg fixes a fresh production-export /favicon.ico 404.",
-    "apps/web/app/globals.css constrains the build toolbar to its viewport and preserves button widths after a production browser measurement found essential tools clipped at 1365x900."
+    "apps/web/app/globals.css constrains the build toolbar to its viewport and preserves button widths after a production browser measurement found essential tools clipped at 1365x900.",
+    "apps/web/package.json and package-lock.json declare the existing @types/react and @types/node versions directly in the web workspace after the first Vercel preview failed at Next TypeScript setup."
   ],
   "appUrl": "http://127.0.0.1:4010/",
   "browser": {
@@ -282,6 +283,11 @@
       "defect": "At 1365x900 the build toolbar measured 2267px in a 1337px area; Inspect started at x=-444 and Extractor at x=-380.",
       "fix": "Build toolbar now scrolls horizontally; child buttons do not shrink.",
       "verification": "After the fix, Inspect starts at x=21 and Extractor at x=85; the 1337px toolbar area has a 1335px client width and 2265px scroll width."
+    },
+    {
+      "defect": "The first Vercel preview failed at Next TypeScript setup because React and Node type packages were declared only at the monorepo root, not in the web workspace.",
+      "fix": "Declared the existing locked @types/react 19.3.0 and @types/node 26.6.2 as apps/web development dependencies and updated the workspace lock entry.",
+      "verification": "Local typecheck and static export build pass; corrected Vercel preview is pending."
     }
   ],
   "verificationBaseline": {
@@ -294,6 +300,10 @@
     "typecheck": "passed",
     "lint": "passed",
     "build": "passed; static export route and authoring exclusion verified",
-    "buildEnvironmentNote": "Temporarily set experimental.useTypeScriptCli=false because the spawned TypeScript --showConfig process returns empty stdout; next.config.ts was restored."
+    "buildEnvironmentNote": "Temporarily set experimental.useTypeScriptCli=false because the spawned TypeScript --showConfig process returns empty stdout; next.config.ts was restored.",
+    "webWorkspaceTypeDependencies": [
+      "@types/react@19.3.0",
+      "@types/node@26.6.2"
+    ]
   }
 }
