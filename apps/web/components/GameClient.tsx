@@ -183,7 +183,11 @@ function GameClientInner() {
   });
   useEffect(() => installBrowserPerformanceDiagnostics(), []);
   useEffect(() => {
-    setPreferences(loadGamePreferences(localStorage));
+    try {
+      setPreferences(loadGamePreferences(window.localStorage));
+    } catch {
+      setPreferences(DEFAULT_GAME_PREFERENCES);
+    }
   }, []);
   useEffect(
     () => session.subscribe(() => setSnapshot(session.snapshot())),
@@ -281,7 +285,13 @@ function GameClientInner() {
       },
     };
     setPreferences(next);
-    if (!saveGamePreferences(localStorage, next)) {
+    let saved = false;
+    try {
+      saved = saveGamePreferences(window.localStorage, next);
+    } catch {
+      saved = false;
+    }
+    if (!saved) {
       setNotice({
         ok: false,
         message:
@@ -771,7 +781,7 @@ function GameClientInner() {
           </button>
           <button
             aria-label="Game menu"
-            title="Save & settings"
+            title="Expedition menu"
             onClick={() => setPanel(panel === "menu" ? null : "menu")}
           >
             <Glyph type="menu" />
