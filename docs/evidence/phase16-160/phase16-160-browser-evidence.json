@@ -287,7 +287,7 @@
     {
       "defect": "Consecutive Vercel previews showed the web build could not resolve React/Node type packages, then Vitest/React DOM types, because the app workspace typechecks its test files but these development packages were declared only at the monorepo root.",
       "fix": "Declared the existing locked @types/node 26.6.2, @types/react 19.3.0, @types/react-dom 19.3.0 and vitest 5.0.1 packages as apps/web development dependencies and updated the workspace lock entry.",
-      "verification": "Local typecheck and static export build pass; corrected Vercel preview is pending."
+      "verification": "Local typecheck and static export build pass; corrected Vercel preview is READY on PR code head 07b2cf9b461fd095a21e6b8e4843e516eb2618db; GitHub Actions CI run #169 passed on the same head."
     }
   ],
   "verificationBaseline": {
