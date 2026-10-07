@@ -30,7 +30,14 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npm test
+      - name: Run deterministic test suite
+        run: npm test
+        env:
+          UNKNOWN_YIELD_BROWSER_ACCEPTANCE: skip
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run build
+      - name: Run production-browser acceptance
+        run: npx vitest run apps/web/test/phase10-browser-acceptance.test.ts --reporter=verbose
+        env:
+          UNKNOWN_YIELD_BROWSER_ACCEPTANCE: production
