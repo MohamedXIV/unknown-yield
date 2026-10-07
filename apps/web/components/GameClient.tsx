@@ -184,8 +184,6 @@ function GameClientInner() {
     window.addEventListener("keydown", onKeyDown, true);
     return () => window.removeEventListener("keydown", onKeyDown, true);
   }, [openToolGroup]);
-  useEffect(() => setOpenToolGroup(null), [panel]);
-
   const unlockFor = (tool: Tool) =>
     snapshot.definitions.find((definition) => definition.id === tool)?.unlock;
   const toolLocked = (tool: Tool) => unlockFor(tool)?.unlocked === false;
@@ -2793,6 +2791,7 @@ function GameClientInner() {
             const group = groupFor(entry.groupId);
             const primary = group.defaultTool;
             const open = openToolGroup === group.id;
+            const groupActive = group.tools.includes(mode.tool);
             return (
               <div className="build-group" key={group.id}>
                 {open && (
@@ -2821,14 +2820,14 @@ function GameClientInner() {
                 )}
                 <button
                   className={
-                    (mode.tool === primary ? "active " : "") +
-                    (toolLocked(primary) ? "locked" : "") +
+                    (groupActive ? "active " : "") +
+                    (toolLocked(primary) ? "locked " : "") +
                     "group-primary"
                   }
                   aria-label={toolName(primary) + " group"}
                   aria-expanded={open}
                   aria-haspopup="menu"
-                  aria-pressed={mode.tool === primary}
+                  aria-pressed={groupActive}
                   aria-disabled={toolLocked(primary)}
                   title={toolDescription(primary) + " · Hold for related tools"}
                   onPointerDown={(event) => {
@@ -2840,7 +2839,7 @@ function GameClientInner() {
                   onPointerLeave={cancelGroupPress}
                   onClick={() => activateGroupPrimary(group.id)}
                 >
-                  {toolTile(primary, group.shortcut)}
+                  {toolTile(primary, TOOL_HOTKEYS[primary])}
                   <i className="group-marker" aria-hidden="true">▲</i>
                 </button>
               </div>
