@@ -1,0 +1,85 @@
+{
+  "issue": 159,
+  "testedCommit": "c0dacf95ad5f220a9e8e08a5cfee9564c48638d8",
+  "liveMainVerification": {
+    "verifiedWithGitHubConnector": true,
+    "verifiedOn": "2026-10-07",
+    "mainMatchedTestedCommit": true
+  },
+  "build": "successful production export",
+  "environment": {
+    "runner": "Codex VM",
+    "cpuQuotaLogicalCores": 4,
+    "browser": "Chromium 151 headless",
+    "graphics": "software WebGL; GPU acceleration disabled",
+    "representativePhysicalDevice": false
+  },
+  "capture": {
+    "durationSecondsPerReport": 18,
+    "reportCount": 3,
+    "query": "?perf=1",
+    "scenarioConstruction": "Two extractor/factory/crusher lines assembled through the normal game UI; cargo observed on both belt paths.",
+    "views": [
+      {
+        "name": "production-running",
+        "frameIntervalP95Ms": 81.66,
+        "simulationStepP95Ms": 0.6,
+        "snapshotP95Ms": 0.6,
+        "worldSyncP95Ms": 0.5,
+        "dynamicDrawP95Ms": 0.1,
+        "uiCommitP95Ms": 1.1
+      },
+      {
+        "name": "factory-roof-open",
+        "frameIntervalP95Ms": 86.66,
+        "simulationStepP95Ms": 0.7,
+        "snapshotP95Ms": 0.6,
+        "worldSyncP95Ms": 0.5,
+        "dynamicDrawP95Ms": 0.1,
+        "uiCommitP95Ms": 1.3,
+        "note": "Factory inspection reported one waiting machine."
+      },
+      {
+        "name": "terminal-panel-open",
+        "frameIntervalP95Ms": 89.99,
+        "simulationStepP95Ms": 0.6,
+        "snapshotP95Ms": 0.6,
+        "worldSyncP95Ms": 0.5,
+        "dynamicDrawP95Ms": 0.1,
+        "uiCommitP95Ms": 2.3
+      }
+    ]
+  },
+  "phase16ArtResources": {
+    "count": 11,
+    "encodedBytes": 6787,
+    "transferBytes": 10087,
+    "medianLoadDurationMs": 13,
+    "p95LoadDurationMs": 20.7
+  },
+  "browserObservations": {
+    "javascriptRuntimeExceptionsCaptured": 0,
+    "warnings": [
+      "software rendering warning",
+      "GPU stall warning",
+      "missing local /favicon.ico"
+    ]
+  },
+  "interpretation": {
+    "browserFrameBudgetDefined": false,
+    "frameIntervalsAcceptedAsPhysicalDeviceResult": false,
+    "framePacingAttribution": "The 81.66–89.99 ms p95 frame intervals occurred under headless software WebGL and are not attributed to the measured JavaScript subsystems, whose reported p95 values remained <= 2.3 ms.",
+    "phase7ReopenJustifiedByThisEvidence": false,
+    "phase16OnlineEngineeringGate": "PASS",
+    "representativePhysicalDeviceGate": "DEFERRED_NON_BLOCKING"
+  },
+  "provenance": {
+    "summarySource": "User-provided Codex VM report in ChatGPT on 2026-10-07.",
+    "rawArtifactPathsReportedByCaptureSession": [
+      "/workspace/unknown-yield/artifacts/phase16-159/README.md",
+      "/workspace/unknown-yield/artifacts/phase16-159/evidence.json"
+    ],
+    "rawArtifactsImportedIntoRepositoryByThisChange": false,
+    "note": "This repository file preserves the measured summary and live-main verification. The raw VM artifact files were not accessible to this ChatGPT session."
+  }
+}

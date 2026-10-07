@@ -4,9 +4,11 @@ Parent epic: #107.
 
 ## Status
 
-The browser measurement boundary is implemented on the canonical #159 branch. **Representative-device acceptance is not yet a PASS.**
+The browser measurement boundary is merged on `main`, and the Phase 16 **online engineering gate is accepted** from a production-export Codex VM capture at `c0dacf95ad5f220a9e8e08a5cfee9564c48638d8`.
 
-The existing Phase 7 `<=10ms` p95 budget applies to the approved Node simulation + snapshot workload only. It is not silently reused as a browser frame budget. #159 must record the production slice on the agreed representative device before closing.
+The capture used Chromium 151 headless with software WebGL and a four-core CPU quota, so it does **not** establish physical-device/GPU performance. Project execution now treats representative physical-device validation as deferred, non-blocking release evidence rather than a Phase 16 dependency.
+
+The existing Phase 7 `<=10ms` p95 budget applies only to its approved Node simulation + snapshot workload. It is not silently reused as a browser frame budget.
 
 ## Measurement boundary
 
@@ -41,24 +43,32 @@ Use the production export, not a development build:
 
 Resource timings are intentionally retained across metric resets so the report still describes the production art payload loaded by that page.
 
+## Accepted VM evidence
+
+Three 18-second production-export captures were recorded at exact head `c0dacf95ad5f220a9e8e08a5cfee9564c48638d8`, which was independently verified as live `main` through the GitHub connector before acceptance.
+
+| View | Frame interval p95 | Simulation step p95 | Snapshot p95 | World sync p95 | Dynamic draw p95 | UI commit p95 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Production running | 81.66 ms | 0.6 ms | 0.6 ms | 0.5 ms | 0.1 ms | 1.1 ms |
+| Factory roof open | 86.66 ms | 0.7 ms | 0.6 ms | 0.5 ms | 0.1 ms | 1.3 ms |
+| Terminal panel open | 89.99 ms | 0.6 ms | 0.6 ms | 0.5 ms | 0.1 ms | 2.3 ms |
+
+The run loaded 11 Phase 16 art resources: 6,787 encoded bytes / 10,087 transfer bytes, 13 ms median load duration and 20.7 ms p95. No JavaScript runtime exception was captured. Chromium logged software-rendering/GPU-stall warnings and a missing local `/favicon.ico`.
+
+The production slice was assembled through normal game UI as two extractor/factory/crusher lines with cargo visible on both belt paths. Factory inspection reported one waiting machine.
+
+The 81.66–89.99 ms frame-interval p95 is **not** accepted as a physical-device result: this headless VM used software WebGL with GPU acceleration disabled. The important attribution result is that all measured JavaScript subsystem p95 values remained at or below 2.3 ms. This evidence does not justify reopening deferred Phase 7 optimization.
+
+The durable measured summary is [`docs/evidence/phase16-159-vm-summary.json`](evidence/phase16-159-vm-summary.json). The capture session also reported raw VM artifacts under `/workspace/unknown-yield/artifacts/phase16-159/`; those VM-local files were not available to this repository update.
+
 ## Acceptance rule
 
-Do not convert a GitHub-hosted runner, Node benchmark, development build or cloud browser into “representative-device PASS”.
+For Phase 16, a reproducible production-export cloud-browser capture is sufficient for the **online engineering gate** when it preserves exact-head provenance, representative production-slice interaction, subsystem attribution, asset timings and runtime errors. It must not be relabeled as physical-device/GPU validation.
 
-Before #159 closes, the evidence must state:
+Representative physical-device validation is deferred, non-blocking release evidence. No browser frame budget has been invented after the fact.
 
-- exact Git commit tested;
-- production build;
-- representative device/browser;
-- production-slice world/scenario;
-- capture duration/repetitions;
-- separate subsystem summaries plus frame pacing and asset timings;
-- any agreed browser/device budgets and the result against them;
-- visible/runtime errors honestly;
-- whether measured evidence justifies reopening deferred Phase 7 optimization.
-
-If a budget fails, profile the measured category before changing architecture. Rust/WASM, workers, aggregate simulation, render rewrites or new caching frameworks remain evidence-gated.
+If future evidence shows a real measured budget failure, profile the failing category before changing architecture. Rust/WASM, workers, aggregate simulation, render rewrites or new caching frameworks remain evidence-gated.
 
 ## Repository verification
 
-The diagnostics themselves remain covered by deterministic unit tests, typecheck, lint and production build. Those checks prove the instrumentation is safe to ship; they do **not** replace representative-device measurement.
+The diagnostics themselves remain covered by deterministic unit tests, typecheck, lint and production build. Those checks prove the instrumentation is safe to ship; the accepted VM capture adds browser attribution evidence, while physical-device/GPU validation remains explicitly deferred.
