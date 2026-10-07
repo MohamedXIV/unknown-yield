@@ -1,0 +1,25 @@
+Phase 16 #160 verification — 2026-10-07
+
+npm test
+  Test Files: 111 passed | 1 skipped (112 total)
+  Tests:      532 passed | 3 skipped (535 total)
+
+npm run typecheck
+  Passed: tsc --noEmit -p tsconfig.json && tsc --noEmit -p apps/web/tsconfig.json
+
+npm run lint
+  Passed: eslint .
+
+npm run build
+  Passed: static production export generated at apps/web/out
+  Passed: scripts/verify-export.mjs confirmed no Studio route or authoring component
+  Routes: /, /_not-found, /icon.svg
+  VM workaround: temporarily set experimental.useTypeScriptCli=false because the spawned TypeScript --showConfig process returns empty stdout; restored apps/web/next.config.ts after build.
+
+Production browser run
+  Chromium 151, x86_64 Linux, 1365x900, DPR 1, software WebGL
+  9/9 structured stages passed
+  page errors: 0
+  failed requests: 0
+  HTTP responses >= 400: 0
+  Console: 4 WebGL performance warnings for GPU stall due to ReadPixels; no JS errors.
