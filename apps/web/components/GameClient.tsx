@@ -185,6 +185,12 @@ function GameClientInner() {
     window.addEventListener("keydown", onKeyDown, true);
     return () => window.removeEventListener("keydown", onKeyDown, true);
   }, [openToolGroup]);
+  useEffect(
+    () => () => {
+      cancelGroupHold.current?.();
+    },
+    [],
+  );
   const unlockFor = (tool: Tool) =>
     snapshot.definitions.find((definition) => definition.id === tool)?.unlock;
   const toolLocked = (tool: Tool) => unlockFor(tool)?.unlocked === false;
@@ -2838,6 +2844,7 @@ function GameClientInner() {
                   onPointerUp={cancelGroupPress}
                   onPointerCancel={cancelGroupPress}
                   onPointerLeave={cancelGroupPress}
+                  onContextMenu={(event) => event.preventDefault()}
                   onClick={() => activateGroupPrimary(group.id)}
                 >
                   {toolTile(primary, TOOL_HOTKEYS[primary])}
