@@ -152,6 +152,11 @@ function GameClientInner() {
     held: boolean;
     cancel: () => void;
   } | null>(null);
+  const buildKeyboardContext = useRef<{
+    openToolGroup: ToolGroupId | null;
+    setTool: (tool: Tool) => void;
+    chooseGroupTool: (tool: Tool) => void;
+  } | null>(null);
   const [onboarding, setOnboarding] = useState<OnboardingSignals>({
     knowledgeOpened: false,
     terminalOpened: false,
@@ -490,6 +495,11 @@ function GameClientInner() {
     setTool(tool);
     if (!locked) setOpenToolGroup(null);
   };
+  buildKeyboardContext.current = {
+    openToolGroup,
+    setTool,
+    chooseGroupTool,
+  };
   useEffect(() => {
     const editingInput = () => {
       const element = document.activeElement;
@@ -506,26 +516,29 @@ function GameClientInner() {
       if (editingInput()) return;
       const shortcut = event.key.toLowerCase();
 
-      if (openToolGroup && shortcut === "escape") {
+      const context = buildKeyboardContext.current;
+      if (!context) return;
+
+      if (context.openToolGroup && shortcut === "escape") {
         ownEvent(event);
         if (!event.repeat) setOpenToolGroup(null);
         return;
       }
 
-      const resolution = resolveBuildShortcut(shortcut, openToolGroup);
+      const resolution = resolveBuildShortcut(shortcut, context.openToolGroup);
       if (!resolution) return;
 
       ownEvent(event);
       if (event.repeat) return;
 
       if (resolution.kind === "context-tool") {
-        chooseGroupTool(resolution.tool);
+        context.chooseGroupTool(resolution.tool);
         return;
       }
       if (resolution.kind === "suppressed") return;
       if (resolution.kind === "standalone-tool") {
         setOpenToolGroup(null);
-        setTool(resolution.tool);
+        context.setTool(resolution.tool);
         return;
       }
 
@@ -551,7 +564,9 @@ function GameClientInner() {
       keyboardGroupHold.current = null;
       if (!pending.held) {
         setOpenToolGroup(null);
-        setTool(groupFor(pending.groupId).defaultTool);
+        buildKeyboardContext.current?.setTool(
+          groupFor(pending.groupId).defaultTool,
+        );
       }
     };
     const onBlur = () => {
@@ -567,7 +582,7 @@ function GameClientInner() {
       window.removeEventListener("keyup", onKeyUp, true);
       window.removeEventListener("blur", onBlur);
     };
-  });
+  }, []);
 
   const toolGlyph = (tool: Tool) =>
     tool === "sealed-furnace" ||
