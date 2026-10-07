@@ -5,6 +5,7 @@ export type GamePreferences = {
   version: typeof CURRENT_GAME_PREFERENCES_VERSION;
   buildPalette: {
     promoteLastUsed: boolean;
+    lastUsedByGroup: Record<string, string>;
   };
 };
 
@@ -12,6 +13,7 @@ export const DEFAULT_GAME_PREFERENCES: GamePreferences = {
   version: CURRENT_GAME_PREFERENCES_VERSION,
   buildPalette: {
     promoteLastUsed: true,
+    lastUsedByGroup: {},
   },
 };
 
@@ -23,6 +25,7 @@ function defaults(): GamePreferences {
     version: CURRENT_GAME_PREFERENCES_VERSION,
     buildPalette: {
       promoteLastUsed: DEFAULT_GAME_PREFERENCES.buildPalette.promoteLastUsed,
+      lastUsedByGroup: {},
     },
   };
 }
@@ -33,7 +36,13 @@ function isCurrentPreferences(value: unknown): value is GamePreferences {
   return (
     candidate.version === CURRENT_GAME_PREFERENCES_VERSION &&
     !!candidate.buildPalette &&
-    typeof candidate.buildPalette.promoteLastUsed === "boolean"
+    typeof candidate.buildPalette.promoteLastUsed === "boolean" &&
+    !!candidate.buildPalette.lastUsedByGroup &&
+    typeof candidate.buildPalette.lastUsedByGroup === "object" &&
+    !Array.isArray(candidate.buildPalette.lastUsedByGroup) &&
+    Object.values(candidate.buildPalette.lastUsedByGroup).every(
+      (value) => typeof value === "string",
+    )
   );
 }
 
@@ -47,6 +56,7 @@ export function loadGamePreferences(storage: StorageReader): GamePreferences {
       version: CURRENT_GAME_PREFERENCES_VERSION,
       buildPalette: {
         promoteLastUsed: parsed.buildPalette.promoteLastUsed,
+        lastUsedByGroup: { ...parsed.buildPalette.lastUsedByGroup },
       },
     };
   } catch {
@@ -65,6 +75,7 @@ export function saveGamePreferences(
         version: CURRENT_GAME_PREFERENCES_VERSION,
         buildPalette: {
           promoteLastUsed: preferences.buildPalette.promoteLastUsed,
+          lastUsedByGroup: { ...preferences.buildPalette.lastUsedByGroup },
         },
       } satisfies GamePreferences),
     );
