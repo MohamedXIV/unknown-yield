@@ -461,7 +461,7 @@ The sequence is intentionally dependency-aware: first make material states physi
 
 ## Phase 17 — Hierarchical build-tool and interaction UX
 
-**Epic:** GitHub Issue #217. **ACTIVE**. Canonical execution: #218 -> #219 -> #220, with #221 -> #222 in parallel after #218, then #223 integrated browser acceptance.
+**Epic:** GitHub Issue #217. **COMPLETE** through #223 / PR #230 / `a9f7d8374aec98e42c101c96a8487568a322b225`. Canonical execution was #218 -> #219 -> #220, with #221 -> #222 in parallel after #218, then #223 integrated production-browser acceptance. Evidence: [PHASE17_EXIT_REVIEW.md](PHASE17_EXIT_REVIEW.md).
 
 ### Question
 
@@ -481,18 +481,18 @@ Can the player operate the growing construction/tool set as a coherent game inte
 
 ### Canonical children
 
-- #218 — build-tool taxonomy and grouped palette contract — **ACTIVE**
-- #219 — hold-to-open build submenus and pointer interaction
-- #220 — contextual submenu shortcuts and keyboard interaction
-- #221 — Game Configuration foundation and persisted UX preferences
-- #222 — last-used child promotion for grouped build tools
-- #223 — hierarchical build UX browser acceptance and exit review
+- #218 — build-tool taxonomy and grouped palette contract — **COMPLETE** via PR #225
+- #219 — hold-to-open build submenus and pointer interaction — **COMPLETE** via PR #226
+- #220 — contextual submenu shortcuts and keyboard interaction — **COMPLETE** via PR #227
+- #221 — Game Configuration foundation and persisted UX preferences — **COMPLETE** via PR #228
+- #222 — last-used child promotion for grouped build tools — **COMPLETE** via PR #229
+- #223 — hierarchical build UX browser acceptance and exit review — **COMPLETE** via PR #230
 
 ### Exit criteria
 
 A representative production site can be built without horizontal all-tool catalog scanning. Group primary selection is fast, pointer and keyboard hold behavior agree, contextual shortcuts are scoped deterministically to the open submenu, last-used promotion follows a persisted preference, locked tools remain truthful, and production-browser acceptance proves existing build/rotate/cancel/camera/inspector/factory/logistics behavior still works.
 
-Subjective visual polish, visual identity and broader UI redesign are explicitly deferred until this UX interaction pass is complete.
+The technical exit gate passed against the built static production export on exact head `d2b25105313cda6e43e962912568d2e374d320a6` in CI #189. Subjective visual polish, visual identity and broader UI redesign remain explicitly deferred to a later, separately selected pass.
 
 ## Deferred decisions
 
@@ -539,10 +539,11 @@ User chose to return to gameplay after #96 / PR #97 rather than continue snapsho
 
 Phase 7 performance work is deferred. The fixed 32-factory joint p95 <=10ms gate remains unmet (24.5777ms flowing / 19.6748ms backpressured). Phase 16 later accepted its production-export VM browser engineering gate while explicitly deferring representative physical-device/GPU validation; that does not retroactively satisfy the Phase 7 scale budget. Keep existing evidence and correctness boundaries. Revisit when an actual browser-playability problem or an agreed feature scale requirement justifies it. Old NEXT recommendations in profiling docs are historical candidates, not active assignments.
 
-Roadmap expansion approved on 2026-10-02: Phases 9–16 capture the major post-foundation gameplay discussed but not represented by the earlier execution phases. Canonical epics #100–#107 and children #108–#161 form that completed gameplay queue. Phases 9–16 are complete through their recorded exit decisions. On 2026-10-07 the user explicitly opened Phase 17 / #217 to address hierarchical build-tool and interaction UX before any broad visual UI restyling. Phase 7 remains deferred and Phase 8 remains a parallel art-production track.
+Roadmap expansion approved on 2026-10-02: Phases 9–16 capture the major post-foundation gameplay discussed but not represented by the earlier execution phases. Canonical epics #100–#107 and children #108–#161 form that completed gameplay queue. Phases 9–16 are complete through their recorded exit decisions. Phase 17 / #217 is also complete through #223 / PR #230, with production-browser evidence recorded in [PHASE17_EXIT_REVIEW.md](PHASE17_EXIT_REVIEW.md). No later gameplay or visual-polish phase is implicitly selected. Phase 7 remains deferred and Phase 8 remains a parallel art-production track.
 
 
 - [PHASE16_SAVE_COMPATIBILITY.md](PHASE16_SAVE_COMPATIBILITY.md) — Phase 16 #158 supported save/content compatibility and atomic migration boundary.
 - [PHASE16_BROWSER_PERFORMANCE.md](PHASE16_BROWSER_PERFORMANCE.md) — Phase 16 #159 browser attribution, accepted VM engineering evidence and deferred physical-device boundary.
 - [PHASE16_PLAYTESTING.md](PHASE16_PLAYTESTING.md) — Phase 16 #160 structured production-export playtesting and objective defects fixed.
 - [PHASE16_EXIT_REVIEW.md](PHASE16_EXIT_REVIEW.md) — Phase 16 #161 integrated automated exit review and deferred-human-review boundary.
+- [PHASE17_EXIT_REVIEW.md](PHASE17_EXIT_REVIEW.md) — Phase 17 #223 integrated production-browser UX exit review and deferred visual-polish boundary.
