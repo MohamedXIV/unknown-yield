@@ -2776,8 +2776,10 @@ function GameClientInner() {
                   <dd>Home</dd>
                   <dt>Factory roof</dt>
                   <dd>Select factory + F</dd>
-                  <dt>Build tools</dt>
-                  <dd>1–9</dd>
+                  <dt>Build groups</dt>
+                  <dd>1–8 · tap selects, hold opens group</dd>
+                  <dt>Open group</dt>
+                  <dd>1–N selects the shown child</dd>
                   <dt>Dismantle</dt>
                   <dd>X</dd>
                 </dl>
