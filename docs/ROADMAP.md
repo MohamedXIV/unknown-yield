@@ -428,7 +428,7 @@ A fresh expedition can progress through several qualitatively different industri
 
 ## Phase 16 — Production vertical slice
 
-**Epic:** GitHub Issue #107. **ACTIVE**. #153–#158 are complete; #159 browser and representative-device performance acceptance is the active dependency-ready child. Children #153–#161.
+**Epic:** GitHub Issue #107. **ACTIVE**. #153–#159 are complete; #160 structured production-slice playtesting is the active dependency-ready child. #159 accepted the production-export Codex VM engineering gate at `c0dacf95ad5f220a9e8e08a5cfee9564c48638d8`; physical-device/GPU validation is deferred as non-blocking release evidence. Children #153–#161.
 
 ### Question
 
@@ -508,4 +508,4 @@ Roadmap expansion approved on 2026-10-02: Phases 9–16 capture the major post-f
 
 
 - [PHASE16_SAVE_COMPATIBILITY.md](PHASE16_SAVE_COMPATIBILITY.md) — Phase 16 #158 supported save/content compatibility and atomic migration boundary.
-- [PHASE16_BROWSER_PERFORMANCE.md](PHASE16_BROWSER_PERFORMANCE.md) — Phase 16 #159 opt-in browser attribution and representative-device capture contract.
+- [PHASE16_BROWSER_PERFORMANCE.md](PHASE16_BROWSER_PERFORMANCE.md) — Phase 16 #159 browser attribution, accepted VM engineering evidence and deferred physical-device boundary.
