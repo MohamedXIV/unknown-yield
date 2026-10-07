@@ -3059,6 +3059,7 @@ function GameClientInner() {
                     (toolLocked(primary) ? "locked " : "") +
                     "group-primary"
                   }
+                  data-build-group={group.id}
                   aria-label={toolName(primary) + " group"}
                   aria-expanded={open}
                   aria-haspopup="menu"
