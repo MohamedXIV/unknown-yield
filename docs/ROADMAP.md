@@ -459,6 +459,41 @@ Phase 7 remains a deferred evidence gate, not a prerequisite for ordinary gamepl
 
 The sequence is intentionally dependency-aware: first make material states physically meaningful, then let industry reveal deeper resources, then deepen hazards/recovery, then make factories easier to adapt, then expand company/terminal strategy, then add advanced infrastructure only where the larger world proves a need. Content breadth comes after these systems are stable, and the production vertical slice integrates them rather than inventing another foundation.
 
+## Phase 17 — Hierarchical build-tool and interaction UX
+
+**Epic:** GitHub Issue #217. **ACTIVE**. Canonical execution: #218 -> #219 -> #220, with #221 -> #222 in parallel after #218, then #223 integrated browser acceptance.
+
+### Question
+
+Can the player operate the growing construction/tool set as a coherent game interface rather than scanning a flat catalog of every unlocked machine and logistics variant?
+
+### Scope
+
+- replace the flat all-tools build strip with functional parent/groups;
+- short click/tap selects the group's current primary child;
+- pointer press-and-hold opens that group's submenu upward;
+- holding the group's global shortcut opens the same submenu;
+- while a submenu is open, contextual child shortcuts take precedence over unrelated global tool shortcuts;
+- add a small real Game Configuration surface and a versioned local preferences contract;
+- optionally promote the last-used child to become that group's primary quick-selection tool;
+- preserve existing tool IDs, costs, unlocks, build commands, containment behavior and sim-core authority;
+- keep the phase focused on interaction/organization; broad visual restyling and the “AI-ish” appearance pass come later.
+
+### Canonical children
+
+- #218 — build-tool taxonomy and grouped palette contract — **ACTIVE**
+- #219 — hold-to-open build submenus and pointer interaction
+- #220 — contextual submenu shortcuts and keyboard interaction
+- #221 — Game Configuration foundation and persisted UX preferences
+- #222 — last-used child promotion for grouped build tools
+- #223 — hierarchical build UX browser acceptance and exit review
+
+### Exit criteria
+
+A representative production site can be built without horizontal all-tool catalog scanning. Group primary selection is fast, pointer and keyboard hold behavior agree, contextual shortcuts are scoped deterministically to the open submenu, last-used promotion follows a persisted preference, locked tools remain truthful, and production-browser acceptance proves existing build/rotate/cancel/camera/inspector/factory/logistics behavior still works.
+
+Subjective visual polish, visual identity and broader UI redesign are explicitly deferred until this UX interaction pass is complete.
+
 ## Deferred decisions
 
 Do not prematurely lock:
@@ -504,7 +539,7 @@ User chose to return to gameplay after #96 / PR #97 rather than continue snapsho
 
 Phase 7 performance work is deferred. The fixed 32-factory joint p95 <=10ms gate remains unmet (24.5777ms flowing / 19.6748ms backpressured). Phase 16 later accepted its production-export VM browser engineering gate while explicitly deferring representative physical-device/GPU validation; that does not retroactively satisfy the Phase 7 scale budget. Keep existing evidence and correctness boundaries. Revisit when an actual browser-playability problem or an agreed feature scale requirement justifies it. Old NEXT recommendations in profiling docs are historical candidates, not active assignments.
 
-Roadmap expansion approved on 2026-10-02: Phases 9–16 capture the major post-foundation gameplay discussed but not represented by the earlier execution phases. Canonical epics #100–#107 and children #108–#161 form that completed gameplay queue. Phases 9–15 are complete through their recorded exit decisions, and Phase 16 / #107 closes through #161's integrated automated exit review. Phase 7 remains deferred and Phase 8 remains a parallel art-production track. No Phase 17 is implied by this closeout.
+Roadmap expansion approved on 2026-10-02: Phases 9–16 capture the major post-foundation gameplay discussed but not represented by the earlier execution phases. Canonical epics #100–#107 and children #108–#161 form that completed gameplay queue. Phases 9–16 are complete through their recorded exit decisions. On 2026-10-07 the user explicitly opened Phase 17 / #217 to address hierarchical build-tool and interaction UX before any broad visual UI restyling. Phase 7 remains deferred and Phase 8 remains a parallel art-production track.
 
 
 - [PHASE16_SAVE_COMPATIBILITY.md](PHASE16_SAVE_COMPATIBILITY.md) — Phase 16 #158 supported save/content compatibility and atomic migration boundary.
