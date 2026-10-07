@@ -12,13 +12,19 @@ it("uses explicit Game Configuration defaults when no preference record exists",
   expect(preferences).toEqual(DEFAULT_GAME_PREFERENCES);
   expect(preferences).not.toBe(DEFAULT_GAME_PREFERENCES);
   expect(preferences.buildPalette.promoteLastUsed).toBe(true);
+  expect(preferences.buildPalette.lastUsedByGroup).toEqual({});
 });
 
 it("persists and restores preferences independently from expedition saves", () => {
   const records = new Map<string, string>();
   const configured = {
     version: CURRENT_GAME_PREFERENCES_VERSION,
-    buildPalette: { promoteLastUsed: false },
+    buildPalette: {
+      promoteLastUsed: false,
+      lastUsedByGroup: {
+        acquisition: "deep-extractor",
+      },
+    },
   };
 
   expect(
@@ -41,11 +47,17 @@ it("recovers safely from malformed, unsupported and invalid preference records",
     "{broken",
     JSON.stringify({
       version: 0,
-      buildPalette: { promoteLastUsed: false },
+      buildPalette: {
+        promoteLastUsed: false,
+        lastUsedByGroup: {},
+      },
     }),
     JSON.stringify({
       version: CURRENT_GAME_PREFERENCES_VERSION,
-      buildPalette: { promoteLastUsed: "yes" },
+      buildPalette: {
+        promoteLastUsed: "yes",
+        lastUsedByGroup: {},
+      },
     }),
   ]) {
     expect(loadGamePreferences({ getItem: () => raw })).toEqual(
