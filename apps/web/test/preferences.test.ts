@@ -59,6 +59,12 @@ it("recovers safely from malformed, unsupported and invalid preference records",
         lastUsedByGroup: {},
       },
     }),
+    JSON.stringify({
+      version: CURRENT_GAME_PREFERENCES_VERSION,
+      buildPalette: {
+        promoteLastUsed: false,
+      },
+    }),
   ]) {
     expect(loadGamePreferences({ getItem: () => raw })).toEqual(
       DEFAULT_GAME_PREFERENCES,
