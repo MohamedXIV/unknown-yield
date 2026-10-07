@@ -207,7 +207,7 @@ GitHub Actions CI is intentionally budget-conscious: it runs the full `npm test`
 - Do not add Rust/WASM without benchmark/profiler evidence.
 - Completed phases are foundations, not active scope: extend their accepted contracts rather than reopening them casually.
 - Phase 7 performance work remains deferred until measured browser/scale evidence justifies reopening it; Phase 8 art work is parallel and explicitly selected only when needed.
-- Phase 10 is complete through #119 / PR #174, Phase 11 through #125 / PR #180, Phase 12 is complete under its recorded decisions, Phase 13 through #138 / PR #192, Phase 14 through #144 / PR #196, Phase 15 through #152 / PR #205, and Phase 16 through #161 / PR #216. Current product phase: **Phase 17 — hierarchical build-tool and interaction UX (#217)**, beginning with #218.
+- Phase 10 is complete through #119 / PR #174, Phase 11 through #125 / PR #180, Phase 12 is complete under its recorded decisions, Phase 13 through #138 / PR #192, Phase 14 through #144 / PR #196, Phase 15 through #152 / PR #205, Phase 16 through #161 / PR #216, and **Phase 17 — hierarchical build-tool and interaction UX (#217)** through #223 / PR #230 / `a9f7d8374aec98e42c101c96a8487568a322b225`. No later product phase is implicitly selected.
 
 ## Active/later phase epics
 
@@ -255,7 +255,7 @@ The roadmap now records Phases 9–16 for the major gameplay directions that wer
 - Phase 15 — content scale and expedition arc;
 - Phase 16 — production vertical slice.
 
-Canonical GitHub epics and children exist for Phase 9 #100 (#108–#113), Phase 10 #101 (#114–#119), Phase 11 #102 (#120–#125), Phase 12 #103 (#126–#131), Phase 13 #104 (#132–#138), Phase 14 #105 (#139–#144), Phase 15 #106 (#145–#152), Phase 16 #107 (#153–#161), and Phase 17 #217 (#218–#223). Phases 9–16 are complete under their recorded exit decisions. Phase 17 / #217 is active at first child #218.
+Canonical GitHub epics and children exist for Phase 9 #100 (#108–#113), Phase 10 #101 (#114–#119), Phase 11 #102 (#120–#125), Phase 12 #103 (#126–#131), Phase 13 #104 (#132–#138), Phase 14 #105 (#139–#144), Phase 15 #106 (#145–#152), Phase 16 #107 (#153–#161), and Phase 17 #217 (#218–#223). Phases 9–17 are complete under their recorded exit decisions. Phase 17 evidence is [PHASE17_EXIT_REVIEW.md](PHASE17_EXIT_REVIEW.md).
 
 Phase 7 remains deferred with its accepted unmet performance budget preserved. Phase 8 remains a parallel art-pipeline track and does not block gameplay execution. Do not reopen completed foundations merely because later phases deepen discovery, company systems or logistics; extend the accepted contracts.
 
@@ -292,7 +292,7 @@ Approved 2026-10-04 after #112 merge. Native review on `codex/113-material-state
 
 Player comprehension, subjective pacing/visual taste and representative physical-device/GPU judgment remain **DEFERRED HUMAN REVIEW** for the user's consolidated playthrough. They are not claimed as automated PASS and do not block the recorded Phase 16 technical closeout.
 
-Phase 16 is closed. On 2026-10-07 the user explicitly approved Phase 17 / #217 to fix interaction UX before the later visual/UI polish pass. Begin with #218; do not fold broad appearance restyling into this phase.
+Phase 16 is closed. On 2026-10-07 the user explicitly approved Phase 17 / #217 to fix interaction UX before the later visual/UI polish pass. Phase 17 is now closed through #223 / PR #230; evidence: [PHASE17_EXIT_REVIEW.md](PHASE17_EXIT_REVIEW.md). Broad appearance restyling remains a separate, not-yet-selected scope.
 
 
 ## Phase 17 interaction UX — #217
@@ -307,6 +307,6 @@ Canonical execution:
 
 `#219 + #220 + #221 + #222 -> #223`
 
-#218 is ACTIVE. The accepted direction is functional tool groups, short-click primary selection, press-and-hold upward submenus for pointer and group shortcuts, contextual submenu shortcut precedence, and optional last-used child promotion controlled by a persisted Game Configuration preference.
+Phase 17 is **COMPLETE** through #223 / PR #230 / `a9f7d8374aec98e42c101c96a8487568a322b225`. The accepted model is functional tool groups, short-click effective-primary selection, press-and-hold upward submenus for pointer and group shortcuts, deterministic contextual submenu shortcut precedence, and optional last-used child promotion controlled by persisted Game Configuration preferences. The exact production-browser exit gate passed on head `d2b25105313cda6e43e962912568d2e374d320a6` in CI #189. See [PHASE17_EXIT_REVIEW.md](PHASE17_EXIT_REVIEW.md).
 
-This phase must preserve gameplay/simulation semantics. Broad visual identity, stylistic polish and the user's “AI-ish” appearance concerns are deliberately deferred until the interaction model is complete.
+Gameplay/simulation semantics remain unchanged by the Phase 17 interaction layer. Broad visual identity, stylistic polish and the user's “AI-ish” appearance concerns remain deliberately deferred until explicitly selected.
