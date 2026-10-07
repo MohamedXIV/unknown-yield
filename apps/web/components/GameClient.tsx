@@ -15,6 +15,7 @@ import { Session } from "../game/session";
 import {
   BUILD_PALETTE,
   DEFAULT_MODE,
+  armBuildGroupHold,
   TOOL_GROUPS,
   TOOL_HOTKEYS,
   toggleFactoryOpen,
@@ -141,7 +142,7 @@ function GameClientInner() {
     [homeToken, setHomeToken] = useState(0),
     [confirmReset, setConfirmReset] = useState(false),
     [openToolGroup, setOpenToolGroup] = useState<ToolGroupId | null>(null);
-  const groupHoldTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cancelGroupHold = useRef<(() => void) | null>(null);
   const suppressGroupClick = useRef<ToolGroupId | null>(null);
   const [onboarding, setOnboarding] = useState<OnboardingSignals>({
     knowledgeOpened: false,
@@ -460,16 +461,16 @@ function GameClientInner() {
   const groupFor = (id: ToolGroupId) =>
     TOOL_GROUPS.find((group) => group.id === id)!;
   const startGroupPress = (id: ToolGroupId) => {
-    if (groupHoldTimer.current) clearTimeout(groupHoldTimer.current);
+    cancelGroupHold.current?.();
     suppressGroupClick.current = null;
-    groupHoldTimer.current = setTimeout(() => {
-      suppressGroupClick.current = id;
-      setOpenToolGroup(id);
-    }, 360);
+    cancelGroupHold.current = armBuildGroupHold(id, (groupId) => {
+      suppressGroupClick.current = groupId;
+      setOpenToolGroup(groupId);
+    });
   };
   const cancelGroupPress = () => {
-    if (groupHoldTimer.current) clearTimeout(groupHoldTimer.current);
-    groupHoldTimer.current = null;
+    cancelGroupHold.current?.();
+    cancelGroupHold.current = null;
   };
   const activateGroupPrimary = (id: ToolGroupId) => {
     if (suppressGroupClick.current === id) {
