@@ -171,6 +171,37 @@ export function toolGroupFor(tool: Tool): ToolGroup | null {
   return TOOL_GROUPS.find((group) => group.tools.includes(tool)) ?? null;
 }
 
+export function buildGroupById(groupId: ToolGroupId): ToolGroup {
+  return TOOL_GROUPS.find((group) => group.id === groupId)!;
+}
+
+export function effectiveBuildGroupPrimary(
+  groupId: ToolGroupId,
+  promoteLastUsed: boolean,
+  lastUsedByGroup: Readonly<Record<string, string>>,
+  isToolAvailable: (tool: Tool) => boolean,
+): Tool {
+  const group = buildGroupById(groupId);
+  if (!promoteLastUsed) return group.defaultTool;
+
+  const remembered = lastUsedByGroup[groupId] as Tool | undefined;
+  return remembered &&
+    group.tools.includes(remembered) &&
+    isToolAvailable(remembered)
+    ? remembered
+    : group.defaultTool;
+}
+
+export function rememberBuildGroupTool(
+  lastUsedByGroup: Readonly<Record<string, string>>,
+  tool: Tool,
+): Record<string, string> {
+  const group = toolGroupFor(tool);
+  return group
+    ? { ...lastUsedByGroup, [group.id]: tool }
+    : { ...lastUsedByGroup };
+}
+
 export const STANDALONE_BUILD_SHORTCUTS = {
   demolish: "x",
 } as const;
