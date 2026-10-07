@@ -17,7 +17,10 @@ import {
   DEFAULT_MODE,
   armBuildGroupHold,
   buildContextShortcutForTool,
+  effectiveBuildGroupPrimary,
+  rememberBuildGroupTool,
   resolveBuildShortcut,
+  toolGroupFor,
   TOOL_GROUPS,
   TOOL_HOTKEYS,
   toggleFactoryOpen,
@@ -172,6 +175,7 @@ function GameClientInner() {
     openToolGroup: ToolGroupId | null;
     setTool: (tool: Tool) => void;
     chooseGroupTool: (tool: Tool) => void;
+    groupPrimary: (groupId: ToolGroupId) => Tool;
   } | null>(null);
   const [onboarding, setOnboarding] = useState<OnboardingSignals>({
     knowledgeOpened: false,
@@ -276,14 +280,7 @@ function GameClientInner() {
       });
     }
   };
-  const setPromoteLastUsed = (enabled: boolean) => {
-    const next: GamePreferences = {
-      ...preferences,
-      buildPalette: {
-        ...preferences.buildPalette,
-        promoteLastUsed: enabled,
-      },
-    };
+  const commitPreferences = (next: GamePreferences) => {
     setPreferences(next);
     let saved: boolean;
     try {
@@ -298,6 +295,15 @@ function GameClientInner() {
           "Game Configuration changed for this session, but browser storage is unavailable.",
       });
     }
+  };
+  const setPromoteLastUsed = (enabled: boolean) => {
+    commitPreferences({
+      ...preferences,
+      buildPalette: {
+        ...preferences.buildPalette,
+        promoteLastUsed: enabled,
+      },
+    });
   };
   const machine = snapshot.machines.find((m) => m.id === mode.selected),
     factory = snapshot.factories.find((f) => f.id === mode.selected),
@@ -516,6 +522,31 @@ function GameClientInner() {
                       ?.cost);
   const groupFor = (id: ToolGroupId) =>
     TOOL_GROUPS.find((group) => group.id === id)!;
+  const groupPrimary = (id: ToolGroupId) =>
+    effectiveBuildGroupPrimary(
+      id,
+      preferences.buildPalette.promoteLastUsed,
+      preferences.buildPalette.lastUsedByGroup,
+      (tool) => !toolLocked(tool),
+    );
+  const rememberGroupSelection = (tool: Tool) => {
+    const group = toolGroupFor(tool);
+    if (
+      !group ||
+      preferences.buildPalette.lastUsedByGroup[group.id] === tool
+    )
+      return;
+    commitPreferences({
+      ...preferences,
+      buildPalette: {
+        ...preferences.buildPalette,
+        lastUsedByGroup: rememberBuildGroupTool(
+          preferences.buildPalette.lastUsedByGroup,
+          tool,
+        ),
+      },
+    });
+  };
   const startGroupPress = (id: ToolGroupId) => {
     cancelGroupHold.current?.();
     suppressGroupClick.current = null;
@@ -534,17 +565,21 @@ function GameClientInner() {
       return;
     }
     setOpenToolGroup(null);
-    setTool(groupFor(id).defaultTool);
+    setTool(groupPrimary(id));
   };
   const chooseGroupTool = (tool: Tool) => {
     const locked = toolLocked(tool);
     setTool(tool);
-    if (!locked) setOpenToolGroup(null);
+    if (!locked) {
+      rememberGroupSelection(tool);
+      setOpenToolGroup(null);
+    }
   };
   buildKeyboardContext.current = {
     openToolGroup,
     setTool,
     chooseGroupTool,
+    groupPrimary,
   };
   useEffect(() => {
     const editingInput = () => {
@@ -610,9 +645,8 @@ function GameClientInner() {
       keyboardGroupHold.current = null;
       if (!pending.held) {
         setOpenToolGroup(null);
-        buildKeyboardContext.current?.setTool(
-          groupFor(pending.groupId).defaultTool,
-        );
+        const context = buildKeyboardContext.current;
+        if (context) context.setTool(context.groupPrimary(pending.groupId));
       }
     };
     const onBlur = () => {
@@ -2986,7 +3020,7 @@ function GameClientInner() {
             }
 
             const group = groupFor(entry.groupId);
-            const primary = group.defaultTool;
+            const primary = groupPrimary(group.id);
             const open = openToolGroup === group.id;
             const groupActive = group.tools.includes(mode.tool);
             return (
