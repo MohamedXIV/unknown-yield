@@ -171,6 +171,50 @@ export function toolGroupFor(tool: Tool): ToolGroup | null {
   return TOOL_GROUPS.find((group) => group.tools.includes(tool)) ?? null;
 }
 
+export const STANDALONE_BUILD_SHORTCUTS = {
+  demolish: "x",
+} as const;
+
+export function buildGroupForShortcut(shortcut: string): ToolGroup | null {
+  const normalized = shortcut.toLowerCase();
+  return TOOL_GROUPS.find((group) => group.shortcut.toLowerCase() === normalized) ?? null;
+}
+
+export function buildContextShortcutForTool(
+  groupId: ToolGroupId,
+  tool: Tool,
+): string | null {
+  const group = TOOL_GROUPS.find((entry) => entry.id === groupId);
+  if (!group) return null;
+  const index = group.tools.indexOf(tool);
+  return index >= 0 ? String(index + 1) : null;
+}
+
+export function buildContextToolForShortcut(
+  groupId: ToolGroupId,
+  shortcut: string,
+): Tool | null {
+  const group = TOOL_GROUPS.find((entry) => entry.id === groupId);
+  if (!group) return null;
+  const index = Number(shortcut) - 1;
+  if (!Number.isInteger(index) || index < 0 || index >= group.tools.length)
+    return null;
+  return group.tools[index] ?? null;
+}
+
+export function standaloneBuildToolForShortcut(shortcut: string): Tool | null {
+  return shortcut.toLowerCase() === STANDALONE_BUILD_SHORTCUTS.demolish
+    ? "demolish"
+    : null;
+}
+
+export function isGlobalBuildShortcut(shortcut: string): boolean {
+  return (
+    buildGroupForShortcut(shortcut) !== null ||
+    standaloneBuildToolForShortcut(shortcut) !== null
+  );
+}
+
 export const BUILD_GROUP_HOLD_MS = 360;
 
 export function armBuildGroupHold(
