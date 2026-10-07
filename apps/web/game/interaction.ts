@@ -171,6 +171,17 @@ export function toolGroupFor(tool: Tool): ToolGroup | null {
   return TOOL_GROUPS.find((group) => group.tools.includes(tool)) ?? null;
 }
 
+export const BUILD_GROUP_HOLD_MS = 360;
+
+export function armBuildGroupHold(
+  groupId: ToolGroupId,
+  onOpen: (groupId: ToolGroupId) => void,
+): () => void {
+  const timer = setTimeout(() => onOpen(groupId), BUILD_GROUP_HOLD_MS);
+  return () => clearTimeout(timer);
+}
+
+
 export function buildPaletteTools(): Tool[] {
   return BUILD_PALETTE.flatMap((entry) =>
     entry.kind === "tool"
