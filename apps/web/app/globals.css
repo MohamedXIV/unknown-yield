@@ -656,6 +656,39 @@ a {
 .controls-list dd {
   margin: 0;
 }
+.configuration-section {
+  margin: 18px 0;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.configuration-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 10px;
+  color: #c4ceb6;
+  font-size: 11px;
+  line-height: 1.45;
+  cursor: pointer;
+}
+.configuration-option > span {
+  min-width: 0;
+}
+.configuration-option small {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.5;
+}
+.configuration-option input {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--gold);
+}
 .reset-confirm p {
   font-size: 11px;
   line-height: 1.6;
