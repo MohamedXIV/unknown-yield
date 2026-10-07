@@ -1162,6 +1162,7 @@ browserIt(
       const preferenceRecord = await evaluate<{
         version: number;
         promoteLastUsed: boolean;
+        lastUsedByGroup: Record<string, string>;
         expeditionSaveStillPresent: boolean;
       }>(`(() => {
         const preferences = JSON.parse(
@@ -1170,6 +1171,7 @@ browserIt(
         return {
           version: preferences.version,
           promoteLastUsed: preferences.buildPalette.promoteLastUsed,
+          lastUsedByGroup: preferences.buildPalette.lastUsedByGroup,
           expeditionSaveStillPresent:
             localStorage.getItem("industrial-site-save-v15") !== null,
         };
@@ -1177,6 +1179,7 @@ browserIt(
       expect(preferenceRecord).toEqual({
         version: 1,
         promoteLastUsed: false,
+        lastUsedByGroup: {},
         expeditionSaveStillPresent: true,
       });
 
