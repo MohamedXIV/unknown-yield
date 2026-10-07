@@ -181,7 +181,6 @@ export function armBuildGroupHold(
   return () => clearTimeout(timer);
 }
 
-
 export function buildPaletteTools(): Tool[] {
   return BUILD_PALETTE.flatMap((entry) =>
     entry.kind === "tool"
