@@ -2862,6 +2862,7 @@ function GameClientInner() {
                   aria-label={toolName(tool)}
                   aria-pressed={mode.tool === tool}
                   aria-disabled={toolLocked(tool)}
+                  aria-keyshortcuts={tool === "demolish" ? "x" : undefined}
                   title={toolDescription(tool)}
                   onClick={() => {
                     setOpenToolGroup(null);
@@ -2885,22 +2886,26 @@ function GameClientInner() {
                     role="menu"
                     aria-label={toolName(primary) + " related tools"}
                   >
-                    {group.tools.map((tool) => (
-                      <button
-                        key={tool}
-                        role="menuitem"
-                        className={
-                          (mode.tool === tool ? "active " : "") +
-                          (toolLocked(tool) ? "locked" : "")
-                        }
-                        aria-label={toolName(tool)}
-                        aria-disabled={toolLocked(tool)}
-                        title={toolDescription(tool)}
-                        onClick={() => chooseGroupTool(tool)}
-                      >
-                        {toolTile(tool, null)}
-                      </button>
-                    ))}
+                    {group.tools.map((tool) => {
+                      const shortcut = buildContextShortcutForTool(group.id, tool);
+                      return (
+                        <button
+                          key={tool}
+                          role="menuitem"
+                          className={
+                            (mode.tool === tool ? "active " : "") +
+                            (toolLocked(tool) ? "locked" : "")
+                          }
+                          aria-label={toolName(tool)}
+                          aria-disabled={toolLocked(tool)}
+                          aria-keyshortcuts={shortcut ?? undefined}
+                          title={toolDescription(tool)}
+                          onClick={() => chooseGroupTool(tool)}
+                        >
+                          {toolTile(tool, shortcut)}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
                 <button
@@ -2914,6 +2919,7 @@ function GameClientInner() {
                   aria-haspopup="menu"
                   aria-pressed={groupActive}
                   aria-disabled={toolLocked(primary)}
+                  aria-keyshortcuts={group.shortcut}
                   title={toolDescription(primary) + " · Hold for related tools"}
                   onPointerDown={(event) => {
                     if (event.pointerType === "mouse" && event.button !== 0) return;
@@ -2925,7 +2931,7 @@ function GameClientInner() {
                   onContextMenu={(event) => event.preventDefault()}
                   onClick={() => activateGroupPrimary(group.id)}
                 >
-                  {toolTile(primary, TOOL_HOTKEYS[primary])}
+                  {toolTile(primary, group.shortcut)}
                   <i className="group-marker" aria-hidden="true">▲</i>
                 </button>
               </div>
