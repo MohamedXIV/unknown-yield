@@ -94,3 +94,5 @@ Prefer a small complete loop over broad half-built systems. New infrastructure m
 - [PHASE16_PRODUCTION_UX.md](PHASE16_PRODUCTION_UX.md) — Phase 16 #156 world-first Notebook, Inspector and Terminal production UX contract.
 
 - [PHASE16_CONTENT_SLICE.md](PHASE16_CONTENT_SLICE.md) — Phase 16 #157 curated representative expedition content and Phase-ceramic capstone objective.
+
+- [PHASE16_PLAYTESTING.md](PHASE16_PLAYTESTING.md) — Phase 16 #160 automated production-slice playthrough and explicitly deferred human review.

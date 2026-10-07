@@ -1,0 +1,311 @@
+{
+  "runId": "phase16-160-production-slice-v1",
+  "task": 160,
+  "startedAt": "2026-10-07T07:58:22.395Z",
+  "completedAt": "2026-10-07T08:02:25.702Z",
+  "testedBaseSha": "8beaab2583420af7fb0e9ab6852e6e2365c42df6",
+  "sourceDelta": [
+    "apps/web/app/icon.svg fixes a fresh production-export /favicon.ico 404.",
+    "apps/web/app/globals.css constrains the build toolbar to its viewport and preserves button widths after a production browser measurement found essential tools clipped at 1365x900.",
+    "apps/web/package.json and package-lock.json declare @types/react, @types/react-dom, @types/node and vitest directly in the web workspace after consecutive Vercel previews exposed that the app build typechecks test files while omitting root-only development dependencies."
+  ],
+  "appUrl": "http://127.0.0.1:4010/",
+  "browser": {
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36",
+    "platform": "Linux x86_64",
+    "hardwareConcurrency": 3,
+    "deviceMemoryGiB": 8,
+    "viewport": {
+      "width": 1365,
+      "height": 900
+    },
+    "devicePixelRatio": 1,
+    "webglRenderer": "WebKit WebGL"
+  },
+  "steps": [
+    {
+      "name": "fresh-production-export-load-and-onboarding",
+      "status": "passed",
+      "at": "2026-10-07T07:58:22.396Z",
+      "result": {
+        "title": "Unknown Yield — Field Operations",
+        "onboarding": "×FIELD BRIEF · 1/6Read the site before you automate it.Right-drag to pan, scroll to zoom, and Home recenters the site. Start with an Extractor on a visible surface deposit.Build tools preview placement before committing it. Arrows are physical input/output direction, not decoration.",
+        "canvas": {
+          "width": 1365,
+          "height": 900
+        },
+        "viewport": {
+          "width": 1365,
+          "height": 900,
+          "dpr": 1,
+          "cores": 3,
+          "memoryGiB": 8
+        },
+        "iconLinks": [
+          {
+            "href": "http://127.0.0.1:4010/icon.svg?57e5dd1fe9cab094",
+            "type": "image/svg+xml"
+          }
+        ]
+      }
+    },
+    {
+      "name": "notebook-hidden-knowledge-boundary",
+      "status": "passed",
+      "at": "2026-10-07T07:58:25.900Z",
+      "result": {
+        "opening": "3 open · 1 confirmed · 0 hazards",
+        "hiddenThermalResultAbsent": true
+      }
+    },
+    {
+      "name": "terminal-economic-motivation",
+      "status": "passed",
+      "at": "2026-10-07T07:58:30.600Z",
+      "result": {
+        "activeOpportunity": "1 active opportunity",
+        "directive": "Sealed thermal study",
+        "fuelReward": "+18 fuel",
+        "exportObligationRule": true,
+        "hiddenOutcomeRemainsUnknown": true
+      }
+    },
+    {
+      "name": "normal-ui-build-two-production-and-experiment-lines",
+      "status": "passed",
+      "at": "2026-10-07T07:58:35.200Z",
+      "result": {
+        "extractor1": "◇ Machine placed ×",
+        "extractor2": "◇ Machine placed ×",
+        "factory": "◇ Factory built ×",
+        "port1": "◇ Wall port placed ×",
+        "port2": "◇ Wall port placed ×",
+        "crusher": "◇ Machine placed ×",
+        "furnace": "◇ Machine placed ×",
+        "belt1": "◇ Belt path built ×",
+        "belt2": "◇ Belt path built ×"
+      }
+    },
+    {
+      "name": "observe-production-and-physical-backpressure",
+      "status": "passed",
+      "at": "2026-10-07T07:59:21.112Z",
+      "result": {
+        "crusherInspection": "INSPECT\n×\nMACHINE · OUTPUT FULL\nOutput blocked\n\nDownstream capacity is full or disconnected. Clear or reroute the physical output.\n\nInput containment: No added protection\n\nOutput containment: No added protection\n\nNo connected destination\n\nM6 · AUTOMATED EQUIPMENT\nCrusher\nOutput full\nCompany fuel / batch\n2\nBatch time\n3s\nOperation\nCrush\nStop after this batch\nInput\n12 / 12\nFerrite rubble\n12\nOutput\n12 / 12\nStructural plates\n12\n\nCyan arrow: incoming belt. Gold arrow: outgoing belt. Unfamiliar outcomes are recorded after processing. Buffers survive disable and save/load. Dismantling needs empty buffers: drain output through belts first.\n\nDismantle & reclaim",
+        "visibleStatus": "",
+        "onboarding": "×\nFIELD BRIEF · 5/6\nA solved factory is persistent capital.\n\nSelect a factory and close its roof with F or the factory control. Its internal topology and buffers remain real while the exterior becomes compact.\n\nClosing is presentation and operating context—not deletion."
+      }
+    },
+    {
+      "name": "experiment-observation-without-hidden-recipe-leak",
+      "status": "passed",
+      "at": "2026-10-07T08:00:14.718Z",
+      "result": {
+        "evidenceSummary": "3 open · 2 confirmed · 0 hazards",
+        "text": "FIELD NOTEBOOK\n×\nEVIDENCE STATUS\n3 open · 2 confirmed · 0 hazards\n\nFilter what you know without exposing the authored recipe graph. Unconfirmed outcomes stay unnamed.\n\nAll\nOpen\nHazards\nConfirmed\nLearn by doing.\n\nKnown construction methods and your observed discoveries. There is no complete recipe book.\n\nMaterial findings\nOBSERVED PROPERTY\nFerrite rubble\n\nFerrite already anchors site construction through structural plate production. Diverting the same feedstock into other applications competes directly with physical expansion.\n\nOPEN BRANCH\nFerrite rubble\n\nFerrite still has unresolved thermal behavior. Treat heating trials as a separate branch rather than assuming the construction route is its only useful application.\n\nCOMPANY OPPORTUNITY\nMagnetic ceramic\n\nMagnetic ceramic carries strong small-batch company value, but demand saturates quickly. It is an opportunistic export, not a stable backbone.\n\nOPEN BRANCH\nVeined ore\n\nVeined ore supports more than one process path. Some transformations may leave ordinary dry handling and require different logistics.\n\nOPEN BRANCH\nCatalytic stone\n\nCatalytic stone has competing industrial uses. A commodity branch may provide steady value, while preserving feedstock leaves room for higher-grade resonance work.\n\nKNOWN METHOD · CRUSH\nStructural plates\n\nFerrite compacts into structural plates for local construction.\n\nFerrite rubble → Crush · Crusher\nOBSERVED · HEAT\nMagnetic ceramic\n\nAmbient heating vitrifies ferrite into a magnetic ceramic. The company values small batches, but demand saturates quickly.\n\nFerrite rubble → Heat · Furnace",
+        "hiddenOutcomeTermsAbsent": true
+      }
+    },
+    {
+      "name": "factory-persistence-and-shell-reconfiguration",
+      "status": "passed",
+      "at": "2026-10-07T08:00:19.560Z",
+      "result": {
+        "expansion": "◇ Factory shell reshaped ×",
+        "trim": "◇ Factory shell reshaped ×",
+        "crusherAndFurnacePersisted": true,
+        "panelTail": "st\nExpand east\nExpand north\nExpand south\nTrim west\nTrim east\nTrim north\nTrim south\nIntact relocation\n\nMove the suspended shell and its internal equipment together by one cell. Each step costs 2 fuel and starts 24 ticks of downtime. External logistics stay at the source and previously connected media must be rebuilt before resume.\n\nMove west\nMove east\nMove north\nMove south\nExternal contract\nContract not certified\nMachines\n2\nInput ports\n2\nOutput ports\n0\nNeeds compatible input\n1\nOutput full\n1\nMeasured throughput\n\nDetailed boundary flow is still measuring or the factory is blocked. Open the interior for diagnosis.\n\nThis is a read-only view of detailed simulation. Closing the roof never replaces it with aggregate execution.\n\nDiagnostic buffers\nStructural plates\n12\nMagnetic ceramic\n8\nDiagnostic equipment\nCrusher\nOutput full\nFurnace\nNeeds compatible input\nAdd a wall port\nDismantle empty factory"
+      }
+    },
+    {
+      "name": "recover-output-block-by-routing-to-terminal",
+      "status": "passed",
+      "at": "2026-10-07T08:00:32.538Z",
+      "result": {
+        "blockedInspection": "INSPECT\n×\nMACHINE · OUTPUT FULL\nOutput blocked\n\nDownstream capacity is full or disconnected. Clear or reroute the physical output.\n\nInput containment: No added protection\n\nOutput containment: No added protection\n\nNo connected destination\n\nM6 · AUTOMATED EQUIPMENT\nCrusher\nOutput full\nCompany fuel / batch\n2\nBatch time\n3s\nOperation\nCrush\nStop after this batch\nInput\n12 / 12\nFerrite rubble\n12\nOutput\n12 / 12\nStructural plates\n12\n\nCyan arrow: incoming belt. Gold arrow: outgoing belt. Unfamiliar outcomes are recorded after processing. Buffers survive disable and save/load. Dismantling needs empty buffers: drain output through belts first.\n\nDismantle & reclaim",
+        "plateStockPort": "◇ Wall port placed ×",
+        "plateStockRoute": "◇ Belt path built ×",
+        "exportPort": "◇ Wall port placed ×",
+        "exportRoute": "◇ Belt path built ×",
+        "furnaceInspection": "INSPECT\n×\nMACHINE · PROCESSING\nProcessing normally\n\nThis machine is active. Watch its buffers and downstream route for backpressure.\n\nInput containment: No added protection\n\nOutput containment: No added protection\n\nM7 · AUTOMATED EQUIPMENT\nFurnace\nProcessing\nCompany fuel / batch\n2\nBatch time\n3s\nOperation\nHeat\nStop after this batch\nInput\n0 / 12\nEmpty\nOutput\n0 / 12\nEmpty\n\nCyan arrow: incoming belt. Gold arrow: outgoing belt. Unfamiliar outcomes are recorded after processing. Buffers survive disable and save/load. Dismantling needs empty buffers: drain output through belts first.\n\nDismantle & reclaim",
+        "factoryAfterRouting": "INSPECT\n×\nFACTORY CAPITAL\n2 machines in persistent layout\n\nClose or reopen this factory without deleting its internal machines, buffers or connections.\n\n10 × 10 CELLS\nFactory 3\nClose roof\nF\n\nRoof state is presentation-only. Every machine, belt, buffer and cargo slot continues in the detailed simulation.\n\nShell reshape\n\nMove one wall at a time around the existing interior. Equipment stays at its world coordinates; ports and external logistics are never moved implicitly.\n\nExpand west\nExpand east\nExpand north\nExpand south\nTrim west\nTrim east\nTrim north\nTrim south\nIntact relocation\n\nMove the suspended shell and its internal equipment together by one cell. Each step costs 2 fuel and starts 24 ticks of downtime. External logistics stay at the source and previously connected media must be rebuilt before resume.\n\nMove west\nMove east\nMove north\nMove south\nExternal contract\nContract not certified\nMachines\n2\nInput ports\n2\nOutput ports\n2\nProcessing\n2\nMeasured throughput\n\nDetailed boundary flow is still measuring or the factory is blocked. Open the interior for diagnosis.\n\nThis is a read-only view of detailed simulation. Closing the roof never replaces it with aggregate execution.\n\nDiagnostic buffers\nStructural plates\n5\nDiagnostic equipment\nCrusher\nProcessing\nFurnace\nProcessing\nAdd a wall port\nDismantle empty factory",
+        "shipmentInputs": [
+          {
+            "label": "Magnetic ceramic shipment quantity",
+            "value": "0",
+            "max": "12",
+            "disabled": false
+          }
+        ],
+        "ceramicStaged": true,
+        "terminalMentionsCargo": true,
+        "terminalPreview": "COMPANY TERMINAL\n×\nPHYSICAL CARGO\n12 exportable units staged\n\nBuild a shipment manifest below or leave an explicit auto-export policy enabled.\n\nWork\nHandling\nShipment\nCompany\nORBITAL UPLINK · CONNECTED\nKeep the expedition moving.\nExported\n0\nObligation\n0 fuel\nCompany milestones\nPENDING\nOutbound handling certified\n\nConfirm the sealed Heat trial to certify expanded terminal handling.\n\nPENDING\nLiquid handling authorization\n\nConfirm a liquid-processing trial to authorize liquid handling.\n\nPENDING\nGas handling authorization\n\nConfirm a gas-producing trial to authorize sealed gas handling.\n\nPENDING\nSpecialized terminal authorization\n\nComplete the sealed-process handling proof to authorize protected inbound cargo.\n\nPENDING\nResonance survey capability\n\nManufacture conductive granules through sealed gas collection to calibrate the resonance probe.\n\n"
+      }
+    },
+    {
+      "name": "save-load-dispatch-economic-result",
+      "status": "passed",
+      "at": "2026-10-07T08:01:52.614Z",
+      "result": {
+        "saveNotice": "◇ Field record saved on this device ×",
+        "dispatchNotice": "◇ Shipment dispatched ×",
+        "exportCounterAfterDispatch": "Exported\n2",
+        "loadNotice": "◇ Site restored ×",
+        "restoredCeramicInput": {
+          "label": "Magnetic ceramic shipment quantity",
+          "value": "0",
+          "max": "12",
+          "disabled": false
+        },
+        "saveRestoredPhysicalCargo": true,
+        "finalDispatch": "◇ Shipment dispatched ×",
+        "finalExportCounter": "Exported\n2"
+      }
+    }
+  ],
+  "browserEvents": {
+    "pageErrors": [],
+    "console": [
+      {
+        "type": "warning",
+        "text": "[.WebGL-0x1f8c0017f800]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+        "location": {
+          "url": "http://127.0.0.1:4010/",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "type": "warning",
+        "text": "[.WebGL-0x1f8c0017f800]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+        "location": {
+          "url": "http://127.0.0.1:4010/",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "type": "warning",
+        "text": "[.WebGL-0x1f8c0017f800]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+        "location": {
+          "url": "http://127.0.0.1:4010/",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "type": "warning",
+        "text": "[.WebGL-0x1f8c0017f800]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)",
+        "location": {
+          "url": "http://127.0.0.1:4010/",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "failedRequests": [],
+    "badResponses": []
+  },
+  "result": {
+    "status": "passed",
+    "stepsPassed": 9,
+    "browserEvents": {
+      "pageErrors": [],
+      "console": [
+        {
+          "type": "warning",
+          "text": "[.WebGL-0x1f8c0017f800]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+          "location": {
+            "url": "http://127.0.0.1:4010/",
+            "line": 0,
+            "column": 0,
+            "lineNumber": 0,
+            "columnNumber": 0
+          }
+        },
+        {
+          "type": "warning",
+          "text": "[.WebGL-0x1f8c0017f800]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+          "location": {
+            "url": "http://127.0.0.1:4010/",
+            "line": 0,
+            "column": 0,
+            "lineNumber": 0,
+            "columnNumber": 0
+          }
+        },
+        {
+          "type": "warning",
+          "text": "[.WebGL-0x1f8c0017f800]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+          "location": {
+            "url": "http://127.0.0.1:4010/",
+            "line": 0,
+            "column": 0,
+            "lineNumber": 0,
+            "columnNumber": 0
+          }
+        },
+        {
+          "type": "warning",
+          "text": "[.WebGL-0x1f8c0017f800]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)",
+          "location": {
+            "url": "http://127.0.0.1:4010/",
+            "line": 0,
+            "column": 0,
+            "lineNumber": 0,
+            "columnNumber": 0
+          }
+        }
+      ],
+      "failedRequests": [],
+      "badResponses": []
+    }
+  },
+  "deferredHumanReview": [
+    "Player comprehension and subjective pacing/taste feedback are deferred to the user’s consolidated human playthrough.",
+    "Representative physical-device/GPU performance remains deferred, non-blocking release evidence per #159."
+  ],
+  "objectiveDefects": [
+    {
+      "defect": "Fresh static export did not provide a favicon; browser requested /favicon.ico and received 404.",
+      "fix": "Added apps/web/app/icon.svg.",
+      "verification": "Static build now exports /icon.svg; final browser event log has no HTTP 4xx response."
+    },
+    {
+      "defect": "At 1365x900 the build toolbar measured 2267px in a 1337px area; Inspect started at x=-444 and Extractor at x=-380.",
+      "fix": "Build toolbar now scrolls horizontally; child buttons do not shrink.",
+      "verification": "After the fix, Inspect starts at x=21 and Extractor at x=85; the 1337px toolbar area has a 1335px client width and 2265px scroll width."
+    },
+    {
+      "defect": "Consecutive Vercel previews showed the web build could not resolve React/Node type packages, then Vitest/React DOM types, because the app workspace typechecks its test files but these development packages were declared only at the monorepo root.",
+      "fix": "Declared the existing locked @types/node 26.6.2, @types/react 19.3.0, @types/react-dom 19.3.0 and vitest 5.0.1 packages as apps/web development dependencies and updated the workspace lock entry.",
+      "verification": "Local typecheck and static export build pass; corrected Vercel preview is READY on PR code head 07b2cf9b461fd095a21e6b8e4843e516eb2618db; GitHub Actions CI run #169 passed on the same head."
+    }
+  ],
+  "verificationBaseline": {
+    "npmTest": {
+      "passedFiles": 111,
+      "skippedFiles": 1,
+      "passedTests": 532,
+      "skippedTests": 3
+    },
+    "typecheck": "passed",
+    "lint": "passed",
+    "build": "passed; static export route and authoring exclusion verified",
+    "buildEnvironmentNote": "Temporarily set experimental.useTypeScriptCli=false because the spawned TypeScript --showConfig process returns empty stdout; next.config.ts was restored.",
+    "webWorkspaceTypeDependencies": [
+      "@types/node@26.6.2",
+      "@types/react@19.3.0",
+      "@types/react-dom@19.3.0",
+      "vitest@5.0.1"
+    ]
+  }
+}

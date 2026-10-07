@@ -677,6 +677,10 @@ a {
   display: flex;
   gap: 3px;
   padding: 6px;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
   background: #162019ef;
   border: 1px solid #8a927451;
   border-radius: 7px;
@@ -687,6 +691,7 @@ a {
 .build-bar button {
   display: flex;
   position: relative;
+  flex: 0 0 auto;
   align-items: center;
   flex-direction: column;
   width: 78px;
