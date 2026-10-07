@@ -1179,7 +1179,11 @@ browserIt(
       expect(preferenceRecord).toEqual({
         version: 1,
         promoteLastUsed: false,
-        lastUsedByGroup: {},
+        lastUsedByGroup: {
+          processing: "sinterer",
+          "solid-logistics": "belt",
+          thermal: "furnace",
+        },
         expeditionSaveStillPresent: true,
       });
 
