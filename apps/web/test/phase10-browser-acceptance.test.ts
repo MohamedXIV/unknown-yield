@@ -581,14 +581,28 @@ browserIt(
       const initialState = await evaluate<{
         canvas: boolean;
         extractorGroup: boolean;
+        groupShortcuts: Array<string | null>;
       }>(`(() => ({
         canvas: !!document.querySelector("canvas"),
         extractorGroup: !!document.querySelector(
           'nav[aria-label="Build tools"] button[aria-label="Extractor group"]',
         ),
+        groupShortcuts: [...document.querySelectorAll(
+          'nav[aria-label="Build tools"] .build-group > button',
+        )].map((button) => button.getAttribute("aria-keyshortcuts")),
       }))()`);
       expect(initialState.canvas).toBe(true);
       expect(initialState.extractorGroup).toBe(true);
+      expect(initialState.groupShortcuts).toEqual([
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+      ]);
 
       await pressKey("5", "Digit5", 53);
       await waitForExpression(
