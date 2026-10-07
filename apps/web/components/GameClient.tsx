@@ -38,6 +38,12 @@ import {
   installBrowserPerformanceDiagnostics,
   startBrowserMetric,
 } from "../game/performance";
+import {
+  DEFAULT_GAME_PREFERENCES,
+  loadGamePreferences,
+  saveGamePreferences,
+  type GamePreferences,
+} from "../game/preferences";
 import GameHost from "./GameHost";
 function Glyph({ type, size = 20 }: { type: string; size?: number }) {
   const paths: Record<string, string> = {
@@ -64,6 +70,8 @@ function Glyph({ type, size = 20 }: { type: string; size?: number }) {
     book: "M3 4h6l3 2 3-2h6v16h-6l-3 2-3-2H3z M12 6v16",
     terminal: "M4 5h16v12H4z M8 21h8 M12 17v4 M7 8l3 3-3 3 M12 14h5",
     menu: "M4 6h16 M4 12h16 M4 18h16",
+    settings:
+      "M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z M12 2v3 M12 19v3 M4.93 4.93l2.12 2.12 M16.95 16.95l2.12 2.12 M2 12h3 M19 12h3 M4.93 19.07l2.12-2.12 M16.95 7.05l2.12-2.12",
     save: "M3 3h15l3 3v15H3z M7 3v6h10V3 M7 21v-8h10v8",
     home: "M3 11l9-8 9 8 M5 10v11h14V10 M9 21v-7h6v7",
     pause: "M8 4v16 M16 4v16",
@@ -134,7 +142,12 @@ function GameClientInner() {
     [snapshot, setSnapshot] = useState(() => session.snapshot());
   const [mode, setMode] = useState<WorldMode>(DEFAULT_MODE),
     [panel, setPanel] = useState<
-      "selection" | "knowledge" | "terminal" | "menu" | null
+      | "selection"
+      | "knowledge"
+      | "terminal"
+      | "configuration"
+      | "menu"
+      | null
     >(null),
     [knowledgeFilter, setKnowledgeFilter] =
       useState<KnowledgeFilter>("all");
@@ -143,7 +156,10 @@ function GameClientInner() {
     [guide, setGuide] = useState(true),
     [homeToken, setHomeToken] = useState(0),
     [confirmReset, setConfirmReset] = useState(false),
-    [openToolGroup, setOpenToolGroup] = useState<ToolGroupId | null>(null);
+    [openToolGroup, setOpenToolGroup] = useState<ToolGroupId | null>(null),
+    [preferences, setPreferences] = useState<GamePreferences>(
+      DEFAULT_GAME_PREFERENCES,
+    );
   const cancelGroupHold = useRef<(() => void) | null>(null);
   const suppressGroupClick = useRef<ToolGroupId | null>(null);
   const keyboardGroupHold = useRef<{
@@ -166,6 +182,13 @@ function GameClientInner() {
     finishBrowserMetric("ui-render-commit", uiRenderStartedAt);
   });
   useEffect(() => installBrowserPerformanceDiagnostics(), []);
+  useEffect(() => {
+    try {
+      setPreferences(loadGamePreferences(window.localStorage));
+    } catch {
+      setPreferences(DEFAULT_GAME_PREFERENCES);
+    }
+  }, []);
   useEffect(
     () => session.subscribe(() => setSnapshot(session.snapshot())),
     [session],
@@ -250,6 +273,29 @@ function GameClientInner() {
       setNotice({
         ok: false,
         message: "Storage is unavailable. Your running site is unchanged.",
+      });
+    }
+  };
+  const setPromoteLastUsed = (enabled: boolean) => {
+    const next: GamePreferences = {
+      ...preferences,
+      buildPalette: {
+        ...preferences.buildPalette,
+        promoteLastUsed: enabled,
+      },
+    };
+    setPreferences(next);
+    let saved: boolean;
+    try {
+      saved = saveGamePreferences(window.localStorage, next);
+    } catch {
+      saved = false;
+    }
+    if (!saved) {
+      setNotice({
+        ok: false,
+        message:
+          "Game Configuration changed for this session, but browser storage is unavailable.",
       });
     }
   };
@@ -724,8 +770,18 @@ function GameClientInner() {
             <Glyph type={paused ? "play" : "pause"} />
           </button>
           <button
+            aria-label="Game configuration"
+            title="Game configuration"
+            onClick={() => {
+              setPanel(panel === "configuration" ? null : "configuration");
+              setMode((m) => ({ ...m, tool: "select", selected: null }));
+            }}
+          >
+            <Glyph type="settings" />
+          </button>
+          <button
             aria-label="Game menu"
-            title="Save & settings"
+            title="Expedition menu"
             onClick={() => setPanel(panel === "menu" ? null : "menu")}
           >
             <Glyph type="menu" />
@@ -782,9 +838,11 @@ function GameClientInner() {
                 ? "FIELD NOTEBOOK"
                 : panel === "terminal"
                   ? "COMPANY TERMINAL"
-                  : panel === "menu"
-                    ? "EXPEDITION MENU"
-                    : "INSPECT"}
+                  : panel === "configuration"
+                    ? "GAME CONFIGURATION"
+                    : panel === "menu"
+                      ? "EXPEDITION MENU"
+                      : "INSPECT"}
             </span>
             <button aria-label="Close panel" onClick={close}>
               ×
@@ -2761,6 +2819,42 @@ function GameClientInner() {
                     )}
                   </article>
                 ))}
+              </>
+            )}
+            {panel === "configuration" && (
+              <>
+                <h2>Game Configuration</h2>
+                <p className="hint">
+                  Interface and input preferences are stored locally on this
+                  device. They are separate from expedition saves and never
+                  change simulation truth.
+                </p>
+                <section className="configuration-section">
+                  <small className="eyebrow">BUILD PALETTE</small>
+                  <label className="configuration-option">
+                    <span>
+                      Promote last-used group tool
+                      <small>
+                        When enabled, the last child chosen from a build group
+                        becomes that group&apos;s quick-selection tool. The
+                        grouped-palette layer consumes this preference in the
+                        promotion step.
+                      </small>
+                    </span>
+                    <input
+                      type="checkbox"
+                      aria-label="Promote last-used group tool"
+                      checked={preferences.buildPalette.promoteLastUsed}
+                      onChange={(event) =>
+                        setPromoteLastUsed(event.currentTarget.checked)
+                      }
+                    />
+                  </label>
+                </section>
+                <p className="hint">
+                  Configuration version {preferences.version}. Starting or
+                  loading an expedition does not reset these preferences.
+                </p>
               </>
             )}
             {panel === "menu" && (

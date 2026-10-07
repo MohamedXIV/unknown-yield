@@ -1136,6 +1136,68 @@ browserIt(
         diverter: { switched: true },
       });
 
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Game configuration"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.body.textContent?.includes("GAME CONFIGURATION") === true &&
+          document.querySelector(
+            'input[aria-label="Promote last-used group tool"]'
+          )?.checked === true`,
+      );
+
+      await evaluate(`(() => {
+        document.querySelector(
+          'input[aria-label="Promote last-used group tool"]'
+        )?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector(
+          'input[aria-label="Promote last-used group tool"]'
+        )?.checked === false`,
+      );
+
+      const preferenceRecord = await evaluate<{
+        version: number;
+        promoteLastUsed: boolean;
+        lastUsedByGroup: Record<string, string>;
+        expeditionSaveStillPresent: boolean;
+      }>(`(() => {
+        const preferences = JSON.parse(
+          localStorage.getItem("unknown-yield-game-preferences") ?? "null"
+        );
+        return {
+          version: preferences.version,
+          promoteLastUsed: preferences.buildPalette.promoteLastUsed,
+          lastUsedByGroup: preferences.buildPalette.lastUsedByGroup,
+          expeditionSaveStillPresent:
+            localStorage.getItem("industrial-site-save-v15") !== null,
+        };
+      })()`);
+      expect(preferenceRecord).toEqual({
+        version: 1,
+        promoteLastUsed: false,
+        lastUsedByGroup: {},
+        expeditionSaveStillPresent: true,
+      });
+
+      await call("Page.navigate", { url: appUrl });
+      await waitForExpression(
+        `document.readyState === "complete" &&
+          !!document.querySelector('button[aria-label="Game configuration"]')`,
+      );
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Game configuration"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector(
+          'input[aria-label="Promote last-used group tool"]'
+        )?.checked === false`,
+      );
+
       socket.close();
     } catch (error) {
       throw new Error(
