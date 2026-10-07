@@ -643,7 +643,7 @@ browserIt(
       expect(initialState.extractorGroup).toBe(true);
       expect(initialState.topLevelEntries).toBe(10);
       expect(initialState.groupedEntries).toBe(8);
-      expect(initialState.standaloneLabels).toEqual(["Inspect", "Demolish"]);
+      expect(initialState.standaloneLabels).toEqual(["Inspect", "Dismantle"]);
       expect(initialState.groupShortcuts).toEqual([
         "1",
         "2",
