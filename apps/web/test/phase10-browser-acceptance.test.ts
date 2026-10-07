@@ -411,6 +411,61 @@ browserIt(
         throw new Error("Browser condition timed out: " + expression);
       };
 
+      const openBuildGroup = async (label: string): Promise<void> => {
+        await evaluate(`(async () => {
+          const entry = [...document.querySelectorAll(
+            'nav[aria-label="Build tools"] > .build-group > button',
+          )].find((button) => button.getAttribute("aria-label") === ${JSON.stringify(
+            label,
+          )});
+          if (!entry) throw new Error("Build group missing: " + ${JSON.stringify(
+            label,
+          )});
+          entry.dispatchEvent(
+            new PointerEvent("pointerdown", {
+              bubbles: true,
+              composed: true,
+              button: 0,
+              pointerId: 1,
+              pointerType: "mouse",
+            }),
+          );
+          await new Promise((resolve) => setTimeout(resolve, 390));
+          entry.dispatchEvent(
+            new PointerEvent("pointerup", {
+              bubbles: true,
+              composed: true,
+              button: 0,
+              pointerId: 1,
+              pointerType: "mouse",
+            }),
+          );
+          return true;
+        })()`);
+        await waitForExpression(
+          `document.querySelector('.build-submenu') !== null`,
+        );
+      };
+
+      const clickBuildTool = async (
+        groupLabel: string,
+        toolLabel: string,
+      ): Promise<void> => {
+        await openBuildGroup(groupLabel);
+        await evaluate(`(() => {
+          const entry = [...document.querySelectorAll(
+            '.build-submenu button',
+          )].find((button) => button.getAttribute("aria-label") === ${JSON.stringify(
+            toolLabel,
+          )});
+          if (!entry) throw new Error("Build tool missing: " + ${JSON.stringify(
+            toolLabel,
+          )});
+          entry.click();
+          return true;
+        })()`);
+      };
+
       const clickCell = async (x: number, y: number): Promise<void> => {
         const point = await evaluate<{ x: number; y: number }>(`(() => {
           const canvas = document.querySelector("canvas");
@@ -475,89 +530,80 @@ browserIt(
           ?.textContent?.includes("Read the site before you automate it.") === true`,
       );
 
-      const state = await evaluate<{
+      const initialState = await evaluate<{
         canvas: boolean;
-        extractor: { disabled: string | null } | null;
-        deep: { disabled: string | null } | null;
-        atmosphere: { disabled: string | null } | null;
-        sinterer: { disabled: string | null } | null;
-        relief: { disabled: string | null } | null;
-        underground: { disabled: string | null } | null;
-        elevated: { disabled: string | null } | null;
-      }>(`(() => {
-        const button = (label) =>
-          [...document.querySelectorAll('nav[aria-label="Build tools"] button')]
-            .find((entry) => entry.getAttribute("aria-label") === label);
-        const state = (label) => {
-          const entry = button(label);
-          return entry
-            ? { disabled: entry.getAttribute("aria-disabled") }
-            : null;
-        };
-        return {
-          canvas: !!document.querySelector("canvas"),
-          extractor: state("Extractor"),
-          deep: state("Deep extractor"),
-          atmosphere: state("Atmospheric intake"),
-          sinterer: state("Sinterer"),
-          relief: state("Relief furnace"),
-          underground: state("Underground belt"),
-          elevated: state("Elevated gantry"),
-        };
-      })()`);
+        extractorGroup: boolean;
+      }>(`(() => ({
+        canvas: !!document.querySelector("canvas"),
+        extractorGroup: !!document.querySelector(
+          'nav[aria-label="Build tools"] button[aria-label="Extractor group"]',
+        ),
+      }))()`);
+      expect(initialState.canvas).toBe(true);
+      expect(initialState.extractorGroup).toBe(true);
 
-      expect(state.canvas).toBe(true);
-      expect(state.extractor).not.toBeNull();
-      expect(state.deep?.disabled).toBe("true");
-      expect(state.atmosphere?.disabled).toBe("true");
-      expect(state.sinterer?.disabled).toBe("false");
-      expect(state.relief?.disabled).toBe("true");
-      expect(state.underground?.disabled).toBe("false");
-      expect(state.elevated?.disabled).toBe("false");
+      const submenuState = async (
+        groupLabel: string,
+        labels: string[],
+      ): Promise<Record<string, string | null>> => {
+        await openBuildGroup(groupLabel);
+        return evaluate<Record<string, string | null>>(`(() => {
+          const wanted = ${JSON.stringify(labels)};
+          return Object.fromEntries(
+            wanted.map((label) => {
+              const entry = [...document.querySelectorAll(".build-submenu button")]
+                .find((button) => button.getAttribute("aria-label") === label);
+              return [label, entry?.getAttribute("aria-disabled") ?? null];
+            }),
+          );
+        })()`);
+      };
 
-      await evaluate(`(() => {
-        const entry = [...document.querySelectorAll('nav[aria-label="Build tools"] button')]
-          .find((button) => button.getAttribute("aria-label") === "Underground belt");
-        entry.click();
-        return true;
-      })()`);
+      expect(
+        await submenuState("Extractor group", [
+          "Deep extractor",
+          "Atmospheric intake",
+        ]),
+      ).toEqual({
+        "Deep extractor": "true",
+        "Atmospheric intake": "true",
+      });
+      expect(await submenuState("Crusher group", ["Sinterer"])).toEqual({
+        Sinterer: "false",
+      });
+      expect(await submenuState("Furnace group", ["Relief furnace"])).toEqual({
+        "Relief furnace": "true",
+      });
+      expect(
+        await submenuState("Belt group", ["Underground belt", "Elevated gantry"]),
+      ).toEqual({
+        "Underground belt": "false",
+        "Elevated gantry": "false",
+      });
+
+      await clickBuildTool("Belt group", "Underground belt");
       await waitForExpression(
-        `document.querySelector('button[aria-label="Underground belt"]')
+        `document.querySelector('button[aria-label="Belt group"]')
           ?.getAttribute("aria-pressed") === "true" &&
           document.querySelector(".build-hint strong")?.textContent === "Underground belt"`,
       );
 
-      await evaluate(`(() => {
-        const entry = [...document.querySelectorAll('nav[aria-label="Build tools"] button')]
-          .find((button) => button.getAttribute("aria-label") === "Elevated gantry");
-        entry.click();
-        return true;
-      })()`);
+      await clickBuildTool("Belt group", "Elevated gantry");
       await waitForExpression(
-        `document.querySelector('button[aria-label="Elevated gantry"]')
+        `document.querySelector('button[aria-label="Belt group"]')
           ?.getAttribute("aria-pressed") === "true" &&
           document.querySelector(".build-hint strong")?.textContent === "Elevated gantry"`,
       );
 
-      await evaluate(`(() => {
-        const entry = [...document.querySelectorAll('nav[aria-label="Build tools"] button')]
-          .find((button) => button.getAttribute("aria-label") === "Deep extractor");
-        entry.click();
-        return true;
-      })()`);
+      await clickBuildTool("Extractor group", "Deep extractor");
       await waitForExpression(
         `document.querySelector('[role="status"].toast.error')
           ?.textContent.includes("confirmed Heat result") === true`,
       );
 
-      await evaluate(`(() => {
-        const entry = [...document.querySelectorAll('nav[aria-label="Build tools"] button')]
-          .find((button) => button.getAttribute("aria-label") === "Sinterer");
-        entry.click();
-        return true;
-      })()`);
+      await clickBuildTool("Crusher group", "Sinterer");
       await waitForExpression(
-        `document.querySelector('button[aria-label="Sinterer"]')
+        `document.querySelector('button[aria-label="Crusher group"]')
           ?.getAttribute("aria-pressed") === "true"`,
       );
       await waitForExpression(
@@ -654,9 +700,12 @@ browserIt(
           document.body.textContent?.includes("SAFER NEXT TEST") === true &&
           document.body.textContent?.includes(
             "If that trial stays stable, the extra confinement caused the jam."
-          ) === true &&
-          document.querySelector('button[aria-label="Relief furnace"]')
-            ?.getAttribute("aria-disabled") === "false"`,
+          ) === true`,
+      );
+      await openBuildGroup("Furnace group");
+      await waitForExpression(
+        `document.querySelector('.build-submenu button[aria-label="Relief furnace"]')
+          ?.getAttribute("aria-disabled") === "false"`,
       );
 
       await evaluate(`(() => {
