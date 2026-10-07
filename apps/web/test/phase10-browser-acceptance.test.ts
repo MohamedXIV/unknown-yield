@@ -875,13 +875,11 @@ browserIt(
       );
 
       await evaluate(`(() => {
-        [...document.querySelectorAll('nav[aria-label="Build tools"] button')]
-          .find((button) => button.getAttribute("aria-label") === "Belt")
-          ?.click();
+        document.querySelector('button[aria-label="Belt group"]')?.click();
         return true;
       })()`);
       await waitForExpression(
-        `document.querySelector('button[aria-label="Belt"]')
+        `document.querySelector('button[aria-label="Belt group"]')
           ?.getAttribute("aria-pressed") === "true"`,
       );
       await pressKey("r", "KeyR", 82);
