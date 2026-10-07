@@ -1198,6 +1198,109 @@ browserIt(
         )?.checked === false`,
       );
 
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Close panel"]')?.click();
+        return true;
+      })()`);
+      await holdKey("4", "Digit4", 52);
+      await waitForExpression(
+        `document.querySelector(
+          '[data-build-group="thermal"][aria-expanded="true"]'
+        ) !== null &&
+          document.querySelector(
+            '.build-submenu button[aria-label="Sealed furnace"]'
+          ) !== null`,
+      );
+      await evaluate(`(() => {
+        document.querySelector(
+          '.build-submenu button[aria-label="Sealed furnace"]'
+        )?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector(".build-submenu") === null &&
+          document.querySelector(".build-hint strong")?.textContent ===
+            "Sealed furnace"`,
+      );
+
+      const disabledPromotionMemory = await evaluate<{
+        promoteLastUsed: boolean;
+        thermal: string | null;
+        topLevelName: string | null;
+      }>(`(() => {
+        const preferences = JSON.parse(
+          localStorage.getItem("unknown-yield-game-preferences") ?? "null"
+        );
+        return {
+          promoteLastUsed: preferences.buildPalette.promoteLastUsed,
+          thermal: preferences.buildPalette.lastUsedByGroup.thermal ?? null,
+          topLevelName: document
+            .querySelector('[data-build-group="thermal"]')
+            ?.getAttribute("aria-label") ?? null,
+        };
+      })()`);
+      expect(disabledPromotionMemory).toEqual({
+        promoteLastUsed: false,
+        thermal: "sealed-furnace",
+        topLevelName: "Furnace group",
+      });
+
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Game configuration"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector(
+          'input[aria-label="Promote last-used group tool"]'
+        )?.checked === false`,
+      );
+      await evaluate(`(() => {
+        document.querySelector(
+          'input[aria-label="Promote last-used group tool"]'
+        )?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector(
+          'input[aria-label="Promote last-used group tool"]'
+        )?.checked === true &&
+          document.querySelector('[data-build-group="thermal"]')
+            ?.getAttribute("aria-label") === "Sealed furnace group"`,
+      );
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Close panel"]')?.click();
+        return true;
+      })()`);
+
+      await pressKey("4", "Digit4", 52);
+      await waitForExpression(
+        `document.querySelector(".build-hint strong")?.textContent ===
+          "Sealed furnace"`,
+      );
+
+      await call("Page.navigate", { url: appUrl });
+      await waitForExpression(
+        `document.readyState === "complete" &&
+          document.querySelector('[data-build-group="thermal"]')
+            ?.getAttribute("aria-label") === "Sealed furnace group"`,
+      );
+      const promotedAfterReload = await evaluate<{
+        promoteLastUsed: boolean;
+        thermal: string | null;
+      }>(`(() => {
+        const preferences = JSON.parse(
+          localStorage.getItem("unknown-yield-game-preferences") ?? "null"
+        );
+        return {
+          promoteLastUsed: preferences.buildPalette.promoteLastUsed,
+          thermal: preferences.buildPalette.lastUsedByGroup.thermal ?? null,
+        };
+      })()`);
+      expect(promotedAfterReload).toEqual({
+        promoteLastUsed: true,
+        thermal: "sealed-furnace",
+      });
+
       socket.close();
     } catch (error) {
       throw new Error(
