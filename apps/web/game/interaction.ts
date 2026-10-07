@@ -215,6 +215,32 @@ export function isGlobalBuildShortcut(shortcut: string): boolean {
   );
 }
 
+export type BuildShortcutResolution =
+  | { kind: "context-tool"; tool: Tool }
+  | { kind: "group"; groupId: ToolGroupId }
+  | { kind: "standalone-tool"; tool: Tool }
+  | { kind: "suppressed" }
+  | null;
+
+export function resolveBuildShortcut(
+  shortcut: string,
+  openGroupId: ToolGroupId | null,
+): BuildShortcutResolution {
+  if (openGroupId) {
+    const contextualTool = buildContextToolForShortcut(openGroupId, shortcut);
+    if (contextualTool) return { kind: "context-tool", tool: contextualTool };
+    return isGlobalBuildShortcut(shortcut) ? { kind: "suppressed" } : null;
+  }
+
+  const group = buildGroupForShortcut(shortcut);
+  if (group) return { kind: "group", groupId: group.id };
+
+  const standaloneTool = standaloneBuildToolForShortcut(shortcut);
+  return standaloneTool
+    ? { kind: "standalone-tool", tool: standaloneTool }
+    : null;
+}
+
 export const BUILD_GROUP_HOLD_MS = 360;
 
 export function armBuildGroupHold(
