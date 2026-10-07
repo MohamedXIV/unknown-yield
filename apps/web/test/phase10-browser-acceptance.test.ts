@@ -528,7 +528,9 @@ browserIt(
           code,
           windowsVirtualKeyCode,
         });
-        await sleep(390);
+        // Leave ample headroom above the 360 ms product threshold so CI
+        // scheduling jitter cannot turn a deliberate hold into a short press.
+        await sleep(500);
         await call("Input.dispatchKeyEvent", {
           type: "keyUp",
           key,
