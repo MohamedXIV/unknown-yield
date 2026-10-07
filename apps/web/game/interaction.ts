@@ -64,6 +64,121 @@ export const TOOL_HOTKEYS: Record<Tool, string> = {
   depot: "7",
   demolish: "X",
 };
+
+export type ToolGroupId =
+  | "acquisition"
+  | "factory"
+  | "processing"
+  | "thermal"
+  | "solid-logistics"
+  | "liquid-logistics"
+  | "gas-logistics"
+  | "storage";
+
+export type ToolGroup = {
+  id: ToolGroupId;
+  shortcut: string;
+  defaultTool: Tool;
+  tools: readonly Tool[];
+};
+
+/**
+ * Phase 17 build-palette taxonomy.
+ *
+ * Groups are organized around the player's immediate construction goal rather
+ * than renderer/content implementation details. Existing Tool ids remain the
+ * gameplay/build-command identity; this contract only owns palette navigation.
+ */
+export const TOOL_GROUPS: readonly ToolGroup[] = [
+  {
+    id: "acquisition",
+    shortcut: "1",
+    defaultTool: "extractor",
+    tools: [
+      "extractor",
+      "deep-extractor",
+      "atmospheric-intake",
+      "gas-collector",
+    ],
+  },
+  {
+    id: "factory",
+    shortcut: "2",
+    defaultTool: "factory",
+    tools: ["factory", "port"],
+  },
+  {
+    id: "processing",
+    shortcut: "3",
+    defaultTool: "crusher",
+    tools: ["crusher", "sinterer", "liquefier", "precipitator", "vaporizer"],
+  },
+  {
+    id: "thermal",
+    shortcut: "4",
+    defaultTool: "furnace",
+    tools: [
+      "furnace",
+      "sealed-furnace",
+      "oversealed-furnace",
+      "relief-furnace",
+    ],
+  },
+  {
+    id: "solid-logistics",
+    shortcut: "5",
+    defaultTool: "belt",
+    tools: ["belt", "underground-solid", "elevated-solid"],
+  },
+  {
+    id: "liquid-logistics",
+    shortcut: "6",
+    defaultTool: "pipe",
+    tools: ["pipe", "underground-liquid", "pump"],
+  },
+  {
+    id: "gas-logistics",
+    shortcut: "7",
+    defaultTool: "pressure-line",
+    tools: ["pressure-line", "compressor"],
+  },
+  {
+    id: "storage",
+    shortcut: "8",
+    defaultTool: "depot",
+    tools: ["depot", "tank", "pressure-vessel"],
+  },
+];
+
+export type BuildPaletteEntry =
+  | { kind: "tool"; tool: "select" | "demolish" }
+  | { kind: "group"; groupId: ToolGroupId };
+
+export const BUILD_PALETTE: readonly BuildPaletteEntry[] = [
+  { kind: "tool", tool: "select" },
+  { kind: "group", groupId: "acquisition" },
+  { kind: "group", groupId: "factory" },
+  { kind: "group", groupId: "processing" },
+  { kind: "group", groupId: "thermal" },
+  { kind: "group", groupId: "solid-logistics" },
+  { kind: "group", groupId: "liquid-logistics" },
+  { kind: "group", groupId: "gas-logistics" },
+  { kind: "group", groupId: "storage" },
+  { kind: "tool", tool: "demolish" },
+];
+
+export function toolGroupFor(tool: Tool): ToolGroup | null {
+  return TOOL_GROUPS.find((group) => group.tools.includes(tool)) ?? null;
+}
+
+export function buildPaletteTools(): Tool[] {
+  return BUILD_PALETTE.flatMap((entry) =>
+    entry.kind === "tool"
+      ? [entry.tool]
+      : [...(TOOL_GROUPS.find((group) => group.id === entry.groupId)?.tools ?? [])],
+  );
+}
+
 /**
  * Stable structural fingerprint for Phaser rebuild invalidation.
  * Every placed-geometry collection the renderer draws must appear here;
