@@ -13,8 +13,10 @@ import {
   buildContextShortcutForTool,
   buildContextToolForShortcut,
   buildGroupForShortcut,
+  effectiveBuildGroupPrimary,
   buildPaletteTools,
   isGlobalBuildShortcut,
+  rememberBuildGroupTool,
   resolveBuildShortcut,
   standaloneBuildToolForShortcut,
   toolGroupFor,
@@ -99,6 +101,64 @@ it("defines a complete deterministic grouped build palette", () => {
   expect(toolGroupFor("furnace")?.id).toBe("thermal");
   expect(toolGroupFor("belt")?.id).toBe("solid-logistics");
   expect(toolGroupFor("tank")?.id).toBe("storage");
+});
+
+it("promotes remembered grouped tools only when configured and available", () => {
+  const memory = {
+    acquisition: "deep-extractor",
+    thermal: "sealed-furnace",
+  };
+
+  expect(
+    effectiveBuildGroupPrimary("acquisition", true, memory, () => true),
+  ).toBe("deep-extractor");
+  expect(
+    effectiveBuildGroupPrimary("thermal", true, memory, () => true),
+  ).toBe("sealed-furnace");
+
+  // Disabling promotion preserves memory but restores canonical primaries.
+  expect(
+    effectiveBuildGroupPrimary("acquisition", false, memory, () => true),
+  ).toBe("extractor");
+  expect(memory.acquisition).toBe("deep-extractor");
+
+  // A remembered child that is currently locked/unavailable falls back
+  // deterministically without erasing the remembered choice.
+  expect(
+    effectiveBuildGroupPrimary(
+      "acquisition",
+      true,
+      memory,
+      (tool) => tool !== "deep-extractor",
+    ),
+  ).toBe("extractor");
+  expect(
+    effectiveBuildGroupPrimary("acquisition", true, memory, () => true),
+  ).toBe("deep-extractor");
+
+  // Corrupt/stale memory from another group cannot become this group's primary.
+  expect(
+    effectiveBuildGroupPrimary(
+      "storage",
+      true,
+      { storage: "sealed-furnace" },
+      () => true,
+    ),
+  ).toBe("depot");
+});
+
+it("remembers last-used children independently per build group", () => {
+  const first = rememberBuildGroupTool({}, "deep-extractor");
+  const second = rememberBuildGroupTool(first, "sealed-furnace");
+  const third = rememberBuildGroupTool(second, "tank");
+
+  expect(third).toEqual({
+    acquisition: "deep-extractor",
+    thermal: "sealed-furnace",
+    storage: "tank",
+  });
+  expect(rememberBuildGroupTool(third, "demolish")).toEqual(third);
+  expect(rememberBuildGroupTool(third, "demolish")).not.toBe(third);
 });
 
 it("resolves global and contextual build shortcuts with submenu precedence", () => {
