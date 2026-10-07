@@ -191,6 +191,7 @@ function GameClientInner() {
     },
     [],
   );
+  useEffect(() => setOpenToolGroup(null), [panel]);
   const unlockFor = (tool: Tool) =>
     snapshot.definitions.find((definition) => definition.id === tool)?.unlock;
   const toolLocked = (tool: Tool) => unlockFor(tool)?.unlocked === false;
