@@ -678,9 +678,9 @@ a {
   gap: 3px;
   padding: 6px;
   max-width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: thin;
+  flex-wrap: wrap;
+  justify-content: center;
+  overflow: visible;
   background: #162019ef;
   border: 1px solid #8a927451;
   border-radius: 7px;
@@ -702,10 +702,10 @@ a {
   border-radius: 3px;
   border: 1px solid transparent;
 }
-.build-bar button:first-child {
+.build-bar > button:first-child {
   width: 61px;
 }
-.build-bar button:last-child {
+.build-bar > button:last-child {
   border-left: 1px solid var(--line);
   margin-left: 5px;
 }
@@ -731,6 +731,70 @@ a {
 }
 .build-bar .active em {
   color: #c2b88d;
+}
+.build-bar {
+  position: relative;
+  z-index: 2;
+}
+.build-group {
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+}
+.build-submenu {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%);
+  display: flex;
+  gap: 3px;
+  padding: 6px;
+  width: max-content;
+  max-width: calc(100vw - 24px);
+  background: #162019f8;
+  border: 1px solid #8a927475;
+  border-radius: 7px;
+  box-shadow: 0 10px 34px #0810089c;
+  backdrop-filter: blur(14px);
+  pointer-events: auto;
+  z-index: 4;
+}
+.build-submenu button {
+  background: #162019f5;
+}
+.build-submenu button:hover,
+.build-group > button:hover {
+  background: #33432f8a;
+}
+.build-group > button.group-primary {
+  padding-right: 12px;
+}
+.group-marker {
+  position: absolute;
+  top: 3px;
+  right: 5px;
+  font: 7px var(--mono);
+  color: #829473;
+  opacity: 0.8;
+}
+.build-menu-scrim {
+  position: absolute;
+  left: 50%;
+  bottom: -17px;
+  transform: translateX(-50%);
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: default;
+  pointer-events: auto;
+  z-index: 1;
+}
+.build-hint {
+  position: relative;
+  z-index: 2;
 }
 .build-hint {
   display: flex;
@@ -1194,7 +1258,7 @@ kbd {
   .build-bar button {
     width: 70px;
   }
-  .build-bar button:first-child {
+  .build-bar > button:first-child {
     width: 50px;
   }
   .build-hint {
@@ -1255,14 +1319,14 @@ kbd {
     padding: 4px;
   }
   .build-bar button {
-    width: calc((100vw - 24px) / 8);
+    width: calc((100vw - 24px) / 5);
     height: 65px;
     gap: 4px;
   }
-  .build-bar button:first-child {
-    width: calc((100vw - 24px) / 8);
+  .build-bar > button:first-child {
+    width: calc((100vw - 24px) / 5);
   }
-  .build-bar button:last-child {
+  .build-bar > button:last-child {
     margin-left: 0;
   }
   .build-bar button svg {

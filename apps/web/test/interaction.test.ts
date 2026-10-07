@@ -1,13 +1,15 @@
-import { it, expect } from "vitest";
+import { it, expect, vi } from "vitest";
 import {
   beltPath,
   buildCommand,
   hitTest,
   structureKey,
+  BUILD_GROUP_HOLD_MS,
   BUILD_PALETTE,
   DEFAULT_MODE,
   TOOL_GROUPS,
   TOOL_HOTKEYS,
+  armBuildGroupHold,
   buildPaletteTools,
   toolGroupFor,
   toggleFactoryOpen,
@@ -91,6 +93,29 @@ it("defines a complete deterministic grouped build palette", () => {
   expect(toolGroupFor("furnace")?.id).toBe("thermal");
   expect(toolGroupFor("belt")?.id).toBe("solid-logistics");
   expect(toolGroupFor("tank")?.id).toBe("storage");
+});
+
+it("opens grouped build menus only after the hold threshold and supports cancellation", () => {
+  vi.useFakeTimers();
+  const opened: string[] = [];
+
+  const cancel = armBuildGroupHold("acquisition", (groupId) =>
+    opened.push(groupId),
+  );
+  vi.advanceTimersByTime(BUILD_GROUP_HOLD_MS - 1);
+  expect(opened).toEqual([]);
+  vi.advanceTimersByTime(1);
+  expect(opened).toEqual(["acquisition"]);
+
+  const cancelEarly = armBuildGroupHold("thermal", (groupId) =>
+    opened.push(groupId),
+  );
+  cancelEarly();
+  vi.advanceTimersByTime(BUILD_GROUP_HOLD_MS);
+  expect(opened).toEqual(["acquisition"]);
+
+  cancel();
+  vi.useRealTimers();
 });
 
 it("maps the atmospheric intake to a distinct machine build command", () => {
@@ -438,7 +463,6 @@ it("passes the selected profile across a liquid drag and rotation", () => {
   }
 });
 
-
 it("builds, selects, and fingerprints underground routes without treating cargo as topology", () => {
   const snapshot = new Simulation(fixture).snapshot();
   expect(
@@ -494,7 +518,6 @@ it("builds, selects, and fingerprints underground routes without treating cargo 
   movedPortal.undergroundSolids[0].exit.x += 1;
   expect(structureKey(movedPortal)).not.toBe(key);
 });
-
 
 it("builds, selects, and fingerprints elevated gantries without treating cargo as topology", () => {
   expect(TOOL_HOTKEYS["elevated-solid"]).toBe("E");
