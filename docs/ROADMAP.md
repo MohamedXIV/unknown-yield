@@ -428,7 +428,7 @@ A fresh expedition can progress through several qualitatively different industri
 
 ## Phase 16 — Production vertical slice
 
-**Epic:** GitHub Issue #107. **ACTIVE**. #153–#159 are complete; #160 structured production-slice playtesting is the active dependency-ready child. #159 accepted the production-export Codex VM engineering gate at `c0dacf95ad5f220a9e8e08a5cfee9564c48638d8`; physical-device/GPU validation is deferred as non-blocking release evidence. Children #153–#161.
+**Epic:** GitHub Issue #107. **COMPLETE** through #161. #153–#160 are accepted, and the integrated automated exit review is recorded in [PHASE16_EXIT_REVIEW.md](PHASE16_EXIT_REVIEW.md). Human comprehension, subjective pacing/visual taste and physical-device/GPU judgment remain deferred to the user's consolidated playthrough and are not claimed as PASS.
 
 ### Question
 
@@ -509,3 +509,5 @@ Roadmap expansion approved on 2026-10-02: Phases 9–16 capture the major post-f
 
 - [PHASE16_SAVE_COMPATIBILITY.md](PHASE16_SAVE_COMPATIBILITY.md) — Phase 16 #158 supported save/content compatibility and atomic migration boundary.
 - [PHASE16_BROWSER_PERFORMANCE.md](PHASE16_BROWSER_PERFORMANCE.md) — Phase 16 #159 browser attribution, accepted VM engineering evidence and deferred physical-device boundary.
+- [PHASE16_PLAYTESTING.md](PHASE16_PLAYTESTING.md) — Phase 16 #160 structured production-export playtesting and objective defects fixed.
+- [PHASE16_EXIT_REVIEW.md](PHASE16_EXIT_REVIEW.md) — Phase 16 #161 integrated automated exit review and deferred-human-review boundary.
