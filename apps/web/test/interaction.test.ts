@@ -10,7 +10,13 @@ import {
   TOOL_GROUPS,
   TOOL_HOTKEYS,
   armBuildGroupHold,
+  buildContextShortcutForTool,
+  buildContextToolForShortcut,
+  buildGroupForShortcut,
   buildPaletteTools,
+  isGlobalBuildShortcut,
+  resolveBuildShortcut,
+  standaloneBuildToolForShortcut,
   toolGroupFor,
   toggleFactoryOpen,
 } from "../game/interaction";
@@ -93,6 +99,47 @@ it("defines a complete deterministic grouped build palette", () => {
   expect(toolGroupFor("furnace")?.id).toBe("thermal");
   expect(toolGroupFor("belt")?.id).toBe("solid-logistics");
   expect(toolGroupFor("tank")?.id).toBe("storage");
+});
+
+it("resolves global and contextual build shortcuts with submenu precedence", () => {
+  expect(buildGroupForShortcut("1")?.id).toBe("acquisition");
+  expect(buildGroupForShortcut("8")?.id).toBe("storage");
+  expect(buildGroupForShortcut("k")).toBeNull();
+
+  expect(buildContextShortcutForTool("acquisition", "extractor")).toBe("1");
+  expect(buildContextShortcutForTool("acquisition", "deep-extractor")).toBe("2");
+  expect(buildContextShortcutForTool("processing", "vaporizer")).toBe("5");
+  expect(buildContextToolForShortcut("thermal", "3")).toBe(
+    "oversealed-furnace",
+  );
+  expect(buildContextToolForShortcut("storage", "4")).toBeNull();
+
+  expect(standaloneBuildToolForShortcut("X")).toBe("demolish");
+  expect(isGlobalBuildShortcut("5")).toBe(true);
+  expect(isGlobalBuildShortcut("x")).toBe(true);
+  expect(isGlobalBuildShortcut("k")).toBe(false);
+
+  expect(resolveBuildShortcut("5", null)).toEqual({
+    kind: "group",
+    groupId: "solid-logistics",
+  });
+  expect(resolveBuildShortcut("x", null)).toEqual({
+    kind: "standalone-tool",
+    tool: "demolish",
+  });
+
+  // The same key is contextual while a submenu is open instead of switching groups.
+  expect(resolveBuildShortcut("2", "thermal")).toEqual({
+    kind: "context-tool",
+    tool: "sealed-furnace",
+  });
+  expect(resolveBuildShortcut("5", "thermal")).toEqual({
+    kind: "suppressed",
+  });
+  expect(resolveBuildShortcut("x", "thermal")).toEqual({
+    kind: "suppressed",
+  });
+  expect(resolveBuildShortcut("r", "thermal")).toBeNull();
 });
 
 it("opens grouped build menus only after the hold threshold and supports cancellation", () => {

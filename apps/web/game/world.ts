@@ -12,7 +12,6 @@ import {
   buildCommand,
   hitTest,
   DEFAULT_MODE,
-  TOOL_HOTKEYS,
   structureKey as computeStructureKey,
   type WorldMode,
   type Tool,
@@ -316,12 +315,6 @@ export function createWorld(
           e.preventDefault();
           this.home();
         }
-        const hotkeys: Record<string, Tool> = Object.fromEntries(
-          Object.entries(TOOL_HOTKEYS)
-            .filter(([, label]) => label !== "↖")
-            .map(([tool, label]) => [label.toLowerCase(), tool as Tool]),
-        );
-        if (hotkeys[k]) actions.mode(hotkeys[k]);
         if (
           k === "f" &&
           mode.selected &&

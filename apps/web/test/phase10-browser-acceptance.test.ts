@@ -517,6 +517,58 @@ browserIt(
         });
       };
 
+      const holdKey = async (
+        key: string,
+        code: string,
+        windowsVirtualKeyCode: number,
+      ): Promise<void> => {
+        await call("Input.dispatchKeyEvent", {
+          type: "keyDown",
+          key,
+          code,
+          windowsVirtualKeyCode,
+        });
+        // Wait on the browser event loop, not the Node test process. This
+        // guarantees the product's 360 ms hold timer gets its turn before keyup
+        // even when the browser main thread is busy under CI.
+        await evaluate<void>(
+          `new Promise((resolve) => setTimeout(resolve, 500))`,
+        );
+        await call("Input.dispatchKeyEvent", {
+          type: "keyUp",
+          key,
+          code,
+          windowsVirtualKeyCode,
+        });
+      };
+
+      const pressWithRepeat = async (
+        key: string,
+        code: string,
+        windowsVirtualKeyCode: number,
+      ): Promise<void> => {
+        await call("Input.dispatchKeyEvent", {
+          type: "keyDown",
+          key,
+          code,
+          windowsVirtualKeyCode,
+        });
+        await call("Input.dispatchKeyEvent", {
+          type: "keyDown",
+          key,
+          code,
+          windowsVirtualKeyCode,
+          autoRepeat: true,
+        });
+        await sleep(60);
+        await call("Input.dispatchKeyEvent", {
+          type: "keyUp",
+          key,
+          code,
+          windowsVirtualKeyCode,
+        });
+      };
+
       await call("Page.enable");
       await call("Runtime.enable");
       await call("Page.navigate", { url: appUrl });
@@ -533,14 +585,84 @@ browserIt(
       const initialState = await evaluate<{
         canvas: boolean;
         extractorGroup: boolean;
+        groupShortcuts: Array<string | null>;
       }>(`(() => ({
         canvas: !!document.querySelector("canvas"),
         extractorGroup: !!document.querySelector(
           'nav[aria-label="Build tools"] button[aria-label="Extractor group"]',
         ),
+        groupShortcuts: [...document.querySelectorAll(
+          'nav[aria-label="Build tools"] .build-group > button',
+        )].map((button) => button.getAttribute("aria-keyshortcuts")),
       }))()`);
       expect(initialState.canvas).toBe(true);
       expect(initialState.extractorGroup).toBe(true);
+      expect(initialState.groupShortcuts).toEqual([
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+      ]);
+
+      await pressKey("5", "Digit5", 53);
+      await waitForExpression(
+        `document.querySelector('button[aria-label="Belt group"]')
+          ?.getAttribute("aria-pressed") === "true" &&
+          document.querySelector(".build-hint strong")?.textContent === "Belt"`,
+      );
+
+      await pressWithRepeat("3", "Digit3", 51);
+      await waitForExpression(
+        `document.querySelector('button[aria-label="Crusher group"]')
+          ?.getAttribute("aria-pressed") === "true" &&
+          document.querySelector(".build-submenu") === null &&
+          document.querySelector(".build-hint strong")?.textContent === "Crusher"`,
+      );
+
+      await holdKey("4", "Digit4", 52);
+      await waitForExpression(
+        `document.querySelector('button[aria-label="Furnace group"]')
+          ?.getAttribute("aria-expanded") === "true" &&
+          document.querySelector('.build-submenu[aria-label="Furnace related tools"]') !== null &&
+          document.querySelector('.build-submenu button[aria-label="Sealed furnace"]')
+            ?.getAttribute("aria-keyshortcuts") === "2"`,
+      );
+
+      await pressKey("1", "Digit1", 49);
+      await waitForExpression(
+        `document.querySelector(".build-submenu") === null &&
+          document.querySelector('button[aria-label="Furnace group"]')
+            ?.getAttribute("aria-pressed") === "true" &&
+          document.querySelector('button[aria-label="Extractor group"]')
+            ?.getAttribute("aria-pressed") !== "true" &&
+          document.querySelector(".build-hint strong")?.textContent === "Furnace"`,
+      );
+
+      await holdKey("4", "Digit4", 52);
+      await waitForExpression(
+        `document.querySelector('.build-submenu[aria-label="Furnace related tools"]') !== null`,
+      );
+      await pressKey("7", "Digit7", 55);
+      await sleep(80);
+      expect(
+        await evaluate<boolean>(
+          `document.querySelector('.build-submenu[aria-label="Furnace related tools"]') !== null &&
+            document.querySelector('button[aria-label="Pressure line group"]')
+              ?.getAttribute("aria-pressed") !== "true"`,
+        ),
+      ).toBe(true);
+
+      await pressKey("Escape", "Escape", 27);
+      await waitForExpression(
+        `document.querySelector(".build-submenu") === null &&
+          document.querySelector(".build-hint strong")?.textContent === "Furnace"`,
+      );
+      await pressKey("Escape", "Escape", 27);
+      await waitForExpression(`document.querySelector(".build-hint") === null`);
 
       const submenuState = async (
         groupLabel: string,

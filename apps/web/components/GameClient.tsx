@@ -16,6 +16,8 @@ import {
   BUILD_PALETTE,
   DEFAULT_MODE,
   armBuildGroupHold,
+  buildContextShortcutForTool,
+  resolveBuildShortcut,
   TOOL_GROUPS,
   TOOL_HOTKEYS,
   toggleFactoryOpen,
@@ -144,6 +146,17 @@ function GameClientInner() {
     [openToolGroup, setOpenToolGroup] = useState<ToolGroupId | null>(null);
   const cancelGroupHold = useRef<(() => void) | null>(null);
   const suppressGroupClick = useRef<ToolGroupId | null>(null);
+  const keyboardGroupHold = useRef<{
+    groupId: ToolGroupId;
+    shortcut: string;
+    held: boolean;
+    cancel: () => void;
+  } | null>(null);
+  const buildKeyboardContext = useRef<{
+    openToolGroup: ToolGroupId | null;
+    setTool: (tool: Tool) => void;
+    chooseGroupTool: (tool: Tool) => void;
+  } | null>(null);
   const [onboarding, setOnboarding] = useState<OnboardingSignals>({
     knowledgeOpened: false,
     terminalOpened: false,
@@ -174,20 +187,10 @@ function GameClientInner() {
     const timer = setTimeout(() => setNotice(null), 6000);
     return () => clearTimeout(timer);
   }, [notice]);
-  useEffect(() => {
-    if (!openToolGroup) return;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      event.preventDefault();
-      event.stopPropagation();
-      setOpenToolGroup(null);
-    };
-    window.addEventListener("keydown", onKeyDown, true);
-    return () => window.removeEventListener("keydown", onKeyDown, true);
-  }, [openToolGroup]);
   useEffect(
     () => () => {
       cancelGroupHold.current?.();
+      keyboardGroupHold.current?.cancel();
     },
     [],
   );
@@ -492,6 +495,95 @@ function GameClientInner() {
     setTool(tool);
     if (!locked) setOpenToolGroup(null);
   };
+  buildKeyboardContext.current = {
+    openToolGroup,
+    setTool,
+    chooseGroupTool,
+  };
+  useEffect(() => {
+    const editingInput = () => {
+      const element = document.activeElement;
+      return (
+        element instanceof HTMLElement &&
+        (element.matches("input,textarea,select") || element.isContentEditable)
+      );
+    };
+    const ownEvent = (event: KeyboardEvent) => {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (editingInput()) return;
+      const shortcut = event.key.toLowerCase();
+
+      const context = buildKeyboardContext.current;
+      if (!context) return;
+
+      if (context.openToolGroup && shortcut === "escape") {
+        ownEvent(event);
+        if (!event.repeat) setOpenToolGroup(null);
+        return;
+      }
+
+      const resolution = resolveBuildShortcut(shortcut, context.openToolGroup);
+      if (!resolution) return;
+
+      ownEvent(event);
+      if (event.repeat) return;
+
+      if (resolution.kind === "context-tool") {
+        context.chooseGroupTool(resolution.tool);
+        return;
+      }
+      if (resolution.kind === "suppressed") return;
+      if (resolution.kind === "standalone-tool") {
+        setOpenToolGroup(null);
+        context.setTool(resolution.tool);
+        return;
+      }
+
+      if (keyboardGroupHold.current) return;
+      const pending = {
+        groupId: resolution.groupId,
+        shortcut,
+        held: false,
+        cancel: () => {},
+      };
+      pending.cancel = armBuildGroupHold(resolution.groupId, (groupId) => {
+        pending.held = true;
+        setOpenToolGroup(groupId);
+      });
+      keyboardGroupHold.current = pending;
+    };
+    const onKeyUp = (event: KeyboardEvent) => {
+      const pending = keyboardGroupHold.current;
+      if (!pending || event.key.toLowerCase() !== pending.shortcut) return;
+
+      ownEvent(event);
+      pending.cancel();
+      keyboardGroupHold.current = null;
+      if (!pending.held) {
+        setOpenToolGroup(null);
+        buildKeyboardContext.current?.setTool(
+          groupFor(pending.groupId).defaultTool,
+        );
+      }
+    };
+    const onBlur = () => {
+      keyboardGroupHold.current?.cancel();
+      keyboardGroupHold.current = null;
+    };
+
+    window.addEventListener("keydown", onKeyDown, true);
+    window.addEventListener("keyup", onKeyUp, true);
+    window.addEventListener("blur", onBlur);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown, true);
+      window.removeEventListener("keyup", onKeyUp, true);
+      window.removeEventListener("blur", onBlur);
+    };
+  }, []);
+
   const toolGlyph = (tool: Tool) =>
     tool === "sealed-furnace" ||
     tool === "oversealed-furnace" ||
@@ -2699,8 +2791,10 @@ function GameClientInner() {
                   <dd>Home</dd>
                   <dt>Factory roof</dt>
                   <dd>Select factory + F</dd>
-                  <dt>Build tools</dt>
-                  <dd>1–9</dd>
+                  <dt>Build groups</dt>
+                  <dd>1–8 · tap selects, hold opens group</dd>
+                  <dt>Open group</dt>
+                  <dd>1–N selects the shown child</dd>
                   <dt>Dismantle</dt>
                   <dd>X</dd>
                 </dl>
@@ -2785,6 +2879,7 @@ function GameClientInner() {
                   aria-label={toolName(tool)}
                   aria-pressed={mode.tool === tool}
                   aria-disabled={toolLocked(tool)}
+                  aria-keyshortcuts={tool === "demolish" ? "x" : undefined}
                   title={toolDescription(tool)}
                   onClick={() => {
                     setOpenToolGroup(null);
@@ -2808,22 +2903,26 @@ function GameClientInner() {
                     role="menu"
                     aria-label={toolName(primary) + " related tools"}
                   >
-                    {group.tools.map((tool) => (
-                      <button
-                        key={tool}
-                        role="menuitem"
-                        className={
-                          (mode.tool === tool ? "active " : "") +
-                          (toolLocked(tool) ? "locked" : "")
-                        }
-                        aria-label={toolName(tool)}
-                        aria-disabled={toolLocked(tool)}
-                        title={toolDescription(tool)}
-                        onClick={() => chooseGroupTool(tool)}
-                      >
-                        {toolTile(tool, null)}
-                      </button>
-                    ))}
+                    {group.tools.map((tool) => {
+                      const shortcut = buildContextShortcutForTool(group.id, tool);
+                      return (
+                        <button
+                          key={tool}
+                          role="menuitem"
+                          className={
+                            (mode.tool === tool ? "active " : "") +
+                            (toolLocked(tool) ? "locked" : "")
+                          }
+                          aria-label={toolName(tool)}
+                          aria-disabled={toolLocked(tool)}
+                          aria-keyshortcuts={shortcut ?? undefined}
+                          title={toolDescription(tool)}
+                          onClick={() => chooseGroupTool(tool)}
+                        >
+                          {toolTile(tool, shortcut)}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
                 <button
@@ -2837,6 +2936,7 @@ function GameClientInner() {
                   aria-haspopup="menu"
                   aria-pressed={groupActive}
                   aria-disabled={toolLocked(primary)}
+                  aria-keyshortcuts={group.shortcut}
                   title={toolDescription(primary) + " · Hold for related tools"}
                   onPointerDown={(event) => {
                     if (event.pointerType === "mouse" && event.button !== 0) return;
@@ -2848,7 +2948,7 @@ function GameClientInner() {
                   onContextMenu={(event) => event.preventDefault()}
                   onClick={() => activateGroupPrimary(group.id)}
                 >
-                  {toolTile(primary, TOOL_HOTKEYS[primary])}
+                  {toolTile(primary, group.shortcut)}
                   <i className="group-marker" aria-hidden="true">▲</i>
                 </button>
               </div>
