@@ -428,7 +428,7 @@ A fresh expedition can progress through several qualitatively different industri
 
 ## Phase 16 — Production vertical slice
 
-**Epic:** GitHub Issue #107. **ACTIVE**. #153–#159 are complete; #160 structured production-slice playtesting is the active dependency-ready child. #159 accepted the production-export Codex VM engineering gate at `c0dacf95ad5f220a9e8e08a5cfee9564c48638d8`; physical-device/GPU validation is deferred as non-blocking release evidence. Children #153–#161.
+**Epic:** GitHub Issue #107. **COMPLETE** through #161. #153–#160 are accepted, and the integrated automated exit review is recorded in [PHASE16_EXIT_REVIEW.md](PHASE16_EXIT_REVIEW.md). Human comprehension, subjective pacing/visual taste and physical-device/GPU judgment remain deferred to the user's consolidated playthrough and are not claimed as PASS.
 
 ### Question
 
@@ -502,10 +502,12 @@ Completed optimization: #96 through PR #97, fresh local membership reused within
 
 User chose to return to gameplay after #96 / PR #97 rather than continue snapshot optimization now. #2 is closed as a retired execution index, not evidence that every roadmap gate passed. #75 is closed as not planned: Vercel repair/deployment is outside the current scope, not fixed. Completed gameplay phases 1.5–6 and accepted Phase 7 measurements/optimizations remain documented.
 
-Phase 7 performance work is deferred. The fixed 32-factory joint p95 <=10ms gate remains unmet (24.5777ms flowing / 19.6748ms backpressured); browser/device gates remain unverified. Keep existing evidence and correctness boundaries. Revisit when an actual browser-playability problem or an agreed feature scale requirement justifies it. Old NEXT recommendations in profiling docs are historical candidates, not active assignments.
+Phase 7 performance work is deferred. The fixed 32-factory joint p95 <=10ms gate remains unmet (24.5777ms flowing / 19.6748ms backpressured). Phase 16 later accepted its production-export VM browser engineering gate while explicitly deferring representative physical-device/GPU validation; that does not retroactively satisfy the Phase 7 scale budget. Keep existing evidence and correctness boundaries. Revisit when an actual browser-playability problem or an agreed feature scale requirement justifies it. Old NEXT recommendations in profiling docs are historical candidates, not active assignments.
 
-Roadmap expansion approved on 2026-10-02: Phases 9–16 capture the major post-foundation gameplay discussed but not represented by the earlier execution phases. Canonical epics #100–#107 and children #108–#161 form the canonical queue. Phases 9–15 are complete through their recorded exit decisions, most recently Phase 15 / #106 through #152 / PR #205. Phase 16 / #107 is the active dependency-ordered queue beginning with #153. Phase 7 remains deferred and Phase 8 remains a parallel art-production track.
+Roadmap expansion approved on 2026-10-02: Phases 9–16 capture the major post-foundation gameplay discussed but not represented by the earlier execution phases. Canonical epics #100–#107 and children #108–#161 form that completed gameplay queue. Phases 9–15 are complete through their recorded exit decisions, and Phase 16 / #107 closes through #161's integrated automated exit review. Phase 7 remains deferred and Phase 8 remains a parallel art-production track. No Phase 17 is implied by this closeout.
 
 
 - [PHASE16_SAVE_COMPATIBILITY.md](PHASE16_SAVE_COMPATIBILITY.md) — Phase 16 #158 supported save/content compatibility and atomic migration boundary.
 - [PHASE16_BROWSER_PERFORMANCE.md](PHASE16_BROWSER_PERFORMANCE.md) — Phase 16 #159 browser attribution, accepted VM engineering evidence and deferred physical-device boundary.
+- [PHASE16_PLAYTESTING.md](PHASE16_PLAYTESTING.md) — Phase 16 #160 structured production-export playtesting and objective defects fixed.
+- [PHASE16_EXIT_REVIEW.md](PHASE16_EXIT_REVIEW.md) — Phase 16 #161 integrated automated exit review and deferred-human-review boundary.

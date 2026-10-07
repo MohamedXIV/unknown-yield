@@ -55,7 +55,7 @@ This document is intentionally procedural. Game/design truth lives in the domain
 - Completed phase: **Phase 12 — factory lifecycle and reconfiguration (#103)**. #126–#129 landed; #130 and #131 closed not planned under their recorded evidence/user decisions, with no false integrated-exit PASS claim for #131.
 - Completed phase: **Phase 13 — terminal and off-world exchange depth (#104)** (closed after #138 / PR #192, main `a42e6e94a9f41588ddd4ecc19efea3829f8ddb42`). #132–#138 are complete; integrated evidence: [PHASE13_EXIT_REVIEW.md](PHASE13_EXIT_REVIEW.md).
 - Completed phase: **Phase 14 — layered and long-distance logistics (#105)** (closed after #144 / PR #196, main `04da68325c495f811e611c05ae436c4daec79aa2`). #139 underground routes and #140 elevated gantries are accepted; #141–#143 closed NOT PLANNED after their evidence gates; integrated evidence: [PHASE14_EXIT_REVIEW.md](PHASE14_EXIT_REVIEW.md).
-- Completed phase: **Phase 15 — content scale and expedition arc (#106)** (closed after #152 / PR #205, main `d8d0de628b73f1cd291083437de5aa2a88b33804`). #145–#152 are complete; integrated evidence: [PHASE15_EXIT_REVIEW.md](PHASE15_EXIT_REVIEW.md). Current gameplay phase: **Phase 16 — production vertical slice (#107)**. **#153–#157 are COMPLETE; #158 save/content migration hardening is COMPLETE through PR #212 / main `bd8a5616455da0e78ce0a48e464e99b375f49caa`; #159 online browser performance acceptance is COMPLETE from production-export VM evidence at `c0dacf95ad5f220a9e8e08a5cfee9564c48638d8`, with physical-device/GPU validation deferred as non-blocking release evidence; #160 automated structured production-slice playtesting is COMPLETE under the VM evidence in [PHASE16_PLAYTESTING.md](PHASE16_PLAYTESTING.md), with subjective/hardware review deferred; #161 is next and dependency-ready**.
+- Completed phase: **Phase 15 — content scale and expedition arc (#106)** (closed after #152 / PR #205, main `d8d0de628b73f1cd291083437de5aa2a88b33804`). #145–#152 are complete; integrated evidence: [PHASE15_EXIT_REVIEW.md](PHASE15_EXIT_REVIEW.md). Completed gameplay phase: **Phase 16 — production vertical slice (#107)**. #153–#160 are accepted and #161 records the integrated automated exit review. Human comprehension, subjective pacing/visual taste and physical-device/GPU judgment are deferred to the user's consolidated playthrough and are not claimed as PASS.
 
 ## Phase 1.5 dependency graph
 
@@ -223,7 +223,7 @@ GitHub Actions CI is intentionally budget-conscious: it runs the full `npm test`
 - #104 — Phase 13 terminal and off-world exchange depth — COMPLETE through #138 / PR #192 / `a42e6e94a9f41588ddd4ecc19efea3829f8ddb42`.
 - #105 — Phase 14 layered and long-distance logistics — COMPLETE through #144 / PR #196 / `04da68325c495f811e611c05ae436c4daec79aa2`; #139–#140 accepted, #141–#143 CLOSED NOT PLANNED under evidence.
 - #106 — Phase 15 content scale and expedition arc — COMPLETE through #152 / PR #205 / `d8d0de628b73f1cd291083437de5aa2a88b33804`.
-- #107 — Phase 16 production vertical slice — ACTIVE; #153–#159 COMPLETE under the recorded VM engineering-gate decision; #160 automated structured production-slice playtesting is complete; #161 end-to-end production vertical-slice exit review is dependency-ready. Representative physical-device/GPU performance remains deferred, non-blocking release evidence; user comprehension and taste await the consolidated human playthrough.
+- #107 — Phase 16 production vertical slice — COMPLETE through #161 integrated automated exit review. See [PHASE16_EXIT_REVIEW.md](PHASE16_EXIT_REVIEW.md). Deferred human/physical-device review remains outside the automated Phase 16 blocking gate.
 - Phase 8 — art production pipeline — parallel planned track, selected explicitly when useful.
 - Completed Phase 7 baseline: **#90 — single-world simulation/snapshot baseline**, through PR #91. Evidence: PHASE7_BASELINE.md. Phase 7 remains deferred; #92 profiling completed through PR #93; 32-factory / 10ms joint-p95 budget FAILS. Evidence: PHASE7_PROFILING.md. Optimization #94 is complete through PR #95: shared connected topology indexing within each throughput observation; all dynamic recurrence checks retained. Browser costs remain a separate gate.
 
@@ -284,3 +284,12 @@ Approved contained pump failure is implemented on codex/112-recoverable-handling
 ## Phase 9 integrated exit review — #113
 
 Approved 2026-10-04 after #112 merge. Native review on `codex/113-material-state-exit` from main `539f3f37dc2d317423748493c7c65383009e0a27`. No production defect or schema change: adds one fresh-world integrated regression, browser continuation and evidence. Local gate: **381 PASS / 2 skipped; typecheck/lint/build/static-export/browser PASS**. [Exit review](PHASE9_EXIT_REVIEW.md) records exact commands, retries, attribution and limits. #113 merged via PR #167 to main `f8d3ac03aba006a0320b51c840441d2564f8a8b2`; #100 and #113 are closed. Phase 10 / #101 is now active, beginning with #114.
+
+
+## Phase 16 integrated exit review — #161
+
+#160 merged through PR #215 / main `d49806b566265a766018626fcb498132d69c1752`. #161 reconciles accepted children #153–#160 without introducing new gameplay scope. The automated/technical Phase 16 exit gate passes; evidence is [PHASE16_EXIT_REVIEW.md](PHASE16_EXIT_REVIEW.md).
+
+Player comprehension, subjective pacing/visual taste and representative physical-device/GPU judgment remain **DEFERRED HUMAN REVIEW** for the user's consolidated playthrough. They are not claimed as automated PASS and do not block the recorded Phase 16 technical closeout.
+
+After #161/#107 close, do not invent a Phase 17. The next canonical product work must come from consolidated user feedback or a new explicitly approved roadmap decision.
