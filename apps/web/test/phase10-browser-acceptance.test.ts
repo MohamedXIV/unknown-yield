@@ -564,7 +564,6 @@ browserIt(
         });
       };
 
-
       await call("Page.enable");
       await call("Runtime.enable");
       await call("Page.navigate", { url: appUrl });
