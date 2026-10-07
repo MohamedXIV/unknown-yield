@@ -15,7 +15,7 @@ npm run build
   Passed: scripts/verify-export.mjs confirmed no Studio route or authoring component
   Routes: /, /_not-found, /icon.svg
   VM workaround: temporarily set experimental.useTypeScriptCli=false because the spawned TypeScript --showConfig process returns empty stdout; restored apps/web/next.config.ts after build.
-  Vercel preview on the first reviewed head exposed missing direct @types/react and @types/node dependencies in apps/web; both existing locked versions were added to the web workspace. Awaiting the corrected preview result.
+  Vercel preview on the first reviewed head exposed missing direct @types/react and @types/node dependencies in apps/web. The next preview found root-only vitest and @types/react-dom used by apps/web/test. All four existing locked packages were declared in the web workspace; awaiting the corrected preview result.
 
 Production browser run
   Chromium 151, x86_64 Linux, 1365x900, DPR 1, software WebGL

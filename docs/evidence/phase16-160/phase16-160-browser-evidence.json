@@ -7,7 +7,7 @@
   "sourceDelta": [
     "apps/web/app/icon.svg fixes a fresh production-export /favicon.ico 404.",
     "apps/web/app/globals.css constrains the build toolbar to its viewport and preserves button widths after a production browser measurement found essential tools clipped at 1365x900.",
-    "apps/web/package.json and package-lock.json declare the existing @types/react and @types/node versions directly in the web workspace after the first Vercel preview failed at Next TypeScript setup."
+    "apps/web/package.json and package-lock.json declare @types/react, @types/react-dom, @types/node and vitest directly in the web workspace after consecutive Vercel previews exposed that the app build typechecks test files while omitting root-only development dependencies."
   ],
   "appUrl": "http://127.0.0.1:4010/",
   "browser": {
@@ -285,8 +285,8 @@
       "verification": "After the fix, Inspect starts at x=21 and Extractor at x=85; the 1337px toolbar area has a 1335px client width and 2265px scroll width."
     },
     {
-      "defect": "The first Vercel preview failed at Next TypeScript setup because React and Node type packages were declared only at the monorepo root, not in the web workspace.",
-      "fix": "Declared the existing locked @types/react 19.3.0 and @types/node 26.6.2 as apps/web development dependencies and updated the workspace lock entry.",
+      "defect": "Consecutive Vercel previews showed the web build could not resolve React/Node type packages, then Vitest/React DOM types, because the app workspace typechecks its test files but these development packages were declared only at the monorepo root.",
+      "fix": "Declared the existing locked @types/node 26.6.2, @types/react 19.3.0, @types/react-dom 19.3.0 and vitest 5.0.1 packages as apps/web development dependencies and updated the workspace lock entry.",
       "verification": "Local typecheck and static export build pass; corrected Vercel preview is pending."
     }
   ],
@@ -302,8 +302,10 @@
     "build": "passed; static export route and authoring exclusion verified",
     "buildEnvironmentNote": "Temporarily set experimental.useTypeScriptCli=false because the spawned TypeScript --showConfig process returns empty stdout; next.config.ts was restored.",
     "webWorkspaceTypeDependencies": [
+      "@types/node@26.6.2",
       "@types/react@19.3.0",
-      "@types/node@26.6.2"
+      "@types/react-dom@19.3.0",
+      "vitest@5.0.1"
     ]
   }
 }
