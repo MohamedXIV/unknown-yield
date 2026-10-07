@@ -13,7 +13,11 @@ import {
 } from "@site/sim-core";
 import { expect, it } from "vitest";
 
-const browserIt = process.env.CI ? it : it.skip;
+const browserAcceptanceMode =
+  process.env.UNKNOWN_YIELD_BROWSER_ACCEPTANCE ?? "dev";
+const browserIt =
+  process.env.CI && browserAcceptanceMode !== "skip" ? it : it.skip;
+const productionBrowser = browserAcceptanceMode === "production";
 const appUrl = "http://127.0.0.1:4010/";
 const debugPort = 9333;
 
@@ -283,22 +287,46 @@ function stop(child: ChildProcess | null): void {
 }
 
 browserIt(
-  "renders the Phase 10 tools truthfully in a real browser",
+  productionBrowser
+    ? "accepts the hierarchical build UX in the production export browser"
+    : "renders the Phase 10 tools truthfully in a real browser",
   async () => {
     const chrome = chromeExecutable();
     expect(chrome, "Chrome/Chromium must be available on the CI runner").toBeTruthy();
 
+    const exportRoot = join(process.cwd(), "apps", "web", "out");
+    if (productionBrowser) {
+      expect(
+        existsSync(join(exportRoot, "index.html")),
+        "Production export must be built before browser acceptance",
+      ).toBe(true);
+    }
+
     const require = createRequire(import.meta.url);
     const nextBin = require.resolve("next/dist/bin/next");
-    const server = spawn(
-      process.execPath,
-      [nextBin, "dev", "--hostname", "127.0.0.1", "--port", "4010"],
-      {
-        cwd: join(process.cwd(), "apps", "web"),
-        env: { ...process.env, NEXT_TELEMETRY_DISABLED: "1" },
-        stdio: ["ignore", "pipe", "pipe"],
-      },
-    );
+    const server = productionBrowser
+      ? spawn(
+          process.execPath,
+          [
+            join(process.cwd(), "scripts", "serve-static-export.mjs"),
+            exportRoot,
+            "4010",
+          ],
+          {
+            cwd: process.cwd(),
+            env: { ...process.env, NEXT_TELEMETRY_DISABLED: "1" },
+            stdio: ["ignore", "pipe", "pipe"],
+          },
+        )
+      : spawn(
+          process.execPath,
+          [nextBin, "dev", "--hostname", "127.0.0.1", "--port", "4010"],
+          {
+            cwd: join(process.cwd(), "apps", "web"),
+            env: { ...process.env, NEXT_TELEMETRY_DISABLED: "1" },
+            stdio: ["ignore", "pipe", "pipe"],
+          },
+        );
     let serverLog = "";
     server.stdout?.on("data", (chunk) => {
       serverLog += String(chunk);
@@ -310,6 +338,10 @@ browserIt(
     let browser: ChildProcess | null = null;
     try {
       await waitForHttp(appUrl);
+      if (productionBrowser) {
+        const response = await fetch(appUrl);
+        expect(response.headers.get("x-unknown-yield-export")).toBe("static");
+      }
 
       browser = spawn(
         chrome!,
