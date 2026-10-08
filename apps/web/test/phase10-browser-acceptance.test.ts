@@ -431,9 +431,6 @@ browserIt(
           socket.send(JSON.stringify({ id, method, params }));
         });
 
-      // Subscribe before the first page navigation, so failures from the
-      // real static export are captured rather than silently omitted.
-      await call("Runtime.enable");
       const evaluate = async <T>(expression: string): Promise<T> => {
         const response = await call("Runtime.evaluate", {
           expression,
@@ -623,6 +620,7 @@ browserIt(
         });
       };
 
+      // Subscribe before first navigation to capture real game exceptions.
       await call("Page.enable");
       await call("Runtime.enable");
       await call("Page.navigate", { url: appUrl });
