@@ -37,6 +37,39 @@ describe("Phase 16 browser performance diagnostics", () => {
     expect(recorder.metric("frame-interval").count).toBe(1);
   });
 
+  it("separates close-zoom frame pacing from normal zoom without guessing GPU cost", () => {
+    const recorder = new BrowserPerformanceRecorder();
+    recorder.recordCameraPacing(1, 16.7, 3);
+    recorder.recordCameraPacing(1.2, 33.5, 0);
+    recorder.recordCameraPacing(2, 50, 12);
+    recorder.recordCameraPacing(2.2, 210, 6);
+    recorder.recordCameraPacing(0.6, 16, 2);
+    // Invalid measurements never affect the summary.
+    recorder.recordCameraPacing(Number.NaN, 40, 1);
+    recorder.recordCameraPacing(2, -1, 1);
+    recorder.recordCameraPacing(2, 16, Number.NaN);
+
+    const pacing = recorder.cameraPacing();
+    expect(pacing.normal.frames).toBe(2);
+    expect(pacing.normal.movingFrames).toBe(1);
+    expect(pacing.normal.over33ms).toBe(1);
+    expect(pacing.normal.over100ms).toBe(0);
+    expect(pacing.normal.frameInterval.p95Ms).toBe(33.5);
+
+    expect(pacing.close.frames).toBe(2);
+    expect(pacing.close.movingFrames).toBe(2);
+    expect(pacing.close.over33ms).toBe(2);
+    expect(pacing.close.over100ms).toBe(1);
+    expect(pacing.close.frameInterval.maxMs).toBe(210);
+    expect(pacing.far.frames).toBe(1);
+
+    recorder.reset();
+    expect(recorder.cameraPacing().close).toEqual({
+      frames: 0, movingFrames: 0, over33ms: 0, over100ms: 0,
+      frameInterval: { count: 0, medianMs: 0, p95Ms: 0, maxMs: 0 },
+    });
+  });
+
   it("ignores invalid timing samples and resets deterministically", () => {
     const recorder = new BrowserPerformanceRecorder();
     recorder.record("snapshot", -1);
