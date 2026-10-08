@@ -20,6 +20,7 @@ export type GamePreferences = {
   };
   interface: {
     showFps: boolean;
+    soundEffects: boolean;
   };
   accessibility: {
     reducedMotion: ReducedMotionPreference;
@@ -46,6 +47,7 @@ export const DEFAULT_GAME_PREFERENCES: GamePreferences = {
   },
   interface: {
     showFps: false,
+    soundEffects: true,
   },
   accessibility: {
     reducedMotion: "system",
@@ -151,6 +153,11 @@ export function normalizeGamePreferences(value: unknown): GamePreferences {
     typeof interfacePreferences?.showFps === "boolean"
       ? interfacePreferences.showFps
       : DEFAULT_GAME_PREFERENCES.interface.showFps;
+  // Additive v2 field: old settings retain every other preference.
+  next.interface.soundEffects =
+    typeof interfacePreferences?.soundEffects === "boolean"
+      ? interfacePreferences.soundEffects
+      : DEFAULT_GAME_PREFERENCES.interface.soundEffects;
   const motion = accessibility?.reducedMotion;
   next.accessibility.reducedMotion =
     motion === "system" || motion === "on" || motion === "off"

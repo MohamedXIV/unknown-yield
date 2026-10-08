@@ -29,6 +29,7 @@ import {
   type ArtAssetId,
 } from "./art-assets";
 import { deriveFeedbackEvents, type FeedbackEvent } from "./feedback";
+import { derivePlacementFeedback, type PlacementFeedbackEvent } from "./placement-feedback";
 import { IndustrialFeedbackAudio } from "./audio-feedback";
 import {
   CameraNavigation,
@@ -368,7 +369,7 @@ export function createWorld(
       });
       this.input.on("pointerdown", (p: Phaser.Input.Pointer) => {
         this.invalidateOverlays();
-        void feedbackAudio.enable();
+        if (preferences.interface.soundEffects) void feedbackAudio.enable();
         if (p.wasTouch) {
           const result = this.touch.down(p.id, { x: p.x, y: p.y });
           if (result?.kind === "cancel-build") this.anchor = null;
@@ -394,7 +395,7 @@ export function createWorld(
             const origin = this.screenCell(gesture.start);
             const end = this.screenCell(gesture.end);
             const command = buildCommand(mode, snapshot, end, origin);
-            if (command) actions.command(command);
+            if (command) this.place(command);
           }
           this.anchor = null;
           return;
@@ -406,7 +407,7 @@ export function createWorld(
           actions.select(id);
         } else {
           const command = buildCommand(mode, snapshot, cell, this.anchor);
-          if (command) actions.command(command);
+          if (command) this.place(command);
         }
         this.anchor = null;
       });
@@ -442,7 +443,7 @@ export function createWorld(
       );
       const down = (e: KeyboardEvent) => {
         if (editing()) return;
-        void feedbackAudio.enable();
+        if (preferences.interface.soundEffects) void feedbackAudio.enable();
         const k = e.key.toLowerCase();
         this.keys.add(k);
         if (
@@ -518,11 +519,13 @@ export function createWorld(
       )?.nameKey;
       return key ? translate(key).toLowerCase() : snapshot.map.buildMaterial;
     }
-    private cameraInstant(): boolean {
+    private motionReduced(): boolean {
       const reduced = preferences.accessibility.reducedMotion;
-      const prefersReduced = reduced === "on" ||
+      return reduced === "on" ||
         (reduced === "system" && this.reducedMotionQuery?.matches === true);
-      return !preferences.camera.smooth || prefersReduced;
+    }
+    private cameraInstant(): boolean {
+      return !preferences.camera.smooth || this.motionReduced();
     }
     setCameraPreferences(next: GamePreferences) {
       preferences = next;
@@ -587,15 +590,24 @@ export function createWorld(
     invalidateOverlays() {
       this.overlaysDirty = true;
     }
+    private place(command: GameCommand) {
+      const before = snapshot;
+      const result = actions.command(command);
+      // The session notifies the Phaser bridge synchronously after the command.
+      // A restore, an invalid action, or a tick never generates this cue.
+      this.feedback(derivePlacementFeedback(command, result, before, snapshot));
+    }
     feedback(events: readonly FeedbackEvent[]) {
       if (!events.length) return;
-      feedbackAudio.play(events);
+      feedbackAudio.play(events, preferences.interface.soundEffects);
       const visual = {
         "machine-start": { tint: 0xa9cf8a, radius: 14, duration: 480 },
         "logistics-flow": { tint: 0xb9c7a0, radius: 10, duration: 360 },
         discovery: { tint: 0xd8d79a, radius: 22, duration: 850 },
         warning: { tint: 0xe5ad75, radius: 18, duration: 700 },
         hazard: { tint: 0xe57865, radius: 24, duration: 900 },
+        "placement-light": { tint: 0xc4cfaa, radius: 9, duration: 190 },
+        "placement-heavy": { tint: 0xe0c69c, radius: 18, duration: 280 },
       } as const;
       for (const event of events) {
         if (!event.at) continue;
@@ -603,22 +615,44 @@ export function createWorld(
           x = event.at.x * X,
           y = event.at.y * Y,
           pulse = this.add.graphics().setDepth(940);
-        pulse
-          .lineStyle(event.kind === "hazard" ? 4 : 2, cue.tint, 0.95)
-          .strokeCircle(x, y, cue.radius);
+        const placement = event.kind === "placement-light" ||
+          event.kind === "placement-heavy";
+        if (placement) {
+          const r = (event as PlacementFeedbackEvent).footprint;
+          pulse.lineStyle(event.kind === "placement-heavy" ? 2.5 : 1.5, cue.tint, 0.86)
+            .strokeRect(r.x * X + 2, r.y * Y + 2,
+              Math.max(2, r.width * X - 4), Math.max(2, r.height * Y - 4));
+          // A few fixed dust/spark dashes: no particle emitters or allocations per tick.
+          if (event.kind === "placement-heavy") {
+            for (const dx of [-16, 0, 16]) {
+              pulse.lineStyle(1, cue.tint, 0.55)
+                .lineBetween(x + dx - 3, y + 9, x + dx + 3, y + 6);
+            }
+          }
+        } else {
+          pulse.lineStyle(event.kind === "hazard" ? 4 : 2, cue.tint, 0.95)
+            .strokeCircle(x, y, cue.radius);
+        }
         if (event.kind === "warning" || event.kind === "hazard")
           pulse
             .lineStyle(1, cue.tint, 0.65)
             .strokeCircle(x, y, Math.max(5, cue.radius - 7));
-        this.tweens.add({
-          targets: pulse,
-          scaleX: event.kind === "discovery" ? 2.4 : 1.9,
-          scaleY: event.kind === "discovery" ? 2.4 : 1.9,
-          alpha: 0,
-          duration: cue.duration,
-          ease: "Quad.easeOut",
-          onComplete: () => pulse.destroy(),
-        });
+        if (this.motionReduced()) {
+          this.time.delayedCall(110, () => pulse.destroy());
+        } else {
+          this.tweens.add({
+            targets: pulse,
+            scaleX: placement ? 1.06 : event.kind === "discovery" ? 2.4 : 1.9,
+            scaleY: placement ? 1.06 : event.kind === "discovery" ? 2.4 : 1.9,
+            alpha: 0,
+            duration: cue.duration,
+            ease: "Quad.easeOut",
+            onComplete: () => pulse.destroy(),
+          });
+          // Phaser's visual-only camera effect; never write to CameraNavigation.
+          if (event.kind === "placement-heavy")
+            this.cameras.main.shake(65, 0.00035);
+        }
       }
     }
     arrow(

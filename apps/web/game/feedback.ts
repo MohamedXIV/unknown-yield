@@ -5,7 +5,9 @@ export type FeedbackKind =
   | "logistics-flow"
   | "discovery"
   | "warning"
-  | "hazard";
+  | "hazard"
+  | "placement-light"
+  | "placement-heavy";
 
 export type FeedbackEvent = {
   kind: FeedbackKind;

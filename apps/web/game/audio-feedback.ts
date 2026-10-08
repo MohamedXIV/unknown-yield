@@ -6,6 +6,7 @@ type AudioContextWithWebkit = Window & {
 
 export class IndustrialFeedbackAudio {
   private context: AudioContext | null = null;
+  private lastConstructionAt = -Infinity;
 
   async enable(): Promise<void> {
     if (typeof window === "undefined") return;
@@ -19,9 +20,18 @@ export class IndustrialFeedbackAudio {
     if (this.context.state === "suspended") await this.context.resume();
   }
 
-  play(events: readonly FeedbackEvent[]): void {
-    if (!this.context || this.context.state !== "running") return;
-    for (const event of events) this.playKind(event.kind);
+  play(events: readonly FeedbackEvent[], enabled = true): void {
+    if (!enabled || !this.context || this.context.state !== "running") return;
+    for (const event of events) {
+      if (event.kind === "placement-light" || event.kind === "placement-heavy") {
+        // Coalesce rapid drag gestures and button-repeat commands into one
+        // quiet construction confirmation, not N oscillators per cell.
+        const now = this.context.currentTime;
+        if (now - this.lastConstructionAt < 0.11) continue;
+        this.lastConstructionAt = now;
+      }
+      this.playKind(event.kind);
+    }
   }
 
   destroy(): void {
@@ -76,6 +86,13 @@ export class IndustrialFeedbackAudio {
 
   private playKind(kind: FeedbackKind): void {
     switch (kind) {
+      case "placement-light":
+        this.tone(255, 0.035, 0.017, "triangle");
+        break;
+      case "placement-heavy":
+        this.tone(105, 0.095, 0.035, "triangle");
+        this.tone(174, 0.055, 0.018, "sine", 0.025);
+        break;
       case "machine-start":
         this.tone(118, 0.09, 0.045, "square");
         this.tone(82, 0.13, 0.028, "sine", 0.025);
