@@ -1469,7 +1469,24 @@ browserIt(
         `document.querySelector('input[aria-label="Smooth camera motion"]')
           ?.checked === true &&
           document.querySelector('input[aria-label="Pan speed"]')?.value === "1" &&
-          document.querySelector('select[aria-label="Reduce motion"]')?.value === "system"`,
+          document.querySelector('select[aria-label="Reduce motion"]')?.value === "system" &&
+          document.querySelector('input[aria-label="Show FPS"]')?.checked === false &&
+          document.querySelector("output.world-fps") === null`,
+      );
+
+      await evaluate(`(() => {
+        document.querySelector('input[aria-label="Show FPS"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `JSON.parse(localStorage.getItem("unknown-yield-game-preferences"))
+          ?.interface?.showFps === true &&
+          document.querySelector("output.world-fps") !== null`,
+      );
+      // The persistent counter is visible without ?perf or DevTools.
+      await waitForExpression(
+        `/^FPS [0-9]+$/.test(document.querySelector("output.world-fps")
+          ?.textContent?.trim() ?? "")`,
       );
 
       await evaluate(`(() => {
@@ -1530,7 +1547,9 @@ browserIt(
         `document.querySelector('input[aria-label="Pan speed"]')?.value === "1.7" &&
           document.querySelector('input[aria-label="Smooth camera motion"]')
             ?.checked === false &&
-          document.querySelector('select[aria-label="Reduce motion"]')?.value === "on"`,
+          document.querySelector('select[aria-label="Reduce motion"]')?.value === "on" &&
+          document.querySelector('input[aria-label="Show FPS"]')?.checked === true &&
+          document.querySelector("output.world-fps") !== null`,
       );
 
       await evaluate(`(() => {
@@ -1543,7 +1562,9 @@ browserIt(
         `document.querySelector('input[aria-label="Pan speed"]')?.value === "1" &&
           document.querySelector('input[aria-label="Smooth camera motion"]')
             ?.checked === true &&
-          document.querySelector('select[aria-label="Reduce motion"]')?.value === "system"`,
+          document.querySelector('select[aria-label="Reduce motion"]')?.value === "system" &&
+          document.querySelector('input[aria-label="Show FPS"]')?.checked === false &&
+          document.querySelector("output.world-fps") === null`,
       );
       const afterReset = await evaluate<{
         version: number;
