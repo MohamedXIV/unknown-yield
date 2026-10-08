@@ -23,3 +23,24 @@ Your local draft autosaves to `unknown-yield-studio-draft-v1` in local browser s
 - Unknown validation fields, missing references, invalid localization and malformed packs fail validation before a new `Simulation` is created.
 - Browser/runtime imports are file-only, same browser origin. Different browser origins or private browsing sessions have separate local drafts and expedition saves.
 - A universal world editor, in-place save migrations and automatic remote publishing are deliberately out of scope; #254 audits the highest-friction missing authoring tables.
+
+## Phase 19 targeted authoring additions (#254)
+
+Content Studio now has a **Surface deposits** tab. Create/edit finite exposed resource fields `id`, `material`, `x`, `y`, `width`, `height`, `units`. The selector shows authored **solid** material IDs; an exposed deposit must use an **initially known** material, or the shared content validator blocks export. Geometry must fit the site and cannot overlap the orbital terminal or another exposed deposit. Create a new material, mark it initially known, then create and position its deposit to playtest a genuinely new extraction chain. Initial unknown ores are still governed by the existing hidden-deposit/site-sensing data and are **not** silently exposed as new surface deposits.
+
+Other world authoring tables (deep deposits, survey signal graph, atmospheric source relations, terminal placement) are intentionally unchanged until they have a dedicated validation/editor contract. The canonical bundle format remains schema-1, and runtime imports need no rebuild.
+
+### Authoring gap audit (P19 P5)
+
+| Real author workflow | Pre-P19 surface | P19 decision | Runtime behavior |
+| --- | --- | --- | --- |
+| New ore/material ID, initial knowledge and color | Materials in TinyBase Studio | **Already editable** | Validated bundle includes material; no source rebuild |
+| New exposed ore field / world spawn rectangle / finite units | `site.deposits` passed straight through from base fixture | **Added Surface deposits table/UI** | Full validated site geometry+known-solid reference consumed by new authoritative world |
+| New processing operation + machine + reaction + locales | Existing Operations, Machines, Reactions, locale and isolated reaction preview | **Reuse**; #251 adds build-palette dynamic IDs | Available in same prebuilt player via imported pack |
+| Change existing machine construction cost, processing duration/throughput, machine unlock | Existing Machines fields | **Already editable** | Pack identity changes; prior save remains separate |
+| Change global factory-cell construction cost, map dimensions, terminal location | `site.*` passed from base, not exposed as Studio entity | **Deferred**: not required for tested material/deposit/processor loop | Source fixture stays canonical baseline |
+| Add hidden/deep deposit and sensing signal/capability graph | `site.hiddenDeposits` and `site.surveySignals` passthrough | **Deferred**: needs consistent discovery+secrecy authoring contract | Existing discovery remains unchanged |
+| Change storage/logistics catalog, late-game terminal module | Storage, transport and terminal-module tables currently passthrough | **Deferred**: choose based on an actual blocked content-author session | Existing definitions remain byte-equivalent |
+| Set construction delays/jobs | No persistent construction job schema | **No-go** in #250; #253 not planned | No save/sim timing changes |
+
+**Preservation rule:** only `site.deposits` is reconstructed from its TinyBase authoring table. The rest of `site` and untouched content tables are inherited from the unchanged validated base, and the versioned schema-1 pack parser remains the same. Art assets, CDN packs, and a general-purpose world editor are out of scope.

@@ -6,6 +6,7 @@ import { STUDIO_BUNDLE_SCHEMA_VERSION, type StudioBundle } from "./bundle";
 export { parseStudioBundle, STUDIO_BUNDLE_SCHEMA_VERSION, type StudioBundle } from "./bundle";
 
 export type StudioEntityKind =
+  | "deposit"
   | "material"
   | "operation"
   | "machine"
@@ -33,6 +34,7 @@ export type StudioReference = {
 };
 
 type StudioTable =
+  | "deposits"
   | "materials"
   | "operations"
   | "machines"
@@ -43,6 +45,7 @@ type StudioTable =
   | "propertyDirectives";
 
 const entityTable: Record<StudioEntityKind, StudioTable> = {
+  deposit: "deposits",
   material: "materials",
   operation: "operations",
   machine: "machines",
@@ -158,6 +161,10 @@ export function createContentStore(
         tickMs: content.tickMs,
       },
     })
+    .setTable(
+      "deposits",
+      Object.fromEntries(content.site.deposits.map(({ id, ...row }) => [id, row])),
+    )
     .setTable(
       "materials",
       Object.fromEntries(
@@ -328,6 +335,24 @@ function candidateFromStore(store: Store, base: Content): unknown {
         { operationsJson: row.requiredContainmentJson ?? "[]" },
         label + " containment",
       ),
+    };
+  });
+
+  const deposits = orderedIds(
+    store,
+    "deposits",
+    base.site.deposits.map((deposit) => deposit.id),
+  ).map((id) => {
+    const row = rawRow(store, "deposits", id),
+      label = "Surface deposit " + id;
+    return {
+      id,
+      material: stringCell(row, "material", label),
+      x: numberCell(row, "x", label),
+      y: numberCell(row, "y", label),
+      width: numberCell(row, "width", label),
+      height: numberCell(row, "height", label),
+      units: numberCell(row, "units", label),
     };
   });
 
@@ -615,6 +640,7 @@ function candidateFromStore(store: Store, base: Content): unknown {
     ...base,
     version: stringCell(meta, "version", "Content metadata"),
     tickMs: numberCell(meta, "tickMs", "Content metadata"),
+    site: { ...base.site, deposits },
     materials,
     operations,
     machines,
