@@ -30,7 +30,11 @@ import {
 } from "./art-assets";
 import { deriveFeedbackEvents, type FeedbackEvent } from "./feedback";
 import { IndustrialFeedbackAudio } from "./audio-feedback";
-import { CameraNavigation, type CameraView } from "./camera-navigation";
+import {
+  CameraNavigation,
+  cameraZoomLimits,
+  type CameraView,
+} from "./camera-navigation";
 import { TouchGestureArbiter, type TouchPoint } from "./touch-gesture";
 import {
   DEFAULT_GAME_PREFERENCES,
@@ -263,15 +267,12 @@ export function createWorld(
           padding: { x: 9, y: 6 },
         })
         .setDepth(1000);
+      const geometry = this.cameraGeometry();
+      const limits = cameraZoomLimits(geometry, this.homeZoom());
       this.navigation = new CameraNavigation(
-        {
-          worldWidth: snapshot.map.width * X,
-          worldHeight: snapshot.map.height * Y,
-          viewportWidth: this.cameras.main.width,
-          viewportHeight: this.cameras.main.height,
-        },
+        geometry,
         { zoom: 1, scrollX: 0, scrollY: 0 },
-        { motion: "instant" },
+        { ...limits, motion: "instant" },
       );
       this.viewportWidth = this.cameras.main.width;
       this.viewportHeight = this.cameras.main.height;
@@ -469,12 +470,28 @@ export function createWorld(
       this.navigation.setHalfLifeMs(45 + next.camera.inertia * 205);
       this.navigation.setMotion(this.cameraInstant() ? "instant" : "smooth");
     }
-    home(initial = false) {
+    private cameraGeometry() {
+      return {
+        worldWidth: snapshot.map.width * X,
+        worldHeight: snapshot.map.height * Y,
+        viewportWidth: this.cameras.main.width,
+        viewportHeight: this.cameras.main.height,
+      };
+    }
+    private homeZoom() {
       const camera = this.cameras.main;
-      const zoom = Math.min(
-        camera.width / (36 * X),
-        camera.height / (27 * Y),
-      );
+      return Math.min(camera.width / (36 * X), camera.height / (27 * Y));
+    }
+    private syncCameraLimits() {
+      const limits = cameraZoomLimits(this.cameraGeometry(), this.homeZoom());
+      this.navigation.setZoomLimits(limits.minZoom, limits.maxZoom);
+    }
+    syncMapBounds() {
+      this.navigation.setWorldSize(snapshot.map.width * X, snapshot.map.height * Y);
+      this.syncCameraLimits();
+    }
+    home(initial = false) {
+      const zoom = this.homeZoom();
       this.navigation.centerOn(29 * X, 30 * Y, zoom);
       if (initial) this.navigation.reset(this.navigation.getTarget());
       this.applyCamera(this.navigation.getView());
@@ -1411,6 +1428,7 @@ export function createWorld(
         this.viewportWidth = camera.width;
         this.viewportHeight = camera.height;
         this.navigation.resize(camera.width, camera.height);
+        this.syncCameraLimits();
       }
       const speed =
         (Math.min(delta, 50) * 0.7 * preferences.camera.panSpeed) /
@@ -1725,13 +1743,18 @@ export function createWorld(
     },
     scene: Site,
     audio: { noAudio: true },
-    render: { roundPixels: true },
+    // Phaser's pixel rounding and fractional animated zoom do not mix well.
+    // Keep transforms sub-pixel accurate for steady smooth navigation.
+    render: { roundPixels: false },
   });
   return {
     setSnapshot: (s) => {
       const startedAt = startBrowserMetric();
       const events = deriveFeedbackEvents(snapshot, s);
+      const worldChanged = snapshot.map.width !== s.map.width ||
+        snapshot.map.height !== s.map.height;
       snapshot = s;
+      if (worldChanged) scene?.syncMapBounds();
       const k = computeStructureKey(s);
       if (k !== structureKey) {
         structureKey = k;
