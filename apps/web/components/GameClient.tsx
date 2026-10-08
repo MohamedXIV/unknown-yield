@@ -735,7 +735,10 @@ function GameClientInner() {
     </section>
   );
   return (
-    <main className="game">
+    <main
+      className="game"
+      data-motion-mode={preferences.accessibility.reducedMotion}
+    >
       <GameHost
         session={session}
         mode={mode}

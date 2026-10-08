@@ -1538,6 +1538,77 @@ browserIt(
         };
       })()`);
       expect(afterReset).toEqual({ version: 2, memory: {}, worldSave: true });
+      // Phase 18: UI reveals are immediate when reduced, and the player
+      // override has higher priority than the device motion preference.
+      await call("Emulation.setEmulatedMedia", {
+        features: [{ name: "prefers-reduced-motion", value: "reduce" }],
+      });
+      await waitForExpression(
+        `document.querySelector(".game")?.getAttribute("data-motion-mode") ===
+          "system" &&
+          getComputedStyle(document.querySelector(".context-panel"))
+            .animationName === "none"`,
+      );
+      await evaluate(`(() => {
+        const select = document.querySelector('select[aria-label="Reduce motion"]');
+        const setter = Object.getOwnPropertyDescriptor(
+          HTMLSelectElement.prototype, "value"
+        ).set;
+        setter.call(select, "off");
+        select.dispatchEvent(new Event("change", { bubbles: true }));
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector(".game")?.getAttribute("data-motion-mode") ===
+          "off" &&
+          getComputedStyle(document.querySelector(".context-panel"))
+            .animationName === "uy-context-arrive"`,
+      );
+      await evaluate(`(() => {
+        const select = document.querySelector('select[aria-label="Reduce motion"]');
+        const setter = Object.getOwnPropertyDescriptor(
+          HTMLSelectElement.prototype, "value"
+        ).set;
+        setter.call(select, "on");
+        select.dispatchEvent(new Event("change", { bubbles: true }));
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector(".game")?.getAttribute("data-motion-mode") ===
+          "on" &&
+          getComputedStyle(document.querySelector(".context-panel"))
+            .animationName === "none"`,
+      );
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Close panel"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector(".context-panel") === null`,
+      );
+      await call("Emulation.setEmulatedMedia", { features: [] });
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Game configuration"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector("select[aria-label='Reduce motion']")?.value ===
+          "on" &&
+          document.querySelector(".context-panel") !== null`,
+      );
+      await evaluate(`(() => {
+        const select = document.querySelector('select[aria-label="Reduce motion"]');
+        const setter = Object.getOwnPropertyDescriptor(
+          HTMLSelectElement.prototype, "value"
+        ).set;
+        setter.call(select, "system");
+        select.dispatchEvent(new Event("change", { bubbles: true }));
+        return true;
+      })()`);
+      await waitForExpression(
+        `JSON.parse(localStorage.getItem("unknown-yield-game-preferences"))
+          ?.accessibility?.reducedMotion === "system"`,
+      );
 
       // Read-only camera diagnostics are opt-in; ordinary players do not
       // expose the probe. These assertions run against the production export.
