@@ -85,6 +85,41 @@ a {
   touch-action: none;
   overscroll-behavior: contain;
 }
+.world-zoom-controls {
+  position: absolute;
+  z-index: 6;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  pointer-events: auto;
+}
+.world-zoom-controls button {
+  width: 44px;
+  height: 44px;
+  border: 1px solid #8fa77788;
+  border-radius: 7px;
+  background: #18251fe8;
+  color: #edf3d9;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.world-zoom-controls button:hover,
+.world-zoom-controls button:focus-visible {
+  border-color: var(--gold);
+  background: #314331;
+}
+@media (max-width: 650px) {
+  .world-zoom-controls {
+    right: 9px;
+    top: 49%;
+    gap: 5px;
+  }
+}
 .hud-top {
   position: absolute;
   left: 20px;
