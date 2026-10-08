@@ -19,6 +19,7 @@ export default function GameHost({
 }) {
   const element = useRef<HTMLDivElement>(null),
     controls = useRef<WorldControls | null>(null),
+    fpsOutput = useRef<HTMLOutputElement>(null),
     latest = useRef({ mode, actions, preferences });
   const [error, setError] = useState("");
   useEffect(() => {
@@ -87,6 +88,22 @@ export default function GameHost({
   useEffect(() => {
     controls.current?.home();
   }, [homeToken]);
+  useEffect(() => {
+    if (!preferences.interface.showFps) return;
+    const updateFps = () => {
+      if (!fpsOutput.current) return;
+      const fps = controls.current?.getFps();
+      fpsOutput.current.textContent = typeof fps === "number" &&
+        Number.isFinite(fps) && fps > 0 && !document.hidden
+        ? `FPS ${Math.round(fps)}`
+        : "FPS —";
+    };
+    updateFps();
+    // Reading the Phaser counter twice a second doesn't introduce another
+    // animation loop, per-frame React rerenders or simulation dependencies.
+    const interval = window.setInterval(updateFps, 500);
+    return () => window.clearInterval(interval);
+  }, [preferences.interface.showFps]);
   return (
     <div
       ref={element}
@@ -94,6 +111,16 @@ export default function GameHost({
       role="application"
       aria-label="Industrial world. Use build tools then click or drag on the ground. Arrow keys or WASD pan. R rotates. Escape cancels."
     >
+      {preferences.interface.showFps && (
+        <output
+          ref={fpsOutput}
+          className="world-fps"
+          aria-label="Frames per second"
+          aria-live="off"
+        >
+          FPS —
+        </output>
+      )}
       <nav className="world-zoom-controls" aria-label="Camera zoom controls">
         <button
           type="button"
