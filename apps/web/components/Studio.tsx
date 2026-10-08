@@ -28,6 +28,7 @@ import {
 } from "../game/studio-preview";
 
 const tableFor: Record<StudioKind, string> = {
+  deposit: "deposits",
   material: "materials",
   operation: "operations",
   machine: "machines",
@@ -39,6 +40,7 @@ const tableFor: Record<StudioKind, string> = {
 };
 
 const plural: Record<StudioKind, string> = {
+  deposit: "Surface deposits",
   material: "Materials",
   operation: "Operations",
   machine: "Machines",
@@ -51,6 +53,7 @@ const plural: Record<StudioKind, string> = {
 
 const kinds: StudioKind[] = [
   "material",
+  "deposit",
   "operation",
   "machine",
   "reaction",
@@ -228,6 +231,60 @@ export default function Studio() {
           />
           Initially known to the expedition
         </label>
+      </>
+    );
+  };
+
+  const editDeposit = () => {
+    if (!row || !selected) return null;
+    return (
+      <>
+        <p className="hint">Surface deposits are real, finite ore reserves in the saved world. Their geometry and material are validated before publish; no automatic world mutation occurs during editing.</p>
+        <label className="studio-field">
+          <span>Initially known solid material</span>
+          <select
+            aria-label="Surface deposit material"
+            value={String(row.material)}
+            onChange={(event) => touch(() =>
+              store.setCell("deposits", selected, "material", event.currentTarget.value))}
+          >
+            {studioEntityIds(store, "material")
+              .filter((id) => {
+                const state = studioRow(store, "material", id).handlingState;
+                return (!state || state === "solid") &&
+                  studioRow(store, "material", id).known === true;
+              })
+              .map((id) => (
+                <option value={id} key={id}>
+                  {studioEntityLabel(store, "material", id)} · {id}
+                </option>
+              ))}
+          </select>
+        </label>
+        <div className="studio-number-grid">
+          {([
+            ["x", "World X"],
+            ["y", "World Y"],
+            ["width", "Width"],
+            ["height", "Height"],
+            ["units", "Finite resource units"],
+          ] as const).map(([field, title]) => (
+            <label className="studio-field" key={field}>
+              <span>{title}</span>
+              <input
+                type="number"
+                min={field === "x" || field === "y" ? 0 : 1}
+                step={1}
+                aria-label={title}
+                value={Number(row[field])}
+                onChange={(event) => touch(() =>
+                  store.setCell("deposits", selected, field,
+                    Number(event.currentTarget.value)))}
+              />
+            </label>
+          ))}
+        </div>
+        <p className="hint">Map bounds are {base.site.width} × {base.site.height}. The validator checks the location and material references; existing expeditions remain unchanged.</p>
       </>
     );
   };
@@ -999,6 +1056,7 @@ export default function Studio() {
                     </label>
                   ))}
                 {kind === "material" && editMaterial()}
+                {kind === "deposit" && editDeposit()}
                 {kind === "operation" && editOperation()}
                 {kind === "machine" && editMachine()}
                 {kind === "reaction" && editReaction()}

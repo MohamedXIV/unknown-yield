@@ -337,4 +337,19 @@ Evidence and limitations: [PHASE18_EXIT_REVIEW.md](PHASE18_EXIT_REVIEW.md).
 **Deferred, not PASS:** physical Android touch/zoom feel, real-device GPU frame
 pacing and the user's consolidated visual-taste review. Phase 7 scale budget
 remains unmet/deferred; broad UI appearance/visual identity redesign is
-not included or automatically opened by this exit. No Phase 19 is selected.
+not included or automatically opened by this exit. Phase 19 was subsequently selected as #248; see the technical closeout below.
+
+
+## Phase 19 — placement feedback and runtime Studio playtest (#248)
+
+The 2026-10-08 scope is complete at its **technical gate** under the per-child evidence recorded in [PHASE19_EXIT_REVIEW.md](PHASE19_EXIT_REVIEW.md).
+
+- **#249** placement feedback VFX/SFX/very small optional camera impulse was merged in PR #255, main `07886344e052d31da02ffadfd5ee08c25707912b`. This is a presentation-only, command-confirmed cue and does not alter authoritative simulation.
+- **#250** construction-time decision is **NO-GO for Phase 19**. Placement remains immediate for paths and machinery; **#253** was closed **NOT PLANNED** under that decision. Never assume construction-job/save semantics are implemented.
+- **#251** runtime Studio content packs merged in PR #256, main `2a42160e5bac9d00afeb753a2cd874596617276b`. Validated external schema-1 JSON can start new content-specific worlds in a prebuilt static web client, with exact SHA-256 pack identity and independent saves. No silent world hot-swap.
+- **#252** Studio draft recovery and validated playtest export merged in PR #257, main `96ae445bf52183baf1e41544b554ef17baf2a65e`. The development-only Studio is not shipped in the player bundle.
+- **#254** targeted Studio source-passthrough gap addressed via PR #258: editable finite surface deposits, invalid reference/geometry rejection and end-to-end new ore→deposit→processor content testing. The pre-merge code head `e9f9775c2e0eefd44e30acd8377fdc2ecacb1ed0` passed **577 tests / 3 skipped** plus typecheck, lint, build, and production browser acceptance.
+
+See [RUNTIME_CONTENT_PACKS.md](RUNTIME_CONTENT_PACKS.md) and [STUDIO_PLAYTEST.md](STUDIO_PLAYTEST.md) for how to test authored content without rebuilding the web game.
+
+Human review remains explicitly deferred for subjective SFX/VFX/impulse taste and fresh target-device frame pacing. The previously user-tested 60 FPS after PR #247 is not falsely extended as a new physical-device proof for Phase 19. Do not reopen the technical phase solely for these voluntary polish judgments, and do not start a new phase without agreement.
