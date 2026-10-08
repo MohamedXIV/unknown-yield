@@ -172,3 +172,26 @@ it("recovers from blocked storage without affecting the game", () => {
     ),
   ).toBe(false);
 });
+
+it("preserves old v2 sound preference defaults and persists explicit mute", () => {
+  const legacy = {
+    ...DEFAULT_GAME_PREFERENCES,
+    interface: { showFps: true },
+  };
+  expect(normalizeGamePreferences(legacy).interface).toEqual({
+    showFps: true,
+    soundEffects: true,
+  });
+  const muted = normalizeGamePreferences({
+    ...legacy,
+    interface: { showFps: true, soundEffects: false },
+  });
+  expect(muted.interface.soundEffects).toBe(false);
+  const records = new Map<string, string>();
+  expect(saveGamePreferences({
+    setItem: (key, value) => { records.set(key, value); },
+  }, muted)).toBe(true);
+  expect(loadGamePreferences({
+    getItem: (key) => records.get(key) ?? null,
+  }).interface.soundEffects).toBe(false);
+});
