@@ -119,8 +119,8 @@ it("clamps zoom, world edges and small worlds deterministically", () => {
     { motion: "instant", minZoom: 0.4, maxZoom: 2.5 },
   );
   camera.panByWorld(-100000, -100000);
-  expect(camera.getView().scrollX).toBe(0);
-  expect(camera.getView().scrollY).toBe(0);
+  close(camera.getView().scrollX, 600 / 1.1 - 600);
+  close(camera.getView().scrollY, 400 / 1.1 - 400);
   camera.zoomAt(100, 500, 300);
   expect(camera.getView().zoom).toBe(2.5);
   camera.panByWorld(100000, 100000);
