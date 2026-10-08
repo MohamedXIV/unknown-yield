@@ -33,8 +33,10 @@ export type Tool =
   | "depot"
   | "belt"
   | "port"
-  | "demolish";
-export const TOOL_HOTKEYS: Record<Tool, string> = {
+  | "demolish"
+  // Imported, validated machine definition IDs have no predefined shortcut.
+  | (string & {});
+export const TOOL_HOTKEYS: Record<string, string> = {
   "elevated-solid": "E",
   "underground-solid": "H",
   "underground-liquid": "I",
@@ -489,23 +491,8 @@ export function buildCommand(
       height: click ? s.map.factoryMin : Math.abs(a.y - p.y) + 1,
     };
   }
-  if (
-    [
-      "vaporizer",
-      "gas-collector",
-      "liquefier",
-      "precipitator",
-      "extractor",
-      "deep-extractor",
-      "atmospheric-intake",
-      "sinterer",
-      "crusher",
-      "furnace",
-      "sealed-furnace",
-      "oversealed-furnace",
-      "relief-furnace",
-    ].includes(mode.tool)
-  )
+  // Every validated content machine is placeable, not only fixture IDs.
+  if (s.definitions.some((definition) => definition.id === mode.tool))
     return {
       type: "placeMachine",
       definitionId: mode.tool,
