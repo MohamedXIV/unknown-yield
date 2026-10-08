@@ -109,6 +109,10 @@ export function createWorld(
         ? window.matchMedia("(prefers-reduced-motion: reduce)")
         : null;
     private dirty = true;
+    // World overlays are world-space Graphics, not animations. Redrawing them
+    // every RAF creates fresh geometry/upload work even when only camera
+    // scroll/zoom changed. Snapshot and input events invalidate them instead.
+    private overlaysDirty = true;
     private seenDiscoveries = new Set(initial.observations.map(observationKey));
     private notices: Phaser.GameObjects.Text[] = [];
     preload() {
@@ -301,6 +305,7 @@ export function createWorld(
         this.game.canvas.removeEventListener("pointercancel", cancelNativeTouch);
       });
       this.input.on("pointermove", (p: Phaser.Input.Pointer) => {
+        this.invalidateOverlays();
         if (p.wasTouch) {
           const gesture = this.touch.move(
             p.id,
@@ -327,6 +332,7 @@ export function createWorld(
         this.hover = this.cell(p);
       });
       this.input.on("pointerdown", (p: Phaser.Input.Pointer) => {
+        this.invalidateOverlays();
         void feedbackAudio.enable();
         if (p.wasTouch) {
           const result = this.touch.down(p.id, { x: p.x, y: p.y });
@@ -338,6 +344,7 @@ export function createWorld(
         this.anchor = this.hover;
       });
       this.input.on("pointerup", (p: Phaser.Input.Pointer) => {
+        this.invalidateOverlays();
         if (p.wasTouch) {
           const gesture = this.touch.up(
             p.id,
@@ -369,11 +376,13 @@ export function createWorld(
         this.anchor = null;
       });
       this.input.on("gameout", () => {
+        this.invalidateOverlays();
         this.hover = null;
         this.touch.cancel();
         this.anchor = null;
       });
       this.input.on("pointerupoutside", (p: Phaser.Input.Pointer) => {
+        this.invalidateOverlays();
         if (p.wasTouch) this.touch.cancel(p.id);
         this.anchor = null;
       });
@@ -408,6 +417,7 @@ export function createWorld(
         if (e.repeat) return;
         if (k === "r") actions.rotate();
         if (k === "escape") {
+          this.invalidateOverlays();
           this.anchor = null;
           actions.mode("select");
           actions.select(null);
@@ -458,6 +468,7 @@ export function createWorld(
     cancelTouch() {
       this.touch.cancel();
       this.anchor = null;
+      this.invalidateOverlays();
     }
     zoomBy(factor: number) {
       this.navigation.zoomAt(
@@ -536,6 +547,10 @@ export function createWorld(
     }
     markDirty() {
       this.dirty = true;
+      this.invalidateOverlays();
+    }
+    invalidateOverlays() {
+      this.overlaysDirty = true;
     }
     feedback(events: readonly FeedbackEvent[]) {
       if (!events.length) return;
@@ -1430,7 +1445,6 @@ export function createWorld(
     update(_time: number, delta: number) {
       if (!this.dynamic) return;
       recordBrowserMetric("frame-interval", delta);
-      const dynamicDrawStartedAt = startBrowserMetric();
       if (this.dirty) {
         this.rebuild();
         this.refresh();
@@ -1474,6 +1488,12 @@ export function createWorld(
         ),
       );
       this.grid.setVisible(mode.tool !== "select");
+      // Camera movement alone never changes world-space overlay geometry.
+      // Preserve the last Graphics buffers instead of clearing and rebuilding
+      // them on all 60+ render frames. The simulation still refreshes at 10 Hz.
+      if (!this.overlaysDirty) return;
+      this.overlaysDirty = false;
+      const dynamicDrawStartedAt = startBrowserMetric();
       const g = this.dynamic;
       g.clear();
       for (const b of snapshot.belts) {
@@ -1789,12 +1809,14 @@ export function createWorld(
       }
       scene?.feedback(events);
       scene?.refresh();
+      scene?.invalidateOverlays();
       finishBrowserMetric("world-sync", startedAt);
     },
     setMode: (m) => {
       const rebuild = mode.openFactories.join() !== m.openFactories.join();
       if (m.tool !== mode.tool) scene?.cancelTouch();
       mode = m;
+      scene?.invalidateOverlays();
       if (rebuild) scene?.markDirty();
     },
     setPreferences: (next) => {
