@@ -665,3 +665,34 @@ it("builds, selects, and fingerprints elevated gantries without treating cargo a
   movedDeck.elevatedSolids[0].exit.x += 1;
   expect(structureKey(movedDeck)).not.toBe(key);
 });
+
+it("accepts a newly authored machine definition without recompiling the build-command switch", () => {
+  const builtIn = new Simulation(fixture).snapshot();
+  const newContent = structuredClone(builtIn);
+  newContent.definitions.push({
+    ...builtIn.definitions.find((entry) => entry.id === "crusher")!,
+    id: "polisher",
+    nameKey: "machine.polisher.name",
+  });
+  const command = buildCommand(
+    { ...DEFAULT_MODE, tool: "polisher" },
+    newContent,
+    { x: 28, y: 27 },
+    null,
+  );
+  expect(command).toEqual({
+    type: "placeMachine",
+    definitionId: "polisher",
+    x: 28,
+    y: 27,
+    direction: DEFAULT_MODE.direction,
+  });
+  expect(toolGroupFor("polisher")).toBeNull();
+  expect(TOOL_HOTKEYS["polisher"]).toBeUndefined();
+  expect(buildCommand(
+    { ...DEFAULT_MODE, tool: "malformed-unknown-machine" },
+    newContent,
+    { x: 28, y: 27 },
+    null,
+  )).toBeNull();
+});

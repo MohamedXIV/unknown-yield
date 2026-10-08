@@ -1,4 +1,5 @@
 import { fixture } from "@site/content";
+import type { RuntimePack } from "./runtime-content";
 import { finishBrowserMetric, startBrowserMetric } from "./performance";
 import {
   Simulation,
@@ -10,6 +11,7 @@ type StorageReader = { getItem(key: string): string | null };
 type StorageWriter = { setItem(key: string, value: string): void };
 export class Session {
   private sim = new Simulation(fixture);
+  private pack: RuntimePack | null = null;
   private last: number | null = null;
   private listeners = new Set<() => void>();
   // Both React and Phaser consume the same read-only projection per update.
@@ -56,14 +58,35 @@ export class Session {
     }
     this.last = now;
   }
+  /** Explicit new expedition. Never hot-swap an already running world. */
+  usePack(pack: RuntimePack | null) {
+    // Build the replacement first: a failed constructor cannot damage the
+    // running sim or the user's existing saves.
+    const next = new Simulation(pack?.bundle.content ?? fixture);
+    this.sim = next;
+    this.pack = pack;
+    this.last = null;
+    this.notify();
+  }
+  activePackFingerprint() {
+    return this.pack?.fingerprint ?? null;
+  }
   reset() {
-    this.sim = new Simulation(fixture);
+    this.sim = new Simulation(this.pack?.bundle.content ?? fixture);
     this.last = null;
     this.notify();
   }
   save(storage: StorageWriter): CommandResult {
     try {
-      storage.setItem(SAVE_KEY, JSON.stringify(this.sim.serialize()));
+      const save = this.sim.serialize();
+      if (this.pack) {
+        storage.setItem(
+          SAVE_KEY + "-pack-" + this.pack.fingerprint,
+          JSON.stringify({ fingerprint: this.pack.fingerprint, save }),
+        );
+      } else {
+        storage.setItem(SAVE_KEY, JSON.stringify(save));
+      }
       return { ok: true, message: "Field record saved on this device" };
     } catch {
       return {
@@ -74,6 +97,21 @@ export class Session {
   }
   restore(storage: StorageReader): CommandResult {
     try {
+      if (this.pack) {
+        const raw = storage.getItem(SAVE_KEY + "-pack-" + this.pack.fingerprint);
+        if (!raw) return {
+          ok: false, message: "No world saved for this exact content pack. Existing other worlds were not changed.",
+        };
+        const envelope = JSON.parse(raw) as { fingerprint?: unknown; save?: unknown };
+        if (!envelope || envelope.fingerprint !== this.pack.fingerprint || !envelope.save)
+          return { ok: false, message: "Saved world content identity mismatch. Current session unchanged." };
+        const result = this.sim.load(envelope.save);
+        if (result.ok) {
+          this.last = null;
+          this.notify();
+        }
+        return result;
+      }
       // Older browser records remain readable for explicit compatibility diagnostics.
       const raw =
         storage.getItem(SAVE_KEY) ??

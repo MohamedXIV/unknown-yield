@@ -1,1 +1,1 @@
-{"name":"@site/content","version":"0.1.0","private":true,"type":"module","exports":{".":"./src/index.ts","./locale":"./src/locale.ts","./studio":"./src/studio.ts"},"dependencies":{"tinybase":"9.7.1","zod":"4.6.5"}}
+{"name":"@site/content","version":"0.1.0","private":true,"type":"module","exports":{".":"./src/index.ts","./locale":"./src/locale.ts","./studio":"./src/studio.ts","./bundle":"./src/bundle.ts"},"dependencies":{"tinybase":"9.7.1","zod":"4.6.5"}}

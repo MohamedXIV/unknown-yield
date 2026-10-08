@@ -5,7 +5,9 @@ import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
-import { fixture } from "@site/content";
+import { fixture, enCatalog } from "@site/content";
+import { createContentStore, serializeStudioBundle } from "@site/content/studio";
+import { createStudioEntity, setStudioLocaleText } from "../game/studio-workbench";
 import {
   Simulation,
   experimentEvidenceKey,
@@ -13,6 +15,34 @@ import {
   type GameCommand,
 } from "@site/sim-core";
 import { expect, it } from "vitest";
+
+function runtimePackBrowserFixture(): string {
+  const store = createContentStore(fixture, enCatalog);
+  store.setCell("meta", "content", "version", "world-01-v14-browser-content-pack");
+  createStudioEntity(store, "material", "powder");
+  createStudioEntity(store, "operation", "polish");
+  createStudioEntity(store, "machine", "polisher");
+  createStudioEntity(store, "reaction", "polish-raw");
+  store.setCell("materials", "powder", "color", "#8899aa");
+  setStudioLocaleText(store, "material.powder.name", "Polished powder");
+  setStudioLocaleText(store, "operation.polish.name", "Polish");
+  setStudioLocaleText(store, "machine.polisher.name", "Polisher");
+  setStudioLocaleText(store, "reaction.polish-raw.observation", "Polishing produces powder.");
+  store.setCell("machines", "polisher", "role", "processor");
+  store.setCell("machines", "polisher", "operationsJson", '["polish"]');
+  store.setCell("machines", "polisher", "capacity", 8);
+  store.setCell("machines", "polisher", "fuel", 1);
+  store.setCell("machines", "polisher", "durationTicks", 20);
+  store.setCell("machines", "polisher", "width", 2);
+  store.setCell("machines", "polisher", "height", 2);
+  store.setCell("machines", "polisher", "cost", 20);
+  store.setCell("reactions", "polish-raw", "operation", "polish");
+  store.setCell("reactions", "polish-raw", "input", "raw");
+  store.setCell("reactions", "polish-raw", "inputAmount", 2);
+  store.setCell("reactions", "polish-raw", "output", "powder");
+  store.setCell("reactions", "polish-raw", "outputAmount", 1);
+  return serializeStudioBundle(store, fixture);
+}
 
 const browserAcceptanceMode =
   process.env.UNKNOWN_YIELD_BROWSER_ACCEPTANCE ?? "dev";
@@ -1978,6 +2008,102 @@ browserIt(
         performance: frameReport,
       }));
       expect(runtimeErrors, runtimeErrors.join("\n")).toEqual([]);
+
+      if (productionBrowser) {
+        // Real prebuilt browser, no Studio route or code rebuild: inject an
+        // actual exported Studio JSON as a file-input change (not a sim shortcut).
+        const payload = runtimePackBrowserFixture();
+        await evaluate<boolean>(`(() => {
+          const menu = document.querySelector('button[aria-label="Game menu"]');
+          if (!document.querySelector('input[aria-label="Choose Studio JSON content pack"]')) menu?.click();
+          return true;
+        })()`);
+        await waitForExpression(`document.querySelector('input[aria-label="Choose Studio JSON content pack"]') !== null`);
+        await evaluate<boolean>(`(() => {
+          const input = document.querySelector('input[aria-label="Choose Studio JSON content pack"]');
+          const file = new File([${JSON.stringify(payload)}], "studio-playtest.json", { type: "application/json" });
+          const transfer = new DataTransfer();
+          transfer.items.add(file);
+          input.files = transfer.files;
+          input.dispatchEvent(new Event("change", { bubbles: true }));
+          return true;
+        })()`);
+        await waitForExpression(`[...document.querySelectorAll("button")].some(b => b.textContent?.includes("Play new expedition with imported pack"))`);
+        await evaluate<boolean>(`(() => {
+          [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Play new expedition with imported pack"))?.click();
+          return true;
+        })()`);
+        await waitForExpression(`localStorage.getItem("unknown-yield-active-pack-v1") !== null`);
+        const postActivation = await evaluate<unknown>(`(() => ({
+          menuButton: Boolean(document.querySelector('button[aria-label="Game menu"]')),
+          hasCanvas: Boolean(document.querySelector('canvas')),
+          storedPack: Boolean(localStorage.getItem("unknown-yield-active-pack-v1")),
+          text: (document.body?.innerText ?? "").slice(-1500),
+        }))()`);
+        console.log("PHASE19_PACK_ACTIVATION_DIAGNOSTIC " + JSON.stringify(postActivation));
+        await waitForExpression(`document.querySelector('button[aria-label="Game menu"]') !== null`);
+        await evaluate<boolean>(`(() => {
+          if (!document.body.textContent?.includes("Expedition controls"))
+            document.querySelector('button[aria-label="Game menu"]')?.click();
+          return true;
+        })()`);
+        await waitForExpression(`document.body.textContent?.includes("Expedition controls") === true`);
+        const packMenuText = await evaluate<string>(`document.body.innerText.slice(-1700)`);
+        console.log("PHASE19_PACK_MENU " + JSON.stringify({ text: packMenuText }));
+        expect(packMenuText).toContain("Offline content packs");
+        await evaluate<boolean>(`(() => {
+          [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Save world"))?.click();
+          return true;
+        })()`);
+        const packEvidence = await evaluate<{ id: string; scopedSave: boolean; locale: string }>(`(() => {
+          const stored = JSON.parse(localStorage.getItem("unknown-yield-active-pack-v1"));
+          const id = stored.fingerprint;
+          return {
+            id,
+            scopedSave: localStorage.getItem("industrial-site-save-v15-pack-" + id) !== null,
+            locale: stored.bundle.locale["material.powder.name"],
+          };
+        })()`);
+        expect(packEvidence.id).toMatch(/^[a-f0-9]{64}$/);
+        expect(packEvidence.scopedSave).toBe(true);
+        expect(packEvidence.locale).toBe("Polished powder");
+        await call("Page.reload", { ignoreCache: true });
+        // CDP Page.reload acknowledges navigation start, not React hydration.
+        // The static export and async persisted-pack verification both finish
+        // before the test attempts to load a pack-scoped world.
+        await sleep(900);
+        await waitForExpression(`document.body.textContent?.includes("UNKNOWN YIELD") === true`);
+        await waitForExpression(`document.querySelector('button[aria-label="Game menu"]') !== null`);
+        await evaluate<boolean>(`(() => {
+          document.querySelector('button[aria-label="Game menu"]')?.click();
+          return true;
+        })()`);
+        await waitForExpression(`document.body.textContent?.includes("Offline content packs") === true`);
+        await waitForExpression(`[...document.querySelectorAll("button")].some(b => b.textContent?.includes("Start new expedition with built-in content"))`);
+        await evaluate<boolean>(`(() => {
+          [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Load saved world"))?.click();
+          return true;
+        })()`);
+        await waitForExpression(`document.body.textContent?.includes("Site restored") === true`);
+        // A successful Load closes the menu, so reopen it before rollback.
+        await evaluate<boolean>(`(() => {
+          if (!document.body.textContent?.includes("Expedition controls"))
+            document.querySelector('button[aria-label="Game menu"]')?.click();
+          return true;
+        })()`);
+        await waitForExpression(`[...document.querySelectorAll("button")].some(b => b.textContent?.includes("Start new expedition with built-in content"))`);
+        await evaluate<boolean>(`(() => {
+          [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Start new expedition with built-in content"))?.click();
+          return true;
+        })()`);
+        await waitForExpression(`localStorage.getItem("unknown-yield-active-pack-v1") === null`);
+        expect(await evaluate<boolean>(`(() => {
+          const keys = Object.keys(localStorage);
+          return keys.some(k => k.startsWith("industrial-site-save-v15-pack-"));
+        })()`)).toBe(true);
+        console.log("PHASE19_RUNTIME_PACK_BROWSER " + JSON.stringify({ fingerprint: packEvidence.id, scopedSave: true, reload: true, rollback: true }));
+        expect(runtimeErrors, runtimeErrors.join("\\n")).toEqual([]);
+      }
 
       socket.close();
     } catch (error) {
