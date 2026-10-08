@@ -89,6 +89,7 @@ export function createWorld(
     destroyed = false;
   class Site extends Phaser.Scene {
     private grid!: Phaser.GameObjects.Graphics;
+    private mapBoundary!: Phaser.GameObjects.Graphics;
     private structures!: Phaser.GameObjects.Container;
     private dynamic!: Phaser.GameObjects.Graphics;
     private ghost!: Phaser.GameObjects.Graphics;
@@ -183,6 +184,9 @@ export function createWorld(
         )
         .setOrigin(0)
         .setAlpha(0.14);
+      // A subtle perimeter makes the actual buildable map edge legible.
+      this.mapBoundary = this.add.graphics();
+      this.drawMapBoundary();
       let seed = 131;
       const rand = () => {
         seed = (seed * 1664525 + 1013904223) >>> 0;
@@ -434,6 +438,14 @@ export function createWorld(
       this.rebuild();
       this.refresh();
     }
+    private drawMapBoundary() {
+      const width = snapshot.map.width * X;
+      const height = snapshot.map.height * Y;
+      this.mapBoundary.clear();
+      this.mapBoundary.lineStyle(2, 0xa3ad8e, 0.38).strokeRect(
+        1, 1, Math.max(0, width - 2), Math.max(0, height - 2),
+      );
+    }
     private screenCell(p: TouchPoint): Point {
       const w = this.cameras.main.getWorldPoint(p.x, p.y);
       return { x: Math.floor(w.x / X), y: Math.floor(w.y / Y) };
@@ -489,6 +501,7 @@ export function createWorld(
     syncMapBounds() {
       this.navigation.setWorldSize(snapshot.map.width * X, snapshot.map.height * Y);
       this.syncCameraLimits();
+      this.drawMapBoundary();
     }
     home(initial = false) {
       const zoom = this.homeZoom();
