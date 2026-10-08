@@ -2,26 +2,30 @@
 import { useEffect, useRef, useState } from "react";
 import type { Session } from "../game/session";
 import type { WorldMode } from "../game/interaction";
+import type { GamePreferences } from "../game/preferences";
 import type { WorldControls, WorldActions } from "../game/world";
 export default function GameHost({
   session,
   mode,
   actions,
   homeToken,
+  preferences,
 }: {
   session: Session;
   mode: WorldMode;
   actions: WorldActions;
   homeToken: number;
+  preferences: GamePreferences;
 }) {
   const element = useRef<HTMLDivElement>(null),
     controls = useRef<WorldControls | null>(null),
-    latest = useRef({ mode, actions });
+    latest = useRef({ mode, actions, preferences });
   const [error, setError] = useState("");
   useEffect(() => {
-    latest.current = { mode, actions };
+    latest.current = { mode, actions, preferences };
     controls.current?.setMode(mode);
-  }, [mode, actions]);
+    controls.current?.setPreferences(preferences);
+  }, [mode, actions, preferences]);
   useEffect(() => {
     let cancelled = false,
       teardown: (() => void) | undefined;
@@ -41,6 +45,7 @@ export default function GameHost({
           session.snapshot(),
           callbacks,
           latest.current.mode,
+          latest.current.preferences,
         );
         controls.current = world;
         const unsubscribe = session.subscribe(() =>
