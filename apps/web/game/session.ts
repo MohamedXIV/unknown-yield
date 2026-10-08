@@ -12,11 +12,15 @@ export class Session {
   private sim = new Simulation(fixture);
   private last: number | null = null;
   private listeners = new Set<() => void>();
+  // Both React and Phaser consume the same read-only projection per update.
+  // Do not run Simulation.snapshot() and its structuredClone twice for one tick.
+  private cachedSnapshot: ReturnType<Simulation["snapshot"]> | null = null;
   snapshot = () => {
+    if (this.cachedSnapshot) return this.cachedSnapshot;
     const startedAt = startBrowserMetric();
-    const snapshot = this.sim.snapshot();
+    this.cachedSnapshot = this.sim.snapshot();
     finishBrowserMetric("snapshot", startedAt);
-    return snapshot;
+    return this.cachedSnapshot;
   };
   subscribe = (fn: () => void) => {
     this.listeners.add(fn);
@@ -25,6 +29,9 @@ export class Session {
     };
   };
   private notify() {
+    // Invalidate BEFORE either subscriber reads so all consumers see
+    // the same fresh, completed simulation state.
+    this.cachedSnapshot = null;
     for (const fn of this.listeners) fn();
   }
   command = (cmd: GameCommand) => {
