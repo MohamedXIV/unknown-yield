@@ -137,3 +137,32 @@ it("never drifts when idle and tolerates invalid or huge frame deltas", () => {
     expect(camera.advance(16)).toEqual(camera.getTarget());
   }
 });
+
+it("pins the previous gesture center under a moving pinch midpoint", () => {
+  const geometry = {
+    worldWidth: 6000,
+    worldHeight: 4800,
+    viewportWidth: 1200,
+    viewportHeight: 800,
+  };
+  const camera = new CameraNavigation(
+    geometry,
+    { scrollX: 800, scrollY: 600, zoom: 1 },
+    { motion: "instant" },
+  );
+
+  const worldX = 800 + 400;
+  const worldY = 600 + 250;
+  camera.pinchBy(1.5, { x: 400, y: 250 }, { x: 460, y: 290 });
+
+  const view = camera.getView();
+  expect(view.zoom).toBeCloseTo(1.5);
+  expect(view.scrollX + 460 / view.zoom).toBeCloseTo(worldX);
+  expect(view.scrollY + 290 / view.zoom).toBeCloseTo(worldY);
+
+  camera.pinchBy(1, { x: 460, y: 290 }, { x: 500, y: 330 });
+  const moved = camera.getView();
+  expect(moved.scrollX).toBeCloseTo(view.scrollX - 40 / view.zoom);
+  expect(moved.scrollY).toBeCloseTo(view.scrollY - 40 / view.zoom);
+});
+
