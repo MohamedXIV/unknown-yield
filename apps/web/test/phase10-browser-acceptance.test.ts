@@ -906,15 +906,13 @@ browserIt(
         const canvas = document.querySelector("canvas");
         if (!canvas) throw new Error("Canvas missing");
         const rect = canvas.getBoundingClientRect();
-        const X = 32, Y = 24;
-        const zoom = Math.min(rect.width / (36 * X), rect.height / (27 * Y));
-        const scrollX = 29 * X - rect.width / (2 * zoom);
-        const scrollY = 30 * Y - rect.height / (2 * zoom);
-        const worldX = 25.5 * X;
-        const worldY = 24.5 * Y;
+        // Ask the actual renderer rather than approximating Phaser's
+        // zoomed viewport with scroll-as-top-left coordinates.
+        const point = window.__UNKNOWN_YIELD_PROJECT_WORLD__?.(25.5 * 32, 24.5 * 24);
+        if (!point) throw new Error("World projection probe missing");
         return {
-          x: rect.left + (worldX - scrollX) * zoom,
-          y: rect.top + (worldY - scrollY) * zoom,
+          x: rect.left + point.x * rect.width,
+          y: rect.top + point.y * rect.height,
         };
       })()`);
       await call("Input.dispatchMouseEvent", {
@@ -1653,14 +1651,25 @@ browserIt(
         scrollY: number;
         zoom: number;
       }>(`window.__UNKNOWN_YIELD_CAMERA__()`);
-      const focusBeforeX = initialCamera.scrollX + 640 / initialCamera.zoom;
-      const focusBeforeY = initialCamera.scrollY + 420 / initialCamera.zoom;
-      expect(
-        Math.abs(zoomedCamera.scrollX + 640 / zoomedCamera.zoom - focusBeforeX),
-      ).toBeLessThan(0.1);
-      expect(
-        Math.abs(zoomedCamera.scrollY + 420 / zoomedCamera.zoom - focusBeforeY),
-      ).toBeLessThan(0.1);
+      const wheelViewport = await evaluate<{
+        x: number; y: number; width: number; height: number;
+      }>(`(() => {
+        const canvas = document.querySelector(".world-host canvas");
+        if (!canvas) throw new Error("Canvas missing");
+        const rect = canvas.getBoundingClientRect();
+        return { x: 640 - rect.left, y: 420 - rect.top,
+          width: canvas.width, height: canvas.height };
+      })()`);
+      const worldAtWheel = (view: { scrollX: number; scrollY: number; zoom: number }) => ({
+        x: view.scrollX + wheelViewport.width / 2 +
+          (wheelViewport.x - wheelViewport.width / 2) / view.zoom,
+        y: view.scrollY + wheelViewport.height / 2 +
+          (wheelViewport.y - wheelViewport.height / 2) / view.zoom,
+      });
+      const focusBefore = worldAtWheel(initialCamera);
+      const focusAfter = worldAtWheel(zoomedCamera);
+      expect(Math.abs(focusAfter.x - focusBefore.x)).toBeLessThan(0.1);
+      expect(Math.abs(focusAfter.y - focusBefore.y)).toBeLessThan(0.1);
 
       await call("Input.dispatchKeyEvent", {
         type: "keyDown",
