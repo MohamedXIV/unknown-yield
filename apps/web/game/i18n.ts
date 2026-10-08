@@ -1,6 +1,6 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
-import { enCatalog } from "@site/content/locale";
+import { enCatalog, type LocaleCatalog } from "@site/content/locale";
 
 /**
  * Shared localization runtime (Issue #14).
@@ -22,3 +22,9 @@ void i18n.use(initReactI18next).init({
 
 export { i18n };
 export const t: typeof i18n.t = i18n.t.bind(i18n);
+
+/** Locale belongs to selected new-world content, never to hidden sim state. */
+export function setRuntimeContentLocale(locale: LocaleCatalog | null): void {
+  i18n.removeResourceBundle("en", "translation");
+  i18n.addResourceBundle("en", "translation", { ...enCatalog, ...(locale ?? {}) }, true, true);
+}
