@@ -1884,7 +1884,7 @@ browserIt(
         format: "png",
         captureBeyondViewport: false,
       });
-      const screenshotData = (screenshotResult as { data?: string }).data;
+      const screenshotData = (screenshotResult as unknown as { data?: string }).data;
       expect(screenshotData, "Mobile screenshot data must be captured").toBeTruthy();
       const screenshotBytes = Buffer.from(screenshotData!, "base64");
       const screenshotSha256 = createHash("sha256")
