@@ -740,6 +740,7 @@ function GameClientInner() {
         session={session}
         mode={mode}
         homeToken={homeToken}
+        preferences={preferences}
         actions={{
           select,
           command: act,
