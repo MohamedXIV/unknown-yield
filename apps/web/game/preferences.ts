@@ -18,6 +18,9 @@ export type GamePreferences = {
   controls: {
     invertWheelZoom: boolean;
   };
+  interface: {
+    showFps: boolean;
+  };
   accessibility: {
     reducedMotion: ReducedMotionPreference;
   };
@@ -40,6 +43,9 @@ export const DEFAULT_GAME_PREFERENCES: GamePreferences = {
   },
   controls: {
     invertWheelZoom: false,
+  },
+  interface: {
+    showFps: false,
   },
   accessibility: {
     reducedMotion: "system",
@@ -65,6 +71,7 @@ function defaults(): GamePreferences {
     },
     camera: { ...DEFAULT_GAME_PREFERENCES.camera },
     controls: { ...DEFAULT_GAME_PREFERENCES.controls },
+    interface: { ...DEFAULT_GAME_PREFERENCES.interface },
     accessibility: { ...DEFAULT_GAME_PREFERENCES.accessibility },
   };
 }
@@ -111,6 +118,7 @@ export function normalizeGamePreferences(value: unknown): GamePreferences {
 
   const camera = record(source.camera);
   const controls = record(source.controls);
+  const interfacePreferences = record(source.interface);
   const accessibility = record(source.accessibility);
   next.camera = {
     smooth:
@@ -137,6 +145,12 @@ export function normalizeGamePreferences(value: unknown): GamePreferences {
     typeof controls?.invertWheelZoom === "boolean"
       ? controls.invertWheelZoom
       : next.controls.invertWheelZoom;
+  // Additive v2 preference: existing saves without interface.showFps
+  // keep their camera/palette configuration and default the HUD to off.
+  next.interface.showFps =
+    typeof interfacePreferences?.showFps === "boolean"
+      ? interfacePreferences.showFps
+      : DEFAULT_GAME_PREFERENCES.interface.showFps;
   const motion = accessibility?.reducedMotion;
   next.accessibility.reducedMotion =
     motion === "system" || motion === "on" || motion === "off"
