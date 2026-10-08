@@ -3123,7 +3123,7 @@ function GameClientInner() {
                 <section className="configuration-section">
                   <h3>Offline content packs</h3>
                   <p className="hint">Import a validated Studio JSON bundle into this already-built client. Selecting it always starts a NEW expedition; existing saves stay separate.</p>
-                  <p className="hint">Active: {activePack ? "Imported · " + activePack.fingerprint.slice(0, 12) : "Built-in content"}</p>
+                  <p className="hint">Active: {session.activePackFingerprint() ? "Imported · " + session.activePackFingerprint()!.slice(0, 12) : "Built-in content"}</p>
                   <label className="configuration-option">
                     <span>Choose Studio JSON bundle (max 2 MiB)</span>
                     <input
