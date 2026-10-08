@@ -43,6 +43,7 @@ import {
 import {
   finishBrowserMetric,
   recordBrowserMetric,
+  recordCameraPacing,
   startBrowserMetric,
 } from "./performance";
 export type WorldControls = {
@@ -1458,7 +1459,19 @@ export function createWorld(
           this.navigation.panByWorld(x * speed * scale, y * speed * scale);
         }
       }
-      this.applyCamera(this.navigation.advance(delta));
+      const previousView = this.navigation.getView();
+      const nextView = this.navigation.advance(delta);
+      this.applyCamera(nextView);
+      // Track actual navigation pacing at normal vs close zoom without
+      // introducing a separate RAF/React loop or recording player data.
+      recordCameraPacing(
+        nextView.zoom / this.homeZoom(),
+        delta,
+        Math.hypot(
+          (nextView.scrollX - previousView.scrollX) * nextView.zoom,
+          (nextView.scrollY - previousView.scrollY) * nextView.zoom,
+        ),
+      );
       this.grid.setVisible(mode.tool !== "select");
       const g = this.dynamic;
       g.clear();
