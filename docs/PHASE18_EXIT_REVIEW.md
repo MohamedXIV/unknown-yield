@@ -1,9 +1,11 @@
 # Phase 18 — Integrated desktop/mobile interaction exit (#238)
 
 Parent epic: [#232](https://github.com/MohamedXIV/unknown-yield/issues/232).
-The final exact-head acceptance run and its outcome are recorded on
-[exit issue #238](https://github.com/MohamedXIV/unknown-yield/issues/238);
-this document defines its scope, provenance and decision boundary.
+**Status: COMPLETE — automated production-browser technical exit accepted.**
+
+Exact-head gate: [CI #206](https://github.com/MohamedXIV/unknown-yield/actions/runs/37712884560) on `c32ea23b269d7cd9f62d5644cd57415776e6d16d`; PR #244 merged to main at `a4ab5a8cb70e63134f8398807facca20d8ff421e`.
+
+The same evidence is recorded on [exit issue #238](https://github.com/MohamedXIV/unknown-yield/issues/238).
 
 ## Delivered interaction slices
 
@@ -13,7 +15,7 @@ this document defines its scope, provenance and decision boundary.
 | #234 + #235 | Discoverable Camera/Controls/Accessibility settings v2, v1 migration, live Phaser bridge and desktop pan/zoom | PR #240 / `717e4b1a785bbe95a7c37324010abb3274a9ed95` |
 | #236 | One-finger tap/build and Inspect pan, two-finger anchored pinch+pan, cancellation, scoped touch-action, accessible zoom buttons | PR #241 / `06abf715d145eaae439fd4f771946a87af1885e8` |
 | #237 | Selective UI transitions, System/On/Off motion override, no delayed unmount | PR #243 / `45f29061209acb14673dd7cb7050c8ed54024a49` |
-| #238 | Integrated production-export proof, runtime exception recording, desktop/mobile environment and screenshot digest | Exit PR and final issue evidence |
+| #238 | Integrated production-export proof, runtime exception recording, desktop/mobile environment and screenshot digest | PR #244 / `a4ab5a8cb70e63134f8398807facca20d8ff421e` |
 
 No child changes sim-core, authored hidden knowledge, content discovery, factories,
 world IDs or expedition save schema. Camera state remains presentation only.
@@ -61,9 +63,54 @@ physical GPU observations are inferred from the screenshot or the VM.
 - UI motion #237 CI **#204**, exact head
   `165ef6bad532a5b4473ae27999b91b0dd7154375`: PASS,
   including production-browser reduced-motion assertions.
-- The integrated #238 gate must separately validate the exact exit PR head
-  and the browser evidence output `PHASE18_INTEGRATED_BROWSER_EVIDENCE`.
-  Do not claim completion while its checks are pending or failed.
+- Integrated exit **#238 CI #206** / run `37712884560`, exact head
+  `c32ea23b269d7cd9f62d5644cd57415776e6d16d`: **PASS**.
+  `npm ci`, **114 deterministic test files PASS / 1 skipped;
+  557 tests PASS / 3 skipped**, typecheck PASS, lint PASS,
+  build/static-export verification PASS, and **1/1 production-browser
+  acceptance PASS** (~63.5 s). The run covered touch long-press as well
+  as the established desktop, mobile, build and configuration regressions.
+
+## Measured integrated headless-browser evidence — CI #206
+
+The production-export browser emitted
+`PHASE18_INTEGRATED_BROWSER_EVIDENCE` at 2026-10-08T01:29:25Z.
+It reported:
+
+- Desktop emulation: HeadlessChrome 154 on Linux, viewport
+  **1440 × 857**, DPR **1**.
+- Mobile emulation: HeadlessChrome 154 on Linux, viewport
+  **390 × 844**, DPR **2**. This is browser emulation, not a physical
+  Android handset.
+- PNG screenshot captured: **269,102 bytes**, SHA-256
+  `94527ad6438f0347db29ec6b9f573f5840ee3a975de45925fd2cfbbba96c3e6a`.
+  PNG bytes were **not retained**, so the hash proves that the capture
+  completed, not the visual quality of the pixels.
+- Uncaught JavaScript runtime exceptions: **0**.
+
+End-of-scenario opt-in browser metrics (mobile-emulated VM, not a
+comparable repeated benchmark; durations in milliseconds):
+
+| Subsystem | Samples | Median | p95 | Max |
+| --- | ---: | ---: | ---: | ---: |
+| Frame interval | 159 | 16.6667 | 28.34 | 48.34 |
+| Simulation step | 53 | 0 | 0.1 | 0.3 |
+| Snapshot | 107 | 0.4 | 0.6 | 1 |
+| World sync | 53 | 0 | 0.1 | 0.2 |
+| Dynamic world draw | 159 | 0 | 0.1 | 0.9 |
+| React render-to-commit | 56 | 0.7 | 1.6 | 3.1 |
+
+Phase 16 art resources: **11**, **6,787 encoded bytes**, **10,087
+transfer bytes**, load duration median **6.8 ms**, p95 **9.8 ms**, max
+**9.8 ms**. Browser-reported concurrency: **4**, reported device memory:
+**16 GiB**.
+
+No conclusion about physical-device frame pacing, GPU acceleration,
+scalability, or representative sustained FPS follows from this short
+emulated end-of-scenario sample. This browser run tested correctness and
+attribution, not a pre-agreed browser FPS threshold. Its p95 frame
+interval is not directly comparable with Phase 16's different
+software-rendered VM scenario.
 
 ## Performance interpretation
 
@@ -85,11 +132,12 @@ browser evidence.
 
 ## Decision and deferrals
 
-Phase 18 may technically close only when the integrated exact-head
-unit/typecheck/lint/build/static-export/browser suite passes without new
-runtime JS exceptions, and all #233–#237 are merged. Record the final exact
-head, CI run, browser viewport/UA, screenshot digest, performance attribution
-and runtime errors in the final #238 issue comment.
+**Phase 18 automated/technical exit criteria have been met.**
+All #233–#237 are merged, and #238 passed the integrated exact-head
+unit/typecheck/lint/build/static-export/production-browser suite with
+zero uncaught runtime exceptions. The acceptance evidence and limits above
+remain explicit; closing the issue does not certify physical-device
+performance or a future visual restyling phase.
 
 **Deferred human review:** physical Android device pan/pinch feel, actual GPU
 frame pacing, subjective animation/visual taste, and broader appearance

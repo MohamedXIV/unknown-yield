@@ -494,6 +494,45 @@ A representative production site can be built without horizontal all-tool catalo
 
 The technical exit gate passed against the built static production export on exact head `d2b25105313cda6e43e962912568d2e374d320a6` in CI #189. Subjective visual polish, visual identity and broader UI redesign remain explicitly deferred to a later, separately selected pass.
 
+## Phase 18 — Camera comfort, mobile touch and Game Configuration
+
+**Epic:** #232. **COMPLETE** through #238 / PR #244 /
+`a4ab5a8cb70e63134f8398807facca20d8ff421e`.
+Approved 2026-10-08 to improve interaction comfort and touch-first usability
+before broad art/visual polish. The interaction and camera layer stays
+presentation-only; sim-core truth and save contracts do not change.
+
+### Canonical delivery
+
+- #233 — **COMPLETE**, smooth camera controller with frame-independent targets,
+  zoom focal anchoring, bounds, Home and reduced-motion mode, PR #239.
+- #234 — **COMPLETE**, discoverable Camera/Controls/Accessibility Game
+  Configuration, bounded versioned preferences and v1 migration, PR #240.
+- #235 — **COMPLETE**, desktop wheel/keyboard/drag camera integration,
+  live settings and anchor-accurate production-browser coverage, PR #240.
+- #236 — **COMPLETE**, safe mobile tap/drag/pan, multi-touch pinch,
+  gesture cancellation and explicit Zoom/Reset buttons, PR #241.
+- #237 — **COMPLETE**, selective CSS UI reveals and persisted
+  System/On/Off reduced-motion preference, PR #243. `motion/react` stays
+  a conditional future choice; no unnecessary dependency added.
+- #238 — **COMPLETE**, integrated desktop/mobile-emulated production export
+  acceptance, PR #244 and CI #206; evidence in
+  [PHASE18_EXIT_REVIEW.md](PHASE18_EXIT_REVIEW.md).
+
+### Exit and deferred judgment
+
+Exact head `c32ea23b269d7cd9f62d5644cd57415776e6d16d`
+passed **557 tests / 3 skipped**, typecheck, lint, build,
+static-export verification and 1/1 production-browser acceptance.
+No uncaught JS exception. The VM captured 390×844 touch emulation,
+a PNG digest and separate frame/subsystem/asset timing results.
+
+The user requested **one consolidated human review later**:
+physical Android multitouch and camera feel, actual GPU pacing,
+animation taste and visual-identity restyling are **DEFERRED**, not PASS.
+The separate Phase 7 32-factory scale budget remains unmet/deferred.
+Do not implicitly start a later product phase or aesthetic restyling.
+
 ## Deferred decisions
 
 Do not prematurely lock:
@@ -539,7 +578,7 @@ User chose to return to gameplay after #96 / PR #97 rather than continue snapsho
 
 Phase 7 performance work is deferred. The fixed 32-factory joint p95 <=10ms gate remains unmet (24.5777ms flowing / 19.6748ms backpressured). Phase 16 later accepted its production-export VM browser engineering gate while explicitly deferring representative physical-device/GPU validation; that does not retroactively satisfy the Phase 7 scale budget. Keep existing evidence and correctness boundaries. Revisit when an actual browser-playability problem or an agreed feature scale requirement justifies it. Old NEXT recommendations in profiling docs are historical candidates, not active assignments.
 
-Roadmap expansion approved on 2026-10-02: Phases 9–16 capture the major post-foundation gameplay discussed but not represented by the earlier execution phases. Canonical epics #100–#107 and children #108–#161 form that completed gameplay queue. Phases 9–16 are complete through their recorded exit decisions. Phase 17 / #217 is also complete through #223 / PR #230, with production-browser evidence recorded in [PHASE17_EXIT_REVIEW.md](PHASE17_EXIT_REVIEW.md). No later gameplay or visual-polish phase is implicitly selected. Phase 7 remains deferred and Phase 8 remains a parallel art-production track.
+Roadmap expansion approved on 2026-10-02: Phases 9–16 capture the major post-foundation gameplay discussed but not represented by the earlier execution phases. Canonical epics #100–#107 and children #108–#161 form that completed gameplay queue. Phases 9–16 are complete through their recorded exit decisions. Phase 17 / #217 is complete through #223 / PR #230, and Phase 18 / #232 through #238 / PR #244 with production-browser evidence in [PHASE17_EXIT_REVIEW.md](PHASE17_EXIT_REVIEW.md) and [PHASE18_EXIT_REVIEW.md](PHASE18_EXIT_REVIEW.md). No later gameplay or visual-polish phase is implicitly selected. Phase 7 remains deferred and Phase 8 remains a parallel art-production track.
 
 
 - [PHASE16_SAVE_COMPATIBILITY.md](PHASE16_SAVE_COMPATIBILITY.md) — Phase 16 #158 supported save/content compatibility and atomic migration boundary.
@@ -547,3 +586,5 @@ Roadmap expansion approved on 2026-10-02: Phases 9–16 capture the major post-f
 - [PHASE16_PLAYTESTING.md](PHASE16_PLAYTESTING.md) — Phase 16 #160 structured production-export playtesting and objective defects fixed.
 - [PHASE16_EXIT_REVIEW.md](PHASE16_EXIT_REVIEW.md) — Phase 16 #161 integrated automated exit review and deferred-human-review boundary.
 - [PHASE17_EXIT_REVIEW.md](PHASE17_EXIT_REVIEW.md) — Phase 17 #223 integrated production-browser UX exit review and deferred visual-polish boundary.
+- [PHASE18_EXIT_REVIEW.md](PHASE18_EXIT_REVIEW.md) — Phase 18 #238 desktop/mobile-emulated engineering exit evidence and deferred human/device review.
+- [PHASE18_UI_MOTION.md](PHASE18_UI_MOTION.md) — UI animation tokens, ownership, reduced-motion overrides and dependency decision.
