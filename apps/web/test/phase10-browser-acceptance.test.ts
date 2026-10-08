@@ -2015,13 +2015,13 @@ browserIt(
         const payload = runtimePackBrowserFixture();
         await evaluate<boolean>(`(() => {
           const menu = document.querySelector('button[aria-label="Game menu"]');
-          menu?.click();
+          if (!document.querySelector('input[aria-label="Choose Studio JSON content pack"]')) menu?.click();
           return true;
         })()`);
         await waitForExpression(`document.querySelector('input[aria-label="Choose Studio JSON content pack"]') !== null`);
         await evaluate<boolean>(`(() => {
           const input = document.querySelector('input[aria-label="Choose Studio JSON content pack"]');
-          const file = new File([\${JSON.stringify(payload)}], "studio-playtest.json", { type: "application/json" });
+          const file = new File([${JSON.stringify(payload)}], "studio-playtest.json", { type: "application/json" });
           const transfer = new DataTransfer();
           transfer.items.add(file);
           input.files = transfer.files;
@@ -2078,6 +2078,7 @@ browserIt(
           return keys.some(k => k.startsWith("industrial-site-save-v15-pack-"));
         })()`)).toBe(true);
         console.log("PHASE19_RUNTIME_PACK_BROWSER " + JSON.stringify({ fingerprint: packEvidence.id, scopedSave: true, reload: true, rollback: true }));
+        expect(runtimeErrors, runtimeErrors.join("\\n")).toEqual([]);
       }
 
       socket.close();
