@@ -1478,6 +1478,70 @@ browserIt(
       })()`);
       expect(afterReset).toEqual({ version: 2, memory: {}, worldSave: true });
 
+      // Read-only camera diagnostics are opt-in; ordinary players do not
+      // expose the probe. These assertions run against the production export.
+      await call("Page.navigate", { url: appUrl + "?perf=1" });
+      await waitForExpression(
+        `typeof window.__UNKNOWN_YIELD_CAMERA__ === "function" &&
+          window.__UNKNOWN_YIELD_CAMERA__()?.zoom > 0`,
+      );
+      const initialCamera = await evaluate<{
+        scrollX: number;
+        scrollY: number;
+        zoom: number;
+      }>(`window.__UNKNOWN_YIELD_CAMERA__()`);
+      await call("Input.dispatchMouseEvent", {
+        type: "mouseWheel",
+        x: 640,
+        y: 420,
+        deltaX: 0,
+        deltaY: -120,
+      });
+      await waitForExpression(
+        `window.__UNKNOWN_YIELD_CAMERA__()?.zoom >
+          ${JSON.stringify(initialCamera.zoom + 0.02)}`,
+      );
+      const zoomedCamera = await evaluate<{
+        scrollX: number;
+        scrollY: number;
+        zoom: number;
+      }>(`window.__UNKNOWN_YIELD_CAMERA__()`);
+      const focusBeforeX = initialCamera.scrollX + 640 / initialCamera.zoom;
+      const focusBeforeY = initialCamera.scrollY + 420 / initialCamera.zoom;
+      expect(
+        Math.abs(zoomedCamera.scrollX + 640 / zoomedCamera.zoom - focusBeforeX),
+      ).toBeLessThan(0.1);
+      expect(
+        Math.abs(zoomedCamera.scrollY + 420 / zoomedCamera.zoom - focusBeforeY),
+      ).toBeLessThan(0.1);
+
+      await call("Input.dispatchKeyEvent", {
+        type: "keyDown",
+        key: "d",
+        code: "KeyD",
+        windowsVirtualKeyCode: 68,
+      });
+      await evaluate<void>(`new Promise((resolve) => setTimeout(resolve, 500))`);
+      await call("Input.dispatchKeyEvent", {
+        type: "keyUp",
+        key: "d",
+        code: "KeyD",
+        windowsVirtualKeyCode: 68,
+      });
+      await waitForExpression(
+        `window.__UNKNOWN_YIELD_CAMERA__()?.scrollX >
+          ${JSON.stringify(zoomedCamera.scrollX + 5)}`,
+      );
+
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Center camera"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `Math.abs(window.__UNKNOWN_YIELD_CAMERA__()?.zoom -
+          ${JSON.stringify(initialCamera.zoom)}) < 0.002`,
+      );
+
       socket.close();
     } catch (error) {
       throw new Error(
