@@ -16,6 +16,12 @@ Your local draft autosaves to `unknown-yield-studio-draft-v1` in local browser s
 6. Save, reload, restore the matching pack world. To compare with vanilla, choose **Start new expedition with built-in content**. Pack-scoped saves stay stored, and an exact original pack can be re-imported later.
 7. Iterate: revise the Studio draft, download a new validated pack and start a **new** test expedition. This never edits or hot-swaps the active world. No Next.js rebuild, code edit, GitHub push or Vercel deployment is required for the new content data.
 
+## Draft compatibility after #254
+
+The existing localStorage key `unknown-yield-studio-draft-v1` is retained. Its internal payload now uses `schema: 2` to distinguish intentionally empty surface-deposit edits from old drafts. Legacy `schema: 1` drafts that predate the deposit authoring table restore the missing surface deposits **from that draft's validated base content** rather than silently losing finite ore fields. Legacy drafts that already carry their own `deposits` table keep their authored values. Version-2 drafts respect a deliberate deletion of all deposits instead of recreating defaults.
+
+This compatibility migration affects **only developer authoring drafts**, not existing game saves, their pack fingerprints, or the authoritative simulation.
+
 ## Guardrails
 
 - The runtime loader is implemented in #251 and validated independently of draft work.
