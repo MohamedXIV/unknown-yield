@@ -98,7 +98,7 @@ export default function Studio() {
         setBase(saved.base);
         setStore(saved.store);
         setKind("material");
-        setSelectedId(saved.store.getTableIds("materials")[0] ?? "");
+        setSelectedId(saved.store.getRowIds("materials")[0] ?? "");
         setRevision((n) => n + 1);
         setMessage("Recovered local Studio draft. Validate & export when ready; the game is unchanged.");
       }
