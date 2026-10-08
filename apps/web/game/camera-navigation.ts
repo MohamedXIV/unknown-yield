@@ -187,6 +187,41 @@ export class CameraNavigation {
     if (this.motion === "instant") this.snap();
   }
 
+  /**
+   * Combined two-finger pan and pinch: the world point previously under the
+   * old gesture center follows the new gesture center as zoom converges.
+   * This does not touch build commands or authoritative simulation state.
+   */
+  pinchBy(
+    factor: number,
+    previousCenter: { x: number; y: number },
+    currentCenter: { x: number; y: number },
+  ): void {
+    if (
+      !Number.isFinite(factor) ||
+      factor <= 0 ||
+      !Number.isFinite(previousCenter.x) ||
+      !Number.isFinite(previousCenter.y) ||
+      !Number.isFinite(currentCenter.x) ||
+      !Number.isFinite(currentCenter.y)
+    ) return;
+    const worldX = this.current.scrollX + previousCenter.x / this.current.zoom;
+    const worldY = this.current.scrollY + previousCenter.y / this.current.zoom;
+    const zoom = clamp(this.target.zoom * factor, this.minZoom, this.maxZoom);
+    this.anchor = {
+      x: currentCenter.x,
+      y: currentCenter.y,
+      worldX,
+      worldY,
+    };
+    this.target = this.bound({
+      zoom,
+      scrollX: worldX - currentCenter.x / zoom,
+      scrollY: worldY - currentCenter.y / zoom,
+    });
+    if (this.motion === "instant") this.snap();
+  }
+
   /** Call once per frame, regardless of whether simulation time is paused. */
   advance(deltaMs: number): CameraView {
     if (this.motion === "instant") {
