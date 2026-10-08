@@ -47,6 +47,7 @@ export type WorldControls = {
   setPreferences(preferences: GamePreferences): void;
   getCameraView(): (CameraView & { target: CameraView }) | null;
   projectWorldPoint(worldX: number, worldY: number): { x: number; y: number } | null;
+  zoomBy(factor: number): void;
   home(): void;
   destroy(): void;
 };
@@ -285,6 +286,13 @@ export function createWorld(
       // request an additional independent touch pointer.
       this.input.addPointer(1);
       this.input.mouse?.disableContextMenu();
+      const cancelNativeTouch = () => this.cancelTouch();
+      this.game.canvas.addEventListener("touchcancel", cancelNativeTouch);
+      this.game.canvas.addEventListener("pointercancel", cancelNativeTouch);
+      this.events.once("shutdown", () => {
+        this.game.canvas.removeEventListener("touchcancel", cancelNativeTouch);
+        this.game.canvas.removeEventListener("pointercancel", cancelNativeTouch);
+      });
       this.input.on("pointermove", (p: Phaser.Input.Pointer) => {
         if (p.wasTouch) {
           const gesture = this.touch.move(
@@ -435,6 +443,13 @@ export function createWorld(
     cancelTouch() {
       this.touch.cancel();
       this.anchor = null;
+    }
+    zoomBy(factor: number) {
+      this.navigation.zoomAt(
+        factor,
+        this.cameras.main.width / 2,
+        this.cameras.main.height / 2,
+      );
     }
     buildUnit() {
       const key = snapshot.materials.find(
@@ -1738,6 +1753,7 @@ export function createWorld(
     },
     getCameraView: () => scene?.getCameraView() ?? null,
     projectWorldPoint: (x, y) => scene?.projectWorldPoint(x, y) ?? null,
+    zoomBy: (factor) => scene?.zoomBy(factor),
     home: () => scene?.home(),
     destroy: () => {
       if (!destroyed) {
