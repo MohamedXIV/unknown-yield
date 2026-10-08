@@ -1817,6 +1817,38 @@ browserIt(
         ),
       ).toBe(platesBeforePinch);
 
+      // Native mobile long-press must open the grouped upward tool menu.
+      // This is different from a synthetic DOM click on the primary tool.
+      const holdPoint = await evaluate<{ x: number; y: number }>(
+        `(() => {
+          const rect = document.querySelector(
+            '[data-build-group="solid-logistics"]'
+          ).getBoundingClientRect();
+          return {
+            x: rect.left + rect.width / 2,
+            y: rect.top + rect.height / 2,
+          };
+        })()`,
+      );
+      await call("Input.dispatchTouchEvent", {
+        type: "touchStart",
+        touchPoints: [{ id: 7, ...holdPoint }],
+      });
+      await evaluate<void>(
+        `new Promise((resolve) => setTimeout(resolve, 450))`,
+      );
+      await waitForExpression(
+        `document.querySelector(".build-submenu") !== null`,
+      );
+      await call("Input.dispatchTouchEvent", {
+        type: "touchEnd",
+        touchPoints: [],
+      });
+      await evaluate(`(() => {
+        document.querySelector(".build-menu-scrim")?.click();
+        return true;
+      })()`);
+
       // Non-pinch accessibility alternatives operate through the same
       // camera controller, and React controls remain operable on mobile.
       const mobileCamera = await evaluate<{ zoom: number }>(
