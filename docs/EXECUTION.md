@@ -207,7 +207,7 @@ GitHub Actions CI is intentionally budget-conscious: it runs the full `npm test`
 - Do not add Rust/WASM without benchmark/profiler evidence.
 - Completed phases are foundations, not active scope: extend their accepted contracts rather than reopening them casually.
 - Phase 7 performance work remains deferred until measured browser/scale evidence justifies reopening it; Phase 8 art work is parallel and explicitly selected only when needed.
-- Phase 10 is complete through #119 / PR #174, Phase 11 through #125 / PR #180, Phase 12 is complete under its recorded decisions, Phase 13 through #138 / PR #192, Phase 14 through #144 / PR #196, Phase 15 through #152 / PR #205, Phase 16 through #161 / PR #216, and **Phase 17 — hierarchical build-tool and interaction UX (#217)** through #223 / PR #230 / `a9f7d8374aec98e42c101c96a8487568a322b225`. No later product phase is implicitly selected.
+- Phase 10 is complete through #119 / PR #174, Phase 11 through #125 / PR #180, Phase 12 under its recorded decisions, Phase 13 through #138 / PR #192, Phase 14 through #144 / PR #196, Phase 15 through #152 / PR #205, Phase 16 through #161 / PR #216, Phase 17 through #223 / PR #230, and **Phase 18 — camera comfort, mobile touch and Game Configuration (#232)** through #238 / PR #244 / `a4ab5a8cb70e63134f8398807facca20d8ff421e`. No later product phase is implicitly selected.
 
 ## Active/later phase epics
 
@@ -255,7 +255,7 @@ The roadmap now records Phases 9–16 for the major gameplay directions that wer
 - Phase 15 — content scale and expedition arc;
 - Phase 16 — production vertical slice.
 
-Canonical GitHub epics and children exist for Phase 9 #100 (#108–#113), Phase 10 #101 (#114–#119), Phase 11 #102 (#120–#125), Phase 12 #103 (#126–#131), Phase 13 #104 (#132–#138), Phase 14 #105 (#139–#144), Phase 15 #106 (#145–#152), Phase 16 #107 (#153–#161), and Phase 17 #217 (#218–#223). Phases 9–17 are complete under their recorded exit decisions. Phase 17 evidence is [PHASE17_EXIT_REVIEW.md](PHASE17_EXIT_REVIEW.md).
+Canonical GitHub epics and children exist for Phase 9 #100 (#108–#113), Phase 10 #101 (#114–#119), Phase 11 #102 (#120–#125), Phase 12 #103 (#126–#131), Phase 13 #104 (#132–#138), Phase 14 #105 (#139–#144), Phase 15 #106 (#145–#152), Phase 16 #107 (#153–#161), Phase 17 #217 (#218–#223), and Phase 18 #232 (#233–#238). Phases 9–18 are technically complete under their recorded exit decisions. See [PHASE17_EXIT_REVIEW.md](PHASE17_EXIT_REVIEW.md) and [PHASE18_EXIT_REVIEW.md](PHASE18_EXIT_REVIEW.md); human device/visual feedback remains deferred.
 
 Phase 7 remains deferred with its accepted unmet performance budget preserved. Phase 8 remains a parallel art-pipeline track and does not block gameplay execution. Do not reopen completed foundations merely because later phases deepen discovery, company systems or logistics; extend the accepted contracts.
 
@@ -310,3 +310,31 @@ Canonical execution:
 Phase 17 is **COMPLETE** through #223 / PR #230 / `a9f7d8374aec98e42c101c96a8487568a322b225`. The accepted model is functional tool groups, short-click effective-primary selection, press-and-hold upward submenus for pointer and group shortcuts, deterministic contextual submenu shortcut precedence, and optional last-used child promotion controlled by persisted Game Configuration preferences. The exact production-browser exit gate passed on head `d2b25105313cda6e43e962912568d2e374d320a6` in CI #189. See [PHASE17_EXIT_REVIEW.md](PHASE17_EXIT_REVIEW.md).
 
 Gameplay/simulation semantics remain unchanged by the Phase 17 interaction layer. Broad visual identity, stylistic polish and the user's “AI-ish” appearance concerns remain deliberately deferred until explicitly selected.
+
+## Phase 18 camera, touch and configuration UX — #232
+
+The user approved improving desktop camera comfort, real mobile touch gestures,
+discoverable settings and restrained UI animation on 2026-10-08. All canonical
+children #233–#238 are **technically COMPLETE**:
+
+- #233 camera target/current navigation, bounded zoom and reduced/instant mode:
+  PR #239, main `ff678e97f6cc0416218666d7b580c045f0f8fef2`.
+- #234 + #235 versioned Game Configuration and live desktop camera controls:
+  PR #240, main `717e4b1a785bbe95a7c37324010abb3274a9ed95`.
+- #236 safe touch drag/tap/pan/pinch and accessible zoom alternatives:
+  PR #241, main `06abf715d145eaae439fd4f771946a87af1885e8`.
+- #237 subtle mount-only CSS motion and System/On/Off reduced motion:
+  PR #243, main `45f29061209acb14673dd7cb7050c8ed54024a49`.
+- #238 integrated production-export browser gate, opt-in measurement and
+  runtime-error evidence: PR #244, main
+  `a4ab5a8cb70e63134f8398807facca20d8ff421e`.
+
+Exit gate CI #206 passed at `c32ea23b269d7cd9f62d5644cd57415776e6d16d`:
+**557 tests pass / 3 skipped**; typecheck, lint, build, static export
+and real desktop/mobile-emulated browser acceptance pass. JS runtime errors: 0.
+Evidence and limitations: [PHASE18_EXIT_REVIEW.md](PHASE18_EXIT_REVIEW.md).
+
+**Deferred, not PASS:** physical Android touch/zoom feel, real-device GPU frame
+pacing and the user's consolidated visual-taste review. Phase 7 scale budget
+remains unmet/deferred; broad UI appearance/visual identity redesign is
+not included or automatically opened by this exit. No Phase 19 is selected.
