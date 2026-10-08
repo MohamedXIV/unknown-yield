@@ -581,10 +581,10 @@ function GameClientInner() {
         : tool === "compressor"
           ? snapshot.gasLogistics?.compressor.cost
           : tool === "pipe" || tool === "tank" || tool === "pump"
-            ? (snapshot.liquidLogistics?.[tool].cost ?? 0) +
+            ? (snapshot.liquidLogistics?.[tool as "pipe" | "tank" | "pump"].cost ?? 0) +
               (snapshot.liquidLogistics?.containmentProfiles.find(
                 (p) => p.id === mode.containmentProfileId,
-              )?.additionalCost[tool] ?? 0)
+              )?.additionalCost[tool as "pipe" | "tank" | "pump"] ?? 0)
             : tool === "factory"
               ? snapshot.map.factoryCellCost
               : tool === "belt"
