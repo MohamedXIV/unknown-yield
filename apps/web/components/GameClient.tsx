@@ -2979,6 +2979,26 @@ function GameClientInner() {
                   </label>
                   <label className="configuration-option">
                     <span>
+                      Construction & production sounds
+                      <small>Mute all in-world feedback without muting the browser.</small>
+                    </span>
+                    <input
+                      type="checkbox"
+                      aria-label="Construction & production sounds"
+                      checked={preferences.interface.soundEffects}
+                      onChange={(event) =>
+                        commitPreferences({
+                          ...preferences,
+                          interface: {
+                            ...preferences.interface,
+                            soundEffects: event.currentTarget.checked,
+                          },
+                        })
+                      }
+                    />
+                  </label>
+                  <label className="configuration-option">
+                    <span>
                       Reduce motion
                       <small>
                         System follows your device preference. On disables
