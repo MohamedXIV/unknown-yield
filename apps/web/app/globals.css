@@ -81,6 +81,9 @@ a {
 }
 .world-host canvas {
   display: block;
+  /* Canvas owns world gestures; DOM panels and menus keep normal touch scroll. */
+  touch-action: none;
+  overscroll-behavior: contain;
 }
 .hud-top {
   position: absolute;
