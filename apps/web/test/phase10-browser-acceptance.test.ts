@@ -1222,7 +1222,7 @@ browserIt(
         };
       })()`);
       expect(preferenceRecord).toEqual({
-        version: 1,
+        version: 2,
         promoteLastUsed: false,
         lastUsedByGroup: {
           processing: "sinterer",
@@ -1366,6 +1366,106 @@ browserIt(
         promoteLastUsed: true,
         thermal: "sealed-furnace",
       });
+
+      // Settings must be discoverable even if the player misses the gear icon.
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Game menu"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector("button")?.ownerDocument.body.textContent
+          ?.includes("Expedition controls") === true`,
+      );
+      await evaluate(`(() => {
+        [...document.querySelectorAll("button")]
+          .find((b) => b.textContent?.includes("Game settings & controls"))
+          ?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector('input[aria-label="Smooth camera motion"]')
+          ?.checked === true &&
+          document.querySelector('input[aria-label="Pan speed"]')?.value === "1" &&
+          document.querySelector('select[aria-label="Reduce motion"]')?.value === "system"`,
+      );
+
+      await evaluate(`(() => {
+        const slider = document.querySelector(
+          'input[aria-label="Pan speed"]'
+        );
+        const setter = Object.getOwnPropertyDescriptor(
+          HTMLInputElement.prototype, "value"
+        ).set;
+        setter.call(slider, "1.7");
+        slider.dispatchEvent(new Event("input", { bubbles: true }));
+        document.querySelector('input[aria-label="Invert mouse wheel zoom"]')
+          ?.click();
+        document.querySelector('input[aria-label="Smooth camera motion"]')
+          ?.click();
+        const select = document.querySelector('select[aria-label="Reduce motion"]');
+        const selectSetter = Object.getOwnPropertyDescriptor(
+          HTMLSelectElement.prototype, "value"
+        ).set;
+        selectSetter.call(select, "on");
+        select.dispatchEvent(new Event("change", { bubbles: true }));
+        return true;
+      })()`);
+      await waitForExpression(
+        `(() => {
+          const saved = JSON.parse(localStorage.getItem(
+            "unknown-yield-game-preferences") || "null"
+          );
+          return saved?.version === 2 &&
+            saved.camera.smooth === false &&
+            saved.camera.panSpeed === 1.7 &&
+            saved.controls.invertWheelZoom === true &&
+            saved.accessibility.reducedMotion === "on";
+        })()`,
+      );
+
+      await call("Page.navigate", { url: appUrl });
+      await waitForExpression(
+        `document.readyState === "complete" &&
+          !!document.querySelector('button[aria-label="Game configuration"]')`,
+      );
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Game configuration"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector('input[aria-label="Pan speed"]')?.value === "1.7" &&
+          document.querySelector('input[aria-label="Smooth camera motion"]')
+            ?.checked === false &&
+          document.querySelector('select[aria-label="Reduce motion"]')?.value === "on"`,
+      );
+
+      await evaluate(`(() => {
+        [...document.querySelectorAll("button")]
+          .find((b) => b.textContent?.includes("Reset configuration to defaults"))
+          ?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector('input[aria-label="Pan speed"]')?.value === "1" &&
+          document.querySelector('input[aria-label="Smooth camera motion"]')
+            ?.checked === true &&
+          document.querySelector('select[aria-label="Reduce motion"]')?.value === "system"`,
+      );
+      const afterReset = await evaluate<{
+        version: number;
+        memory: Record<string, string>;
+        worldSave: boolean;
+      }>(`(() => {
+        const saved = JSON.parse(localStorage.getItem(
+          "unknown-yield-game-preferences") || "null"
+        );
+        return {
+          version: saved.version,
+          memory: saved.buildPalette.lastUsedByGroup,
+          worldSave: localStorage.getItem("industrial-site-save-v15") !== null,
+        };
+      })()`);
+      expect(afterReset).toEqual({ version: 2, memory: {}, worldSave: true });
 
       socket.close();
     } catch (error) {
