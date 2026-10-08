@@ -44,7 +44,7 @@ export type WorldControls = {
   setSnapshot(s: PlayerSnapshot): void;
   setMode(mode: WorldMode): void;
   setPreferences(preferences: GamePreferences): void;
-  getCameraView(): CameraView | null;
+  getCameraView(): (CameraView & { target: CameraView }) | null;
   home(): void;
   destroy(): void;
 };
@@ -406,8 +406,10 @@ export function createWorld(
       if (initial) this.navigation.reset(this.navigation.getTarget());
       this.applyCamera(this.navigation.getView());
     }
-    getCameraView(): CameraView | null {
-      return this.navigation?.getView() ?? null;
+    getCameraView(): (CameraView & { target: CameraView }) | null {
+      return this.navigation
+        ? { ...this.navigation.getView(), target: this.navigation.getTarget() }
+        : null;
     }
     private applyCamera(view: CameraView) {
       this.cameras.main.setZoom(view.zoom);
