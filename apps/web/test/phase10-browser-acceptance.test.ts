@@ -901,6 +901,15 @@ browserIt(
         window.dispatchEvent(new KeyboardEvent("keyup", { key: "Home" }));
         return true;
       })()`);
+      await waitForExpression(
+        `(() => {
+          const camera = window.__UNKNOWN_YIELD_CAMERA__?.();
+          return camera?.target &&
+            Math.abs(camera.scrollX - camera.target.scrollX) < 0.05 &&
+            Math.abs(camera.scrollY - camera.target.scrollY) < 0.05 &&
+            Math.abs(camera.zoom - camera.target.zoom) < 0.0001;
+        })()`,
+      );
 
       const factoryPoint = await evaluate<{ x: number; y: number }>(`(() => {
         const canvas = document.querySelector("canvas");
