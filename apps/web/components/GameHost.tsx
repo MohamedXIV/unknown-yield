@@ -22,11 +22,18 @@ export default function GameHost({
     fpsOutput = useRef<HTMLOutputElement>(null),
     latest = useRef({ mode, actions, preferences });
   const [error, setError] = useState("");
+  // The parent recreates the actions bridge when its 100ms simulation
+  // snapshot updates. Keep callbacks fresh without reapplying Phaser camera
+  // preferences and mode on every unrelated React commit.
   useEffect(() => {
     latest.current = { mode, actions, preferences };
-    controls.current?.setMode(mode);
-    controls.current?.setPreferences(preferences);
   }, [mode, actions, preferences]);
+  useEffect(() => {
+    controls.current?.setMode(mode);
+  }, [mode]);
+  useEffect(() => {
+    controls.current?.setPreferences(preferences);
+  }, [preferences]);
   useEffect(() => {
     let cancelled = false,
       teardown: (() => void) | undefined;
