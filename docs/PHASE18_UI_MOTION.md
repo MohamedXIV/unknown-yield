@@ -1,6 +1,6 @@
 # Phase 18 — Restrained UI motion contract (#237)
 
-Status: implementation candidate; browser acceptance and merge are required before completion.
+Status: merged through PR #243 (main `45f29061209acb14673dd7cb7050c8ed54024a49`); canonical CI #204 passed the production-export browser motion and reduced-motion checks. Physical-device visual feel remains deferred.
 
 ## Ownership and decision
 
