@@ -1,7 +1,15 @@
 "use client";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { I18nextProvider, useTranslation } from "react-i18next";
-import { i18n } from "../game/i18n";
+import { i18n, setRuntimeContentLocale } from "../game/i18n";
+import {
+  clearRuntimePack,
+  loadRuntimePack,
+  MAX_RUNTIME_PACK_BYTES,
+  parseRuntimePack,
+  saveRuntimePack,
+  type RuntimePack,
+} from "../game/runtime-content";
 import { machineStatusLabel } from "../game/machine-status";
 import { factoryContractPresentation } from "../game/factory-presentation";
 import { beltArms } from "@site/sim-core";
@@ -164,7 +172,10 @@ function GameClientInner() {
     [openToolGroup, setOpenToolGroup] = useState<ToolGroupId | null>(null),
     [preferences, setPreferences] = useState<GamePreferences>(
       DEFAULT_GAME_PREFERENCES,
-    );
+    ),
+    [activePack, setActivePack] = useState<RuntimePack | null>(null),
+    [pendingPack, setPendingPack] = useState<RuntimePack | null>(null),
+    [packReady, setPackReady] = useState(false);
   const cancelGroupHold = useRef<(() => void) | null>(null);
   const suppressGroupClick = useRef<ToolGroupId | null>(null);
   const keyboardGroupHold = useRef<{
@@ -199,6 +210,23 @@ function GameClientInner() {
     () => session.subscribe(() => setSnapshot(session.snapshot())),
     [session],
   );
+  useEffect(() => {
+    let cancelled = false;
+    void loadRuntimePack(window.localStorage)
+      .then((pack) => {
+        if (cancelled || !pack) return;
+        // Source selection always creates a new world, before Phaser mounts.
+        session.usePack(pack);
+        setRuntimeContentLocale(pack.bundle.locale);
+        setActivePack(pack);
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) setNotice({ ok: false, message:
+          "Stored content pack rejected; built-in content remains active. " + String(error) });
+      })
+      .finally(() => { if (!cancelled) setPackReady(true); });
+    return () => { cancelled = true; };
+  }, [session]);
   useEffect(() => {
     const hide = () => session.suspend();
     document.addEventListener("visibilitychange", hide);
@@ -264,6 +292,41 @@ function GameClientInner() {
       setPanel(null);
     }
     return result;
+  };
+  const importPack = async (file: File | undefined) => {
+    if (!file) return;
+    setPendingPack(null);
+    try {
+      if (file.size > MAX_RUNTIME_PACK_BYTES)
+        throw new Error("Pack exceeds 2 MiB limit");
+      const pack = await parseRuntimePack(await file.text());
+      setPendingPack(pack);
+      setNotice({ ok: true, message: "Pack validated: " + pack.fingerprint.slice(0, 12) + ". Start a new test expedition to use it." });
+    } catch (error) {
+      setNotice({ ok: false, message: "Content pack rejected: " + String(error) });
+    }
+  };
+  const choosePack = (pack: RuntimePack | null) => {
+    try {
+      // An explicit new expedition is the only point where content changes.
+      session.usePack(pack);
+      setRuntimeContentLocale(pack?.bundle.locale ?? null);
+      setActivePack(pack);
+      setPendingPack(null);
+      setMode(DEFAULT_MODE);
+      setPanel(null);
+      setConfirmReset(false);
+      setGuide(true);
+      setHomeToken((n) => n + 1);
+      try {
+        if (pack) saveRuntimePack(window.localStorage, pack);
+        else clearRuntimePack(window.localStorage);
+      } catch {
+        setNotice({ ok: false, message: "Expedition started, but selected content could not be remembered for a reload. Export your work and avoid saving until storage is available." });
+      }
+    } catch (error) {
+      setNotice({ ok: false, message: "Could not start expedition: " + String(error) });
+    }
   };
   const persist = (load: boolean) => {
     try {
@@ -739,7 +802,8 @@ function GameClientInner() {
       className="game"
       data-motion-mode={preferences.accessibility.reducedMotion}
     >
-      <GameHost
+      {packReady ? <GameHost
+        key={activePack?.fingerprint ?? "built-in"}
         session={session}
         mode={mode}
         homeToken={homeToken}
@@ -753,7 +817,7 @@ function GameClientInner() {
             setMode((m) => ({ ...m, direction: (m.direction + 1) % 4 })),
           toggleFactory,
         }}
-      />
+      /> : <div className="world-host" role="status">Validating selected content pack…</div>}
       <header className="hud-top">
         <div className="site-mark">
           <span className="brand-symbol">Y</span>
@@ -3051,6 +3115,37 @@ function GameClientInner() {
                   Saved locally on this device. Worlds pause while the tab is
                   hidden. Old fixed-site saves are incompatible.
                 </p>
+                <section className="configuration-section">
+                  <h3>Offline content packs</h3>
+                  <p className="hint">Import a validated Studio JSON bundle into this already-built client. Selecting it always starts a NEW expedition; existing saves stay separate.</p>
+                  <p className="hint">Active: {activePack ? "Imported · " + activePack.fingerprint.slice(0, 12) : "Built-in content"}</p>
+                  <label className="configuration-option">
+                    <span>Choose Studio JSON bundle (max 2 MiB)</span>
+                    <input
+                      type="file"
+                      accept=".json,application/json"
+                      aria-label="Choose Studio JSON content pack"
+                      onChange={(event) => {
+                        void importPack(event.currentTarget.files?.[0]);
+                        event.currentTarget.value = "";
+                      }}
+                    />
+                  </label>
+                  {pendingPack && (
+                    <div className="reset-confirm">
+                      <p>Validated SHA-256: {pendingPack.fingerprint.slice(0, 16)}. Start a NEW expedition? Unsaved world progress will be lost; all existing saved worlds remain stored.</p>
+                      <button className="primary" onClick={() => choosePack(pendingPack)}>
+                        Play new expedition with imported pack
+                      </button>
+                      <button className="secondary" onClick={() => setPendingPack(null)}>Cancel import</button>
+                    </div>
+                  )}
+                  {activePack && (
+                    <button className="secondary" onClick={() => choosePack(null)}>
+                      Start new expedition with built-in content
+                    </button>
+                  )}
+                </section>
                 <h3>Controls</h3>
                 <dl className="controls-list">
                   <dt>Pan</dt>
