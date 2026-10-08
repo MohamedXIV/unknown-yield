@@ -51,6 +51,7 @@ export type WorldControls = {
   setMode(mode: WorldMode): void;
   setPreferences(preferences: GamePreferences): void;
   getCameraView(): (CameraView & { target: CameraView }) | null;
+  getFps(): number | null;
   projectWorldPoint(worldX: number, worldY: number): { x: number; y: number } | null;
   zoomBy(factor: number): void;
   home(): void;
@@ -1801,6 +1802,11 @@ export function createWorld(
       scene?.setCameraPreferences(next);
     },
     getCameraView: () => scene?.getCameraView() ?? null,
+    // Phaser already estimates its render-loop cadence. Avoid an extra RAF
+    // or a React state update for each frame just to show a counter.
+    getFps: () => scene && Number.isFinite(game.loop.actualFps)
+      ? game.loop.actualFps
+      : null,
     projectWorldPoint: (x, y) => scene?.projectWorldPoint(x, y) ?? null,
     zoomBy: (factor) => scene?.zoomBy(factor),
     home: () => scene?.home(),
