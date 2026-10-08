@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { clearStudioDraft, restoreStudioDraft, saveStudioDraft } from "../game/studio-draft";
 import { enCatalog, fixture, type Content } from "@site/content";
 import {
   createContentStore,
@@ -88,6 +89,37 @@ export default function Studio() {
     "Development authoring surface — canonical spoilers are visible here.",
   );
   const [preview, setPreview] = useState<StudioReactionPreview | null>(null);
+  const [draftReady, setDraftReady] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = restoreStudioDraft(window.localStorage);
+      if (saved) {
+        setBase(saved.base);
+        setStore(saved.store);
+        setKind("material");
+        setSelectedId(saved.store.getTableIds("materials")[0] ?? "");
+        setRevision((n) => n + 1);
+        setMessage("Recovered local Studio draft. Validate & export when ready; the game is unchanged.");
+      }
+    } catch (error) {
+      setMessage("Local Studio draft could not be restored: " + errorText(error));
+    } finally {
+      setDraftReady(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!draftReady) return;
+    const timer = window.setTimeout(() => {
+      try {
+        saveStudioDraft(window.localStorage, base, store);
+      } catch (error) {
+        setMessage("Draft could not be autosaved: " + errorText(error));
+      }
+    }, 350);
+    return () => window.clearTimeout(timer);
+  }, [base, store, revision, draftReady]);
 
   let currentContent = base;
   let validationError = "";
@@ -1119,6 +1151,28 @@ export default function Studio() {
                 className="secondary"
                 onClick={() =>
                   perform(() => {
+                    const serialized = serializeStudioBundle(store, base);
+                    const bundle = parseStudioBundle(serialized);
+                    const blob = new Blob([serialized], { type: "application/json" });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.download = "unknown-yield-" +
+                      bundle.content.version.replace(/[^a-zA-Z0-9_-]/g, "-") + ".json";
+                    document.body.append(link);
+                    link.click();
+                    link.remove();
+                    window.setTimeout(() => URL.revokeObjectURL(url), 2000);
+                    setMessage("Validated pack downloaded. Open the game → Expedition controls → Offline content packs → import this JSON → start a new test expedition. No rebuild needed.");
+                  })
+                }
+              >
+                Download validated playtest pack
+              </button>
+              <button
+                className="secondary"
+                onClick={() =>
+                  perform(() => {
                     const bundle = parseStudioBundle(json);
                     const nextStore = createContentStore(
                       bundle.content,
@@ -1137,6 +1191,21 @@ export default function Studio() {
                 Import bundle
               </button>
             </div>
+            <p className="hint">The Studio draft autosaves separately from game saves. Only validated bundles can be downloaded or imported into a new expedition; broken drafts stay editable here.</p>
+            <button className="secondary" onClick={() => {
+              if (!window.confirm("Discard your Studio draft and return to the built-in authoring baseline? Game saves and published packs are not affected.")) return;
+              clearStudioDraft(window.localStorage);
+              setBase(structuredClone(fixture));
+              setStore(createContentStore(fixture, enCatalog));
+              setKind("material");
+              setSelectedId(fixture.materials[0].id);
+              setJson("");
+              setPreview(null);
+              setRevision((n) => n + 1);
+              setMessage("Studio draft reset. Existing game saves were not modified.");
+            }}>
+              Reset Studio draft to built-in content
+            </button>
             <textarea
               aria-label="Versioned Studio bundle"
               value={json}
