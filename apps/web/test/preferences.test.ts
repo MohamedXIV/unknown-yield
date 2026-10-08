@@ -17,6 +17,8 @@ it("uses deep-copy Game Configuration defaults if storage is empty", () => {
     DEFAULT_GAME_PREFERENCES.buildPalette.lastUsedByGroup,
   );
   expect(preferences.camera).not.toBe(DEFAULT_GAME_PREFERENCES.camera);
+  expect(preferences.interface).not.toBe(DEFAULT_GAME_PREFERENCES.interface);
+  expect(preferences.interface.showFps).toBe(false);
 });
 
 it("persists camera, input and palette preferences outside expedition saves", () => {
@@ -34,6 +36,7 @@ it("persists camera, input and palette preferences outside expedition saves", ()
       inertia: 0.1,
     },
     controls: { invertWheelZoom: true },
+    interface: { showFps: true },
     accessibility: { reducedMotion: "on" },
   });
 
@@ -67,6 +70,7 @@ it("migrates valid v1 data preserving last-used memory and the old toggle", () =
   expect(migrated.buildPalette).toEqual(v1.buildPalette);
   expect(migrated.camera).toEqual(DEFAULT_GAME_PREFERENCES.camera);
   expect(migrated.controls).toEqual(DEFAULT_GAME_PREFERENCES.controls);
+  expect(migrated.interface).toEqual(DEFAULT_GAME_PREFERENCES.interface);
   expect(migrated.accessibility).toEqual(DEFAULT_GAME_PREFERENCES.accessibility);
 });
 
@@ -84,6 +88,7 @@ it("clamps bounded tuning and repairs invalid v2 fields independently", () => {
       inertia: Number.NaN,
     },
     controls: { invertWheelZoom: true },
+    interface: { showFps: "sometimes" },
     accessibility: { reducedMotion: "unrecognized" },
   });
   expect(parsed.buildPalette.lastUsedByGroup).toEqual({ thermal: "furnace" });
@@ -94,7 +99,28 @@ it("clamps bounded tuning and repairs invalid v2 fields independently", () => {
     inertia: DEFAULT_GAME_PREFERENCES.camera.inertia,
   });
   expect(parsed.controls.invertWheelZoom).toBe(true);
+  expect(parsed.interface.showFps).toBe(false);
   expect(parsed.accessibility.reducedMotion).toBe("system");
+});
+
+it("migrates older version 2 settings without an FPS field in place", () => {
+  const legacy = {
+    version: 2,
+    buildPalette: {
+      promoteLastUsed: false,
+      lastUsedByGroup: { thermal: "furnace" },
+    },
+    camera: { smooth: false, panSpeed: 1.7, zoomSensitivity: 0.8, inertia: 0.2 },
+    controls: { invertWheelZoom: true },
+    accessibility: { reducedMotion: "on" },
+  };
+  const next = normalizeGamePreferences(legacy);
+  expect(next.version).toBe(2);
+  expect(next.buildPalette).toEqual(legacy.buildPalette);
+  expect(next.camera).toEqual(legacy.camera);
+  expect(next.controls).toEqual(legacy.controls);
+  expect(next.accessibility).toEqual(legacy.accessibility);
+  expect(next.interface.showFps).toBe(false);
 });
 
 it("recovers from malformed, unsupported and incomplete preference records", () => {
