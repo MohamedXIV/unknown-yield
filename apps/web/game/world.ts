@@ -41,6 +41,7 @@ import {
   type GamePreferences,
 } from "./preferences";
 import {
+  browserPerformanceEnabled,
   finishBrowserMetric,
   recordBrowserMetric,
   recordCameraPacing,
@@ -267,9 +268,14 @@ export function createWorld(
       // texture. The original ground was the bottommost display object.
       const worldWidth = snapshot.map.width * X;
       const worldHeight = snapshot.map.height * Y;
+      const renderer = this.game.renderer;
+      const gl = "gl" in renderer ? renderer.gl : null;
+      const gpuLimit = gl ? Number(gl.getParameter(gl.MAX_TEXTURE_SIZE)) : 4096;
+      const textureLimit = Number.isFinite(gpuLimit) && gpuLimit > 0
+        ? Math.min(4096, gpuLimit) : 4096;
       const canBakeGround =
         worldWidth > 0 && worldHeight > 0 &&
-        worldWidth <= 4096 && worldHeight <= 4096 &&
+        worldWidth <= textureLimit && worldHeight <= textureLimit &&
         worldWidth * worldHeight <= 4_194_304;
       if (canBakeGround) {
         const groundKey = "site:static-ground";
@@ -1503,19 +1509,22 @@ export function createWorld(
           this.navigation.panByWorld(x * speed * scale, y * speed * scale);
         }
       }
-      const previousView = this.navigation.getView();
+      // Do not allocate / compute any instrumentation data during
+      // ordinary gameplay. Frame tracking is explicitly opt-in via ?perf=1.
+      const previousView = browserPerformanceEnabled()
+        ? this.navigation.getView() : null;
       const nextView = this.navigation.advance(delta);
       this.applyCamera(nextView);
-      // Track actual navigation pacing at normal vs close zoom without
-      // introducing a separate RAF/React loop or recording player data.
-      recordCameraPacing(
-        nextView.zoom / this.homeZoom(),
-        delta,
-        Math.hypot(
-          (nextView.scrollX - previousView.scrollX) * nextView.zoom,
-          (nextView.scrollY - previousView.scrollY) * nextView.zoom,
-        ),
-      );
+      if (previousView) {
+        recordCameraPacing(
+          nextView.zoom / this.homeZoom(),
+          delta,
+          Math.hypot(
+            (nextView.scrollX - previousView.scrollX) * nextView.zoom,
+            (nextView.scrollY - previousView.scrollY) * nextView.zoom,
+          ),
+        );
+      }
       this.grid.setVisible(mode.tool !== "select");
       // Camera movement alone never changes world-space overlay geometry.
       // Preserve the last Graphics buffers instead of clearing and rebuilding
