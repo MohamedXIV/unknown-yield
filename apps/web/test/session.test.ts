@@ -40,6 +40,26 @@ it("shares a single snapshot projection across listeners until the world changes
   expect(readings).toHaveLength(subscribersBefore);
 });
 
+it("invalidates the cached projection only after a successful restore", () => {
+  const current = new Session();
+  current.advance(1000, false);
+  current.advance(1100, false);
+  const records = new Map<string, string>();
+  expect(current.save({ setItem: (key, value) => records.set(key, value) }).ok).toBe(true);
+
+  const restored = new Session();
+  const stale = restored.snapshot();
+  expect(restored.restore({
+    getItem: (key) => records.get(key) ?? null,
+  }).ok).toBe(true);
+  expect(restored.snapshot()).not.toBe(stale);
+  expect(restored.snapshot().tick).toBe(1);
+  const loaded = restored.snapshot();
+
+  expect(restored.restore({ getItem: () => "{bad-json" }).ok).toBe(false);
+  expect(restored.snapshot()).toBe(loaded);
+});
+
 it("does not catch up hidden time and bounds a stalled frame", () => {
   const s = new Session();
   s.advance(1000, false);
