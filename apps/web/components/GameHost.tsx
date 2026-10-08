@@ -48,11 +48,20 @@ export default function GameHost({
           latest.current.preferences,
         );
         controls.current = world;
+        // Opt-in read-only browser evidence for camera input acceptance.
+        const probeWindow = window as Window & {
+          __UNKNOWN_YIELD_CAMERA__?: () => ReturnType<WorldControls["getCameraView"]>;
+        };
+        const cameraProbe = new URLSearchParams(window.location.search).get("perf") === "1";
+        if (cameraProbe)
+          probeWindow.__UNKNOWN_YIELD_CAMERA__ = () =>
+            controls.current?.getCameraView() ?? null;
         const unsubscribe = session.subscribe(() =>
           world.setSnapshot(session.snapshot()),
         );
         teardown = () => {
           unsubscribe();
+          if (cameraProbe) delete probeWindow.__UNKNOWN_YIELD_CAMERA__;
           controls.current = null;
           world.destroy();
         };
