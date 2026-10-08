@@ -1610,9 +1610,6 @@ browserIt(
           ?.accessibility?.reducedMotion === "system"`,
       );
 
-
-
-
       // Read-only camera diagnostics are opt-in; ordinary players do not
       // expose the probe. These assertions run against the production export.
       await call("Page.navigate", { url: appUrl });
