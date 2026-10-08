@@ -31,6 +31,7 @@ import {
 import { deriveFeedbackEvents, type FeedbackEvent } from "./feedback";
 import { IndustrialFeedbackAudio } from "./audio-feedback";
 import { CameraNavigation, type CameraView } from "./camera-navigation";
+import { TouchGestureArbiter, type TouchPoint } from "./touch-gesture";
 import {
   DEFAULT_GAME_PREFERENCES,
   type GamePreferences,
@@ -91,6 +92,7 @@ export function createWorld(
     private hover: Point | null = null;
     private anchor: Point | null = null;
     private keys = new Set<string>();
+    private readonly touch = new TouchGestureArbiter();
     private navigation!: CameraNavigation;
     private viewportWidth = 0;
     private viewportHeight = 0;
@@ -279,8 +281,28 @@ export function createWorld(
       this.events.once("shutdown", () =>
         this.reducedMotionQuery?.removeEventListener("change", mediaChanged),
       );
+      // The default pointer allocation is not enough for dependable pinch:
+      // request an additional independent touch pointer.
+      this.input.addPointer(1);
       this.input.mouse?.disableContextMenu();
       this.input.on("pointermove", (p: Phaser.Input.Pointer) => {
+        if (p.wasTouch) {
+          const gesture = this.touch.move(
+            p.id,
+            { x: p.x, y: p.y },
+            mode.tool === "select" ? "inspect" : "build",
+          );
+          if (gesture?.kind === "pan")
+            this.navigation.panByScreen(gesture.dx, gesture.dy);
+          if (gesture?.kind === "pinch")
+            this.navigation.pinchBy(
+              Math.pow(gesture.scale, preferences.camera.zoomSensitivity),
+              gesture.previous,
+              gesture.current,
+            );
+          this.hover = null;
+          return;
+        }
         if (p.isDown && (p.rightButtonDown() || p.middleButtonDown())) {
           this.navigation.panByScreen(
             p.x - p.prevPosition.x,
@@ -291,11 +313,35 @@ export function createWorld(
       });
       this.input.on("pointerdown", (p: Phaser.Input.Pointer) => {
         void feedbackAudio.enable();
+        if (p.wasTouch) {
+          const result = this.touch.down(p.id, { x: p.x, y: p.y });
+          if (result?.kind === "cancel-build") this.anchor = null;
+          return;
+        }
         if (!p.leftButtonDown()) return;
         this.hover = this.cell(p);
         this.anchor = this.hover;
       });
       this.input.on("pointerup", (p: Phaser.Input.Pointer) => {
+        if (p.wasTouch) {
+          const gesture = this.touch.up(
+            p.id,
+            { x: p.x, y: p.y },
+            mode.tool === "select" ? "inspect" : "build",
+          );
+          if (gesture?.kind === "tap")
+            actions.select(
+              hitTest(snapshot, this.screenCell(gesture.point), mode.openFactories),
+            );
+          if (gesture?.kind === "build") {
+            const origin = this.screenCell(gesture.start);
+            const end = this.screenCell(gesture.end);
+            const command = buildCommand(mode, snapshot, end, origin);
+            if (command) actions.command(command);
+          }
+          this.anchor = null;
+          return;
+        }
         if (p.button !== 0 || !this.anchor) return;
         const cell = this.cell(p);
         if (mode.tool === "select") {
@@ -309,8 +355,11 @@ export function createWorld(
       });
       this.input.on("gameout", () => {
         this.hover = null;
+        this.touch.cancel();
+        this.anchor = null;
       });
-      this.input.on("pointerupoutside", () => {
+      this.input.on("pointerupoutside", (p: Phaser.Input.Pointer) => {
+        if (p.wasTouch) this.touch.cancel(p.id);
         this.anchor = null;
       });
       this.input.on(
@@ -362,6 +411,7 @@ export function createWorld(
       const up = (e: KeyboardEvent) => this.keys.delete(e.key.toLowerCase());
       const blur = () => {
         this.keys.clear();
+        this.touch.cancel();
         this.anchor = null;
       };
       window.addEventListener("keydown", down);
@@ -375,9 +425,16 @@ export function createWorld(
       this.rebuild();
       this.refresh();
     }
-    cell(p: Phaser.Input.Pointer): Point {
+    private screenCell(p: TouchPoint): Point {
       const w = this.cameras.main.getWorldPoint(p.x, p.y);
       return { x: Math.floor(w.x / X), y: Math.floor(w.y / Y) };
+    }
+    cell(p: Phaser.Input.Pointer): Point {
+      return this.screenCell({ x: p.x, y: p.y });
+    }
+    cancelTouch() {
+      this.touch.cancel();
+      this.anchor = null;
     }
     buildUnit() {
       const key = snapshot.materials.find(
@@ -1671,6 +1728,7 @@ export function createWorld(
     },
     setMode: (m) => {
       const rebuild = mode.openFactories.join() !== m.openFactories.join();
+      if (m.tool !== mode.tool) scene?.cancelTouch();
       mode = m;
       if (rebuild) scene?.markDirty();
     },
