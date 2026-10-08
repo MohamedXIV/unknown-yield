@@ -13,8 +13,27 @@ export type MetricSummary = {
   maxMs: number;
 };
 
+export type CameraZoomBand = "far" | "normal" | "close";
+
+export type CameraPacingSummary = {
+  frames: number;
+  movingFrames: number;
+  over33ms: number;
+  over100ms: number;
+  frameInterval: MetricSummary;
+};
+
+type CameraPacingSample = {
+  zoomRatio: number;
+  intervalMs: number;
+  travelPx: number;
+};
+
 export type BrowserPerformanceReport = {
   collectedAt: string;
+  // Opt-in, diagnostic only: frame intervals grouped by relative zoom.
+  // Does not distinguish CPU from GPU stalls or measure physical display FPS.
+  cameraPacing: Record<CameraZoomBand, CameraPacingSummary>;
   metrics: Partial<Record<BrowserPerformanceMetric, MetricSummary>>;
   assets: {
     count: number;
@@ -34,6 +53,14 @@ export type BrowserPerformanceReport = {
 };
 
 const MAX_SAMPLES_PER_METRIC = 20_000;
+const MAX_CAMERA_SAMPLES = 4_000;
+const EMPTY_FRAME_PACING = () => ({
+  frames: 0,
+  movingFrames: 0,
+  over33ms: 0,
+  over100ms: 0,
+  frameInterval: summarizeDurations([]),
+});
 
 function rounded(value: number): number {
   return Math.round(value * 10_000) / 10_000;
@@ -55,6 +82,45 @@ export function summarizeDurations(values: readonly number[]): MetricSummary {
 
 export class BrowserPerformanceRecorder {
   private samples = new Map<BrowserPerformanceMetric, number[]>();
+  private cameraSamples: CameraPacingSample[] = [];
+
+  recordCameraPacing(
+    zoomRatio: number,
+    intervalMs: number,
+    travelPx: number,
+  ): void {
+    if (
+      !Number.isFinite(zoomRatio) || zoomRatio <= 0 ||
+      !Number.isFinite(intervalMs) || intervalMs < 0 ||
+      !Number.isFinite(travelPx) || travelPx < 0
+    ) return;
+    this.cameraSamples.push({ zoomRatio, intervalMs, travelPx });
+    if (this.cameraSamples.length > MAX_CAMERA_SAMPLES)
+      this.cameraSamples.splice(0, this.cameraSamples.length - MAX_CAMERA_SAMPLES);
+  }
+
+  cameraPacing(): Record<CameraZoomBand, CameraPacingSummary> {
+    const bands: Record<CameraZoomBand, CameraPacingSample[]> = {
+      far: [], normal: [], close: [],
+    };
+    for (const sample of this.cameraSamples) {
+      const band = sample.zoomRatio < 0.85
+        ? "far" : sample.zoomRatio < 1.5 ? "normal" : "close";
+      bands[band].push(sample);
+    }
+    const summarize = (samples: CameraPacingSample[]): CameraPacingSummary => ({
+      frames: samples.length,
+      movingFrames: samples.filter((sample) => sample.travelPx > 0.1).length,
+      over33ms: samples.filter((sample) => sample.intervalMs > 33.4).length,
+      over100ms: samples.filter((sample) => sample.intervalMs > 100).length,
+      frameInterval: summarizeDurations(samples.map((sample) => sample.intervalMs)),
+    });
+    return {
+      far: bands.far.length ? summarize(bands.far) : EMPTY_FRAME_PACING(),
+      normal: bands.normal.length ? summarize(bands.normal) : EMPTY_FRAME_PACING(),
+      close: bands.close.length ? summarize(bands.close) : EMPTY_FRAME_PACING(),
+    };
+  }
 
   record(metric: BrowserPerformanceMetric, durationMs: number): void {
     if (!Number.isFinite(durationMs) || durationMs < 0) return;
@@ -67,6 +133,7 @@ export class BrowserPerformanceRecorder {
 
   reset(): void {
     this.samples.clear();
+    this.cameraSamples = [];
   }
 
   metric(metric: BrowserPerformanceMetric): MetricSummary {
@@ -115,6 +182,16 @@ export function recordBrowserMetric(
     productionPerformance.record(metric, durationMs);
 }
 
+/** No-op unless ?perf=1. Zoom is relative to Home; travel is screen pixels. */
+export function recordCameraPacing(
+  relativeZoom: number,
+  intervalMs: number,
+  travelPx: number,
+): void {
+  if (browserPerformanceEnabled())
+    productionPerformance.recordCameraPacing(relativeZoom, intervalMs, travelPx);
+}
+
 function assetTimings() {
   if (typeof performance === "undefined" || !performance.getEntriesByType)
     return {
@@ -152,6 +229,7 @@ export function browserPerformanceReport(): BrowserPerformanceReport {
   return {
     collectedAt: new Date().toISOString(),
     metrics: productionPerformance.metrics(),
+    cameraPacing: productionPerformance.cameraPacing(),
     assets: assetTimings(),
     environment: {
       userAgent: navigator.userAgent,

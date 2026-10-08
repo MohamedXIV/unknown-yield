@@ -30,15 +30,21 @@ import {
 } from "./art-assets";
 import { deriveFeedbackEvents, type FeedbackEvent } from "./feedback";
 import { IndustrialFeedbackAudio } from "./audio-feedback";
-import { CameraNavigation, type CameraView } from "./camera-navigation";
+import {
+  CameraNavigation,
+  cameraZoomLimits,
+  type CameraView,
+} from "./camera-navigation";
 import { TouchGestureArbiter, type TouchPoint } from "./touch-gesture";
 import {
   DEFAULT_GAME_PREFERENCES,
   type GamePreferences,
 } from "./preferences";
 import {
+  browserPerformanceEnabled,
   finishBrowserMetric,
   recordBrowserMetric,
+  recordCameraPacing,
   startBrowserMetric,
 } from "./performance";
 export type WorldControls = {
@@ -46,6 +52,7 @@ export type WorldControls = {
   setMode(mode: WorldMode): void;
   setPreferences(preferences: GamePreferences): void;
   getCameraView(): (CameraView & { target: CameraView }) | null;
+  getFps(): number | null;
   projectWorldPoint(worldX: number, worldY: number): { x: number; y: number } | null;
   zoomBy(factor: number): void;
   home(): void;
@@ -85,6 +92,7 @@ export function createWorld(
     destroyed = false;
   class Site extends Phaser.Scene {
     private grid!: Phaser.GameObjects.Graphics;
+    private mapBoundary!: Phaser.GameObjects.Graphics;
     private structures!: Phaser.GameObjects.Container;
     private dynamic!: Phaser.GameObjects.Graphics;
     private ghost!: Phaser.GameObjects.Graphics;
@@ -102,6 +110,10 @@ export function createWorld(
         ? window.matchMedia("(prefers-reduced-motion: reduce)")
         : null;
     private dirty = true;
+    // World overlays are world-space Graphics, not animations. Redrawing them
+    // every RAF creates fresh geometry/upload work even when only camera
+    // scroll/zoom changed. Snapshot and input events invalidate them instead.
+    private overlaysDirty = true;
     private seenDiscoveries = new Set(initial.observations.map(observationKey));
     private notices: Phaser.GameObjects.Text[] = [];
     preload() {
@@ -179,6 +191,9 @@ export function createWorld(
         )
         .setOrigin(0)
         .setAlpha(0.14);
+      // A subtle perimeter makes the actual buildable map edge legible.
+      this.mapBoundary = this.add.graphics();
+      this.drawMapBoundary();
       let seed = 131;
       const rand = () => {
         seed = (seed * 1664525 + 1013904223) >>> 0;
@@ -245,6 +260,30 @@ export function createWorld(
           t.height * Y + 40,
           10,
         );
+      // The terrain / deposit decals / 1,700 ambient details are static.
+      // Phaser 4 Graphics tessellates their paths AGAIN on every WebGL
+      // render, even when only the camera moved. Bake once into a Sprite
+      // instead. Guard texture dimensions and pixel count so large maps
+      // continue rendering via Graphics rather than allocating a huge GPU
+      // texture. The original ground was the bottommost display object.
+      const worldWidth = snapshot.map.width * X;
+      const worldHeight = snapshot.map.height * Y;
+      const renderer = this.game.renderer;
+      const gl = "gl" in renderer ? renderer.gl : null;
+      const gpuLimit = gl ? Number(gl.getParameter(gl.MAX_TEXTURE_SIZE)) : 4096;
+      const textureLimit = Number.isFinite(gpuLimit) && gpuLimit > 0
+        ? Math.min(4096, gpuLimit) : 4096;
+      const canBakeGround =
+        worldWidth > 0 && worldHeight > 0 &&
+        worldWidth <= textureLimit && worldHeight <= textureLimit &&
+        worldWidth * worldHeight <= 4_194_304;
+      if (canBakeGround) {
+        const groundKey = "site:static-ground";
+        ground.generateTexture(groundKey, worldWidth, worldHeight);
+        const groundSprite = this.add.image(0, 0, groundKey).setOrigin(0);
+        this.children.sendToBack(groundSprite);
+        ground.destroy();
+      }
       this.grid = this.add.graphics().setVisible(false);
       this.grid.lineStyle(1, 0xc5c4a2, 0.12);
       for (let x = 0; x <= snapshot.map.width; x++)
@@ -263,15 +302,12 @@ export function createWorld(
           padding: { x: 9, y: 6 },
         })
         .setDepth(1000);
+      const geometry = this.cameraGeometry();
+      const limits = cameraZoomLimits(geometry, this.homeZoom());
       this.navigation = new CameraNavigation(
-        {
-          worldWidth: snapshot.map.width * X,
-          worldHeight: snapshot.map.height * Y,
-          viewportWidth: this.cameras.main.width,
-          viewportHeight: this.cameras.main.height,
-        },
+        geometry,
         { zoom: 1, scrollX: 0, scrollY: 0 },
-        { motion: "instant" },
+        { ...limits, motion: "instant" },
       );
       this.viewportWidth = this.cameras.main.width;
       this.viewportHeight = this.cameras.main.height;
@@ -308,6 +344,7 @@ export function createWorld(
               gesture.previous,
               gesture.current,
             );
+          if (this.hover !== null) this.invalidateOverlays();
           this.hover = null;
           return;
         }
@@ -317,9 +354,20 @@ export function createWorld(
             p.y - p.prevPosition.y,
           );
         }
-        this.hover = this.cell(p);
+        const nextHover = this.cell(p);
+        // Inspect panning only moves the camera. Even with mouse events on
+        // every render frame, no preview geometry depends on hover in this
+        // mode. In build mode, refresh only when the pointed CELL changes.
+        if (
+          mode.tool !== "select" &&
+          (!this.hover ||
+            nextHover.x !== this.hover.x ||
+            nextHover.y !== this.hover.y)
+        ) this.invalidateOverlays();
+        this.hover = nextHover;
       });
       this.input.on("pointerdown", (p: Phaser.Input.Pointer) => {
+        this.invalidateOverlays();
         void feedbackAudio.enable();
         if (p.wasTouch) {
           const result = this.touch.down(p.id, { x: p.x, y: p.y });
@@ -331,6 +379,7 @@ export function createWorld(
         this.anchor = this.hover;
       });
       this.input.on("pointerup", (p: Phaser.Input.Pointer) => {
+        this.invalidateOverlays();
         if (p.wasTouch) {
           const gesture = this.touch.up(
             p.id,
@@ -362,11 +411,13 @@ export function createWorld(
         this.anchor = null;
       });
       this.input.on("gameout", () => {
+        this.invalidateOverlays();
         this.hover = null;
         this.touch.cancel();
         this.anchor = null;
       });
       this.input.on("pointerupoutside", (p: Phaser.Input.Pointer) => {
+        this.invalidateOverlays();
         if (p.wasTouch) this.touch.cancel(p.id);
         this.anchor = null;
       });
@@ -401,6 +452,7 @@ export function createWorld(
         if (e.repeat) return;
         if (k === "r") actions.rotate();
         if (k === "escape") {
+          this.invalidateOverlays();
           this.anchor = null;
           actions.mode("select");
           actions.select(null);
@@ -433,6 +485,14 @@ export function createWorld(
       this.rebuild();
       this.refresh();
     }
+    private drawMapBoundary() {
+      const width = snapshot.map.width * X;
+      const height = snapshot.map.height * Y;
+      this.mapBoundary.clear();
+      this.mapBoundary.lineStyle(2, 0xa3ad8e, 0.38).strokeRect(
+        1, 1, Math.max(0, width - 2), Math.max(0, height - 2),
+      );
+    }
     private screenCell(p: TouchPoint): Point {
       const w = this.cameras.main.getWorldPoint(p.x, p.y);
       return { x: Math.floor(w.x / X), y: Math.floor(w.y / Y) };
@@ -443,6 +503,7 @@ export function createWorld(
     cancelTouch() {
       this.touch.cancel();
       this.anchor = null;
+      this.invalidateOverlays();
     }
     zoomBy(factor: number) {
       this.navigation.zoomAt(
@@ -469,12 +530,29 @@ export function createWorld(
       this.navigation.setHalfLifeMs(45 + next.camera.inertia * 205);
       this.navigation.setMotion(this.cameraInstant() ? "instant" : "smooth");
     }
-    home(initial = false) {
+    private cameraGeometry() {
+      return {
+        worldWidth: snapshot.map.width * X,
+        worldHeight: snapshot.map.height * Y,
+        viewportWidth: this.cameras.main.width,
+        viewportHeight: this.cameras.main.height,
+      };
+    }
+    private homeZoom() {
       const camera = this.cameras.main;
-      const zoom = Math.min(
-        camera.width / (36 * X),
-        camera.height / (27 * Y),
-      );
+      return Math.min(camera.width / (36 * X), camera.height / (27 * Y));
+    }
+    private syncCameraLimits() {
+      const limits = cameraZoomLimits(this.cameraGeometry(), this.homeZoom());
+      this.navigation.setZoomLimits(limits.minZoom, limits.maxZoom);
+    }
+    syncMapBounds() {
+      this.navigation.setWorldSize(snapshot.map.width * X, snapshot.map.height * Y);
+      this.syncCameraLimits();
+      this.drawMapBoundary();
+    }
+    home(initial = false) {
+      const zoom = this.homeZoom();
       this.navigation.centerOn(29 * X, 30 * Y, zoom);
       if (initial) this.navigation.reset(this.navigation.getTarget());
       this.applyCamera(this.navigation.getView());
@@ -504,6 +582,10 @@ export function createWorld(
     }
     markDirty() {
       this.dirty = true;
+      this.invalidateOverlays();
+    }
+    invalidateOverlays() {
+      this.overlaysDirty = true;
     }
     feedback(events: readonly FeedbackEvent[]) {
       if (!events.length) return;
@@ -1398,7 +1480,6 @@ export function createWorld(
     update(_time: number, delta: number) {
       if (!this.dynamic) return;
       recordBrowserMetric("frame-interval", delta);
-      const dynamicDrawStartedAt = startBrowserMetric();
       if (this.dirty) {
         this.rebuild();
         this.refresh();
@@ -1411,6 +1492,7 @@ export function createWorld(
         this.viewportWidth = camera.width;
         this.viewportHeight = camera.height;
         this.navigation.resize(camera.width, camera.height);
+        this.syncCameraLimits();
       }
       const speed =
         (Math.min(delta, 50) * 0.7 * preferences.camera.panSpeed) /
@@ -1427,8 +1509,29 @@ export function createWorld(
           this.navigation.panByWorld(x * speed * scale, y * speed * scale);
         }
       }
-      this.applyCamera(this.navigation.advance(delta));
+      // Do not allocate / compute any instrumentation data during
+      // ordinary gameplay. Frame tracking is explicitly opt-in via ?perf=1.
+      const previousView = browserPerformanceEnabled()
+        ? this.navigation.getView() : null;
+      const nextView = this.navigation.advance(delta);
+      this.applyCamera(nextView);
+      if (previousView) {
+        recordCameraPacing(
+          nextView.zoom / this.homeZoom(),
+          delta,
+          Math.hypot(
+            (nextView.scrollX - previousView.scrollX) * nextView.zoom,
+            (nextView.scrollY - previousView.scrollY) * nextView.zoom,
+          ),
+        );
+      }
       this.grid.setVisible(mode.tool !== "select");
+      // Camera movement alone never changes world-space overlay geometry.
+      // Preserve the last Graphics buffers instead of clearing and rebuilding
+      // them on all 60+ render frames. The simulation still refreshes at 10 Hz.
+      if (!this.overlaysDirty) return;
+      this.overlaysDirty = false;
+      const dynamicDrawStartedAt = startBrowserMetric();
       const g = this.dynamic;
       g.clear();
       for (const b of snapshot.belts) {
@@ -1725,13 +1828,18 @@ export function createWorld(
     },
     scene: Site,
     audio: { noAudio: true },
-    render: { roundPixels: true },
+    // Phaser's pixel rounding and fractional animated zoom do not mix well.
+    // Keep transforms sub-pixel accurate for steady smooth navigation.
+    render: { roundPixels: false },
   });
   return {
     setSnapshot: (s) => {
       const startedAt = startBrowserMetric();
       const events = deriveFeedbackEvents(snapshot, s);
+      const worldChanged = snapshot.map.width !== s.map.width ||
+        snapshot.map.height !== s.map.height;
       snapshot = s;
+      if (worldChanged) scene?.syncMapBounds();
       const k = computeStructureKey(s);
       if (k !== structureKey) {
         structureKey = k;
@@ -1739,12 +1847,14 @@ export function createWorld(
       }
       scene?.feedback(events);
       scene?.refresh();
+      scene?.invalidateOverlays();
       finishBrowserMetric("world-sync", startedAt);
     },
     setMode: (m) => {
       const rebuild = mode.openFactories.join() !== m.openFactories.join();
       if (m.tool !== mode.tool) scene?.cancelTouch();
       mode = m;
+      scene?.invalidateOverlays();
       if (rebuild) scene?.markDirty();
     },
     setPreferences: (next) => {
@@ -1752,6 +1862,11 @@ export function createWorld(
       scene?.setCameraPreferences(next);
     },
     getCameraView: () => scene?.getCameraView() ?? null,
+    // Phaser already estimates its render-loop cadence. Avoid an extra RAF
+    // or a React state update for each frame just to show a counter.
+    getFps: () => scene && Number.isFinite(game.loop.actualFps)
+      ? game.loop.actualFps
+      : null,
     projectWorldPoint: (x, y) => scene?.projectWorldPoint(x, y) ?? null,
     zoomBy: (factor) => scene?.zoomBy(factor),
     home: () => scene?.home(),

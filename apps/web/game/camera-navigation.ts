@@ -1,6 +1,10 @@
 /**
  * Phaser-owned presentation camera math. No simulation state, DOM reads, or
  * browser API are required here: world.ts owns the actual Phaser camera.
+ *
+ * IMPORTANT: Phaser's scroll is NOT the visible world's top-left at zoom != 1.
+ * The center of the view is scroll + viewport / 2 (independent of zoom);
+ * the visible half-extent is viewport / (2 * zoom).
  */
 export type CameraView = {
   scrollX: number;
@@ -29,6 +33,7 @@ type ZoomAnchor = { x: number; y: number; worldX: number; worldY: number };
 const DEFAULT_MIN_ZOOM = 0.12;
 const DEFAULT_MAX_ZOOM = 2.5;
 const DEFAULT_HALF_LIFE_MS = 100;
+const MIN_HOME_ZOOM_RATIO = 0.65; // At most ~1.54x the Home field of view.
 const LN2 = Math.log(2);
 const EPSILON = 0.00001;
 
@@ -50,10 +55,34 @@ function boundedScroll(
   viewport: number,
   zoom: number,
 ): number {
-  const visibleWorld = viewport / zoom;
-  // For smaller worlds, keep them centered instead of creating empty edge drift.
-  if (visibleWorld >= world) return (world - visibleWorld) / 2;
-  return clamp(scroll, 0, world - visibleWorld);
+  const halfViewport = viewport / 2;
+  const halfVisible = halfViewport / zoom;
+  // Phaser.scroll = visibleWorldCenter - halfViewport, NOT visibleWorldLeft.
+  // If the world is smaller than the viewport, center it on that axis.
+  if (2 * halfVisible >= world) return world / 2 - halfViewport;
+  return clamp(
+    scroll,
+    halfVisible - halfViewport,
+    world - halfVisible - halfViewport,
+  );
+}
+
+function worldAtScreen(
+  scroll: number,
+  screen: number,
+  viewport: number,
+  zoom: number,
+): number {
+  return scroll + viewport / 2 + (screen - viewport / 2) / zoom;
+}
+
+function scrollForScreenAnchor(
+  world: number,
+  screen: number,
+  viewport: number,
+  zoom: number,
+): number {
+  return world - viewport / 2 - (screen - viewport / 2) / zoom;
 }
 
 function validateGeometry(geometry: CameraGeometry): CameraGeometry {
@@ -63,6 +92,27 @@ function validateGeometry(geometry: CameraGeometry): CameraGeometry {
     viewportWidth: positive(geometry.viewportWidth, 1),
     viewportHeight: positive(geometry.viewportHeight, 1),
   };
+}
+
+/**
+ * Never show outside the generated map. Preserve a comfortable zoom-out floor
+ * proportional to Home, instead of allowing the historical 0.12x zoom.
+ * For a very small world / large display, raise maxZoom as well.
+ */
+export function cameraZoomLimits(
+  geometry: CameraGeometry,
+  homeZoom: number,
+): { minZoom: number; maxZoom: number } {
+  const g = validateGeometry(geometry);
+  const coverWorld = Math.max(
+    g.viewportWidth / g.worldWidth,
+    g.viewportHeight / g.worldHeight,
+  );
+  const minZoom = Math.max(
+    coverWorld,
+    positive(homeZoom, 1) * MIN_HOME_ZOOM_RATIO,
+  );
+  return { minZoom, maxZoom: Math.max(DEFAULT_MAX_ZOOM, minZoom * 2) };
 }
 
 export class CameraNavigation {
@@ -131,6 +181,18 @@ export class CameraNavigation {
     this.anchor = null;
   }
 
+  /** Map geometry is source-of-truth; supports different generated map sizes. */
+  setWorldSize(worldWidth: number, worldHeight: number): void {
+    this.geometry = validateGeometry({
+      ...this.geometry,
+      worldWidth,
+      worldHeight,
+    });
+    this.current = this.bound(this.current);
+    this.target = this.bound(this.target);
+    this.anchor = null;
+  }
+
   /** Initialize from the camera's world scroll/zoom without animation. */
   reset(view: CameraView): void {
     this.anchor = null;
@@ -144,8 +206,8 @@ export class CameraNavigation {
     this.anchor = null;
     this.target = this.bound({
       zoom: z,
-      scrollX: finite(worldX, 0) - this.geometry.viewportWidth / (2 * z),
-      scrollY: finite(worldY, 0) - this.geometry.viewportHeight / (2 * z),
+      scrollX: finite(worldX, 0) - this.geometry.viewportWidth / 2,
+      scrollY: finite(worldY, 0) - this.geometry.viewportHeight / 2,
     });
     if (this.motion === "instant") this.snap();
   }
@@ -161,8 +223,21 @@ export class CameraNavigation {
   }
 
   panByScreen(dx: number, dy: number): void {
+    // Pointer/touch dragging is a physical grab: no trailing easing or
+    // catch-up after the pointer stops. Keyboard/Home remain smoothed.
     const zoom = this.current.zoom;
-    this.panByWorld(-finite(dx, 0) / zoom, -finite(dy, 0) / zoom);
+    this.anchor = null;
+    this.current = this.bound({
+      ...this.current,
+      scrollX: this.current.scrollX - finite(dx, 0) / zoom,
+      scrollY: this.current.scrollY - finite(dy, 0) / zoom,
+    });
+    this.target = this.bound({
+      ...this.target,
+      scrollX: this.current.scrollX,
+      scrollY: this.current.scrollY,
+    });
+    if (this.motion === "instant") this.snap();
   }
 
   /**
@@ -176,13 +251,17 @@ export class CameraNavigation {
     const y = finite(screenY, this.geometry.viewportHeight / 2);
     const z = clamp(this.target.zoom * factor, this.minZoom, this.maxZoom);
     if (Math.abs(z - this.target.zoom) < EPSILON) return;
-    const worldX = this.current.scrollX + x / this.current.zoom;
-    const worldY = this.current.scrollY + y / this.current.zoom;
+    const worldX = worldAtScreen(
+      this.current.scrollX, x, this.geometry.viewportWidth, this.current.zoom,
+    );
+    const worldY = worldAtScreen(
+      this.current.scrollY, y, this.geometry.viewportHeight, this.current.zoom,
+    );
     this.anchor = { x, y, worldX, worldY };
     this.target = this.bound({
       zoom: z,
-      scrollX: worldX - x / z,
-      scrollY: worldY - y / z,
+      scrollX: scrollForScreenAnchor(worldX, x, this.geometry.viewportWidth, z),
+      scrollY: scrollForScreenAnchor(worldY, y, this.geometry.viewportHeight, z),
     });
     if (this.motion === "instant") this.snap();
   }
@@ -205,8 +284,14 @@ export class CameraNavigation {
       !Number.isFinite(currentCenter.x) ||
       !Number.isFinite(currentCenter.y)
     ) return;
-    const worldX = this.current.scrollX + previousCenter.x / this.current.zoom;
-    const worldY = this.current.scrollY + previousCenter.y / this.current.zoom;
+    const worldX = worldAtScreen(
+      this.current.scrollX, previousCenter.x,
+      this.geometry.viewportWidth, this.current.zoom,
+    );
+    const worldY = worldAtScreen(
+      this.current.scrollY, previousCenter.y,
+      this.geometry.viewportHeight, this.current.zoom,
+    );
     const zoom = clamp(this.target.zoom * factor, this.minZoom, this.maxZoom);
     this.anchor = {
       x: currentCenter.x,
@@ -216,8 +301,12 @@ export class CameraNavigation {
     };
     this.target = this.bound({
       zoom,
-      scrollX: worldX - currentCenter.x / zoom,
-      scrollY: worldY - currentCenter.y / zoom,
+      scrollX: scrollForScreenAnchor(
+        worldX, currentCenter.x, this.geometry.viewportWidth, zoom,
+      ),
+      scrollY: scrollForScreenAnchor(
+        worldY, currentCenter.y, this.geometry.viewportHeight, zoom,
+      ),
     });
     if (this.motion === "instant") this.snap();
   }
@@ -235,8 +324,12 @@ export class CameraNavigation {
     const next = this.anchor
       ? {
           zoom,
-          scrollX: this.anchor.worldX - this.anchor.x / zoom,
-          scrollY: this.anchor.worldY - this.anchor.y / zoom,
+          scrollX: scrollForScreenAnchor(
+            this.anchor.worldX, this.anchor.x, this.geometry.viewportWidth, zoom,
+          ),
+          scrollY: scrollForScreenAnchor(
+            this.anchor.worldY, this.anchor.y, this.geometry.viewportHeight, zoom,
+          ),
         }
       : {
           zoom,

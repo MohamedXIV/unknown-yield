@@ -2957,6 +2957,28 @@ function GameClientInner() {
                   <small className="eyebrow">INTERFACE & ACCESSIBILITY</small>
                   <label className="configuration-option">
                     <span>
+                      Show FPS
+                      <small>
+                        Display an unobtrusive frame rate counter during play.
+                      </small>
+                    </span>
+                    <input
+                      type="checkbox"
+                      aria-label="Show FPS"
+                      checked={preferences.interface.showFps}
+                      onChange={(event) =>
+                        commitPreferences({
+                          ...preferences,
+                          interface: {
+                            ...preferences.interface,
+                            showFps: event.currentTarget.checked,
+                          },
+                        })
+                      }
+                    />
+                  </label>
+                  <label className="configuration-option">
+                    <span>
                       Reduce motion
                       <small>
                         System follows your device preference. On disables
