@@ -18,7 +18,8 @@ const browserAcceptanceMode =
 const browserIt =
   process.env.CI && browserAcceptanceMode !== "skip" ? it : it.skip;
 const productionBrowser = browserAcceptanceMode === "production";
-const appUrl = "http://127.0.0.1:4010/";
+// Camera diagnostics are opt-in; they let the browser test hit real cells.
+const appUrl = "http://127.0.0.1:4010/?perf=1";
 const debugPort = 9333;
 
 function build(sim: Simulation, command: GameCommand) {
@@ -506,9 +507,13 @@ browserIt(
           if (!canvas) throw new Error("Canvas missing");
           const rect = canvas.getBoundingClientRect();
           const X = 32, Y = 24;
-          const zoom = Math.min(rect.width / (36 * X), rect.height / (27 * Y));
-          const scrollX = 29 * X - rect.width / (2 * zoom);
-          const scrollY = 30 * Y - rect.height / (2 * zoom);
+          const view = window.__UNKNOWN_YIELD_CAMERA__?.();
+          const zoom = view?.zoom ??
+            Math.min(rect.width / (36 * X), rect.height / (27 * Y));
+          const scrollX = view?.scrollX ??
+            (29 * X - rect.width / (2 * zoom));
+          const scrollY = view?.scrollY ??
+            (30 * Y - rect.height / (2 * zoom));
           return {
             x: rect.left + ((${x} + 0.5) * X - scrollX) * zoom,
             y: rect.top + ((${y} + 0.5) * Y - scrollY) * zoom,
