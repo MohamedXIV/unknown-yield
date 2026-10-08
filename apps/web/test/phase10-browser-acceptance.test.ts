@@ -2068,6 +2068,10 @@ browserIt(
         expect(packEvidence.scopedSave).toBe(true);
         expect(packEvidence.locale).toBe("Polished powder");
         await call("Page.reload", { ignoreCache: true });
+        // CDP Page.reload acknowledges navigation start, not React hydration.
+        // The static export and async persisted-pack verification both finish
+        // before the test attempts to load a pack-scoped world.
+        await sleep(900);
         await waitForExpression(`document.body.textContent?.includes("UNKNOWN YIELD") === true`);
         await waitForExpression(`document.querySelector('button[aria-label="Game menu"]') !== null`);
         await evaluate<boolean>(`(() => {
@@ -2075,11 +2079,19 @@ browserIt(
           return true;
         })()`);
         await waitForExpression(`document.body.textContent?.includes("Offline content packs") === true`);
+        await waitForExpression(`[...document.querySelectorAll("button")].some(b => b.textContent?.includes("Start new expedition with built-in content"))`);
         await evaluate<boolean>(`(() => {
           [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Load saved world"))?.click();
           return true;
         })()`);
         await waitForExpression(`document.body.textContent?.includes("Site restored") === true`);
+        // A successful Load closes the menu, so reopen it before rollback.
+        await evaluate<boolean>(`(() => {
+          if (!document.body.textContent?.includes("Expedition controls"))
+            document.querySelector('button[aria-label="Game menu"]')?.click();
+          return true;
+        })()`);
+        await waitForExpression(`[...document.querySelectorAll("button")].some(b => b.textContent?.includes("Start new expedition with built-in content"))`);
         await evaluate<boolean>(`(() => {
           [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Start new expedition with built-in content"))?.click();
           return true;
