@@ -259,6 +259,25 @@ export function createWorld(
           t.height * Y + 40,
           10,
         );
+      // The terrain / deposit decals / 1,700 ambient details are static.
+      // Phaser 4 Graphics tessellates their paths AGAIN on every WebGL
+      // render, even when only the camera moved. Bake once into a Sprite
+      // instead. Guard texture dimensions and pixel count so large maps
+      // continue rendering via Graphics rather than allocating a huge GPU
+      // texture. The original ground was the bottommost display object.
+      const worldWidth = snapshot.map.width * X;
+      const worldHeight = snapshot.map.height * Y;
+      const canBakeGround =
+        worldWidth > 0 && worldHeight > 0 &&
+        worldWidth <= 4096 && worldHeight <= 4096 &&
+        worldWidth * worldHeight <= 4_194_304;
+      if (canBakeGround) {
+        const groundKey = "site:static-ground";
+        ground.generateTexture(groundKey, worldWidth, worldHeight);
+        const groundSprite = this.add.image(0, 0, groundKey).setOrigin(0);
+        this.children.sendToBack(groundSprite);
+        ground.destroy();
+      }
       this.grid = this.add.graphics().setVisible(false);
       this.grid.lineStyle(1, 0xc5c4a2, 0.12);
       for (let x = 0; x <= snapshot.map.width; x++)
