@@ -1,6 +1,45 @@
 import { it, expect } from "vitest";
 import { Session } from "../game/session";
 
+it("shares a single snapshot projection across listeners until the world changes", () => {
+  const session = new Session();
+  const original = session.snapshot();
+  expect(session.snapshot()).toBe(original);
+
+  const readings: ReturnType<Session["snapshot"]>[] = [];
+  const unsubscribeA = session.subscribe(() => readings.push(session.snapshot()));
+  const unsubscribeB = session.subscribe(() => readings.push(session.snapshot()));
+  session.advance(1000, false);
+  // First frame only initializes the clock; a subsequent frame mutates sim.
+  expect(readings).toHaveLength(0);
+  session.advance(1100, false);
+  expect(readings).toHaveLength(2);
+  expect(readings[0]).toBe(readings[1]);
+  expect(readings[0]).not.toBe(original);
+  expect(readings[0].tick).toBe(1);
+  expect(session.snapshot()).toBe(readings[0]);
+
+  const beforeCommand = session.snapshot();
+  const result = session.command({
+    type: "placeMachine", definitionId: "extractor",
+    x: 15, y: 25, direction: 0,
+  });
+  expect(result.ok).toBe(true);
+  expect(session.snapshot()).not.toBe(beforeCommand);
+  expect(readings.at(-1)).toBe(session.snapshot());
+
+  const beforeReset = session.snapshot();
+  session.reset();
+  expect(session.snapshot()).not.toBe(beforeReset);
+
+  unsubscribeA();
+  unsubscribeB();
+  const subscribersBefore = readings.length;
+  session.advance(2000, false);
+  session.advance(2100, false);
+  expect(readings).toHaveLength(subscribersBefore);
+});
+
 it("does not catch up hidden time and bounds a stalled frame", () => {
   const s = new Session();
   s.advance(1000, false);
