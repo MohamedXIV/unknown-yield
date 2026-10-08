@@ -51,17 +51,27 @@ export default function GameHost({
         // Opt-in read-only browser evidence for camera input acceptance.
         const probeWindow = window as Window & {
           __UNKNOWN_YIELD_CAMERA__?: () => ReturnType<WorldControls["getCameraView"]>;
+          __UNKNOWN_YIELD_PROJECT_WORLD__?: (
+            x: number,
+            y: number,
+          ) => ReturnType<WorldControls["projectWorldPoint"]>;
         };
         const cameraProbe = new URLSearchParams(window.location.search).get("perf") === "1";
-        if (cameraProbe)
+        if (cameraProbe) {
           probeWindow.__UNKNOWN_YIELD_CAMERA__ = () =>
             controls.current?.getCameraView() ?? null;
+          probeWindow.__UNKNOWN_YIELD_PROJECT_WORLD__ = (x, y) =>
+            controls.current?.projectWorldPoint(x, y) ?? null;
+        }
         const unsubscribe = session.subscribe(() =>
           world.setSnapshot(session.snapshot()),
         );
         teardown = () => {
           unsubscribe();
-          if (cameraProbe) delete probeWindow.__UNKNOWN_YIELD_CAMERA__;
+          if (cameraProbe) {
+            delete probeWindow.__UNKNOWN_YIELD_CAMERA__;
+            delete probeWindow.__UNKNOWN_YIELD_PROJECT_WORLD__;
+          }
           controls.current = null;
           world.destroy();
         };
