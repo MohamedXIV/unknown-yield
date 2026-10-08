@@ -324,7 +324,6 @@ export function createWorld(
         this.game.canvas.removeEventListener("pointercancel", cancelNativeTouch);
       });
       this.input.on("pointermove", (p: Phaser.Input.Pointer) => {
-        this.invalidateOverlays();
         if (p.wasTouch) {
           const gesture = this.touch.move(
             p.id,
@@ -339,6 +338,7 @@ export function createWorld(
               gesture.previous,
               gesture.current,
             );
+          if (this.hover !== null) this.invalidateOverlays();
           this.hover = null;
           return;
         }
@@ -348,7 +348,17 @@ export function createWorld(
             p.y - p.prevPosition.y,
           );
         }
-        this.hover = this.cell(p);
+        const nextHover = this.cell(p);
+        // Inspect panning only moves the camera. Even with mouse events on
+        // every render frame, no preview geometry depends on hover in this
+        // mode. In build mode, refresh only when the pointed CELL changes.
+        if (
+          mode.tool !== "select" &&
+          (!this.hover ||
+            nextHover.x !== this.hover.x ||
+            nextHover.y !== this.hover.y)
+        ) this.invalidateOverlays();
+        this.hover = nextHover;
       });
       this.input.on("pointerdown", (p: Phaser.Input.Pointer) => {
         this.invalidateOverlays();
