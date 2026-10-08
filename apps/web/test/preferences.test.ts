@@ -1,48 +1,103 @@
 import { expect, it } from "vitest";
 import {
+  CAMERA_TUNING_BOUNDS,
   CURRENT_GAME_PREFERENCES_VERSION,
   DEFAULT_GAME_PREFERENCES,
   GAME_PREFERENCES_STORAGE_KEY,
   loadGamePreferences,
+  normalizeGamePreferences,
   saveGamePreferences,
 } from "../game/preferences";
 
-it("uses explicit Game Configuration defaults when no preference record exists", () => {
+it("uses deep-copy Game Configuration defaults if storage is empty", () => {
   const preferences = loadGamePreferences({ getItem: () => null });
   expect(preferences).toEqual(DEFAULT_GAME_PREFERENCES);
   expect(preferences).not.toBe(DEFAULT_GAME_PREFERENCES);
-  expect(preferences.buildPalette.promoteLastUsed).toBe(true);
-  expect(preferences.buildPalette.lastUsedByGroup).toEqual({});
+  expect(preferences.buildPalette.lastUsedByGroup).not.toBe(
+    DEFAULT_GAME_PREFERENCES.buildPalette.lastUsedByGroup,
+  );
+  expect(preferences.camera).not.toBe(DEFAULT_GAME_PREFERENCES.camera);
 });
 
-it("persists and restores preferences independently from expedition saves", () => {
+it("persists camera, input and palette preferences outside expedition saves", () => {
   const records = new Map<string, string>();
-  const configured = {
-    version: CURRENT_GAME_PREFERENCES_VERSION,
+  const configured = normalizeGamePreferences({
+    ...DEFAULT_GAME_PREFERENCES,
+    buildPalette: {
+      promoteLastUsed: false,
+      lastUsedByGroup: { acquisition: "deep-extractor" },
+    },
+    camera: {
+      smooth: false,
+      panSpeed: 1.6,
+      zoomSensitivity: 0.8,
+      inertia: 0.1,
+    },
+    controls: { invertWheelZoom: true },
+    accessibility: { reducedMotion: "on" },
+  });
+
+  expect(
+    saveGamePreferences(
+      { setItem: (key, value) => { records.set(key, value); } },
+      configured,
+    ),
+  ).toBe(true);
+  expect([...records.keys()]).toEqual([GAME_PREFERENCES_STORAGE_KEY]);
+  expect(
+    loadGamePreferences({ getItem: (key) => records.get(key) ?? null }),
+  ).toEqual(configured);
+});
+
+it("migrates valid v1 data preserving last-used memory and the old toggle", () => {
+  const v1 = {
+    version: 1,
     buildPalette: {
       promoteLastUsed: false,
       lastUsedByGroup: {
+        thermal: "sealed-furnace",
         acquisition: "deep-extractor",
       },
     },
   };
-
-  expect(
-    saveGamePreferences(
-      { setItem: (key, value) => records.set(key, value) },
-      configured,
-    ),
-  ).toBe(true);
-  expect(records.has(GAME_PREFERENCES_STORAGE_KEY)).toBe(true);
-  expect([...records.keys()]).not.toContain("industrial-site-save-v15");
-  expect(
-    loadGamePreferences({
-      getItem: (key) => records.get(key) ?? null,
-    }),
-  ).toEqual(configured);
+  const migrated = loadGamePreferences({
+    getItem: () => JSON.stringify(v1),
+  });
+  expect(migrated.version).toBe(CURRENT_GAME_PREFERENCES_VERSION);
+  expect(migrated.buildPalette).toEqual(v1.buildPalette);
+  expect(migrated.camera).toEqual(DEFAULT_GAME_PREFERENCES.camera);
+  expect(migrated.controls).toEqual(DEFAULT_GAME_PREFERENCES.controls);
+  expect(migrated.accessibility).toEqual(DEFAULT_GAME_PREFERENCES.accessibility);
 });
 
-it("recovers safely from malformed, unsupported and invalid preference records", () => {
+it("clamps bounded tuning and repairs invalid v2 fields independently", () => {
+  const parsed = normalizeGamePreferences({
+    version: 2,
+    buildPalette: {
+      promoteLastUsed: false,
+      lastUsedByGroup: { thermal: "furnace" },
+    },
+    camera: {
+      smooth: "not boolean",
+      panSpeed: 999,
+      zoomSensitivity: -4,
+      inertia: Number.NaN,
+    },
+    controls: { invertWheelZoom: true },
+    accessibility: { reducedMotion: "unrecognized" },
+  });
+  expect(parsed.buildPalette.lastUsedByGroup).toEqual({ thermal: "furnace" });
+  expect(parsed.camera).toEqual({
+    smooth: true,
+    panSpeed: CAMERA_TUNING_BOUNDS.panSpeed.max,
+    zoomSensitivity: CAMERA_TUNING_BOUNDS.zoomSensitivity.min,
+    inertia: DEFAULT_GAME_PREFERENCES.camera.inertia,
+  });
+  expect(parsed.controls.invertWheelZoom).toBe(true);
+  expect(parsed.accessibility.reducedMotion).toBe("system");
+});
+
+it("recovers from malformed, unsupported and incomplete preference records", () => {
   for (const raw of [
     "{broken",
     JSON.stringify({
@@ -54,16 +109,15 @@ it("recovers safely from malformed, unsupported and invalid preference records",
     }),
     JSON.stringify({
       version: CURRENT_GAME_PREFERENCES_VERSION,
-      buildPalette: {
-        promoteLastUsed: "yes",
-        lastUsedByGroup: {},
-      },
+      buildPalette: { promoteLastUsed: "yes", lastUsedByGroup: {} },
     }),
     JSON.stringify({
       version: CURRENT_GAME_PREFERENCES_VERSION,
-      buildPalette: {
-        promoteLastUsed: false,
-      },
+      buildPalette: { promoteLastUsed: false },
+    }),
+    JSON.stringify({
+      version: 1,
+      buildPalette: { promoteLastUsed: false },
     }),
   ]) {
     expect(loadGamePreferences({ getItem: () => raw })).toEqual(
@@ -72,7 +126,7 @@ it("recovers safely from malformed, unsupported and invalid preference records",
   }
 });
 
-it("recovers from blocked storage without affecting callers", () => {
+it("recovers from blocked storage without affecting the game", () => {
   expect(
     loadGamePreferences({
       getItem() {

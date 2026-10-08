@@ -30,6 +30,11 @@ import {
 } from "./art-assets";
 import { deriveFeedbackEvents, type FeedbackEvent } from "./feedback";
 import { IndustrialFeedbackAudio } from "./audio-feedback";
+import { CameraNavigation, type CameraView } from "./camera-navigation";
+import {
+  DEFAULT_GAME_PREFERENCES,
+  type GamePreferences,
+} from "./preferences";
 import {
   finishBrowserMetric,
   recordBrowserMetric,
@@ -38,6 +43,9 @@ import {
 export type WorldControls = {
   setSnapshot(s: PlayerSnapshot): void;
   setMode(mode: WorldMode): void;
+  setPreferences(preferences: GamePreferences): void;
+  getCameraView(): (CameraView & { target: CameraView }) | null;
+  projectWorldPoint(worldX: number, worldY: number): { x: number; y: number } | null;
   home(): void;
   destroy(): void;
 };
@@ -64,10 +72,12 @@ export function createWorld(
   initial: PlayerSnapshot,
   actions: WorldActions,
   initialMode: WorldMode = DEFAULT_MODE,
+  initialPreferences: GamePreferences = DEFAULT_GAME_PREFERENCES,
 ): WorldControls {
   const feedbackAudio = new IndustrialFeedbackAudio();
   let snapshot = initial,
     mode = initialMode,
+    preferences = initialPreferences,
     scene: Site | undefined,
     structureKey = "",
     destroyed = false;
@@ -81,6 +91,13 @@ export function createWorld(
     private hover: Point | null = null;
     private anchor: Point | null = null;
     private keys = new Set<string>();
+    private navigation!: CameraNavigation;
+    private viewportWidth = 0;
+    private viewportHeight = 0;
+    private readonly reducedMotionQuery =
+      typeof window.matchMedia === "function"
+        ? window.matchMedia("(prefers-reduced-motion: reduce)")
+        : null;
     private dirty = true;
     private seenDiscoveries = new Set(initial.observations.map(observationKey));
     private notices: Phaser.GameObjects.Text[] = [];
@@ -243,13 +260,32 @@ export function createWorld(
           padding: { x: 9, y: 6 },
         })
         .setDepth(1000);
+      this.navigation = new CameraNavigation(
+        {
+          worldWidth: snapshot.map.width * X,
+          worldHeight: snapshot.map.height * Y,
+          viewportWidth: this.cameras.main.width,
+          viewportHeight: this.cameras.main.height,
+        },
+        { zoom: 1, scrollX: 0, scrollY: 0 },
+        { motion: "instant" },
+      );
+      this.viewportWidth = this.cameras.main.width;
+      this.viewportHeight = this.cameras.main.height;
+      this.home(true);
+      this.setCameraPreferences(preferences);
+      const mediaChanged = () => this.setCameraPreferences(preferences);
+      this.reducedMotionQuery?.addEventListener("change", mediaChanged);
+      this.events.once("shutdown", () =>
+        this.reducedMotionQuery?.removeEventListener("change", mediaChanged),
+      );
       this.input.mouse?.disableContextMenu();
       this.input.on("pointermove", (p: Phaser.Input.Pointer) => {
         if (p.isDown && (p.rightButtonDown() || p.middleButtonDown())) {
-          this.cameras.main.scrollX -=
-            (p.x - p.prevPosition.x) / this.cameras.main.zoom;
-          this.cameras.main.scrollY -=
-            (p.y - p.prevPosition.y) / this.cameras.main.zoom;
+          this.navigation.panByScreen(
+            p.x - p.prevPosition.x,
+            p.y - p.prevPosition.y,
+          );
         }
         this.hover = this.cell(p);
       });
@@ -284,15 +320,16 @@ export function createWorld(
           _objects: unknown,
           _dx: number,
           dy: number,
+          _dz: number,
+          event: WheelEvent,
         ) => {
-          const camera = this.cameras.main,
-            world = camera.getWorldPoint(p.x, p.y);
-          camera.setZoom(
-            Phaser.Math.Clamp(camera.zoom * (dy > 0 ? 0.9 : 1.1), 0.4, 2.5),
+          event?.preventDefault();
+          const direction = preferences.controls.invertWheelZoom ? 1 : -1;
+          const delta = Phaser.Math.Clamp(dy, -240, 240);
+          const factor = Math.exp(
+            direction * delta * 0.0009 * preferences.camera.zoomSensitivity,
           );
-          const after = camera.getWorldPoint(p.x, p.y);
-          camera.scrollX += world.x - after.x;
-          camera.scrollY += world.y - after.y;
+          this.navigation.zoomAt(factor, p.x, p.y);
         },
       );
       const down = (e: KeyboardEvent) => {
@@ -335,7 +372,6 @@ export function createWorld(
         window.removeEventListener("keyup", up);
         window.removeEventListener("blur", blur);
       });
-      this.home();
       this.rebuild();
       this.refresh();
     }
@@ -349,13 +385,50 @@ export function createWorld(
       )?.nameKey;
       return key ? translate(key).toLowerCase() : snapshot.map.buildMaterial;
     }
-    home() {
+    private cameraInstant(): boolean {
+      const reduced = preferences.accessibility.reducedMotion;
+      const prefersReduced = reduced === "on" ||
+        (reduced === "system" && this.reducedMotionQuery?.matches === true);
+      return !preferences.camera.smooth || prefersReduced;
+    }
+    setCameraPreferences(next: GamePreferences) {
+      preferences = next;
+      if (!this.navigation) return;
+      this.navigation.setHalfLifeMs(45 + next.camera.inertia * 205);
+      this.navigation.setMotion(this.cameraInstant() ? "instant" : "smooth");
+    }
+    home(initial = false) {
       const camera = this.cameras.main;
-      camera
-        .setZoom(
-          Math.min(this.scale.width / (36 * X), this.scale.height / (27 * Y)),
-        )
-        .centerOn(29 * X, 30 * Y);
+      const zoom = Math.min(
+        camera.width / (36 * X),
+        camera.height / (27 * Y),
+      );
+      this.navigation.centerOn(29 * X, 30 * Y, zoom);
+      if (initial) this.navigation.reset(this.navigation.getTarget());
+      this.applyCamera(this.navigation.getView());
+    }
+    getCameraView(): (CameraView & { target: CameraView }) | null {
+      return this.navigation
+        ? { ...this.navigation.getView(), target: this.navigation.getTarget() }
+        : null;
+    }
+    projectWorldPoint(worldX: number, worldY: number) {
+      const camera = this.cameras.main;
+      const origin = camera.getWorldPoint(0, 0);
+      const corner = camera.getWorldPoint(camera.width, camera.height);
+      const width = corner.x - origin.x;
+      const height = corner.y - origin.y;
+      if (Math.abs(width) < 0.0001 || Math.abs(height) < 0.0001) return null;
+      // Return ratios relative to the canvas; browser viewport/DPR are
+      // applied by the test at the DOM boundary.
+      return {
+        x: (worldX - origin.x) / width,
+        y: (worldY - origin.y) / height,
+      };
+    }
+    private applyCamera(view: CameraView) {
+      this.cameras.main.setZoom(view.zoom);
+      this.cameras.main.setScroll(view.scrollX, view.scrollY);
     }
     markDirty() {
       this.dirty = true;
@@ -1258,18 +1331,31 @@ export function createWorld(
         this.rebuild();
         this.refresh();
       }
-      const camera = this.cameras.main,
-        speed = (delta * 0.7) / camera.zoom;
-      if (!editing()) {
-        if (this.keys.has("a") || this.keys.has("arrowleft"))
-          camera.scrollX -= speed;
-        if (this.keys.has("d") || this.keys.has("arrowright"))
-          camera.scrollX += speed;
-        if (this.keys.has("w") || this.keys.has("arrowup"))
-          camera.scrollY -= speed;
-        if (this.keys.has("s") || this.keys.has("arrowdown"))
-          camera.scrollY += speed;
+      const camera = this.cameras.main;
+      if (
+        camera.width !== this.viewportWidth ||
+        camera.height !== this.viewportHeight
+      ) {
+        this.viewportWidth = camera.width;
+        this.viewportHeight = camera.height;
+        this.navigation.resize(camera.width, camera.height);
       }
+      const speed =
+        (Math.min(delta, 50) * 0.7 * preferences.camera.panSpeed) /
+        this.navigation.getView().zoom;
+      if (!editing()) {
+        const x =
+          Number(this.keys.has("d") || this.keys.has("arrowright")) -
+          Number(this.keys.has("a") || this.keys.has("arrowleft"));
+        const y =
+          Number(this.keys.has("s") || this.keys.has("arrowdown")) -
+          Number(this.keys.has("w") || this.keys.has("arrowup"));
+        if (x || y) {
+          const scale = x && y ? Math.SQRT1_2 : 1;
+          this.navigation.panByWorld(x * speed * scale, y * speed * scale);
+        }
+      }
+      this.applyCamera(this.navigation.advance(delta));
       this.grid.setVisible(mode.tool !== "select");
       const g = this.dynamic;
       g.clear();
@@ -1588,6 +1674,12 @@ export function createWorld(
       mode = m;
       if (rebuild) scene?.markDirty();
     },
+    setPreferences: (next) => {
+      preferences = next;
+      scene?.setCameraPreferences(next);
+    },
+    getCameraView: () => scene?.getCameraView() ?? null,
+    projectWorldPoint: (x, y) => scene?.projectWorldPoint(x, y) ?? null,
     home: () => scene?.home(),
     destroy: () => {
       if (!destroyed) {

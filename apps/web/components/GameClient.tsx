@@ -42,8 +42,10 @@ import {
   startBrowserMetric,
 } from "../game/performance";
 import {
+  CAMERA_TUNING_BOUNDS,
   DEFAULT_GAME_PREFERENCES,
   loadGamePreferences,
+  normalizeGamePreferences,
   saveGamePreferences,
   type GamePreferences,
 } from "../game/preferences";
@@ -281,10 +283,11 @@ function GameClientInner() {
     }
   };
   const commitPreferences = (next: GamePreferences) => {
-    setPreferences(next);
+    const normalized = normalizeGamePreferences(next);
+    setPreferences(normalized);
     let saved: boolean;
     try {
-      saved = saveGamePreferences(window.localStorage, next);
+      saved = saveGamePreferences(window.localStorage, normalized);
     } catch {
       saved = false;
     }
@@ -305,6 +308,14 @@ function GameClientInner() {
       },
     });
   };
+  const updateCamera = (change: Partial<GamePreferences["camera"]>) => {
+    commitPreferences({
+      ...preferences,
+      camera: { ...preferences.camera, ...change },
+    });
+  };
+  const resetPreferences = () =>
+    commitPreferences(normalizeGamePreferences(DEFAULT_GAME_PREFERENCES));
   const machine = snapshot.machines.find((m) => m.id === mode.selected),
     factory = snapshot.factories.find((f) => f.id === mode.selected),
     belt = snapshot.belts.find((b) => b.id === mode.selected),
@@ -729,6 +740,7 @@ function GameClientInner() {
         session={session}
         mode={mode}
         homeToken={homeToken}
+        preferences={preferences}
         actions={{
           select,
           command: act,
@@ -2859,20 +2871,119 @@ function GameClientInner() {
               <>
                 <h2>Game Configuration</h2>
                 <p className="hint">
-                  Interface and input preferences are stored locally on this
-                  device. They are separate from expedition saves and never
-                  change simulation truth.
+                  Camera, controls, and interface preferences are stored on
+                  this device, separately from expedition saves.
                 </p>
                 <section className="configuration-section">
-                  <small className="eyebrow">BUILD PALETTE</small>
+                  <small className="eyebrow">CAMERA</small>
+                  <label className="configuration-option">
+                    <span>
+                      Smooth camera motion
+                      <small>Ease camera movement instead of snapping.</small>
+                    </span>
+                    <input
+                      type="checkbox"
+                      aria-label="Smooth camera motion"
+                      checked={preferences.camera.smooth}
+                      onChange={(event) =>
+                        updateCamera({ smooth: event.currentTarget.checked })
+                      }
+                    />
+                  </label>
+                  {(
+                    [
+                      ["panSpeed", "Pan speed", "How quickly the camera moves"],
+                      [
+                        "zoomSensitivity",
+                        "Zoom sensitivity",
+                        "How much each wheel or pinch step changes the view",
+                      ],
+                      [
+                        "inertia",
+                        "Camera inertia",
+                        "How gently camera movement settles",
+                      ],
+                    ] as const
+                  ).map(([key, title, description]) => (
+                    <label className="configuration-range" key={key}>
+                      <span>
+                        {title}
+                        <small>{description}</small>
+                      </span>
+                      <input
+                        type="range"
+                        aria-label={title}
+                        min={CAMERA_TUNING_BOUNDS[key].min}
+                        max={CAMERA_TUNING_BOUNDS[key].max}
+                        step={CAMERA_TUNING_BOUNDS[key].step}
+                        value={preferences.camera[key]}
+                        onChange={(event) =>
+                          updateCamera({
+                            [key]: Number(event.currentTarget.value),
+                          })
+                        }
+                      />
+                      <output>{preferences.camera[key].toFixed(1)}×</output>
+                    </label>
+                  ))}
+                </section>
+                <section className="configuration-section">
+                  <small className="eyebrow">CONTROLS</small>
+                  <label className="configuration-option">
+                    <span>
+                      Invert mouse wheel zoom
+                      <small>Reverse the wheel direction for zooming.</small>
+                    </span>
+                    <input
+                      type="checkbox"
+                      aria-label="Invert mouse wheel zoom"
+                      checked={preferences.controls.invertWheelZoom}
+                      onChange={(event) =>
+                        commitPreferences({
+                          ...preferences,
+                          controls: {
+                            ...preferences.controls,
+                            invertWheelZoom: event.currentTarget.checked,
+                          },
+                        })
+                      }
+                    />
+                  </label>
+                </section>
+                <section className="configuration-section">
+                  <small className="eyebrow">INTERFACE & ACCESSIBILITY</small>
+                  <label className="configuration-option">
+                    <span>
+                      Reduce motion
+                      <small>
+                        System follows your device preference. On disables
+                        decorative easing; Off allows game motion.
+                      </small>
+                    </span>
+                    <select
+                      aria-label="Reduce motion"
+                      value={preferences.accessibility.reducedMotion}
+                      onChange={(event) =>
+                        commitPreferences({
+                          ...preferences,
+                          accessibility: {
+                            reducedMotion: event.currentTarget.value as
+                              GamePreferences["accessibility"]["reducedMotion"],
+                          },
+                        })
+                      }
+                    >
+                      <option value="system">System</option>
+                      <option value="on">On</option>
+                      <option value="off">Off</option>
+                    </select>
+                  </label>
                   <label className="configuration-option">
                     <span>
                       Promote last-used group tool
                       <small>
-                        When enabled, the last child chosen from a build group
-                        becomes that group&apos;s quick-selection tool. The
-                        grouped-palette layer consumes this preference in the
-                        promotion step.
+                        Make the most recently chosen tool the primary of its
+                        build group.
                       </small>
                     </span>
                     <input
@@ -2885,15 +2996,25 @@ function GameClientInner() {
                     />
                   </label>
                 </section>
+                <button className="secondary" onClick={resetPreferences}>
+                  Reset configuration to defaults
+                </button>
                 <p className="hint">
-                  Configuration version {preferences.version}. Starting or
-                  loading an expedition does not reset these preferences.
+                  Configuration version {preferences.version}. These
+                  preferences persist independently of your saved world.
                 </p>
               </>
             )}
             {panel === "menu" && (
               <>
                 <h2>Expedition controls</h2>
+                <button
+                  className="secondary"
+                  onClick={() => setPanel("configuration")}
+                >
+                  <Glyph type="settings" size={17} />
+                  Game settings &amp; controls
+                </button>
                 <button className="primary" onClick={() => persist(false)}>
                   <Glyph type="save" size={17} />
                   Save world

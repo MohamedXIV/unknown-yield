@@ -689,6 +689,48 @@ a {
   height: 18px;
   accent-color: var(--gold);
 }
+.configuration-option select {
+  flex: 0 0 auto;
+  min-width: 90px;
+  padding: 7px;
+  color: var(--ink);
+  background: #101a14;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+.configuration-range {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 108px 33px;
+  gap: 8px;
+  align-items: center;
+  margin-top: 15px;
+  color: #c4ceb6;
+  font-size: 11px;
+}
+.configuration-range small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.45;
+}
+.configuration-range input {
+  min-width: 0;
+  width: 100%;
+  accent-color: var(--gold);
+  touch-action: pan-y;
+}
+.configuration-range output {
+  color: var(--gold);
+  font: 10px var(--mono);
+  text-align: right;
+}
+@media (max-width: 650px) {
+  .configuration-range {
+    grid-template-columns: minmax(0, 1fr) 78px 30px;
+    gap: 6px;
+  }
+}
 .reset-confirm p {
   font-size: 11px;
   line-height: 1.6;

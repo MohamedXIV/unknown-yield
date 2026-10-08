@@ -18,7 +18,8 @@ const browserAcceptanceMode =
 const browserIt =
   process.env.CI && browserAcceptanceMode !== "skip" ? it : it.skip;
 const productionBrowser = browserAcceptanceMode === "production";
-const appUrl = "http://127.0.0.1:4010/";
+// Camera diagnostics are opt-in; they let the browser test hit real cells.
+const appUrl = "http://127.0.0.1:4010/?perf=1";
 const debugPort = 9333;
 
 function build(sim: Simulation, command: GameCommand) {
@@ -506,12 +507,14 @@ browserIt(
           if (!canvas) throw new Error("Canvas missing");
           const rect = canvas.getBoundingClientRect();
           const X = 32, Y = 24;
-          const zoom = Math.min(rect.width / (36 * X), rect.height / (27 * Y));
-          const scrollX = 29 * X - rect.width / (2 * zoom);
-          const scrollY = 30 * Y - rect.height / (2 * zoom);
+          const projected = window.__UNKNOWN_YIELD_PROJECT_WORLD__?.(
+            ((${x} + 0.5) * X),
+            ((${y} + 0.5) * Y),
+          );
+          if (!projected) throw new Error("Camera projection unavailable");
           return {
-            x: rect.left + ((${x} + 0.5) * X - scrollX) * zoom,
-            y: rect.top + ((${y} + 0.5) * Y - scrollY) * zoom,
+            x: rect.left + projected.x * rect.width,
+            y: rect.top + projected.y * rect.height,
           };
         })()`);
         await call("Input.dispatchMouseEvent", {
@@ -1024,7 +1027,16 @@ browserIt(
         document.querySelector('button[aria-label="Center camera"]')?.click();
         return true;
       })()`);
-      await sleep(150);
+      await waitForExpression(
+        `(() => {
+          const view = window.__UNKNOWN_YIELD_CAMERA__?.();
+          if (!view?.target) return false;
+          return Math.abs(view.scrollX - view.target.scrollX) < 0.05 &&
+            Math.abs(view.scrollY - view.target.scrollY) < 0.05 &&
+            Math.abs(view.zoom - view.target.zoom) < 0.0001;
+        })()`,
+        5000,
+      );
 
       await clickCell(28, 37);
       await waitForExpression(
@@ -1062,10 +1074,59 @@ browserIt(
       await waitForExpression(
         `document.body.textContent?.includes("Relocation hold") === true`,
       );
-      await waitForExpression(
-        `document.body.textContent?.includes("External requirements restored") === true`,
-        15000,
-      );
+      try {
+        await waitForExpression(
+          `document.body.textContent?.includes("External requirements restored") === true`,
+          15000,
+        );
+      } catch (error) {
+        const diagnostics = await evaluate<{
+          camera: unknown;
+          panel: string | null;
+          notice: string | null;
+        }>(`(() => ({
+          camera: window.__UNKNOWN_YIELD_CAMERA__?.() ?? null,
+          panel: document.querySelector(".context-panel")?.textContent?.slice(0, 950) ?? null,
+          notice: document.querySelector('[role="status"]')?.textContent ?? null,
+        }))()`);
+        let persisted: unknown = null;
+        try {
+          await evaluate(`(() => {
+            document.querySelector('button[aria-label="Game menu"]')?.click();
+            return true;
+          })()`);
+          await waitForExpression(
+            `[...document.querySelectorAll("button")]
+              .some((button) => button.textContent?.includes("Save world"))`,
+          );
+          await evaluate(`(() => {
+            [...document.querySelectorAll("button")]
+              .find((button) => button.textContent?.includes("Save world"))
+              ?.click();
+            return true;
+          })()`);
+          persisted = await evaluate(`(() => {
+            const save = JSON.parse(
+              localStorage.getItem("industrial-site-save-v15") ?? "null"
+            );
+            return {
+              factory: Object.values(save.factories ?? {})
+                .find((factory) => factory.x === 23 && factory.y === 33),
+              belts: Object.values(save.belts ?? {})
+                .filter((belt) => belt.y === 37 && belt.x >= 30 && belt.x <= 35),
+              ports: Object.values(save.ports ?? {})
+                .filter((port) => port.y === 37 && port.x >= 30 && port.x <= 35),
+            };
+          })()`);
+        } catch (captureError) {
+          persisted = { captureError: String(captureError) };
+        }
+        throw new Error(
+          "Relocation inspection: " +
+            JSON.stringify({ ...diagnostics, persisted }),
+          { cause: error },
+        );
+      }
       await evaluate(`(() => {
         [...document.querySelectorAll("button.entity-row")]
           .find((button) => button.textContent?.includes("Crusher"))
@@ -1222,7 +1283,7 @@ browserIt(
         };
       })()`);
       expect(preferenceRecord).toEqual({
-        version: 1,
+        version: 2,
         promoteLastUsed: false,
         lastUsedByGroup: {
           processing: "sinterer",
@@ -1366,6 +1427,181 @@ browserIt(
         promoteLastUsed: true,
         thermal: "sealed-furnace",
       });
+
+      // Settings must be discoverable even if the player misses the gear icon.
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Game menu"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector("button")?.ownerDocument.body.textContent
+          ?.includes("Expedition controls") === true`,
+      );
+      await evaluate(`(() => {
+        [...document.querySelectorAll("button")]
+          .find((b) => b.textContent?.includes("Game settings & controls"))
+          ?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector('input[aria-label="Smooth camera motion"]')
+          ?.checked === true &&
+          document.querySelector('input[aria-label="Pan speed"]')?.value === "1" &&
+          document.querySelector('select[aria-label="Reduce motion"]')?.value === "system"`,
+      );
+
+      await evaluate(`(() => {
+        const slider = document.querySelector('input[aria-label="Pan speed"]');
+        const setter = Object.getOwnPropertyDescriptor(
+          HTMLInputElement.prototype, "value"
+        ).set;
+        setter.call(slider, "1.7");
+        slider.dispatchEvent(new Event("input", { bubbles: true }));
+        return true;
+      })()`);
+      await waitForExpression(
+        `JSON.parse(localStorage.getItem("unknown-yield-game-preferences"))
+          ?.camera?.panSpeed === 1.7`,
+      );
+      await evaluate(`(() => {
+        document.querySelector('input[aria-label="Invert mouse wheel zoom"]')
+          ?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `JSON.parse(localStorage.getItem("unknown-yield-game-preferences"))
+          ?.controls?.invertWheelZoom === true`,
+      );
+      await evaluate(`(() => {
+        document.querySelector('input[aria-label="Smooth camera motion"]')
+          ?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `JSON.parse(localStorage.getItem("unknown-yield-game-preferences"))
+          ?.camera?.smooth === false`,
+      );
+      await evaluate(`(() => {
+        const select = document.querySelector('select[aria-label="Reduce motion"]');
+        const setter = Object.getOwnPropertyDescriptor(
+          HTMLSelectElement.prototype, "value"
+        ).set;
+        setter.call(select, "on");
+        select.dispatchEvent(new Event("change", { bubbles: true }));
+        return true;
+      })()`);
+      await waitForExpression(
+        `JSON.parse(localStorage.getItem("unknown-yield-game-preferences"))
+          ?.accessibility?.reducedMotion === "on"`,
+      );
+
+      await call("Page.navigate", { url: appUrl });
+      await waitForExpression(
+        `document.readyState === "complete" &&
+          !!document.querySelector('button[aria-label="Game configuration"]')`,
+      );
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Game configuration"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector('input[aria-label="Pan speed"]')?.value === "1.7" &&
+          document.querySelector('input[aria-label="Smooth camera motion"]')
+            ?.checked === false &&
+          document.querySelector('select[aria-label="Reduce motion"]')?.value === "on"`,
+      );
+
+      await evaluate(`(() => {
+        [...document.querySelectorAll("button")]
+          .find((b) => b.textContent?.includes("Reset configuration to defaults"))
+          ?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector('input[aria-label="Pan speed"]')?.value === "1" &&
+          document.querySelector('input[aria-label="Smooth camera motion"]')
+            ?.checked === true &&
+          document.querySelector('select[aria-label="Reduce motion"]')?.value === "system"`,
+      );
+      const afterReset = await evaluate<{
+        version: number;
+        memory: Record<string, string>;
+        worldSave: boolean;
+      }>(`(() => {
+        const saved = JSON.parse(localStorage.getItem(
+          "unknown-yield-game-preferences") || "null"
+        );
+        return {
+          version: saved.version,
+          memory: saved.buildPalette.lastUsedByGroup,
+          worldSave: localStorage.getItem("industrial-site-save-v15") !== null,
+        };
+      })()`);
+      expect(afterReset).toEqual({ version: 2, memory: {}, worldSave: true });
+
+      // Read-only camera diagnostics are opt-in; ordinary players do not
+      // expose the probe. These assertions run against the production export.
+      await call("Page.navigate", { url: appUrl });
+      await waitForExpression(
+        `typeof window.__UNKNOWN_YIELD_CAMERA__ === "function" &&
+          window.__UNKNOWN_YIELD_CAMERA__()?.zoom > 0`,
+      );
+      const initialCamera = await evaluate<{
+        scrollX: number;
+        scrollY: number;
+        zoom: number;
+      }>(`window.__UNKNOWN_YIELD_CAMERA__()`);
+      await call("Input.dispatchMouseEvent", {
+        type: "mouseWheel",
+        x: 640,
+        y: 420,
+        deltaX: 0,
+        deltaY: -120,
+      });
+      await waitForExpression(
+        `window.__UNKNOWN_YIELD_CAMERA__()?.zoom >
+          ${JSON.stringify(initialCamera.zoom + 0.02)}`,
+      );
+      const zoomedCamera = await evaluate<{
+        scrollX: number;
+        scrollY: number;
+        zoom: number;
+      }>(`window.__UNKNOWN_YIELD_CAMERA__()`);
+      const focusBeforeX = initialCamera.scrollX + 640 / initialCamera.zoom;
+      const focusBeforeY = initialCamera.scrollY + 420 / initialCamera.zoom;
+      expect(
+        Math.abs(zoomedCamera.scrollX + 640 / zoomedCamera.zoom - focusBeforeX),
+      ).toBeLessThan(0.1);
+      expect(
+        Math.abs(zoomedCamera.scrollY + 420 / zoomedCamera.zoom - focusBeforeY),
+      ).toBeLessThan(0.1);
+
+      await call("Input.dispatchKeyEvent", {
+        type: "keyDown",
+        key: "d",
+        code: "KeyD",
+        windowsVirtualKeyCode: 68,
+      });
+      await evaluate<void>(`new Promise((resolve) => setTimeout(resolve, 500))`);
+      await call("Input.dispatchKeyEvent", {
+        type: "keyUp",
+        key: "d",
+        code: "KeyD",
+        windowsVirtualKeyCode: 68,
+      });
+      await waitForExpression(
+        `window.__UNKNOWN_YIELD_CAMERA__()?.scrollX >
+          ${JSON.stringify(zoomedCamera.scrollX + 5)}`,
+      );
+
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Center camera"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `Math.abs(window.__UNKNOWN_YIELD_CAMERA__()?.zoom -
+          ${JSON.stringify(initialCamera.zoom)}) < 0.002`,
+      );
 
       socket.close();
     } catch (error) {
