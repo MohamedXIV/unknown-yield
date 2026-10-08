@@ -30,7 +30,7 @@ import {
 } from "./art-assets";
 import { deriveFeedbackEvents, type FeedbackEvent } from "./feedback";
 import { IndustrialFeedbackAudio } from "./audio-feedback";
-import { CameraNavigation } from "./camera-navigation";
+import { CameraNavigation, type CameraView } from "./camera-navigation";
 import {
   DEFAULT_GAME_PREFERENCES,
   type GamePreferences,
@@ -44,6 +44,7 @@ export type WorldControls = {
   setSnapshot(s: PlayerSnapshot): void;
   setMode(mode: WorldMode): void;
   setPreferences(preferences: GamePreferences): void;
+  getCameraView(): CameraView | null;
   home(): void;
   destroy(): void;
 };
@@ -405,7 +406,10 @@ export function createWorld(
       if (initial) this.navigation.reset(this.navigation.getTarget());
       this.applyCamera(this.navigation.getView());
     }
-    private applyCamera(view: { scrollX: number; scrollY: number; zoom: number }) {
+    getCameraView(): CameraView | null {
+      return this.navigation?.getView() ?? null;
+    }
+    private applyCamera(view: CameraView) {
       this.cameras.main.setZoom(view.zoom);
       this.cameras.main.setScroll(view.scrollX, view.scrollY);
     }
@@ -1657,6 +1661,7 @@ export function createWorld(
       preferences = next;
       scene?.setCameraPreferences(next);
     },
+    getCameraView: () => scene?.getCameraView() ?? null,
     home: () => scene?.home(),
     destroy: () => {
       if (!destroyed) {
