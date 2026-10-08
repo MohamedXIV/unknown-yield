@@ -94,6 +94,32 @@ export default function GameHost({
       role="application"
       aria-label="Industrial world. Use build tools then click or drag on the ground. Arrow keys or WASD pan. R rotates. Escape cancels."
     >
+      <nav className="world-zoom-controls" aria-label="Camera zoom controls">
+        <button
+          type="button"
+          aria-label="Zoom in"
+          title="Zoom in"
+          onClick={() => controls.current?.zoomBy(1.2)}
+        >
+          +
+        </button>
+        <button
+          type="button"
+          aria-label="Zoom out"
+          title="Zoom out"
+          onClick={() => controls.current?.zoomBy(1 / 1.2)}
+        >
+          −
+        </button>
+        <button
+          type="button"
+          aria-label="Reset camera"
+          title="Center site"
+          onClick={() => controls.current?.home()}
+        >
+          ⌂
+        </button>
+      </nav>
       {error && <div className="render-error">{error}</div>}
     </div>
   );
