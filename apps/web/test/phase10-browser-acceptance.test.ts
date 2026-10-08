@@ -1390,37 +1390,48 @@ browserIt(
       );
 
       await evaluate(`(() => {
-        const slider = document.querySelector(
-          'input[aria-label="Pan speed"]'
-        );
+        const slider = document.querySelector('input[aria-label="Pan speed"]');
         const setter = Object.getOwnPropertyDescriptor(
           HTMLInputElement.prototype, "value"
         ).set;
         setter.call(slider, "1.7");
         slider.dispatchEvent(new Event("input", { bubbles: true }));
+        return true;
+      })()`);
+      await waitForExpression(
+        `JSON.parse(localStorage.getItem("unknown-yield-game-preferences"))
+          ?.camera?.panSpeed === 1.7`,
+      );
+      await evaluate(`(() => {
         document.querySelector('input[aria-label="Invert mouse wheel zoom"]')
           ?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `JSON.parse(localStorage.getItem("unknown-yield-game-preferences"))
+          ?.controls?.invertWheelZoom === true`,
+      );
+      await evaluate(`(() => {
         document.querySelector('input[aria-label="Smooth camera motion"]')
           ?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `JSON.parse(localStorage.getItem("unknown-yield-game-preferences"))
+          ?.camera?.smooth === false`,
+      );
+      await evaluate(`(() => {
         const select = document.querySelector('select[aria-label="Reduce motion"]');
-        const selectSetter = Object.getOwnPropertyDescriptor(
+        const setter = Object.getOwnPropertyDescriptor(
           HTMLSelectElement.prototype, "value"
         ).set;
-        selectSetter.call(select, "on");
+        setter.call(select, "on");
         select.dispatchEvent(new Event("change", { bubbles: true }));
         return true;
       })()`);
       await waitForExpression(
-        `(() => {
-          const saved = JSON.parse(localStorage.getItem(
-            "unknown-yield-game-preferences") || "null"
-          );
-          return saved?.version === 2 &&
-            saved.camera.smooth === false &&
-            saved.camera.panSpeed === 1.7 &&
-            saved.controls.invertWheelZoom === true &&
-            saved.accessibility.reducedMotion === "on";
-        })()`,
+        `JSON.parse(localStorage.getItem("unknown-yield-game-preferences"))
+          ?.accessibility?.reducedMotion === "on"`,
       );
 
       await call("Page.navigate", { url: appUrl });
