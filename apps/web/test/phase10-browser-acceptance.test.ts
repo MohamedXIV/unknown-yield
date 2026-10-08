@@ -2048,7 +2048,9 @@ browserIt(
           return true;
         })()`);
         await waitForExpression(`document.body.textContent?.includes("Expedition controls") === true`);
-        await waitForExpression(`document.body.textContent?.includes("Imported ·") === true`);
+        const packMenuText = await evaluate<string>(`document.body.innerText.slice(-1700)`);
+        console.log("PHASE19_PACK_MENU " + JSON.stringify({ text: packMenuText }));
+        expect(packMenuText).toContain("Offline content packs");
         await evaluate<boolean>(`(() => {
           [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Save world"))?.click();
           return true;
@@ -2072,12 +2074,12 @@ browserIt(
           document.querySelector('button[aria-label="Game menu"]')?.click();
           return true;
         })()`);
-        await waitForExpression(`document.body.textContent?.includes("Imported ·") === true`);
+        await waitForExpression(`document.body.textContent?.includes("Offline content packs") === true`);
         await evaluate<boolean>(`(() => {
           [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Load saved world"))?.click();
           return true;
         })()`);
-        expect(await evaluate<boolean>(`document.body.textContent?.includes("Site restored") === true`)).toBe(true);
+        await waitForExpression(`document.body.textContent?.includes("Site restored") === true`);
         await evaluate<boolean>(`(() => {
           [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Start new expedition with built-in content"))?.click();
           return true;
