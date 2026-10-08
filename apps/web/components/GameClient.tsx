@@ -594,6 +594,11 @@ function GameClientInner() {
                   : (snapshot.definitions.find((d) => d.id === tool)?.cost ??
                     snapshot.storageDefinitions.find((d) => d.id === tool)
                       ?.cost);
+  // New imported machines are content, not a fixed compile-time toolbar list.
+  // Keep original group shortcuts stable and expose extensions in Processing.
+  const packMachineTools = snapshot.definitions
+    .filter((definition) => !TOOL_GROUPS.some((group) => group.tools.includes(definition.id)))
+    .map((definition) => definition.id);
   const groupFor = (id: ToolGroupId) =>
     TOOL_GROUPS.find((group) => group.id === id)!;
   const groupPrimary = (id: ToolGroupId) =>
@@ -3263,7 +3268,8 @@ function GameClientInner() {
             const group = groupFor(entry.groupId);
             const primary = groupPrimary(group.id);
             const open = openToolGroup === group.id;
-            const groupActive = group.tools.includes(mode.tool);
+            const groupActive = group.tools.includes(mode.tool) ||
+              (group.id === "processing" && packMachineTools.includes(mode.tool));
             return (
               <div className="build-group" key={group.id}>
                 {open && (
@@ -3292,6 +3298,19 @@ function GameClientInner() {
                         </button>
                       );
                     })}
+                    {group.id === "processing" && packMachineTools.map((tool) => (
+                      <button
+                        key={tool}
+                        role="menuitem"
+                        className={mode.tool === tool ? "active" : ""}
+                        aria-label={toolName(tool)}
+                        aria-disabled={toolLocked(tool)}
+                        title={toolDescription(tool) || "Imported machine · new expedition content"}
+                        onClick={() => chooseGroupTool(tool)}
+                      >
+                        {toolTile(tool, null)}
+                      </button>
+                    ))}
                   </div>
                 )}
                 <button
