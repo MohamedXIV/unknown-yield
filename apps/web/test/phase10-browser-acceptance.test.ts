@@ -1,4 +1,5 @@
 import { spawn, type ChildProcess } from "node:child_process";
+import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
@@ -381,6 +382,7 @@ browserIt(
         result?: { value?: unknown };
       };
 
+      const runtimeErrors: string[] = [];
       let sequence = 0;
       const pending = new Map<
         number,
@@ -396,7 +398,19 @@ browserIt(
           id?: number;
           error?: unknown;
           result?: CdpResult;
+          method?: string;
+          params?: {
+            exceptionDetails?: {
+              text?: string;
+              exception?: { description?: string };
+            };
+          };
         };
+        if (message.method === "Runtime.exceptionThrown") {
+          const detail = message.params?.exceptionDetails;
+          runtimeErrors.push(detail?.exception?.description ?? detail?.text ?? "Unspecified JS exception");
+          return;
+        }
         if (!message.id || !pending.has(message.id)) return;
         const waiter = pending.get(message.id)!;
         clearTimeout(waiter.timer);
@@ -606,6 +620,7 @@ browserIt(
         });
       };
 
+      // Subscribe before first navigation to capture real game exceptions.
       await call("Page.enable");
       await call("Runtime.enable");
       await call("Page.navigate", { url: appUrl });
@@ -1674,6 +1689,17 @@ browserIt(
           ${JSON.stringify(initialCamera.zoom)}) < 0.002`,
       );
 
+      const desktopEnvironment = await evaluate<{
+        userAgent: string;
+        width: number;
+        height: number;
+        dpr: number;
+      }>(`({
+        userAgent: navigator.userAgent,
+        width: innerWidth,
+        height: innerHeight,
+        dpr: devicePixelRatio,
+      })`);
       // Mobile touch emulation against the built production export.
       await call("Emulation.setDeviceMetricsOverride", {
         width: 390,
@@ -1791,6 +1817,38 @@ browserIt(
         ),
       ).toBe(platesBeforePinch);
 
+      // Native mobile long-press must open the grouped upward tool menu.
+      // This is different from a synthetic DOM click on the primary tool.
+      const holdPoint = await evaluate<{ x: number; y: number }>(
+        `(() => {
+          const rect = document.querySelector(
+            '[data-build-group="solid-logistics"]'
+          ).getBoundingClientRect();
+          return {
+            x: rect.left + rect.width / 2,
+            y: rect.top + rect.height / 2,
+          };
+        })()`,
+      );
+      await call("Input.dispatchTouchEvent", {
+        type: "touchStart",
+        touchPoints: [{ id: 7, ...holdPoint }],
+      });
+      await evaluate<void>(
+        `new Promise((resolve) => setTimeout(resolve, 450))`,
+      );
+      await waitForExpression(
+        `document.querySelector(".build-submenu") !== null`,
+      );
+      await call("Input.dispatchTouchEvent", {
+        type: "touchEnd",
+        touchPoints: [],
+      });
+      await evaluate(`(() => {
+        document.querySelector(".build-menu-scrim")?.click();
+        return true;
+      })()`);
+
       // Non-pinch accessibility alternatives operate through the same
       // camera controller, and React controls remain operable on mobile.
       const mobileCamera = await evaluate<{ zoom: number }>(
@@ -1840,6 +1898,47 @@ browserIt(
           )).touchAction`,
         ),
       ).not.toBe("none");
+
+      const mobileEnvironment = await evaluate<{
+        userAgent: string;
+        width: number;
+        height: number;
+        dpr: number;
+      }>(`({
+        userAgent: navigator.userAgent,
+        width: innerWidth,
+        height: innerHeight,
+        dpr: devicePixelRatio,
+      })`);
+      const screenshotResult = await call("Page.captureScreenshot", {
+        format: "png",
+        captureBeyondViewport: false,
+      });
+      const screenshotData = (screenshotResult as unknown as { data?: string }).data;
+      expect(screenshotData, "Mobile screenshot data must be captured").toBeTruthy();
+      const screenshotBytes = Buffer.from(screenshotData!, "base64");
+      const screenshotSha256 = createHash("sha256")
+        .update(screenshotBytes)
+        .digest("hex");
+      const frameReport = await evaluate<unknown>(
+        `window.__UNKNOWN_YIELD_PERF__?.report() ?? null`,
+      );
+      // The screenshot bytes are NOT persisted as an Actions artifact.
+      // Log size/digest and data provenance for the integrated exit review.
+      console.log("PHASE18_INTEGRATED_BROWSER_EVIDENCE " + JSON.stringify({
+        mode: browserAcceptanceMode,
+        desktopEnvironment,
+        mobileEnvironment,
+        screenshot: {
+          format: "png",
+          bytes: screenshotBytes.length,
+          sha256: screenshotSha256,
+          retained: false,
+        },
+        runtimeErrors,
+        performance: frameReport,
+      }));
+      expect(runtimeErrors, runtimeErrors.join("\n")).toEqual([]);
 
       socket.close();
     } catch (error) {
