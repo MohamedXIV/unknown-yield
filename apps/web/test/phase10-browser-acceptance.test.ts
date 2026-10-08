@@ -1686,8 +1686,9 @@ browserIt(
         `document.querySelector(".build-hint strong")?.textContent === "Belt"`,
       );
       const platesBeforePinch = await evaluate<string>(
-        `document.querySelector(".resources b")?.textContent ?? ""`,
+        `document.querySelector('[data-testid="plates"]')?.textContent ?? ""`,
       );
+      expect(platesBeforePinch).not.toBe("");
       await call("Input.dispatchTouchEvent", {
         type: "touchStart",
         touchPoints: [{ id: 1, x: 170, y: 360 }],
@@ -1715,9 +1716,59 @@ browserIt(
       );
       expect(
         await evaluate<string>(
-          `document.querySelector(".resources b")?.textContent ?? ""`,
+          `document.querySelector('[data-testid="plates"]')?.textContent ?? ""`,
         ),
       ).toBe(platesBeforePinch);
+
+      // Non-pinch accessibility alternatives operate through the same
+      // camera controller, and React controls remain operable on mobile.
+      const mobileCamera = await evaluate<{ zoom: number }>(
+        `window.__UNKNOWN_YIELD_CAMERA__()`,
+      );
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Zoom in"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `window.__UNKNOWN_YIELD_CAMERA__()?.zoom >
+          ${JSON.stringify(mobileCamera.zoom * 1.05)}`,
+      );
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Reset camera"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `(() => {
+          const view = window.__UNKNOWN_YIELD_CAMERA__?.();
+          return view?.target && Math.abs(view.zoom - view.target.zoom) < 0.002;
+        })()`,
+      );
+      const menuTouchPoint = await evaluate<{ x: number; y: number }>(
+        `(() => {
+          const rect = document.querySelector(
+            'button[aria-label="Game menu"]'
+          ).getBoundingClientRect();
+          return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+        })()`,
+      );
+      await call("Input.dispatchTouchEvent", {
+        type: "touchStart",
+        touchPoints: [{ id: 3, ...menuTouchPoint }],
+      });
+      await call("Input.dispatchTouchEvent", {
+        type: "touchEnd",
+        touchPoints: [],
+      });
+      await waitForExpression(
+        `document.body.textContent?.includes("Expedition controls") === true`,
+      );
+      expect(
+        await evaluate<string>(
+          `getComputedStyle(document.querySelector(
+            'button[aria-label="Game menu"]'
+          )).touchAction`,
+        ),
+      ).not.toBe("none");
 
       socket.close();
     } catch (error) {
