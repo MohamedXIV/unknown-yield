@@ -1603,6 +1603,122 @@ browserIt(
           ${JSON.stringify(initialCamera.zoom)}) < 0.002`,
       );
 
+      // Mobile touch emulation against the built production export.
+      await call("Emulation.setDeviceMetricsOverride", {
+        width: 390,
+        height: 844,
+        deviceScaleFactor: 2,
+        mobile: true,
+      });
+      await call("Emulation.setTouchEmulationEnabled", {
+        enabled: true,
+        maxTouchPoints: 3,
+      });
+      await call("Page.navigate", { url: appUrl });
+      await waitForExpression(
+        `typeof window.__UNKNOWN_YIELD_CAMERA__ === "function" &&
+          window.__UNKNOWN_YIELD_CAMERA__()?.zoom > 0 &&
+          document.querySelector(".world-host canvas") !== null`,
+      );
+      expect(
+        await evaluate<string>(
+          `getComputedStyle(document.querySelector(".world-host canvas"))
+            .touchAction`,
+        ),
+      ).toBe("none");
+
+      const touchPanBefore = await evaluate<{ scrollX: number; scrollY: number }>(
+        `window.__UNKNOWN_YIELD_CAMERA__()`,
+      );
+      await call("Input.dispatchTouchEvent", {
+        type: "touchStart",
+        touchPoints: [{ id: 1, x: 175, y: 390 }],
+      });
+      await call("Input.dispatchTouchEvent", {
+        type: "touchMove",
+        touchPoints: [{ id: 1, x: 235, y: 390 }],
+      });
+      await call("Input.dispatchTouchEvent", {
+        type: "touchEnd",
+        touchPoints: [],
+      });
+      await waitForExpression(
+        `Math.abs(window.__UNKNOWN_YIELD_CAMERA__()?.scrollX -
+          ${JSON.stringify(touchPanBefore.scrollX)}) > 5`,
+      );
+
+      const pinchBefore = await evaluate<{ zoom: number }>(
+        `window.__UNKNOWN_YIELD_CAMERA__()`,
+      );
+      await call("Input.dispatchTouchEvent", {
+        type: "touchStart",
+        touchPoints: [{ id: 1, x: 150, y: 370 }],
+      });
+      await call("Input.dispatchTouchEvent", {
+        type: "touchStart",
+        touchPoints: [
+          { id: 1, x: 150, y: 370 },
+          { id: 2, x: 240, y: 370 },
+        ],
+      });
+      await call("Input.dispatchTouchEvent", {
+        type: "touchMove",
+        touchPoints: [
+          { id: 1, x: 115, y: 350 },
+          { id: 2, x: 275, y: 390 },
+        ],
+      });
+      await call("Input.dispatchTouchEvent", {
+        type: "touchEnd",
+        touchPoints: [],
+      });
+      await waitForExpression(
+        `window.__UNKNOWN_YIELD_CAMERA__()?.zoom >
+          ${JSON.stringify(pinchBefore.zoom * 1.08)}`,
+      );
+
+      // A second finger cancels build candidates even if a tool is selected.
+      await evaluate(`(() => {
+        document.querySelector('[data-build-group="solid-logistics"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector(".build-hint strong")?.textContent === "Belt"`,
+      );
+      const platesBeforePinch = await evaluate<string>(
+        `document.querySelector(".resources b")?.textContent ?? ""`,
+      );
+      await call("Input.dispatchTouchEvent", {
+        type: "touchStart",
+        touchPoints: [{ id: 1, x: 170, y: 360 }],
+      });
+      await call("Input.dispatchTouchEvent", {
+        type: "touchStart",
+        touchPoints: [
+          { id: 1, x: 170, y: 360 },
+          { id: 2, x: 250, y: 360 },
+        ],
+      });
+      await call("Input.dispatchTouchEvent", {
+        type: "touchMove",
+        touchPoints: [
+          { id: 1, x: 140, y: 370 },
+          { id: 2, x: 280, y: 350 },
+        ],
+      });
+      await call("Input.dispatchTouchEvent", {
+        type: "touchEnd",
+        touchPoints: [],
+      });
+      await evaluate<void>(
+        `new Promise((resolve) => setTimeout(resolve, 350))`,
+      );
+      expect(
+        await evaluate<string>(
+          `document.querySelector(".resources b")?.textContent ?? ""`,
+        ),
+      ).toBe(platesBeforePinch);
+
       socket.close();
     } catch (error) {
       throw new Error(
