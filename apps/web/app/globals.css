@@ -1519,3 +1519,70 @@ kbd {
     text-align: left;
   }
 }
+
+
+/* Phase 18: presentation-only motion. Never drive Phaser camera or
+   simulation state with React/CSS animation. No delayed unmounts. */
+.game {
+  --uy-motion-feedback: 95ms;
+  --uy-motion-reveal: 165ms;
+  --uy-motion-short: 130ms;
+  --uy-motion-ease: cubic-bezier(0.2, 0.7, 0.25, 1);
+}
+@keyframes uy-context-arrive {
+  from { opacity: 0; transform: translateX(9px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes uy-submenu-arrive {
+  from { opacity: 0; transform: translate(-50%, 7px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+@keyframes uy-toast-arrive {
+  from { opacity: 0; transform: translate(-50%, -6px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+.context-panel {
+  animation: uy-context-arrive var(--uy-motion-reveal)
+    var(--uy-motion-ease) both;
+}
+.build-submenu {
+  animation: uy-submenu-arrive var(--uy-motion-short)
+    var(--uy-motion-ease) both;
+}
+.toast {
+  animation: uy-toast-arrive var(--uy-motion-short)
+    var(--uy-motion-ease) both;
+}
+@media (hover: hover) and (pointer: fine) {
+  .hud-actions button,
+  .build-bar button,
+  .build-submenu button {
+    transition: background-color var(--uy-motion-feedback) ease-out,
+      color var(--uy-motion-feedback) ease-out,
+      border-color var(--uy-motion-feedback) ease-out;
+  }
+}
+/* Explicit On wins, System follows OS, Off deliberately overrides OS.
+   No animated exit: closing panels and selecting tools remain instant. */
+.game[data-motion-mode="on"] .context-panel,
+.game[data-motion-mode="on"] .build-submenu,
+.game[data-motion-mode="on"] .toast {
+  animation: none;
+}
+.game[data-motion-mode="on"] .hud-actions button,
+.game[data-motion-mode="on"] .build-bar button,
+.game[data-motion-mode="on"] .build-submenu button {
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .game[data-motion-mode="system"] .context-panel,
+  .game[data-motion-mode="system"] .build-submenu,
+  .game[data-motion-mode="system"] .toast {
+    animation: none;
+  }
+  .game[data-motion-mode="system"] .hud-actions button,
+  .game[data-motion-mode="system"] .build-bar button,
+  .game[data-motion-mode="system"] .build-submenu button {
+    transition: none;
+  }
+}
