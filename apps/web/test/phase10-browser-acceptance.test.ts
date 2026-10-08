@@ -1091,9 +1091,43 @@ browserIt(
           panel: document.querySelector(".context-panel")?.textContent?.slice(0, 950) ?? null,
           notice: document.querySelector('[role="status"]')?.textContent ?? null,
         }))()`);
-        throw new Error("Relocation inspection: " + JSON.stringify(diagnostics), {
-          cause: error,
-        });
+        let persisted: unknown = null;
+        try {
+          await evaluate(`(() => {
+            document.querySelector('button[aria-label="Game menu"]')?.click();
+            return true;
+          })()`);
+          await waitForExpression(
+            `[...document.querySelectorAll("button")]
+              .some((button) => button.textContent?.includes("Save world"))`,
+          );
+          await evaluate(`(() => {
+            [...document.querySelectorAll("button")]
+              .find((button) => button.textContent?.includes("Save world"))
+              ?.click();
+            return true;
+          })()`);
+          persisted = await evaluate(`(() => {
+            const save = JSON.parse(
+              localStorage.getItem("industrial-site-save-v15") ?? "null"
+            );
+            return {
+              factory: Object.values(save.factories ?? {})
+                .find((factory) => factory.x === 23 && factory.y === 33),
+              belts: Object.values(save.belts ?? {})
+                .filter((belt) => belt.y === 37 && belt.x >= 30 && belt.x <= 35),
+              ports: Object.values(save.ports ?? {})
+                .filter((port) => port.y === 37 && port.x >= 30 && port.x <= 35),
+            };
+          })()`);
+        } catch (captureError) {
+          persisted = { captureError: String(captureError) };
+        }
+        throw new Error(
+          "Relocation inspection: " +
+            JSON.stringify({ ...diagnostics, persisted }),
+          { cause: error },
+        );
       }
       await evaluate(`(() => {
         [...document.querySelectorAll("button.entity-row")]
