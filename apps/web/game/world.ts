@@ -45,6 +45,7 @@ export type WorldControls = {
   setMode(mode: WorldMode): void;
   setPreferences(preferences: GamePreferences): void;
   getCameraView(): (CameraView & { target: CameraView }) | null;
+  projectWorldPoint(worldX: number, worldY: number): { x: number; y: number } | null;
   home(): void;
   destroy(): void;
 };
@@ -410,6 +411,20 @@ export function createWorld(
       return this.navigation
         ? { ...this.navigation.getView(), target: this.navigation.getTarget() }
         : null;
+    }
+    projectWorldPoint(worldX: number, worldY: number) {
+      const camera = this.cameras.main;
+      const origin = camera.getWorldPoint(0, 0);
+      const corner = camera.getWorldPoint(camera.width, camera.height);
+      const width = corner.x - origin.x;
+      const height = corner.y - origin.y;
+      if (Math.abs(width) < 0.0001 || Math.abs(height) < 0.0001) return null;
+      // Return ratios relative to the canvas; browser viewport/DPR are
+      // applied by the test at the DOM boundary.
+      return {
+        x: (worldX - origin.x) / width,
+        y: (worldY - origin.y) / height,
+      };
     }
     private applyCamera(view: CameraView) {
       this.cameras.main.setZoom(view.zoom);
@@ -1664,6 +1679,7 @@ export function createWorld(
       scene?.setCameraPreferences(next);
     },
     getCameraView: () => scene?.getCameraView() ?? null,
+    projectWorldPoint: (x, y) => scene?.projectWorldPoint(x, y) ?? null,
     home: () => scene?.home(),
     destroy: () => {
       if (!destroyed) {
