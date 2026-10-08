@@ -1029,7 +1029,16 @@ browserIt(
         document.querySelector('button[aria-label="Center camera"]')?.click();
         return true;
       })()`);
-      await sleep(150);
+      await waitForExpression(
+        `(() => {
+          const view = window.__UNKNOWN_YIELD_CAMERA__?.();
+          if (!view?.target) return false;
+          return Math.abs(view.scrollX - view.target.scrollX) < 0.05 &&
+            Math.abs(view.scrollY - view.target.scrollY) < 0.05 &&
+            Math.abs(view.zoom - view.target.zoom) < 0.0001;
+        })()`,
+        5000,
+      );
 
       await clickCell(28, 37);
       await waitForExpression(
@@ -1067,10 +1076,25 @@ browserIt(
       await waitForExpression(
         `document.body.textContent?.includes("Relocation hold") === true`,
       );
-      await waitForExpression(
-        `document.body.textContent?.includes("External requirements restored") === true`,
-        15000,
-      );
+      try {
+        await waitForExpression(
+          `document.body.textContent?.includes("External requirements restored") === true`,
+          15000,
+        );
+      } catch (error) {
+        const diagnostics = await evaluate<{
+          camera: unknown;
+          panel: string | null;
+          notice: string | null;
+        }>(`(() => ({
+          camera: window.__UNKNOWN_YIELD_CAMERA__?.() ?? null,
+          panel: document.querySelector(".context-panel")?.textContent?.slice(0, 950) ?? null,
+          notice: document.querySelector('[role="status"]')?.textContent ?? null,
+        }))()`);
+        throw new Error("Relocation inspection: " + JSON.stringify(diagnostics), {
+          cause: error,
+        });
+      }
       await evaluate(`(() => {
         [...document.querySelectorAll("button.entity-row")]
           .find((button) => button.textContent?.includes("Crusher"))
@@ -1485,7 +1509,7 @@ browserIt(
 
       // Read-only camera diagnostics are opt-in; ordinary players do not
       // expose the probe. These assertions run against the production export.
-      await call("Page.navigate", { url: appUrl + "?perf=1" });
+      await call("Page.navigate", { url: appUrl });
       await waitForExpression(
         `typeof window.__UNKNOWN_YIELD_CAMERA__ === "function" &&
           window.__UNKNOWN_YIELD_CAMERA__()?.zoom > 0`,
