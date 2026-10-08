@@ -2034,10 +2034,20 @@ browserIt(
           return true;
         })()`);
         await waitForExpression(`localStorage.getItem("unknown-yield-active-pack-v1") !== null`);
+        const postActivation = await evaluate<unknown>(`(() => ({
+          menuButton: Boolean(document.querySelector('button[aria-label="Game menu"]')),
+          hasCanvas: Boolean(document.querySelector('canvas')),
+          storedPack: Boolean(localStorage.getItem("unknown-yield-active-pack-v1")),
+          text: (document.body?.innerText ?? "").slice(-1500),
+        }))()`);
+        console.log("PHASE19_PACK_ACTIVATION_DIAGNOSTIC " + JSON.stringify(postActivation));
+        await waitForExpression(`document.querySelector('button[aria-label="Game menu"]') !== null`);
         await evaluate<boolean>(`(() => {
-          document.querySelector('button[aria-label="Game menu"]')?.click();
+          if (!document.body.textContent?.includes("Expedition controls"))
+            document.querySelector('button[aria-label="Game menu"]')?.click();
           return true;
         })()`);
+        await waitForExpression(`document.body.textContent?.includes("Expedition controls") === true`);
         await waitForExpression(`document.body.textContent?.includes("Imported ·") === true`);
         await evaluate<boolean>(`(() => {
           [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Save world"))?.click();
