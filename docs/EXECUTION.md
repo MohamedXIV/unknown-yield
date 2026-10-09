@@ -360,6 +360,12 @@ On 2026-10-09 the player explicitly selected **Phase 20** to improve on-map buil
 
 **Live baseline on selection:** `main` `678f48f54731df3e69436f2d3d784b32ea0f3885`, Phase 19 complete and post-phase #259 compatibility repair merged. The user did **not** request immediate speculative implementation of another game phase. The Phase 20 issues are open/planned; **none should be marked delivered until its own evidence passes**.
 
+### Execution split (2026-10-09)
+
+The user divided execution by VM needs. **ChatGPT/GitHub connector** owns Phase 20 design and acceptance decisions, the [P0 interaction contract](PHASE20_INTERACTION_CONTRACT.md), issue/PR sequencing and independent review. **Codex Cloud VM** owns TypeScript implementation and runnable tests, full checks and actual production-browser acceptance for #262–#269. The [collaboration/handoff](PHASE20_EXECUTION_SPLIT.md) is the canonical work split. Codex must be initiated by the user; creating docs or issues does not start its VM.
+
+P0 design decisions are now documented; **#262 stays OPEN** until Codex delivers and tests the pure entity classifier/candidate selector. Do not claim P0 or any later feature shipped merely because a spec or handoff exists.
+
 ### NEXT: #262 P0 design/behavior contract
 
 1. **#262** first: settle exact-type/family taxonomy, idempotent reuse & blocker behavior, flow/junction invariants, batch selection/preflight/partial-block policy, gesture safety and authoritative commit contract.
