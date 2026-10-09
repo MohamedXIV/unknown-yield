@@ -5,6 +5,18 @@ import {
   type Point,
   type GameCommand,
 } from "@site/sim-core";
+export {
+  classifyDismantleEntity,
+  selectDismantleCandidates,
+} from "./dismantle-selection";
+export type {
+  DismantleEntity,
+  DismantleEntityClassification,
+  DismantleFamily,
+  DismantleSelectionMode,
+  DismantleSelectionRequest,
+  DismantleSelectionResult,
+} from "./dismantle-selection";
 export type Tool =
   | "elevated-solid"
   | "underground-solid"
