@@ -1,6 +1,7 @@
 export { Simulation } from "./simulation";
 export { planBeltPlacement } from "./belt-planning";
 export { planLinePlacement } from "./line-planning";
+export { dismantleBatch } from "./dismantle-batch";
 export {
   applyReactionHazard,
   hazardClassDefinition,
@@ -52,6 +53,7 @@ export type {
 export type {
   GameCommand,
   CommandResult,
+  DismantleBatchReport,
   BeltPlacementPlan,
   BeltPlacementPosition,
   BeltPlacementKind,
