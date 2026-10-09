@@ -539,11 +539,11 @@ Do not implicitly start a later product phase or aesthetic restyling.
 
 ## Phase 20 — Smart Construction & Selective Dismantling
 
-**Epic:** [#261](https://github.com/MohamedXIV/unknown-yield/issues/261) — **ACTIVE / IMPLEMENTING**, explicitly selected by the player on 2026-10-09. [Accepted scope and interaction guardrails](PHASE20_SCOPE.md). **P0 #262**, **P1 #263**, and **P2 #264** completed via independently reviewed PRs [#274](https://github.com/MohamedXIV/unknown-yield/pull/274), [#278](https://github.com/MohamedXIV/unknown-yield/pull/278) and [#280](https://github.com/MohamedXIV/unknown-yield/pull/280) on 2026-10-09. Gap-aware belt reuse/new-only cost and the world preview are implemented; flow-aware L corners and valid directional joins are now delivered; directed pipes/gas, batch demolition and the selection UI remain pending.
+**Epic:** [#261](https://github.com/MohamedXIV/unknown-yield/issues/261) — **ACTIVE / IMPLEMENTING**, explicitly selected by the player on 2026-10-09. [Accepted scope and interaction guardrails](PHASE20_SCOPE.md). **P0–P3 (#262–#265)** completed via independently reviewed PRs [#274](https://github.com/MohamedXIV/unknown-yield/pull/274), [#278](https://github.com/MohamedXIV/unknown-yield/pull/278), [#280](https://github.com/MohamedXIV/unknown-yield/pull/280) and [#282](https://github.com/MohamedXIV/unknown-yield/pull/282) on 2026-10-09. Gap-aware belt reuse/new-only cost and the world preview are implemented; flow-aware L corners and valid directional joins are now delivered; directed pipe/gas reuse and new-only costs are also delivered; batch demolition and its selection UI remain pending.
 
 ### Player problem
 
-P1 fixed the original all-path rejection for compatible existing ground belts and can fill missing cells without paying twice. P2 resolved richer belt bend and connection choices, including the native mobile pinch regression. Directional flow should connect new runs to existing equipment according to the drag direction and actual topology. Dismantle currently removes one structure per command; the user requests four selectable modes: single, area-all, same exact starting type and same semantic starting family (e.g. belts plus pipes/pressure lines).
+P1 fixed the original all-path rejection for compatible existing ground belts and can fill missing cells without paying twice. P2 resolved richer belt bend and connection choices, including the native mobile pinch regression. P3 delivered compatible directed liquid/gas reuse while preserving contents and exact IDs. Directional flow should connect new runs to existing equipment according to the drag direction and actual topology. Dismantle currently removes one structure per command; the user requests four selectable modes: single, area-all, same exact starting type and same semantic starting family (e.g. belts plus pipes/pressure lines).
 
 ### Scope
 
@@ -559,8 +559,8 @@ P1 fixed the original all-path rejection for compatible existing ground belts an
 - #262 — **P0 DONE** interaction/planner contract + entity taxonomy + pure candidate selection + tests; PR #274, merge commit `80a457b8edb0cbd21d62c43fc19772334d664ded`. Standard VM build command limitation remains documented.
 - #263 — **P1 DONE** idempotent/gap-aware belts and new/reuse/block preview; PR #278, merge commit `93c583aba35981ee9c03c47fe68027068b84dbaa`. Actions standard build, deterministic suite, and production-browser smoke passed; Vercel preview was blocked.
 - #264 — **P2 DONE** flow-aware L corners, safe existing connections and mobile pinch regression; PR #280, squash `9d75209e5da74fc90a4834c1064df066d52ea4ab`. Actions `37920166990` passed deterministic tests, standard build and full native-touch production browser.
-- #265 — **P3 NEXT / DEPENDENCY-READY** compatible directed liquid/gas line reuse, depends #263/#264 (both merged).
-- #266 — **P4** deterministic authoritative batch dismantle and result preflight, depends #262; may proceed parallel with P1.
+- #265 — **P3 DONE** compatible directed liquid/gas line reuse and gap filling, atomic safety, conserved contents, new-only charges and per-cell previews; PR #282, squash `afb0d49c8d21f1d8d90d85993d1bcf82f551feba`. Actions `37940072627` passed 625 tests/3 skipped, standard build and full browser.
+- #266 — **P4 NEXT / DEPENDENCY-READY** deterministic authoritative batch dismantle and result preflight; implement on merged P3 main to avoid conflicting command-file edits.
 - #267 — **P5** four player-facing dismantle selection modes, depends #266.
 - #268 — **P6** accessibility and workflow ergonomics, depends #264/#267.
 - #269 — **P7** integrated browser/conservation/interaction exit, depends all delivered feature children.
