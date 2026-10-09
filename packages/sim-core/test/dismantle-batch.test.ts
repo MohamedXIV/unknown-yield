@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fixture } from "@site/content";
+import { fixture, validateContent } from "@site/content";
 import { auditLedger, Simulation, type GameCommand } from "../src";
 import { amount } from "../src/types";
 
@@ -284,5 +284,130 @@ describe("Phase 20 P4 — authoritative safe batch dismantling", () => {
     expect(restored.load(sim.serialize()).ok).toBe(true);
     expect(restored.serialize()).toEqual(sim.serialize());
     ledgerOk(sim);
+  });
+});
+
+
+describe("Phase 20 P4 — protected loaded structures and dynamic definitions", () => {
+  it("B09: loaded junction stays intact while independent ordinary belt is reclaimed", () => {
+    const sim = make();
+    const junctionId = belt(sim, 20, 20),
+      emptyId = belt(sim, 22, 20);
+    expect(sim.command({
+      type: "configureJunction",
+      beltId: junctionId,
+      definitionId: "splitter",
+      direction: 0,
+      branch: 1,
+    }).ok).toBe(true);
+    const save = sim.serialize();
+    save.stock[fixture.site.buildMaterial]--;
+    save.belts["20,20"].cargo = fixture.site.buildMaterial;
+    expect(sim.load(save).ok).toBe(true);
+    const existing = sim.serialize().belts["20,20"];
+    const result = sim.command({ type: "dismantleMany", ids: [junctionId, emptyId] });
+    expect(result.batch?.removed).toEqual([emptyId]);
+    expect(result.batch?.blocked).toEqual([
+      { id: junctionId, reason: "Empty junction first" },
+    ]);
+    expect(sim.serialize().belts["20,20"]).toEqual(existing);
+    ledgerOk(sim);
+  });
+
+  for (const medium of ["liquid", "gas"] as const) {
+    it(`B10/B11: loaded ${medium} is not drained during mixed batch removal`, () => {
+      const content = structuredClone(fixture);
+      const raw = content.materials.find(m => m.id === "raw")!;
+      raw.handlingState = medium;
+      for (const machine of content.machines) {
+        machine.inputStates = ["solid", "liquid", "gas"];
+        machine.outputStates = ["solid", "liquid", "gas"];
+      }
+      const authored = validateContent(content);
+      const sim = new Simulation(authored);
+      if (medium === "liquid") {
+        construct(sim, { type: "placePipes", containmentProfileId: "standard",
+          points: [
+            { x: 30, y: 30, inlet: 2, outlet: 0 },
+            { x: 31, y: 30, inlet: 2, outlet: 0 },
+          ] });
+      } else {
+        construct(sim, { type: "placePressureLines",
+          points: [
+            { x: 30, y: 30, inlet: 2, outlet: 0 },
+            { x: 31, y: 30, inlet: 2, outlet: 0 },
+          ] });
+      }
+      const lines = medium === "liquid" ? sim.serialize().pipes : sim.serialize().pressureLines;
+      const loadedId = lines["30,30"].id, emptyId = lines["31,30"].id;
+      const state = sim.serialize(),
+        deposit = authored.site.deposits.find(d => d.material === "raw")!;
+      state.deposits[deposit.id] -= 2;
+      if (medium === "liquid") {
+        state.pipes["30,30"].materialId = "raw";
+        state.pipes["30,30"].quantity = 2;
+      } else {
+        state.pressureLines["30,30"].materialId = "raw";
+        state.pressureLines["30,30"].quantity = 2;
+      }
+      expect(sim.load(state).ok).toBe(true);
+      const result = sim.command({
+        type: "dismantleMany", ids: [loadedId, emptyId],
+      });
+      expect(result.batch?.removed).toEqual([emptyId]);
+      expect(result.batch?.blocked).toHaveLength(1);
+      const after = medium === "liquid"
+        ? sim.serialize().pipes["30,30"]
+        : sim.serialize().pressureLines["30,30"];
+      expect(after).toMatchObject({ id: loadedId, quantity: 2, materialId: "raw" });
+      expect(auditLedger(authored, sim.serialize()).ok).toBe(true);
+    });
+  }
+
+  it("B12/B15: a buffered processor protects itself and its factory, not independent belt", () => {
+    const sim = make();
+    construct(sim, { type: "placeFactory", x: 65, y: 45, width: 6, height: 6 });
+    const factoryId = Object.values(sim.serialize().factories)[0].id;
+    construct(sim, {
+      type: "placeMachine", definitionId: "crusher", x: 67, y: 46, direction: 0,
+    });
+    const machineId = Object.values(sim.serialize().machines)[0].id;
+    const beltId = belt(sim, 68, 49);
+    const loaded = sim.serialize(),
+      deposit = fixture.site.deposits.find(d => d.material === "raw")!;
+    loaded.deposits[deposit.id]--;
+    loaded.machines[machineId].input.raw = 1;
+    expect(sim.load(loaded).ok).toBe(true);
+    const result = sim.command({
+      type: "dismantleMany", ids: [factoryId, beltId, machineId],
+    });
+    expect(result.batch?.removed).toEqual([beltId]);
+    expect(result.batch?.blocked.map(b => b.id)).toEqual([machineId, factoryId]);
+    expect(sim.serialize().machines[machineId].input.raw).toBe(1);
+    expect(sim.serialize().factories[factoryId]).toBeDefined();
+    ledgerOk(sim);
+  });
+
+  it("B18: a valid imported machine definition uses its real dynamic identity and refund", () => {
+    const custom = structuredClone(fixture);
+    const original = custom.machines.find(m => m.id === "crusher")!;
+    custom.machines.push({ ...structuredClone(original), id: "external-processor-v1" });
+    const authored = validateContent(custom),
+      sim = new Simulation(authored);
+    construct(sim, {
+      type: "placeFactory", x: 65, y: 45, width: 6, height: 6,
+    });
+    construct(sim, {
+      type: "placeMachine", definitionId: "external-processor-v1",
+      x: 67, y: 46, direction: 0,
+    });
+    const machine = Object.values(sim.serialize().machines)[0];
+    expect(machine.definitionId).toBe("external-processor-v1");
+    const result = sim.command({ type: "dismantleMany", ids: [machine.id] });
+    expect(result.batch).toMatchObject({
+      removed: [machine.id],
+      reclaimedStructureMaterial: original.cost,
+    });
+    expect(auditLedger(authored, sim.serialize()).ok).toBe(true);
   });
 });
