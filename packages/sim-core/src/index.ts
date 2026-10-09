@@ -1,4 +1,5 @@
 export { Simulation } from "./simulation";
+export { planBeltPlacement } from "./belt-planning";
 export {
   applyReactionHazard,
   hazardClassDefinition,
@@ -50,6 +51,9 @@ export type {
 export type {
   GameCommand,
   CommandResult,
+  BeltPlacementPlan,
+  BeltPlacementPosition,
+  BeltPlacementKind,
   PlayerSnapshot,
   MachineView,
   MachineStatus,

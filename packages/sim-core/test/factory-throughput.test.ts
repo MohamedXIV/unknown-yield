@@ -307,6 +307,19 @@ function stable(view: FactoryThroughputView) {
 }
 
 describe("district route throughput invalidation", () => {
+  it("preserves throughput certification when a belt path is a zero-cost reuse", () => {
+    const { sim, factoryId } = makeLine();
+    const certified = certify(sim, factoryId);
+    const before = sim.serialize();
+
+    const result = sim.command(path(20, 27, 26));
+
+    expect(result).toMatchObject({ ok: true, cost: 0 });
+    expect(result.beltPlan).toMatchObject({ newCount: 0 });
+    expect(sim.serialize()).toEqual(before);
+    expect(throughput(sim, factoryId)).toEqual(certified);
+  });
+
   it("preserves certification on idempotent route selection and resets on a real route change", () => {
     const { sim, factoryId } = makeLine(),
       divert = sim.snapshot().belts.find(

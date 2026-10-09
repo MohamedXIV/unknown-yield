@@ -381,6 +381,12 @@ export const enCatalog: LocaleCatalog = {
   "ui.crossing.held": "Held route: {{axis}} → {{direction}}",
   "ui.crossing.rotate": "Rotate crossing",
   "ui.crossing.remove": "Remove crossing upgrade",
+  "ui.belt.preview.counts": "{{newCount}} new · {{reusedCount}} reused",
+  "ui.belt.preview.shortfall": "Short by {{count}} plates",
+  "ui.belt.preview.crossing-wait":
+    "Crossing admission is temporarily closed",
+  "ui.belt.preview.splitter-choice":
+    "Splitter may send cargo through its other outlet",
   "ui.junction.loaded": "Empty the junction through belts first",
   "ui.junction.unknown": "Unknown junction definition",
   "ui.junction.wall": "Junctions cannot occupy factory walls or ports",

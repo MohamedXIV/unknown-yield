@@ -18,6 +18,7 @@ import { exchangeDefinition } from "./market";
 import { applyAssistance, assistanceEligibility } from "./assistance";
 import { applySensingObservation } from "./sensing";
 import { requestImportCommand } from "./imports";
+import { planBeltPlacement } from "./belt-planning";
 import {
   factoryConnectionRequirements,
   factoryRelocationResumeError,
@@ -28,7 +29,6 @@ import {
   factoryRelocationError,
   machinePlacement,
   portError,
-  beltError,
   storageError,
   wall,
   key,
@@ -895,41 +895,34 @@ export function applyCommand(
       return ok("Underground solid route placed", cost, id);
     }
     case "placeBelts": {
-      const seen = new Set<string>();
-      const segments = [];
-      for (let i = 0; i < cmd.points.length; i++) {
-        const p = cmd.points[i],
-          n = cmd.points[i + 1];
-        if (seen.has(key(p))) return fail("A path cannot cross itself");
-        seen.add(key(p));
-        if (n && Math.abs(n.x - p.x) + Math.abs(n.y - p.y) !== 1)
-          return fail("Draw adjacent cardinal cells");
-        const dir = n
-          ? n.x > p.x
-            ? 0
-            : n.y > p.y
-              ? 1
-              : n.x < p.x
-                ? 2
-                : 3
-          : cmd.direction;
-        const error = beltError(c, s, p, dir);
-        if (error) return fail(error);
-        segments.push({ ...p, direction: dir });
-      }
-      const cost = segments.length * c.site.beltCost;
-      if (!affordable(cost)) return fail("Not enough structural plates");
-      if (!apply) return ok("Build " + segments.length + " belt cells", cost);
-      pay(cost);
-      for (const p of segments)
+      const beltPlan = planBeltPlacement(c, s, cmd);
+      if (!beltPlan.valid)
+        return {
+          ...fail(beltPlan.error ?? "Invalid belt path"),
+          cost: beltPlan.cost,
+          beltPlan,
+        };
+      if (!apply)
+        return {
+          ...ok("Belt path preflight", beltPlan.cost),
+          beltPlan,
+        };
+      if (beltPlan.newCount === 0)
+        return { ...ok("Belt path already present"), beltPlan };
+      pay(beltPlan.cost);
+      for (const p of beltPlan.positions) {
+        if (p.kind !== "add") continue;
         s.belts[key(p)] = {
-          ...p,
           id: issue("b"),
+          x: p.x,
+          y: p.y,
+          direction: p.direction,
           cargo: null,
           alternate: null,
           switched: false,
         };
-      return ok("Belt path built", cost);
+      }
+      return { ...ok("Belt path built", beltPlan.cost), beltPlan };
     }
     case "configureJunction": {
       const b = Object.values(s.belts).find((b) => b.id === cmd.beltId);

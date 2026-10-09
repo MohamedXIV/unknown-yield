@@ -64,6 +64,22 @@ describe("command-owned placement feedback", () => {
     expect(derivePlacementFeedback({ type: "dispatchShipment" }, { ok: true, message: "ok" }, before, after)).toEqual([]);
   });
 
+  it("emits no placement cue for a successful zero-cost belt reuse", () => {
+    const sim = new Simulation(fixture);
+    const command = {
+      type: "placeBelts" as const,
+      points: [{ x: 12, y: 12 }, { x: 13, y: 12 }],
+      direction: 0,
+    };
+    expect(sim.command(command).ok).toBe(true);
+    const before = sim.snapshot();
+    const result = sim.command(command);
+    const after = sim.snapshot();
+
+    expect(result).toMatchObject({ ok: true, cost: 0, beltPlan: { newCount: 0 } });
+    expect(derivePlacementFeedback(command, result, before, after)).toEqual([]);
+  });
+
   it("does not play new build cues when restoring or ticking a snapshot", () => {
     const before = new Simulation(fixture).snapshot();
     const restored = structuredClone(before);
