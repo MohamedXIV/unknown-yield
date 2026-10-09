@@ -28,20 +28,20 @@ There is **no installed Codex Cloud action in this chat** that can launch its VM
 7. **Browser acceptance:** world gestures, canvas previews, save/reload and accessibility are VM/browser work. Follow the repository's real acceptance harness rather than inventing a command. Browser emulation is not a substitute for user's GPU/handheld human review.
 8. After a merged feature PR, sync `main` before the next issue. Report exact feature coverage rather than treating all #261 children as complete.
 
-## Initial Codex Cloud handoff (copy as one task)
+## Current Codex Cloud handoff (from completed P0)
 
-> Continue autonomously in `MohamedXIV/unknown-yield` from **actual live GitHub main** using the repository VM. First read `AGENTS.md`, `docs/EXECUTION.md`, `docs/PHASE20_SCOPE.md`, `docs/PHASE20_INTERACTION_CONTRACT.md` and `docs/PHASE20_EXECUTION_SPLIT.md`.
+> Continue `MohamedXIV/unknown-yield` from the **actual live main**. Verify open PRs and `AGENTS.md`, `docs/EXECUTION.md`, `docs/PHASE20_SCOPE.md`, `docs/PHASE20_INTERACTION_CONTRACT.md`, `docs/PHASE20_LOGISTICS_AUDIT.md`, `docs/PHASE20_DISMANTLE_AUDIT.md` and the corresponding issue before editing.
 >
-> We are collaborating: ChatGPT handles GitHub-only design contracts, issue/backlog coordination and code reviews; **you own all VM-required TypeScript implementation, focused/full tests and real browser acceptance**. Never rewrite the approved roadmap or create competing PRs. The design contract for #262 is authored already; the **code/tests part is still open**, so begin there. Implement the minimum pure, deterministic classifier/candidate selection and tests required by #262, then run focused tests and `npm run typecheck`; open a focused issue-referencing PR with exact evidence.
+> P0 #262 is **DONE** via PR #274. Start **#263**, implementing idempotent gap-aware belt placement with deterministic pure preflight, authoritative command revalidation, unchanged reusable IDs/cargo/flow, new-only structural cost, explicit blockers, atomic rejection and no-op/no-VFX. Follow acceptance matrix L01–L10, and preserve existing transport simulation/junction contracts. Implement a focused PR and tests, then full test, typecheck, lint and normal build.
 >
-> When #262 is safely merged, tackle #263 smart idempotent belt-gap filling, #264 flow-aware joints and bends, #265 pipe/gas parity, then #266 authoritative safe batch dismantle, #267 four demolition filters, #268 accessibility/ergonomics, #269 integrated exit. The two tracks may be parallelized only when distinct clean branches and merged dependencies permit. The accepted P0 contract constrains all future implementation; if a genuine sim-core contradiction appears, document it explicitly, explain your proposed safe change and update contract/tests together.
+> This repository is **public; the user explicitly authorizes GitHub Actions**. Ready-PR CI (normal Ubuntu/Node 24 build) may resolve the earlier Codex VM stdout/Next TypeScript subprocess limitation. An alternative build remains diagnostic only, not a normal-build PASS. Browser-test world interaction if changed; don't claim physical-device proof.
 >
-> Preserve **sim-core authority, conservation of every physical material/cargo, real drainage/structural gates, deterministic save/load, imported machine IDs, hidden-knowledge UI, zero-charge reused cells, touch pan/pinch cancellation and camera performance**. No unsolicited scope expansion, automatic auto-dismantle/auto-reroute, full reskin, Rust, construction timers, speculative new dependencies or manual Vercel deployments. Use Codex VM for `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`, and production-browser acceptance when an issue needs it. Avoid manual GitHub Actions to save quota. Do not report a test as passed unless actually run. For each issue give exact PR/head/test status and actual blockers; don't claim a physical-device FPS certificate.
+> #266 batch dismantle is independently unblocked after P0 but touches overlapping core files; avoid unmerged divergent implementations. Proceed #264 after #263 merge, then #265; implement #266/#267 afterward or only in genuinely non-overlapping independent branches. Do not create competing PRs. Report exact tested SHA, changed files, checks, actual failures/risks and requested follow-up; ChatGPT owns separate GitHub-side review.
 
 ## Handoff back to ChatGPT
 
 When Codex creates a PR, share its URL/number in the conversation and ask:
 
-> Review the current PR for `MohamedXIV/unknown-yield` against #261 / `PHASE20_INTERACTION_CONTRACT.md`: check authoritative safety, exact-head tests, material accounting, save and UX regressions. If safe and repository checks allow, merge it and update the issue/dependency board. Use the connected GitHub connector only; don't run Actions manually.
+> Review the current PR for `MohamedXIV/unknown-yield` against #261 / `PHASE20_INTERACTION_CONTRACT.md`: check authoritative safety, exact-head tests, material accounting, save and UX regressions. If safe and repository checks allow, merge it and update the issue/dependency board. Use the connected GitHub connector; GitHub Actions are explicitly allowed for this public project when useful.
 
 This split is **coordination**, not a claim that Codex was automatically started or that test results exist.
