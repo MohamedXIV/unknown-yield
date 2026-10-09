@@ -1,6 +1,6 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -703,6 +703,11 @@ browserIt(
         "8",
       ]);
 
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Close field brief"]')?.click();
+        return true;
+      })()`);
+
       await pressKey("5", "Digit5", 53);
       await waitForExpression(
         `document.querySelector('[data-build-group="solid-logistics"]')
@@ -876,6 +881,123 @@ browserIt(
         document.querySelector('button[aria-label="Company terminal"]')?.click();
         return true;
       })()`);
+
+      await clickBuildTool("solid-logistics", "Belt");
+      await clickCell(15, 18);
+      await waitForExpression(
+        `document.querySelector('[role="status"]')
+          ?.textContent.includes("Belt path built") === true`,
+      );
+      await waitForExpression(
+        `document.querySelector('[role="status"]')
+          ?.textContent.includes("Belt path built") !== true`,
+        8000,
+      );
+      const beltRoutePixels = await evaluate<{ start: { x: number; y: number }; end: { x: number; y: number } }>(
+        `(() => {
+          const rect = document.querySelector("canvas").getBoundingClientRect();
+          const project = (x, y) => {
+            const point = window.__UNKNOWN_YIELD_PROJECT_WORLD__((x + .5) * 32, (y + .5) * 24);
+            return { x: rect.left + point.x * rect.width, y: rect.top + point.y * rect.height };
+          };
+          return { start: project(15, 18), end: project(17, 18) };
+        })()`
+      );
+      await call("Input.dispatchMouseEvent", {
+        type: "mousePressed",
+        ...beltRoutePixels.start,
+        button: "left",
+        buttons: 1,
+        clickCount: 1,
+      });
+      await call("Input.dispatchMouseEvent", {
+        type: "mouseMoved",
+        ...beltRoutePixels.end,
+        button: "left",
+        buttons: 1,
+      });
+      await sleep(100);
+      const beltPreviewScreenshot = await call("Page.captureScreenshot", {
+        format: "png",
+        captureBeyondViewport: false,
+      });
+      const beltPreviewBytes = Buffer.from(
+        (beltPreviewScreenshot as unknown as { data: string }).data,
+        "base64",
+      );
+      const beltPreviewSha256 = createHash("sha256")
+        .update(beltPreviewBytes)
+        .digest("hex");
+      const evidenceDirectory = process.env.UNKNOWN_YIELD_EVIDENCE_DIR;
+      if (evidenceDirectory) {
+        mkdirSync(evidenceDirectory, { recursive: true });
+        writeFileSync(join(evidenceDirectory, "belt-gap-preview.png"), beltPreviewBytes);
+      }
+      await call("Input.dispatchMouseEvent", {
+        type: "mouseReleased",
+        ...beltRoutePixels.end,
+        button: "left",
+        buttons: 0,
+        clickCount: 1,
+      });
+      await waitForExpression(
+        `document.querySelector('[role="status"]')
+          ?.textContent.includes("Belt path built") === true`,
+      );
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Game menu"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `[...document.querySelectorAll("button")]
+          .some((button) => button.textContent?.includes("Save world"))`,
+      );
+      await evaluate(`(() => {
+        [...document.querySelectorAll("button")]
+          .find((button) => button.textContent?.includes("Save world"))
+          ?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector('[role="status"]')
+          ?.textContent.includes("Field record saved on this device") === true`,
+      );
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Game menu"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `[...document.querySelectorAll("button")]
+          .some((button) => button.textContent?.includes("Save world")) === false`,
+      );
+      const beltGapSave = await evaluate<{
+        belts: Array<{ id: string; x: number; y: number; direction: number }>;
+        plates: number;
+      }>(`(() => {
+        const save = JSON.parse(localStorage.getItem("industrial-site-save-v15"));
+        return {
+          belts: Object.values(save.belts).filter((belt) => belt.y === 18 && belt.x >= 15 && belt.x <= 17),
+          plates: save.stock.plates,
+        };
+      })()`);
+      expect(beltGapSave.belts).toHaveLength(3);
+      expect(beltGapSave.belts.map((belt) => belt.x).sort()).toEqual([15, 16, 17]);
+      expect(new Set(beltGapSave.belts.map((belt) => belt.id)).size).toBe(3);
+      expect(beltGapSave.belts.every((belt) => belt.direction === 0)).toBe(true);
+      expect(beltGapSave.plates).toBe(597);
+      console.log("PHASE20_BELT_GAP_BROWSER_EVIDENCE " + JSON.stringify({
+        mode: browserAcceptanceMode,
+        scenario: "reuse one existing start belt and build two new cells in production browser",
+        reusedCell: { x: 15, y: 18 },
+        addedCells: [{ x: 16, y: 18 }, { x: 17, y: 18 }],
+        savedBelts: beltGapSave.belts,
+        remainingPlates: beltGapSave.plates,
+        previewScreenshot: {
+          bytes: beltPreviewBytes.length,
+          sha256: beltPreviewSha256,
+          retained: Boolean(evidenceDirectory),
+        },
+      }));
 
       const learned = hazardSave();
       const beforeEvidence = await evaluate<string>(

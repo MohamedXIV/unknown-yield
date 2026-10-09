@@ -181,7 +181,14 @@ describe("world construction", () => {
     ).toBe(false);
     build(s, { type: "placePort", factoryId: f, x: 24, y: 27, direction: 0 });
     build(s, path(23, 27, 26, 27));
-    expect(s.command(path(23, 27, 26, 27, 1)).ok).toBe(false);
+    const beforeRepeat = s.serialize();
+    const repeated = s.command(path(23, 27, 26, 27, 1));
+    expect(repeated).toMatchObject({
+      ok: true,
+      cost: 0,
+      beltPlan: { newCount: 0, reusedCount: 4 },
+    });
+    expect(s.serialize()).toEqual(beforeRepeat);
   });
   it("refunds exact costs and refuses occupied factory removal", () => {
     const s = make(),

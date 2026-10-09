@@ -73,6 +73,12 @@ export class Simulation {
           ? commandInput?.route === "alternate"
           : undefined,
       result = applyCommand(this.content, this.state, input, true);
+    if (
+      result.ok &&
+      commandType === "placeBelts" &&
+      result.beltPlan?.newCount === 0
+    )
+      return result;
     if (result.ok) {
       if (
         commandType === "setDivertRoute" &&

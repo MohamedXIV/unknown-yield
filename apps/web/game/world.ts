@@ -1803,7 +1803,8 @@ export function createWorld(
         for (let i = 0; i < command.points.length; i++) {
           const p = command.points[i],
             n = command.points[i + 1],
-            dir = n
+            planPosition = result.beltPlan?.positions[i],
+            dir = planPosition?.direction ?? (n
               ? n.x > p.x
                 ? 0
                 : n.y > p.y
@@ -1811,13 +1812,32 @@ export function createWorld(
                   : n.x < p.x
                     ? 2
                     : 3
-              : command.direction;
+              : command.direction),
+            kind = planPosition?.kind ?? (result.ok ? "add" : "blocked"),
+            tint = kind === "reuse"
+              ? 0x79c5bd
+              : kind === "blocked"
+                ? 0xe79b7c
+                : result.ok
+                  ? 0xbdd79f
+                  : 0xd5a975;
           ghost
-            .fillStyle(tint, 0.2)
+            .fillStyle(tint, kind === "add" ? 0.2 : 0.08)
             .fillRect(p.x * X, p.y * Y, X, Y)
-            .lineStyle(1, tint)
+            .lineStyle(2, tint, 0.95)
             .strokeRect(p.x * X, p.y * Y, X, Y);
-          this.arrow(ghost, (p.x + 0.5) * X, (p.y + 0.5) * Y, dir, tint, 5);
+          const centerX = (p.x + 0.5) * X,
+            centerY = (p.y + 0.5) * Y;
+          if (kind === "blocked") {
+            ghost
+              .lineStyle(2, tint, 0.95)
+              .lineBetween(p.x * X + 7, p.y * Y + 5, p.x * X + X - 7, p.y * Y + Y - 5)
+              .lineBetween(p.x * X + X - 7, p.y * Y + 5, p.x * X + 7, p.y * Y + Y - 5);
+          } else {
+            if (kind === "reuse")
+              ghost.fillStyle(tint, 0.95).fillCircle(centerX, centerY, 2.5);
+            this.arrow(ghost, centerX, centerY, dir, tint, 5);
+          }
         }
       else {
         ghost
@@ -1833,6 +1853,34 @@ export function createWorld(
             7,
           );
       }
+      const beltNotices = result.beltPlan
+        ? [
+            result.beltPlan.positions.some(
+              (position) => position.notice === "crossing-admission-wait",
+            )
+              ? translate("ui.belt.preview.crossing-wait")
+              : "",
+            result.beltPlan.positions.some(
+              (position) => position.notice === "splitter-branch-selection",
+            )
+              ? translate("ui.belt.preview.splitter-choice")
+              : "",
+          ].filter(Boolean)
+        : [];
+      const beltSummary = result.beltPlan
+        ? " · " +
+          translate("ui.belt.preview.counts", {
+            newCount: result.beltPlan.newCount,
+            reusedCount: result.beltPlan.reusedCount,
+          }) +
+          (result.beltPlan.shortfall > 0
+            ? " · " +
+              translate("ui.belt.preview.shortfall", {
+                count: result.beltPlan.shortfall,
+              })
+            : "") +
+          (beltNotices.length ? " · " + beltNotices.join(" · ") : "")
+        : "";
       this.tooltip
         .setVisible(true)
         .setPosition((this.hover.x + 1) * X, (this.hover.y + 1) * Y + 12)
@@ -1844,6 +1892,7 @@ export function createWorld(
             (result.messageKey
               ? translate(result.messageKey)
               : result.message) +
+            beltSummary +
             (result.cost ? " · " + result.cost + " " + this.buildUnit() : ""),
         )
         .setColor(result.ok ? "#d3e4ba" : "#f0ba9a");

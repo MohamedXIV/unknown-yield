@@ -400,6 +400,25 @@ export type CommandResult = {
   messageKey?: string;
   id?: string;
   cost?: number;
+  beltPlan?: BeltPlacementPlan;
+};
+export type BeltPlacementKind = "add" | "reuse" | "blocked";
+export type BeltPlacementPosition = Point & {
+  kind: BeltPlacementKind;
+  direction: number;
+  reason?: string;
+  notice?: "crossing-admission-wait" | "splitter-branch-selection";
+};
+export type BeltPlacementPlan = {
+  valid: boolean;
+  positions: BeltPlacementPosition[];
+  newCount: number;
+  reusedCount: number;
+  blockedCount: number;
+  cost: number;
+  available: number;
+  shortfall: number;
+  error?: string;
 };
 export type GameCommand =
   | { type: "repairPump"; id: string }
