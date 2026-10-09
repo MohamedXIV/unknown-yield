@@ -17,6 +17,10 @@ import {
   type WorldMode,
   type Tool,
 } from "./interaction";
+import {
+  classifyDismantleEntity,
+  type DismantleSelectionRequest,
+} from "./dismantle-selection";
 import { t as translate } from "./i18n";
 import { machineStatusLabel } from "./machine-status";
 import { observationKey, unseenObservations } from "./observations";
@@ -70,6 +74,9 @@ export type WorldActions = {
   mode(tool: Tool): void;
   rotate(): void;
   toggleFactory(id: string): void;
+  reviewArea(request: DismantleSelectionRequest): void;
+  cancelAreaReview(): void;
+  disarmTouchArea(): void;
 };
 const X = ART_CAMERA.cellWidth,
   Y = ART_CAMERA.cellHeight;
@@ -78,7 +85,8 @@ const editing = () => {
   const el = document.activeElement;
   return (
     el instanceof HTMLElement &&
-    (el.matches("input,textarea,select") || el.isContentEditable)
+    (el.matches("input,textarea,select,button,a[href],[role=button],[role=menuitem]") ||
+      el.isContentEditable)
   );
 };
 export function createWorld(
@@ -105,6 +113,8 @@ export function createWorld(
     private tooltip!: Phaser.GameObjects.Text;
     private hover: Point | null = null;
     private anchor: Point | null = null;
+    private areaAnchor: Pick<DismantleSelectionRequest, "anchorId" | "anchorExactType" | "anchorFamily"> = {};
+    private activeAreaTouch = false;
     private beltCornerOrder: BeltCornerOrder = "horizontal-first";
     private keys = new Set<string>();
     private readonly touch = new TouchGestureArbiter();
@@ -347,7 +357,7 @@ export function createWorld(
           const gesture = this.touch.move(
             p.id,
             { x: p.x, y: p.y },
-            mode.tool === "select" ? "inspect" : "build",
+            this.touchMode(),
           );
           if (gesture?.kind === "pan")
             this.navigation.panByScreen(gesture.dx, gesture.dy);
@@ -358,7 +368,8 @@ export function createWorld(
               gesture.current,
             );
           if (this.hover !== null) this.invalidateOverlays();
-          this.hover = null;
+          this.hover = this.activeAreaTouch ? this.cell(p) : null;
+          if (this.activeAreaTouch) this.invalidateOverlays();
           return;
         }
         if (p.isDown && (p.rightButtonDown() || p.middleButtonDown())) {
@@ -385,13 +396,36 @@ export function createWorld(
         if (preferences.interface.soundEffects) void feedbackAudio.enable();
         if (p.wasTouch) {
           const result = this.touch.down(p.id, { x: p.x, y: p.y });
-          if (result?.kind === "cancel-build") this.anchor = null;
+          if (result?.kind === "cancel-build") {
+            this.anchor = null;
+            this.areaAnchor = {};
+            if (this.activeAreaTouch) actions.disarmTouchArea();
+            this.activeAreaTouch = false;
+          } else if (this.touch.activeCount === 1) {
+            const isArea = mode.tool === "demolish" && mode.dismantleMode !== "single";
+            this.activeAreaTouch = isArea && mode.touchAreaArmed;
+            if (this.activeAreaTouch) {
+              this.anchor = this.cell(p);
+              this.hover = this.anchor;
+              this.captureAreaAnchor(this.anchor);
+              actions.disarmTouchArea();
+            }
+          }
+          return;
+        }
+        if (p.rightButtonDown()) {
+          this.anchor = null;
+          this.areaAnchor = {};
+          if (mode.dismantleReview) actions.cancelAreaReview();
           return;
         }
         if (!p.leftButtonDown()) return;
+        if (mode.tool === "demolish" && mode.dismantleMode !== "single")
+          actions.cancelAreaReview();
         this.hover = this.cell(p);
         this.anchor = this.hover;
         this.beltCornerOrder = "horizontal-first";
+        this.captureAreaAnchor(this.anchor);
       });
       this.input.on("pointerup", (p: Phaser.Input.Pointer) => {
         this.invalidateOverlays();
@@ -399,7 +433,7 @@ export function createWorld(
           const gesture = this.touch.up(
             p.id,
             { x: p.x, y: p.y },
-            mode.tool === "select" ? "inspect" : "build",
+            this.touchMode(),
           );
           if (gesture?.kind === "tap")
             actions.select(
@@ -412,16 +446,25 @@ export function createWorld(
           if (gesture?.kind === "build") {
             const origin = this.screenCell(gesture.start);
             const end = this.screenCell(gesture.end);
-            const command = buildCommand(mode, snapshot, end, origin);
-            if (command) this.place(command);
+            if (this.activeAreaTouch) {
+              this.finishAreaSelection(origin, end);
+            } else {
+              const command = buildCommand(mode, snapshot, end, origin);
+              if (command) this.place(command);
+            }
           }
+          if (this.activeAreaTouch) actions.disarmTouchArea();
+          this.activeAreaTouch = false;
           this.anchor = null;
+          this.areaAnchor = {};
           this.beltCornerOrder = "horizontal-first";
           return;
         }
         if (p.button !== 0 || !this.anchor) return;
         const cell = this.cell(p);
-        if (mode.tool === "select") {
+        if (mode.tool === "demolish" && mode.dismantleMode !== "single") {
+          this.finishAreaSelection(this.anchor, cell);
+        } else if (mode.tool === "select") {
           const id = hitTest(snapshot, cell, mode.openFactories);
           actions.select(id);
         } else {
@@ -435,19 +478,26 @@ export function createWorld(
           if (command) this.place(command);
         }
         this.anchor = null;
+        this.areaAnchor = {};
         this.beltCornerOrder = "horizontal-first";
       });
       this.input.on("gameout", () => {
         this.invalidateOverlays();
         this.hover = null;
         this.touch.cancel();
+        if (this.activeAreaTouch) actions.disarmTouchArea();
+        this.activeAreaTouch = false;
         this.anchor = null;
+        this.areaAnchor = {};
         this.beltCornerOrder = "horizontal-first";
       });
       this.input.on("pointerupoutside", (p: Phaser.Input.Pointer) => {
         this.invalidateOverlays();
         if (p.wasTouch) this.touch.cancel(p.id);
+        if (this.activeAreaTouch) actions.disarmTouchArea();
+        this.activeAreaTouch = false;
         this.anchor = null;
+        this.areaAnchor = {};
         this.beltCornerOrder = "horizontal-first";
       });
       this.input.on(
@@ -496,7 +546,12 @@ export function createWorld(
         }
         if (k === "escape") {
           this.invalidateOverlays();
+          if (mode.dismantleReview) {
+            actions.cancelAreaReview();
+            return;
+          }
           this.anchor = null;
+          this.areaAnchor = {};
           this.beltCornerOrder = "horizontal-first";
           actions.mode("select");
           actions.select(null);
@@ -516,7 +571,10 @@ export function createWorld(
       const blur = () => {
         this.keys.clear();
         this.touch.cancel();
+        if (this.activeAreaTouch) actions.disarmTouchArea();
+        this.activeAreaTouch = false;
         this.anchor = null;
+        this.areaAnchor = {};
         this.beltCornerOrder = "horizontal-first";
       };
       window.addEventListener("keydown", down);
@@ -545,9 +603,47 @@ export function createWorld(
     cell(p: Phaser.Input.Pointer): Point {
       return this.screenCell({ x: p.x, y: p.y });
     }
+    private touchMode(): "inspect" | "build" {
+      if (mode.tool === "select") return "inspect";
+      if (mode.tool === "demolish" && mode.dismantleMode !== "single")
+        return this.activeAreaTouch ? "build" : "inspect";
+      return "build";
+    }
+    private captureAreaAnchor(point: Point | null) {
+      this.areaAnchor = {};
+      if (
+        !point ||
+        mode.tool !== "demolish" ||
+        (mode.dismantleMode !== "area-exact" && mode.dismantleMode !== "area-family")
+      ) return;
+      const anchorId = hitTest(snapshot, point, mode.openFactories);
+      this.areaAnchor = { anchorId };
+      if (!anchorId) return;
+      const classification = classifyDismantleEntity(snapshot, anchorId);
+      if (classification.kind === "player-built")
+        this.areaAnchor = {
+          anchorId,
+          anchorExactType: classification.entity.exactType,
+          anchorFamily: classification.entity.family,
+        };
+    }
+    private finishAreaSelection(from: Point, to: Point) {
+      if (mode.tool !== "demolish" || mode.dismantleMode === "single") return;
+      actions.reviewArea({
+        mode: mode.dismantleMode,
+        from: { ...from },
+        to: { ...to },
+        openFactoryIds: [...mode.openFactories],
+        ...(mode.dismantleMode === "area-all" ? {} : { ...this.areaAnchor }),
+      });
+      this.areaAnchor = {};
+    }
     cancelTouch() {
       this.touch.cancel();
+      if (this.activeAreaTouch) actions.disarmTouchArea();
+      this.activeAreaTouch = false;
       this.anchor = null;
+      this.areaAnchor = {};
       this.invalidateOverlays();
     }
     zoomBy(factor: number) {
@@ -1747,7 +1843,64 @@ export function createWorld(
       const ghost = this.ghost;
       ghost.clear();
       this.tooltip.setVisible(false);
+      for (const item of mode.dismantleReview?.items ?? []) {
+        if (!item.footprint) continue;
+        const tint = item.status === "selected"
+          ? 0x83bd79
+          : item.status === "blocked"
+            ? 0xe28c70
+            : 0xb6b9ae;
+        const footprint = item.footprint;
+        ghost
+          .fillStyle(tint, item.status === "selected" ? 0.12 : 0.07)
+          .fillRect(footprint.x * X, footprint.y * Y, footprint.width * X, footprint.height * Y)
+          .lineStyle(2, tint, 0.9)
+          .strokeRect(footprint.x * X + 1, footprint.y * Y + 1, footprint.width * X - 2, footprint.height * Y - 2);
+        if (item.routeEndpoints) {
+          const [entry, exit] = item.routeEndpoints;
+          ghost
+            .lineStyle(4, tint, 0.9)
+            .lineBetween((entry.x + 0.5) * X, (entry.y + 0.5) * Y, (exit.x + 0.5) * X, (exit.y + 0.5) * Y)
+            .fillStyle(tint, 1)
+            .fillCircle((entry.x + 0.5) * X, (entry.y + 0.5) * Y, 5)
+            .fillCircle((exit.x + 0.5) * X, (exit.y + 0.5) * Y, 5);
+        }
+        const cx = (footprint.x + footprint.width / 2) * X;
+        const cy = (footprint.y + footprint.height / 2) * Y;
+        if (item.status === "selected")
+          ghost.fillStyle(tint, 1).fillCircle(cx, cy, 4).lineStyle(1, 0x172116, 1).strokeCircle(cx, cy, 4);
+        else if (item.status === "blocked")
+          ghost.lineStyle(3, tint, 1).lineBetween(cx - 5, cy - 5, cx + 5, cy + 5).lineBetween(cx - 5, cy + 5, cx + 5, cy - 5);
+        else
+          ghost
+            .lineStyle(2, tint, 1)
+            .lineBetween(cx, cy - 6, cx + 6, cy)
+            .lineBetween(cx + 6, cy, cx, cy + 6)
+            .lineBetween(cx, cy + 6, cx - 6, cy)
+            .lineBetween(cx - 6, cy, cx, cy - 6);
+      }
+      if (
+        mode.tool === "demolish" &&
+        mode.dismantleMode !== "single" &&
+        this.anchor && this.hover
+      ) {
+        const left = Math.min(this.anchor.x, this.hover.x);
+        const top = Math.min(this.anchor.y, this.hover.y);
+        const width = Math.abs(this.anchor.x - this.hover.x) + 1;
+        const height = Math.abs(this.anchor.y - this.hover.y) + 1;
+        ghost
+          .fillStyle(0x9bb17f, 0.1)
+          .fillRect(left * X, top * Y, width * X, height * Y)
+          .lineStyle(2, 0xd5c88e, 0.95)
+          .strokeRect(left * X + 1, top * Y + 1, width * X - 2, height * Y - 2);
+        finishBrowserMetric("world-dynamic-draw", dynamicDrawStartedAt);
+        return;
+      }
       if (!this.hover || mode.tool === "select") {
+        finishBrowserMetric("world-dynamic-draw", dynamicDrawStartedAt);
+        return;
+      }
+      if (mode.tool === "demolish" && mode.dismantleMode !== "single") {
         finishBrowserMetric("world-dynamic-draw", dynamicDrawStartedAt);
         return;
       }

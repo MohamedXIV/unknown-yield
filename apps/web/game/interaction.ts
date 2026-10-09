@@ -5,10 +5,13 @@ import {
   type Point,
   type GameCommand,
 } from "@site/sim-core";
+import type { DismantleAreaReview } from "./dismantle-review";
 export {
   classifyDismantleEntity,
   selectDismantleCandidates,
 } from "./dismantle-selection";
+export { previewDismantleArea, sameDismantleAreaReview } from "./dismantle-review";
+export type { DismantleAreaReview, DismantleReviewItem } from "./dismantle-review";
 export type {
   DismantleEntity,
   DismantleEntityClassification,
@@ -17,6 +20,7 @@ export type {
   DismantleSelectionRequest,
   DismantleSelectionResult,
 } from "./dismantle-selection";
+import type { DismantleSelectionMode } from "./dismantle-selection";
 export type Tool =
   | "elevated-solid"
   | "underground-solid"
@@ -418,6 +422,9 @@ export type WorldMode = {
   direction: number;
   selected: string | null;
   openFactories: string[];
+  dismantleMode: DismantleSelectionMode;
+  touchAreaArmed: boolean;
+  dismantleReview: DismantleAreaReview | null;
 };
 export const DEFAULT_MODE: WorldMode = {
   containmentProfileId: "standard",
@@ -425,6 +432,9 @@ export const DEFAULT_MODE: WorldMode = {
   direction: 0,
   selected: null,
   openFactories: [],
+  dismantleMode: "single",
+  touchAreaArmed: false,
+  dismantleReview: null,
 };
 export function toggleFactoryOpen(mode: WorldMode, id: string): WorldMode {
   return {
@@ -619,7 +629,7 @@ export function buildCommand(
       direction: mode.direction,
     };
   }
-  if (mode.tool === "demolish")
+  if (mode.tool === "demolish" && mode.dismantleMode === "single")
     return { type: "dismantle", id: hitTest(s, p, mode.openFactories) ?? "" };
   return null;
 }

@@ -813,6 +813,162 @@ a {
   pointer-events: none;
   z-index: 7;
 }
+.dismantle-modes {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: min(760px, calc(100vw - 20px));
+  margin-bottom: 7px;
+  padding: 6px;
+  color: #c8d0b8;
+  font: 9px var(--mono);
+  background: #162019f2;
+  border: 1px solid #8a927475;
+  border-radius: 6px;
+  box-shadow: 0 7px 25px #10191060;
+  pointer-events: auto;
+}
+.dismantle-modes > span {
+  padding: 0 5px;
+  color: #a9b69a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.dismantle-modes button {
+  min-height: 32px;
+  padding: 6px 9px;
+  color: #c3ceb8;
+  font: 10px var(--mono);
+  background: #27352a;
+  border: 1px solid #65745d;
+  border-radius: 4px;
+  touch-action: manipulation;
+}
+.dismantle-modes button.active,
+.dismantle-modes button[aria-pressed="true"] {
+  color: #f0dca7;
+  border-color: #c0a66e;
+  box-shadow: inset 0 -2px #d1b674;
+}
+.dismantle-modes .touch-area-arm {
+  display: none;
+}
+.dismantle-review-backdrop {
+  position: fixed;
+  z-index: 30;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: #070d0bd9;
+  pointer-events: auto;
+}
+.dismantle-review {
+  width: min(530px, 100%);
+  max-height: min(82dvh, 720px);
+  overflow: auto;
+  padding: 22px;
+  color: #e0e3d2;
+  background: #17221a;
+  border: 1px solid #a69a6b;
+  border-radius: 7px;
+  box-shadow: 0 18px 60px #000b;
+  outline: none;
+}
+.dismantle-review:focus-visible {
+  outline: 2px solid #e3cc91;
+  outline-offset: 3px;
+}
+.dismantle-review > small {
+  color: #b4c39f;
+  font: 9px var(--mono);
+  letter-spacing: 1px;
+}
+.dismantle-review h2 {
+  margin: 7px 0 8px;
+  color: #f0dca7;
+  font-size: 19px;
+}
+.dismantle-review > p {
+  color: #bdc8b0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.dismantle-review-counts,
+.dismantle-review-refunds {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 12px 0;
+}
+.dismantle-review-counts > div,
+.dismantle-review-refunds > div {
+  padding: 9px;
+  background: #222f25;
+  border: 1px solid #69776366;
+  border-radius: 4px;
+}
+.dismantle-review-counts dt,
+.dismantle-review-refunds dt {
+  color: #b7c5ac;
+  font-size: 10px;
+  line-height: 1.4;
+}
+.dismantle-review-counts dd,
+.dismantle-review-refunds dd {
+  margin: 6px 0 0;
+  color: #f0dca7;
+  font: 18px var(--mono);
+}
+.dismantle-review-items {
+  display: grid;
+  gap: 5px;
+  max-height: 190px;
+  overflow: auto;
+  margin: 10px 0;
+  padding: 0;
+  list-style: none;
+}
+.dismantle-review-items li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 8px;
+  color: #c7d0bd;
+  font-size: 10px;
+  background: #202b22;
+  border-left: 3px solid #aab3a5;
+}
+.dismantle-review-items .status-selected { border-left-color: #83bd79; }
+.dismantle-review-items .status-blocked { border-left-color: #e28c70; }
+.dismantle-review-items .status-ignored { border-left-color: #b6b9ae; }
+.dismantle-review-items strong { white-space: nowrap; }
+.dismantle-review-items span { text-align: right; }
+.dismantle-review-error {
+  padding: 8px;
+  color: #ffd2b7 !important;
+  background: #543126;
+  border: 1px solid #d68064;
+}
+.dismantle-review-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+.dismantle-review-actions button {
+  min-height: 40px;
+  padding: 8px 14px;
+  touch-action: manipulation;
+}
+.dismantle-review-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
 .build-bar {
   display: flex;
   gap: 3px;
@@ -1505,6 +1661,45 @@ kbd {
   .guide-toggle {
     top: 70px;
     left: 12px;
+  }
+  .dismantle-modes {
+    max-width: calc(100vw - 12px);
+    font-size: 8px;
+    gap: 3px;
+  }
+  .dismantle-modes button {
+    min-height: 38px;
+    padding: 7px 8px;
+    font-size: 9px;
+  }
+  .dismantle-review {
+    padding: 17px;
+  }
+  .dismantle-review-counts,
+  .dismantle-review-refunds {
+    gap: 4px;
+  }
+  .dismantle-review-counts > div,
+  .dismantle-review-refunds > div {
+    padding: 7px 5px;
+  }
+  .dismantle-review-counts dt,
+  .dismantle-review-refunds dt {
+    font-size: 8px;
+  }
+  .dismantle-review-counts dd,
+  .dismantle-review-refunds dd {
+    font-size: 16px;
+  }
+}
+@media (pointer: coarse) {
+  .dismantle-modes .touch-area-arm {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff0bd;
+    background: #43533d;
+    border-color: #b69c66;
   }
 }
 
