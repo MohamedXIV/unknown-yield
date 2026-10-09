@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fixture, validateContent } from "@site/content";
+import { fixture } from "@site/content";
 import { auditLedger, Simulation, type GameCommand } from "../src";
 import { amount } from "../src/types";
 
