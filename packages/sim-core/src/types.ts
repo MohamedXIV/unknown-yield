@@ -397,6 +397,18 @@ export type CommandResult = {
   cost?: number;
   beltPlan?: BeltPlacementPlan;
   linePlan?: LinePlacementPlan;
+  batch?: DismantleBatchReport;
+};
+export type DismantleBatchReport = {
+  selectedCount: number;
+  uniqueCount: number;
+  duplicateCount: number;
+  removed: string[];
+  blocked: { id: string; reason: string }[];
+  ignored: { id: string; reason: string }[];
+  reclaimedStructureMaterial: number;
+  retrievedCargo: number;
+  netBuildStockDelta: number;
 };
 export type LinePlacementKind = "add" | "reuse" | "blocked";
 export type LinePlacementPosition = Point & {
@@ -501,6 +513,7 @@ export type GameCommand =
       route: "primary" | "alternate";
     }
   | { type: "dismantle"; id: string }
+  | { type: "dismantleMany"; ids: string[] }
   | { type: "recoverMachineIncident"; machineId: string }
   | { type: "setEnabled"; machineId: string; enabled: boolean }
   | { type: "setOperation"; machineId: string; operation: string }
