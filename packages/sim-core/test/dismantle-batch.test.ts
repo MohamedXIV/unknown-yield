@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fixture, validateContent } from "@site/content";
+import { enCatalog, fixture, validateContent } from "@site/content";
 import { auditLedger, Simulation, type GameCommand } from "../src";
 import { amount } from "../src/types";
 
@@ -391,8 +391,16 @@ describe("Phase 20 P4 — protected loaded structures and dynamic definitions", 
   it("B18: a valid imported machine definition uses its real dynamic identity and refund", () => {
     const custom = structuredClone(fixture);
     const original = custom.machines.find(m => m.id === "crusher")!;
-    custom.machines.push({ ...structuredClone(original), id: "external-processor-v1" });
-    const authored = validateContent(custom),
+    const dynamicNameKey = "machine.external-processor-v1.name";
+    custom.machines.push({
+      ...structuredClone(original),
+      id: "external-processor-v1",
+      nameKey: dynamicNameKey,
+    });
+    const authored = validateContent(custom, {
+      ...enCatalog,
+      [dynamicNameKey]: "External processor",
+    }),
       sim = new Simulation(authored);
     construct(sim, {
       type: "placeFactory", x: 65, y: 45, width: 6, height: 6,
