@@ -382,6 +382,8 @@ export const enCatalog: LocaleCatalog = {
   "ui.crossing.rotate": "Rotate crossing",
   "ui.crossing.remove": "Remove crossing upgrade",
   "ui.belt.preview.counts": "{{newCount}} new · {{reusedCount}} reused",
+  "ui.belt.preview.corner.horizontal-first": "Horizontal-first corner · R switches",
+  "ui.belt.preview.corner.vertical-first": "Vertical-first corner · R switches",
   "ui.belt.preview.shortfall": "Short by {{count}} plates",
   "ui.belt.preview.crossing-wait":
     "Crossing admission is temporarily closed",

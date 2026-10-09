@@ -13,6 +13,7 @@ import {
   hitTest,
   DEFAULT_MODE,
   structureKey as computeStructureKey,
+  type BeltCornerOrder,
   type WorldMode,
   type Tool,
 } from "./interaction";
@@ -101,6 +102,7 @@ export function createWorld(
     private tooltip!: Phaser.GameObjects.Text;
     private hover: Point | null = null;
     private anchor: Point | null = null;
+    private beltCornerOrder: BeltCornerOrder = "horizontal-first";
     private keys = new Set<string>();
     private readonly touch = new TouchGestureArbiter();
     private navigation!: CameraNavigation;
@@ -378,6 +380,7 @@ export function createWorld(
         if (!p.leftButtonDown()) return;
         this.hover = this.cell(p);
         this.anchor = this.hover;
+        this.beltCornerOrder = "horizontal-first";
       });
       this.input.on("pointerup", (p: Phaser.Input.Pointer) => {
         this.invalidateOverlays();
@@ -398,6 +401,7 @@ export function createWorld(
             if (command) this.place(command);
           }
           this.anchor = null;
+          this.beltCornerOrder = "horizontal-first";
           return;
         }
         if (p.button !== 0 || !this.anchor) return;
@@ -406,21 +410,30 @@ export function createWorld(
           const id = hitTest(snapshot, cell, mode.openFactories);
           actions.select(id);
         } else {
-          const command = buildCommand(mode, snapshot, cell, this.anchor);
+          const command = buildCommand(
+            mode,
+            snapshot,
+            cell,
+            this.anchor,
+            this.beltCornerOrder,
+          );
           if (command) this.place(command);
         }
         this.anchor = null;
+        this.beltCornerOrder = "horizontal-first";
       });
       this.input.on("gameout", () => {
         this.invalidateOverlays();
         this.hover = null;
         this.touch.cancel();
         this.anchor = null;
+        this.beltCornerOrder = "horizontal-first";
       });
       this.input.on("pointerupoutside", (p: Phaser.Input.Pointer) => {
         this.invalidateOverlays();
         if (p.wasTouch) this.touch.cancel(p.id);
         this.anchor = null;
+        this.beltCornerOrder = "horizontal-first";
       });
       this.input.on(
         "wheel",
@@ -451,10 +464,25 @@ export function createWorld(
         )
           e.preventDefault();
         if (e.repeat) return;
-        if (k === "r") actions.rotate();
+        if (k === "r") {
+          const lShapedBeltDrag =
+            mode.tool === "belt" &&
+            this.anchor !== null &&
+            this.hover !== null &&
+            this.anchor.x !== this.hover.x &&
+            this.anchor.y !== this.hover.y;
+          if (lShapedBeltDrag) {
+            this.beltCornerOrder =
+              this.beltCornerOrder === "horizontal-first"
+                ? "vertical-first"
+                : "horizontal-first";
+            this.invalidateOverlays();
+          } else actions.rotate();
+        }
         if (k === "escape") {
           this.invalidateOverlays();
           this.anchor = null;
+          this.beltCornerOrder = "horizontal-first";
           actions.mode("select");
           actions.select(null);
         }
@@ -474,6 +502,7 @@ export function createWorld(
         this.keys.clear();
         this.touch.cancel();
         this.anchor = null;
+        this.beltCornerOrder = "horizontal-first";
       };
       window.addEventListener("keydown", down);
       window.addEventListener("keyup", up);
@@ -1684,7 +1713,13 @@ export function createWorld(
         finishBrowserMetric("world-dynamic-draw", dynamicDrawStartedAt);
         return;
       }
-      const command = buildCommand(mode, snapshot, this.hover, this.anchor);
+      const command = buildCommand(
+        mode,
+        snapshot,
+        this.hover,
+        this.anchor,
+        this.beltCornerOrder,
+      );
       if (!command) {
         finishBrowserMetric("world-dynamic-draw", dynamicDrawStartedAt);
         return;
@@ -1881,6 +1916,18 @@ export function createWorld(
             : "") +
           (beltNotices.length ? " · " + beltNotices.join(" · ") : "")
         : "";
+      const cornerChoice =
+        command.type === "placeBelts" &&
+        this.anchor !== null &&
+        this.anchor.x !== this.hover.x &&
+        this.anchor.y !== this.hover.y
+          ? " · " +
+            translate(
+              this.beltCornerOrder === "horizontal-first"
+                ? "ui.belt.preview.corner.horizontal-first"
+                : "ui.belt.preview.corner.vertical-first",
+            )
+          : "";
       this.tooltip
         .setVisible(true)
         .setPosition((this.hover.x + 1) * X, (this.hover.y + 1) * Y + 12)
@@ -1892,6 +1939,7 @@ export function createWorld(
             (result.messageKey
               ? translate(result.messageKey)
               : result.message) +
+            cornerChoice +
             beltSummary +
             (result.cost ? " · " + result.cost + " " + this.buildUnit() : ""),
         )

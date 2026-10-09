@@ -48,7 +48,7 @@ const browserAcceptanceMode =
   process.env.UNKNOWN_YIELD_BROWSER_ACCEPTANCE ?? "dev";
 const browserIt =
   process.env.CI && browserAcceptanceMode !== "skip" ? it : it.skip;
-const productionBrowser = browserAcceptanceMode === "production";
+const productionBrowser = browserAcceptanceMode.startsWith("production");
 // Camera diagnostics are opt-in; they let the browser test hit real cells.
 const appUrl = "http://127.0.0.1:4010/?perf=1";
 const debugPort = 9333;
@@ -241,6 +241,25 @@ function phase12BrowserWorld() {
     machineId,
     diverterId,
   };
+}
+
+function phase20FlowBrowserWorld() {
+  const sim = new Simulation(fixture);
+  build(sim, {
+    type: "placeMachine",
+    definitionId: "extractor",
+    x: 15,
+    y: 25,
+    direction: 0,
+  });
+  build(sim, {
+    type: "placeStorage",
+    definitionId: "depot",
+    x: 22,
+    y: 24,
+    direction: 0,
+  });
+  return sim.serialize();
 }
 
 function chromeExecutable(): string | null {
@@ -998,6 +1017,202 @@ browserIt(
           retained: Boolean(evidenceDirectory),
         },
       }));
+
+      const p2Seed = phase20FlowBrowserWorld();
+      await evaluate(
+        `localStorage.setItem("industrial-site-save-v15", ${JSON.stringify(
+          JSON.stringify(p2Seed),
+        )})`,
+      );
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Game menu"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `[...document.querySelectorAll("button")]
+          .some((button) => button.textContent?.includes("Load saved world"))`,
+      );
+      await evaluate(`(() => {
+        [...document.querySelectorAll("button")]
+          .find((button) => button.textContent?.includes("Load saved world"))
+          ?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector('[role="status"]')
+          ?.textContent.includes("Site restored") === true`,
+      );
+      await clickBuildTool("solid-logistics", "Belt");
+      await waitForExpression(
+        `document.querySelector(".build-hint")?.textContent
+          ?.includes("On an L turn, R switches the corner order") === true`,
+      );
+      const p2RoutePixels = await evaluate<{
+        start: { x: number; y: number };
+        end: { x: number; y: number };
+      }>(`(() => {
+        const rect = document.querySelector("canvas").getBoundingClientRect();
+        const project = (x, y) => {
+          const point = window.__UNKNOWN_YIELD_PROJECT_WORLD__((x + .5) * 32, (y + .5) * 24);
+          return { x: rect.left + point.x * rect.width, y: rect.top + point.y * rect.height };
+        };
+        return { start: project(17, 26), end: project(21, 25) };
+      })()`);
+      await call("Input.dispatchMouseEvent", {
+        type: "mousePressed",
+        ...p2RoutePixels.start,
+        button: "left",
+        buttons: 1,
+        clickCount: 1,
+      });
+      await call("Input.dispatchMouseEvent", {
+        type: "mouseMoved",
+        ...p2RoutePixels.end,
+        button: "left",
+        buttons: 1,
+      });
+      await sleep(100);
+      await pressKey("r", "KeyR", 82);
+      await sleep(100);
+      const p2Preview = await call("Page.captureScreenshot", {
+        format: "png",
+        captureBeyondViewport: false,
+      });
+      const p2PreviewBytes = Buffer.from(
+        (p2Preview as unknown as { data: string }).data,
+        "base64",
+      );
+      const p2PreviewSha256 = createHash("sha256")
+        .update(p2PreviewBytes)
+        .digest("hex");
+      if (evidenceDirectory) {
+        mkdirSync(evidenceDirectory, { recursive: true });
+        writeFileSync(
+          join(evidenceDirectory, "p2-belt-corner-preview.png"),
+          p2PreviewBytes,
+        );
+      }
+      await call("Input.dispatchMouseEvent", {
+        type: "mouseReleased",
+        ...p2RoutePixels.end,
+        button: "left",
+        buttons: 0,
+        clickCount: 1,
+      });
+      await waitForExpression(
+        `document.querySelector('[role="status"]')
+          ?.textContent.includes("Belt path built") === true`,
+      );
+      await sleep(5000);
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Game menu"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `[...document.querySelectorAll("button")]
+          .some((button) => button.textContent?.includes("Save world"))`,
+      );
+      await evaluate(`(() => {
+        [...document.querySelectorAll("button")]
+          .find((button) => button.textContent?.includes("Save world"))
+          ?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector('[role="status"]')
+          ?.textContent.includes("Field record saved on this device") === true`,
+      );
+      const p2ProductionSave = await evaluate<{
+        belts: Array<{ id: string; x: number; y: number; direction: number }>;
+        storages: Record<string, { inventory: Record<string, number> }>;
+      }>(`(() => {
+        const save = JSON.parse(localStorage.getItem("industrial-site-save-v15"));
+        return {
+          belts: Object.values(save.belts).filter((belt) =>
+            (belt.y === 25 && belt.x >= 17 && belt.x <= 21) ||
+            (belt.x === 17 && belt.y === 26)),
+          storages: save.storages,
+        };
+      })()`);
+      expect(p2ProductionSave.belts).toHaveLength(6);
+      expect(p2ProductionSave.belts.find((belt) => belt.x === 17 && belt.y === 26)?.direction).toBe(3);
+      expect(p2ProductionSave.belts.filter((belt) => belt.y === 25).every((belt) => belt.direction === 0)).toBe(true);
+      expect(
+        Object.values(p2ProductionSave.storages[Object.keys(p2ProductionSave.storages)[0]].inventory)
+          .some((quantity) => quantity > 0),
+      ).toBe(true);
+      await call("Page.reload", { ignoreCache: true });
+      await sleep(900);
+      await waitForExpression(
+        `document.querySelector("canvas") !== null &&
+          document.querySelector('button[aria-label="Game menu"]') !== null`,
+      );
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Game menu"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `[...document.querySelectorAll("button")]
+          .some((button) => button.textContent?.includes("Load saved world"))`,
+      );
+      await evaluate(`(() => {
+        [...document.querySelectorAll("button")]
+          .find((button) => button.textContent?.includes("Load saved world"))
+          ?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector('[role="status"]')
+          ?.textContent.includes("Site restored") === true`,
+      );
+      await clickCell(23, 24);
+      await waitForExpression(
+        `document.querySelector(".context-panel h2")?.textContent === "Depot"`,
+      );
+      const loadedDepotText = await evaluate<string>(
+        `document.querySelector(".context-panel")?.textContent?.replace(/\\s+/g, " ") ?? ""`,
+      );
+      expect(loadedDepotText).toMatch(/Stored\s*[1-9]\d*\s*\/\s*40/);
+      const p2LoadedScreenshot = await call("Page.captureScreenshot", {
+        format: "png",
+        captureBeyondViewport: false,
+      });
+      const p2LoadedBytes = Buffer.from(
+        (p2LoadedScreenshot as unknown as { data: string }).data,
+        "base64",
+      );
+      if (evidenceDirectory) {
+        mkdirSync(evidenceDirectory, { recursive: true });
+        writeFileSync(
+          join(evidenceDirectory, "p2-belt-corner-loaded.png"),
+          p2LoadedBytes,
+        );
+      }
+      console.log("PHASE20_P2_BELT_CORNER_BROWSER_EVIDENCE " + JSON.stringify({
+        mode: browserAcceptanceMode,
+        gesture: "vertical-first L-corner selected with R during production pointer drag",
+        route: p2ProductionSave.belts.sort((a, b) => a.y - b.y || a.x - b.x),
+        depotInventory: Object.values(
+          p2ProductionSave.storages[Object.keys(p2ProductionSave.storages)[0]].inventory,
+        ).reduce((total, quantity) => total + quantity, 0),
+        saveReload: "route direction and produced inventory restored",
+        previewScreenshot: {
+          bytes: p2PreviewBytes.length,
+          sha256: p2PreviewSha256,
+          retained: Boolean(evidenceDirectory),
+        },
+        loadedScreenshot: {
+          bytes: p2LoadedBytes.length,
+          retained: Boolean(evidenceDirectory),
+        },
+      }));
+
+      if (browserAcceptanceMode === "production-p2") {
+        expect(runtimeErrors, runtimeErrors.join("\n")).toEqual([]);
+        console.log("PHASE20_P2_BROWSER_RUNTIME_ERRORS []");
+        socket.close();
+        return;
+      }
 
       const learned = hazardSave();
       const beforeEvidence = await evaluate<string>(

@@ -84,6 +84,26 @@ describe("gap-aware ground belt placement", () => {
     assertLedger(sim);
   });
 
+  it("joins two existing eastbound networks across one new gap without rotating either end", () => {
+    const sim = make();
+    place(sim, beltPath([{ x: 40, y: 12 }], 0));
+    place(sim, beltPath([{ x: 42, y: 12 }, { x: 43, y: 12 }], 0));
+    const before = sim.serialize();
+    const route = beltPath(
+      [{ x: 40, y: 12 }, { x: 41, y: 12 }, { x: 42, y: 12 }],
+      0,
+    );
+
+    expect(sim.preview(route)).toMatchObject({ ok: true, cost: 1 });
+    expect(sim.command(route)).toMatchObject({ ok: true, cost: 1 });
+    const after = sim.serialize();
+    expect(beltAt(after, 40, 12)).toEqual(beltAt(before, 40, 12));
+    expect(beltAt(after, 42, 12)).toEqual(beltAt(before, 42, 12));
+    expect(beltAt(after, 43, 12)).toEqual(beltAt(before, 43, 12));
+    expect(beltAt(after, 41, 12).direction).toBe(0);
+    assertLedger(sim);
+  });
+
   it("fills multiple separate gaps while preserving every reused belt", () => {
     const sim = make();
     for (const [x, direction] of [[20, 0], [22, 0], [24, 1]] as const)
@@ -222,6 +242,65 @@ describe("gap-aware ground belt placement", () => {
       kind: "blocked",
       reason: "The existing belt does not accept entry from the previous cell",
     });
+  });
+
+  it("blocks an adjacent but disallowed merger inlet without changing its junction", () => {
+    const sim = make();
+    place(sim, beltPath([{ x: 30, y: 24 }], 0));
+    const center = beltAt(sim.serialize(), 30, 24);
+    const configured = sim.command({
+      type: "configureJunction",
+      beltId: center.id,
+      definitionId: "merger",
+      direction: 0,
+      branch: 1,
+    });
+    expect(configured.ok, configured.message).toBe(true);
+    const before = sim.serialize();
+
+    const incompatible = sim.preview(
+      beltPath([{ x: 30, y: 23 }, { x: 30, y: 24 }, { x: 31, y: 24 }]),
+    );
+
+    expect(incompatible.ok).toBe(false);
+    expect(incompatible.beltPlan?.positions[1]).toMatchObject({
+      kind: "blocked",
+      reason: "The existing belt does not accept entry from the previous cell",
+    });
+    expect(sim.command(
+      beltPath([{ x: 30, y: 23 }, { x: 30, y: 24 }, { x: 31, y: 24 }]),
+    ).ok).toBe(false);
+    expect(sim.serialize()).toEqual(before);
+    assertLedger(sim);
+  });
+
+  it("accepts only the matching directional factory port socket", () => {
+    const sim = make();
+    const factoryId = place(sim, {
+      type: "placeFactory",
+      x: 30,
+      y: 30,
+      width: 10,
+      height: 10,
+    }).id!;
+    place(sim, {
+      type: "placePort",
+      factoryId,
+      x: 30,
+      y: 34,
+      direction: 0,
+    });
+    const valid = beltPath([{ x: 29, y: 34 }, { x: 30, y: 34 }], 0);
+    const wrongWay = beltPath([{ x: 31, y: 34 }, { x: 30, y: 34 }], 2);
+
+    expect(sim.preview(valid)).toMatchObject({ ok: true });
+    expect(sim.preview(wrongWay).ok).toBe(false);
+    expect(sim.preview(wrongWay).beltPlan?.positions[1]).toMatchObject({
+      kind: "blocked",
+      reason: "Cross factory walls through a matching directional port",
+    });
+    expect(sim.serialize().belts).toEqual({});
+    assertLedger(sim);
   });
 
   it("keeps crossing axes straight and distinguishes a temporarily closed gate", () => {
@@ -415,5 +494,70 @@ describe("gap-aware ground belt placement", () => {
       expect(sim.command(route).ok).toBe(false);
       expect(sim.serialize()).toEqual(before);
     }
+  });
+
+  it("requires an L-corner to face a real storage input socket and transports through it", () => {
+    const sim = make();
+    place(sim, {
+      type: "placeMachine",
+      definitionId: "extractor",
+      x: 15,
+      y: 25,
+      direction: 0,
+    });
+    const depot = place(sim, {
+      type: "placeStorage",
+      definitionId: "depot",
+      x: 22,
+      y: 24,
+      direction: 0,
+    }).id!;
+    const horizontalFirst = beltPath(
+      [
+        { x: 17, y: 26 },
+        { x: 18, y: 26 },
+        { x: 19, y: 26 },
+        { x: 20, y: 26 },
+        { x: 21, y: 26 },
+        { x: 21, y: 25 },
+      ],
+      3,
+    );
+    const before = sim.serialize();
+    const blocked = sim.preview(horizontalFirst);
+
+    expect(blocked.ok).toBe(false);
+    expect(blocked.beltPlan?.positions.at(-1)).toMatchObject({
+      kind: "blocked",
+      reason: "Face the storage input socket to connect this route",
+    });
+    expect(sim.command(horizontalFirst).ok).toBe(false);
+    expect(sim.serialize()).toEqual(before);
+
+    const verticalFirst = beltPath(
+      [
+        { x: 17, y: 26 },
+        { x: 17, y: 25 },
+        { x: 18, y: 25 },
+        { x: 19, y: 25 },
+        { x: 20, y: 25 },
+        { x: 21, y: 25 },
+      ],
+      0,
+    );
+    const committed = sim.command(verticalFirst);
+    expect(committed.ok, committed.message).toBe(true);
+    sim.step(30_000);
+
+    const loaded = sim.serialize();
+    expect(Object.values(loaded.storages[depot].inventory).some((n) => n > 0)).toBe(true);
+    assertLedger(sim);
+
+    const restored = make();
+    expect(restored.load(loaded).ok).toBe(true);
+    restored.step(5_000);
+    sim.step(5_000);
+    expect(restored.serialize()).toEqual(sim.serialize());
+    assertLedger(restored);
   });
 });
