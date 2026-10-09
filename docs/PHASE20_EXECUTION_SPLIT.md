@@ -1,6 +1,6 @@
 # Phase 20 — GitHub-only ChatGPT × VM Codex Cloud work split
 
-**Coordinated for user request 2026-10-09.** Epic [#261](https://github.com/MohamedXIV/unknown-yield/issues/261); active initial issue [#262](https://github.com/MohamedXIV/unknown-yield/issues/262). [P0 decisions](PHASE20_INTERACTION_CONTRACT.md), [approved scope](PHASE20_SCOPE.md) and the [P4/P5 demolition safety audit & VM acceptance oracle](PHASE20_DISMANTLE_AUDIT.md) are shared review guidance; issue dependencies still apply.
+**Coordinated for user request 2026-10-09.** Epic [#261](https://github.com/MohamedXIV/unknown-yield/issues/261); active initial issue [#262](https://github.com/MohamedXIV/unknown-yield/issues/262). [P0 decisions](PHASE20_INTERACTION_CONTRACT.md), [approved scope](PHASE20_SCOPE.md) and the [P4/P5 demolition safety audit & VM acceptance oracle](PHASE20_DISMANTLE_AUDIT.md), and [P1–P3 actual logistics flow audit & VM acceptance matrix](PHASE20_LOGISTICS_AUDIT.md) are shared review guidance; issue dependencies still apply.
 
 ## Ownership by execution capability
 
