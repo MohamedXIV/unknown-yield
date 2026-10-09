@@ -2250,23 +2250,21 @@ browserIt(
         type: "touchEnd",
         touchPoints: [],
       });
-      // The scrim closes on pointerdown, not on click. A DOM .click()
-      // does not fire pointerdown and can leave this full-screen touch
-      // interceptor mounted above the Game menu button.
-      const closeScrimPoint = await evaluate<{ x: number; y: number }>(
-        `(() => {
-          const rect = document.querySelector(".build-menu-scrim").getBoundingClientRect();
-          return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
-        })()`,
-      );
-      await call("Input.dispatchTouchEvent", {
-        type: "touchStart",
-        touchPoints: [{ id: 8, ...closeScrimPoint }],
-      });
-      await call("Input.dispatchTouchEvent", {
-        type: "touchEnd",
-        touchPoints: [],
-      });
+      // This overlay listens to pointerdown, not click: DOM .click()
+      // cannot dismiss it. Long-press above uses native CDP touch; here
+      // explicitly verify the scrim's close handler before the next
+      // independent native-touch Game menu interaction.
+      await evaluate(`(() => {
+        const scrim = document.querySelector(".build-menu-scrim");
+        if (!scrim) throw new Error("Missing build-menu dismissal scrim");
+        scrim.dispatchEvent(new PointerEvent("pointerdown", {
+          bubbles: true,
+          pointerType: "touch",
+          pointerId: 8,
+          isPrimary: true,
+        }));
+        return true;
+      })()`);
       await waitForExpression(
         `document.querySelector(".build-submenu") === null &&
           document.querySelector(".build-menu-scrim") === null`,
