@@ -28,15 +28,15 @@ There is **no installed Codex Cloud action in this chat** that can launch its VM
 7. **Browser acceptance:** world gestures, canvas previews, save/reload and accessibility are VM/browser work. Follow the repository's real acceptance harness rather than inventing a command. Browser emulation is not a substitute for user's GPU/handheld human review.
 8. After a merged feature PR, sync `main` before the next issue. Report exact feature coverage rather than treating all #261 children as complete.
 
-## Current Codex Cloud handoff (from completed P0)
+## Current Codex Cloud handoff (P0/P1 complete; P2 next)
 
 > Continue `MohamedXIV/unknown-yield` from the **actual live main**. Verify open PRs and `AGENTS.md`, `docs/EXECUTION.md`, `docs/PHASE20_SCOPE.md`, `docs/PHASE20_INTERACTION_CONTRACT.md`, `docs/PHASE20_LOGISTICS_AUDIT.md`, `docs/PHASE20_DISMANTLE_AUDIT.md` and the corresponding issue before editing.
 >
-> P0 #262 is **DONE** via PR #274. Start **#264**, implementing flow-aware belt bends/joins and alternate L-path choices with deterministic pure preflight, authoritative command revalidation, unchanged reusable IDs/cargo/flow, new-only structural cost, explicit blockers, atomic rejection and no-op/no-VFX. Follow acceptance matrix L01–L10, and preserve existing transport simulation/junction contracts. Implement a focused PR and tests, then full test, typecheck, lint and normal build.
+> P0 #262 and P1 #263 are **DONE** via PRs #274/#278. Start **#264**, implementing flow-aware belt directions, L-shaped corners with explicit horizontal-first vs vertical-first choice, directional port/socket joining, and preview arrows matching authoritative transport. Follow **L11–L22** in `docs/PHASE20_LOGISTICS_AUDIT.md`. Preserve P1 pure add/reuse/block planner, new-only cost, exact IDs/cargo, loaded/junction/diverter safety and atomicity; never auto-rotate occupied belts or fabricate splitters. Implement a focused PR with deterministic domain and production-browser tests, then full test, typecheck, lint and normal build.
 >
 > This repository is **public; the user explicitly authorizes GitHub Actions**. Ready-PR CI (normal Ubuntu/Node 24 build) may resolve the earlier Codex VM stdout/Next TypeScript subprocess limitation. An alternative build remains diagnostic only, not a normal-build PASS. Browser-test world interaction if changed; don't claim physical-device proof.
 >
-> #266 batch dismantle is independently unblocked after P0 but touches overlapping core files; avoid unmerged divergent implementations. Proceed #264 after #263 merge, then #265; implement #266/#267 afterward or only in genuinely non-overlapping independent branches. Do not create competing PRs. Report exact tested SHA, changed files, checks, actual failures/risks and requested follow-up; ChatGPT owns separate GitHub-side review.
+> #266 batch dismantle is also dependency-ready but touches overlapping core files; avoid unmerged divergent implementations. After #264 merge, proceed #265; implement #266/#267 afterward, or only on genuinely non-overlapping independent branches. Do not create competing PRs. Report exact tested SHA, changed files, checks, actual failures/risks and requested follow-up; ChatGPT owns separate GitHub-side review.
 
 ## Handoff back to ChatGPT
 
