@@ -539,7 +539,7 @@ Do not implicitly start a later product phase or aesthetic restyling.
 
 ## Phase 20 — Smart Construction & Selective Dismantling
 
-**Epic:** [#261](https://github.com/MohamedXIV/unknown-yield/issues/261) — **ACTIVE / PLANNED**, explicitly selected by the player on 2026-10-09. [Accepted scope and interaction guardrails](PHASE20_SCOPE.md). No Phase 20 issue is yet implemented or accepted.
+**Epic:** [#261](https://github.com/MohamedXIV/unknown-yield/issues/261) — **ACTIVE / IMPLEMENTING**, explicitly selected by the player on 2026-10-09. [Accepted scope and interaction guardrails](PHASE20_SCOPE.md). **P0 #262 completed** via independently reviewed [PR #274](https://github.com/MohamedXIV/unknown-yield/pull/274) on 2026-10-09; pure selector is not yet integrated into the game. Runtime construction and demolition features remain pending.
 
 ### Player problem
 
@@ -556,7 +556,7 @@ A belt path currently fails as a whole if it intersects an existing belt, even i
 
 ### Canonical child dependency board
 
-- #262 — **P0** interaction/planner contract + entity taxonomy + authoritative safety decisions, **FIRST**.
+- #262 — **P0 DONE** interaction/planner contract + entity taxonomy + pure candidate selection + tests; PR #274, merge commit `80a457b8edb0cbd21d62c43fc19772334d664ded`. Standard VM build command limitation remains documented.
 - #263 — **P1** idempotent/gap-aware belts, depends #262.
 - #264 — **P2** flow-aware belts, turns and safe existing connections, depends #263.
 - #265 — **P3** compatible directed liquid/gas line reuse, depends #263/#264.
