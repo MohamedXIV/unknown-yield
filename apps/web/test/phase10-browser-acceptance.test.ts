@@ -2188,6 +2188,14 @@ browserIt(
       await waitForExpression(
         `document.querySelector(".build-hint strong")?.textContent === "Belt"`,
       );
+      expect(
+        await evaluate<string[]>(`[
+          { x: 170, y: 360 },
+          { x: 250, y: 360 },
+        ].map(({ x, y }) =>
+          document.elementFromPoint(x, y)?.tagName.toLowerCase() ?? "",
+        )`),
+      ).toEqual(["canvas", "canvas"]);
       const platesBeforePinch = await evaluate<string>(
         `document.querySelector('[data-testid="plates"]')?.textContent ?? ""`,
       );
@@ -2217,6 +2225,9 @@ browserIt(
       await evaluate<void>(
         `new Promise((resolve) => setTimeout(resolve, 350))`,
       );
+      expect(
+        await evaluate<number>(`window.visualViewport?.scale ?? 1`),
+      ).toBeCloseTo(1, 2);
       expect(
         await evaluate<string>(
           `document.querySelector('[data-testid="plates"]')?.textContent ?? ""`,
