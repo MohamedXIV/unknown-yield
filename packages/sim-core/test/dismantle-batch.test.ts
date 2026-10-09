@@ -219,6 +219,44 @@ describe("Phase 20 P4 — authoritative safe batch dismantling", () => {
     expect(JSON.stringify(sim.serialize())).toBe(before);
   });
 
+
+  it("B14: a relocation-required factory port stays protected after its belt is removed", () => {
+    const sim = make();
+    construct(sim, {
+      type: "placeFactory", x: 24, y: 22, width: 10, height: 10,
+    });
+    const factoryId = Object.values(sim.serialize().factories)[0].id;
+    construct(sim, {
+      type: "placePort", factoryId, x: 24, y: 25, direction: 0,
+    });
+    construct(sim, {
+      type: "placeBelts",
+      points: [{ x: 23, y: 25 }, { x: 24, y: 25 }, { x: 25, y: 25 }],
+      direction: 0,
+    });
+    const relocation = sim.command({
+      type: "relocateFactory", factoryId, x: 25, y: 22,
+    });
+    expect(relocation.ok, relocation.message).toBe(true);
+    const factory = sim.serialize().factories[factoryId];
+    const port = factory.ports[0];
+    expect(factory.relocation?.requirements.some(req => req.portId === port.id))
+      .toBe(true);
+    const attachedBelt = sim.serialize().belts["25,25"];
+    const result = sim.command({
+      type: "dismantleMany", ids: [port.id, attachedBelt.id],
+    });
+    expect(result.batch).toMatchObject({
+      removed: [attachedBelt.id],
+      blocked: [{
+        id: port.id,
+        reason: "Required relocation port must remain until restart",
+      }],
+    });
+    expect(sim.serialize().factories[factoryId].ports[0].id).toBe(port.id);
+    ledgerOk(sim);
+  });
+
   it("B17: terminal, finite and hidden deposits are protected IDs", () => {
     const sim = make(), valid = belt(sim, 30, 22),
       ids = [
