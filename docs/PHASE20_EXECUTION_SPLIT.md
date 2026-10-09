@@ -36,7 +36,7 @@ There is **no installed Codex Cloud action in this chat** that can launch its VM
 >
 > This repository is **public; the user explicitly authorizes GitHub Actions**. Ready-PR CI (normal Ubuntu/Node 24 build) may resolve the earlier Codex VM stdout/Next TypeScript subprocess limitation. An alternative build remains diagnostic only, not a normal-build PASS. Browser-test world interaction if changed; don't claim physical-device proof.
 >
-> #267 is now the single next runtime issue. P4 backend is merged with passing exact-head CI; #267 must implement and demonstrate player-facing gestures and dialogs. Preserve one canonical branch/PR per issue. Keep one canonical branch/PR per issue, with exact tested SHA, changed files, checks, browser evidence, remaining risks and handoff to ChatGPT for independent GitHub-side review.
+> #267 is now the single next runtime issue. P4 backend is merged with passing exact-head CI; #267 must implement and demonstrate player-facing gestures and dialogs. Keep one canonical branch/PR per issue, with exact tested SHA, changed files, checks, browser evidence, remaining risks and handoff to ChatGPT for independent GitHub-side review.
 
 ## Handoff back to ChatGPT
 
