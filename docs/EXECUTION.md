@@ -358,17 +358,17 @@ Human review remains explicitly deferred for subjective SFX/VFX/impulse taste an
 
 On 2026-10-09 the player explicitly selected **Phase 20** to improve on-map building and reconfiguration UX, **before** broad art/UI restyling. See the canonical [PHASE20_SCOPE.md](PHASE20_SCOPE.md), [ROADMAP.md](ROADMAP.md) and [epic #261](https://github.com/MohamedXIV/unknown-yield/issues/261).
 
-**Live baseline on selection:** `main` `678f48f54731df3e69436f2d3d784b32ea0f3885`, Phase 19 complete and post-phase #259 compatibility repair merged. The user did **not** request immediate speculative implementation of another game phase. The Phase 20 issues are open/planned; **none should be marked delivered until its own evidence passes**.
+**Live baseline on selection:** `main` `678f48f54731df3e69436f2d3d784b32ea0f3885`, Phase 19 complete and post-phase #259 compatibility repair merged. The user did **not** request immediate speculative implementation of another game phase. Phase 20 P0 **#262 is completed** via Codex PR #274 (independently reviewed and merged on 2026-10-09); other Phase 20 feature issues remain pending their own runtime/test evidence.
 
 ### Execution split (2026-10-09)
 
 The user divided execution by VM needs. **ChatGPT/GitHub connector** owns Phase 20 design and acceptance decisions, the [P0 interaction contract](PHASE20_INTERACTION_CONTRACT.md), issue/PR sequencing and independent review. **Codex Cloud VM** owns TypeScript implementation and runnable tests, full checks and actual production-browser acceptance for #262–#269. The [collaboration/handoff](PHASE20_EXECUTION_SPLIT.md) is the canonical work split. Codex must be initiated by the user; creating docs or issues does not start its VM.
 
-P0 design decisions are now documented; **#262 stays OPEN** until Codex delivers and tests the pure entity classifier/candidate selector. Do not claim P0 or any later feature shipped merely because a spec or handoff exists.
+P0 is now **complete**: the design decisions and pure entity classifier/candidate selector with tests were delivered in [PR #274](https://github.com/MohamedXIV/unknown-yield/pull/274), merge commit `80a457b8edb0cbd21d62c43fc19772334d664ded`. Codex reported 586 tests passed / 3 skipped, plus typecheck and lint; standard `npm run build` failed within its VM on Next's TypeScript CLI output parsing, while an alternate TypeScript-API-path build passed and the Vercel preview was Ready. The original build problem is **not certified fixed**. No Phaser placement/dismantle UX has shipped yet; preserve all remaining issue gates.
 
-### NEXT: #262 P0 design/behavior contract
+### NEXT: #263 smart ground belts and #266 safe batch dismantle (parallel VM tracks)
 
-1. **#262** first: settle exact-type/family taxonomy, idempotent reuse & blocker behavior, flow/junction invariants, batch selection/preflight/partial-block policy, gesture safety and authoritative commit contract.
+1. **#262 DONE**: P0 contract + pure classifier/candidate selector and focused tests merged via #274. The selector is read-only, **not** authorization to bypass sim-core dismantle checks. On later P5 gesture integration, freeze the exact/family token at pointer-down, not via fresh anchor lookup after drag.
 2. **#263 → #264 → #265**: smart belt reuse and gap filling; flow direction/corners/joining; then liquid/gas pipeline parity.
 3. **#266 → #267** after #262, in parallel to belt track: authoritative batch dismantle with provenance and material safety, then four player-facing modes (single, all, same exact starting type, same semantic family).
 4. **#268** after #264 and #267: sample/pipette tool, preflight legends, safe path-corner choice, accessible keyboard/touch controls and clear cancellation.
