@@ -533,6 +533,42 @@ animation taste and visual-identity restyling are **DEFERRED**, not PASS.
 The separate Phase 7 32-factory scale budget remains unmet/deferred.
 Do not implicitly start a later product phase or aesthetic restyling.
 
+## Phase 19 — Placement feel and runtime Studio playtest
+
+**Epic:** #248 — **TECHNICALLY COMPLETE** through #254 / PR #258, then post-closeout draft compatibility issue #259 / PR #260 on 2026-10-08. [Phase 19 exit evidence](PHASE19_EXIT_REVIEW.md). The user deliberately chose no construction timers (#250 NO-GO, #253 closed NOT PLANNED). Construction placement remains immediate.
+
+## Phase 20 — Smart Construction & Selective Dismantling
+
+**Epic:** [#261](https://github.com/MohamedXIV/unknown-yield/issues/261) — **ACTIVE / PLANNED**, explicitly selected by the player on 2026-10-09. [Accepted scope and interaction guardrails](PHASE20_SCOPE.md). No Phase 20 issue is yet implemented or accepted.
+
+### Player problem
+
+A belt path currently fails as a whole if it intersects an existing belt, even if that belt could safely be reused and missing segments filled. Directional flow should connect new runs to existing equipment according to the drag direction and actual topology. Dismantle currently removes one structure per command; the user requests four selectable modes: single, area-all, same exact starting type and same semantic starting family (e.g. belts plus pipes/pressure lines).
+
+### Scope
+
+- Compatible existing segments are free idempotent reuse; charge/build only missing valid gaps. Show a precise preflight summary; fail on incompatible/loaded/unsafe conflicts rather than destroy or silently rotate them.
+- Build direction, bends and endpoints must respect actual material-flow topology and factory port/junction semantics; extend safety rules to liquid/gas line parity.
+- Support one-to-many dismantle in sim-core under the same cargo, buffer, structural-dependency and build-material reclaim rules as existing single dismantle.
+- World-space area selection with fixed-on-drag-start filtering: Single, Area All, Area Exact Type, Area Family. Preview candidate vs protected vs ignored entities with counts and reasons.
+- Improve practical accessibility: text + shape cues (not color alone), clear keyboard/touch controls, sample/pipette existing structures into build tools, flip ambiguous L-path corners, preflight confirmation and cancel.
+- No blanket undo system, auto-demolish, automatic obstacle rerouting, construction timers, full UI restyle, native/Rust rewrites or speculative new simulation subsystem.
+
+### Canonical child dependency board
+
+- #262 — **P0** interaction/planner contract + entity taxonomy + authoritative safety decisions, **FIRST**.
+- #263 — **P1** idempotent/gap-aware belts, depends #262.
+- #264 — **P2** flow-aware belts, turns and safe existing connections, depends #263.
+- #265 — **P3** compatible directed liquid/gas line reuse, depends #263/#264.
+- #266 — **P4** deterministic authoritative batch dismantle and result preflight, depends #262; may proceed parallel with P1.
+- #267 — **P5** four player-facing dismantle selection modes, depends #266.
+- #268 — **P6** accessibility and workflow ergonomics, depends #264/#267.
+- #269 — **P7** integrated browser/conservation/interaction exit, depends all delivered feature children.
+
+### Exit
+
+The production browser must demonstrate gap-fill/reuse and correct directional connections, all four dismantle modes including loaded/protected structures, accurate new-only costs and reclaimed material conservation, save/reload, desktop/keyboard/touch-emulated cancel semantics and no gameplay JS exceptions. Physical-device 60 FPS and subjective feel require separate real-user evidence; Phase 7 32-factory budget remains recorded as unmet/deferred. Close #261 only after #269 confirms exact evidence.
+
 ## Deferred decisions
 
 Do not prematurely lock:

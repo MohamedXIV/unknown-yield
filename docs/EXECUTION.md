@@ -353,3 +353,23 @@ The 2026-10-08 scope is complete at its **technical gate** under the per-child e
 See [RUNTIME_CONTENT_PACKS.md](RUNTIME_CONTENT_PACKS.md) and [STUDIO_PLAYTEST.md](STUDIO_PLAYTEST.md) for how to test authored content without rebuilding the web game.
 
 Human review remains explicitly deferred for subjective SFX/VFX/impulse taste and fresh target-device frame pacing. The previously user-tested 60 FPS after PR #247 is not falsely extended as a new physical-device proof for Phase 19. Do not reopen the technical phase solely for these voluntary polish judgments, and do not start a new phase without agreement.
+
+## Active Phase 20 — Smart Construction & Selective Dismantling (#261)
+
+On 2026-10-09 the player explicitly selected **Phase 20** to improve on-map building and reconfiguration UX, **before** broad art/UI restyling. See the canonical [PHASE20_SCOPE.md](PHASE20_SCOPE.md), [ROADMAP.md](ROADMAP.md) and [epic #261](https://github.com/MohamedXIV/unknown-yield/issues/261).
+
+**Live baseline on selection:** `main` `678f48f54731df3e69436f2d3d784b32ea0f3885`, Phase 19 complete and post-phase #259 compatibility repair merged. The user did **not** request immediate speculative implementation of another game phase. The Phase 20 issues are open/planned; **none should be marked delivered until its own evidence passes**.
+
+### NEXT: #262 P0 design/behavior contract
+
+1. **#262** first: settle exact-type/family taxonomy, idempotent reuse & blocker behavior, flow/junction invariants, batch selection/preflight/partial-block policy, gesture safety and authoritative commit contract.
+2. **#263 → #264 → #265**: smart belt reuse and gap filling; flow direction/corners/joining; then liquid/gas pipeline parity.
+3. **#266 → #267** after #262, in parallel to belt track: authoritative batch dismantle with provenance and material safety, then four player-facing modes (single, all, same exact starting type, same semantic family).
+4. **#268** after #264 and #267: sample/pipette tool, preflight legends, safe path-corner choice, accessible keyboard/touch controls and clear cancellation.
+5. **#269** after all: integrated production-browser and conservation gate, exact CI checks, `PHASE20_EXIT_REVIEW.md`, then child+epic closure.
+
+**Non-negotiable:** a pre-existing **compatible** belt/pipe is reused for free and holes are filled; an **incompatible** or loaded segment may NOT be overwritten, auto-rotated, implicitly demolished or ignored as though connected. Construction and batch removal must use sim-core authoritative validation at execution, not stale Phaser/UI preview results. The existing material ledger, refund/empty-buffer rules, save compatibility, hidden recipes, reduced-motion accessibility and world-first camera are preserved. Group dismantle is explicit and never default. Exact type and family filters freeze their initial target identity at gesture start.
+
+No blanket construction delays (#250 NO-GO), auto-routing around foreign obstacles, new blueprint/undo system, premature Rust/per-frame React, or Vercel redeploy. Follow the economical GitHub Actions ready-PR merge gate; docs-only PRs should not spend CI. Human physical-device FPS and subjective polish remain deferred, not technically certified.
+
+**No broad performance rewrite:** Phase 7 recorded 32-factory 10ms budget remains unmet/deferred; preserve Phase 18 camera performance and verify integration without making untested 60 FPS claims.
