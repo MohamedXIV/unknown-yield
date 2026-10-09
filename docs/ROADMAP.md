@@ -539,11 +539,11 @@ Do not implicitly start a later product phase or aesthetic restyling.
 
 ## Phase 20 — Smart Construction & Selective Dismantling
 
-**Epic:** [#261](https://github.com/MohamedXIV/unknown-yield/issues/261) — **ACTIVE / IMPLEMENTING**, explicitly selected by the player on 2026-10-09. [Accepted scope and interaction guardrails](PHASE20_SCOPE.md). **P0 #262 completed** via independently reviewed [PR #274](https://github.com/MohamedXIV/unknown-yield/pull/274) on 2026-10-09; pure selector is not yet integrated into the game. Runtime construction and demolition features remain pending.
+**Epic:** [#261](https://github.com/MohamedXIV/unknown-yield/issues/261) — **ACTIVE / IMPLEMENTING**, explicitly selected by the player on 2026-10-09. [Accepted scope and interaction guardrails](PHASE20_SCOPE.md). **P0 #262** and **P1 #263** completed via independently reviewed PRs [#274](https://github.com/MohamedXIV/unknown-yield/pull/274) and [#278](https://github.com/MohamedXIV/unknown-yield/pull/278) on 2026-10-09. Gap-aware belt reuse/new-only cost and the world preview are implemented; richer flow-aware corners, directed pipes/gas, batch demolition and the selection UI remain pending.
 
 ### Player problem
 
-A belt path currently fails as a whole if it intersects an existing belt, even if that belt could safely be reused and missing segments filled. Directional flow should connect new runs to existing equipment according to the drag direction and actual topology. Dismantle currently removes one structure per command; the user requests four selectable modes: single, area-all, same exact starting type and same semantic starting family (e.g. belts plus pipes/pressure lines).
+P1 fixed the original all-path rejection for compatible existing ground belts and can fill missing cells without paying twice. P2 must still resolve richer bend and connection choices. Directional flow should connect new runs to existing equipment according to the drag direction and actual topology. Dismantle currently removes one structure per command; the user requests four selectable modes: single, area-all, same exact starting type and same semantic starting family (e.g. belts plus pipes/pressure lines).
 
 ### Scope
 
@@ -557,7 +557,7 @@ A belt path currently fails as a whole if it intersects an existing belt, even i
 ### Canonical child dependency board
 
 - #262 — **P0 DONE** interaction/planner contract + entity taxonomy + pure candidate selection + tests; PR #274, merge commit `80a457b8edb0cbd21d62c43fc19772334d664ded`. Standard VM build command limitation remains documented.
-- #263 — **P1** idempotent/gap-aware belts, depends #262.
+- #263 — **P1 DONE** idempotent/gap-aware belts and new/reuse/block preview; PR #278, merge commit `93c583aba35981ee9c03c47fe68027068b84dbaa`. Actions standard build, deterministic suite, and production-browser smoke passed; Vercel preview was blocked.
 - #264 — **P2** flow-aware belts, turns and safe existing connections, depends #263.
 - #265 — **P3** compatible directed liquid/gas line reuse, depends #263/#264.
 - #266 — **P4** deterministic authoritative batch dismantle and result preflight, depends #262; may proceed parallel with P1.
