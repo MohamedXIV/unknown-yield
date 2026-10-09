@@ -158,7 +158,7 @@ Content changes should pass:
 
 For bugs, add a regression test when the behavior can be expressed deterministically.
 
-GitHub Actions CI mirrors the repository baseline (`npm test`, typecheck, lint, build) only at economical merge gates: ready/non-draft PR updates or explicit manual dispatch. Draft PRs, docs-only changes, and duplicate post-merge `main` pushes do not spend CI minutes; newer PR commits cancel older in-progress runs. CI is automated evidence, not a substitute for issue-required browser/device acceptance.
+GitHub Actions CI mirrors the repository baseline (`npm test`, typecheck, lint, build) for ready/non-draft PR updates and explicit `workflow_dispatch`. **Unknown Yield is public and the user explicitly authorized GitHub Actions without a cost-minimization restriction on 2026-10-09**: use CI freely when it materially helps verify a change, reproduce a VM-specific failure, or resolve a merge gate. Don't launch redundant jobs merely to create activity. Current workflow skips docs-only changes; newer PR commits cancel older in-progress runs. A CI PASS is automated evidence, not a substitute for issue-required production-browser or physical-device acceptance.
 
 ## 9. Performance work
 
