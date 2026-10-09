@@ -2301,6 +2301,25 @@ browserIt(
           return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
         })()`,
       );
+      const menuHit = () =>
+        evaluate(`(() => {
+          const button = document.querySelector('button[aria-label="Game menu"]');
+          const p = ${JSON.stringify(menuTouchPoint)};
+          const at = document.elementFromPoint(p.x, p.y);
+          const describe = (el) =>
+            el ? { tag: el.tagName, aria: el.getAttribute("aria-label"), className: String(el.className).slice(0, 120) } : null;
+          return {
+            at: describe(at),
+            button: describe(button),
+            buttonContainsHit: !!button?.contains(at),
+            openMenu: document.body.textContent?.includes("Expedition controls") === true,
+            scrim: !!document.querySelector(".build-menu-scrim"),
+            submenu: !!document.querySelector(".build-submenu"),
+            dialog: !!document.querySelector(".context-panel"),
+            viewport: { width: innerWidth, height: innerHeight, dpr: devicePixelRatio },
+          };
+        })()`);
+      console.log("MOBILE_MENU_HIT_BEFORE " + JSON.stringify(await menuHit()));
       await call("Input.dispatchTouchEvent", {
         type: "touchStart",
         touchPoints: [{ id: 3, ...menuTouchPoint }],
@@ -2309,6 +2328,7 @@ browserIt(
         type: "touchEnd",
         touchPoints: [],
       });
+      console.log("MOBILE_MENU_HIT_AFTER " + JSON.stringify(await menuHit()));
       await waitForExpression(
         `document.body.textContent?.includes("Expedition controls") === true`,
       );
