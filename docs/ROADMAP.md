@@ -539,7 +539,7 @@ Do not implicitly start a later product phase or aesthetic restyling.
 
 ## Phase 20 — Smart Construction & Selective Dismantling
 
-**Epic:** [#261](https://github.com/MohamedXIV/unknown-yield/issues/261) — **ACTIVE / IMPLEMENTING**, explicitly selected by the player on 2026-10-09. [Accepted scope and interaction guardrails](PHASE20_SCOPE.md). **P0–P3 (#262–#265)** completed via independently reviewed PRs [#274](https://github.com/MohamedXIV/unknown-yield/pull/274), [#278](https://github.com/MohamedXIV/unknown-yield/pull/278), [#280](https://github.com/MohamedXIV/unknown-yield/pull/280) and [#282](https://github.com/MohamedXIV/unknown-yield/pull/282) on 2026-10-09. Gap-aware belt reuse/new-only cost and the world preview are implemented; flow-aware L corners and valid directional joins are now delivered; directed pipe/gas reuse and new-only costs are also delivered; batch demolition and its selection UI remain pending.
+**Epic:** [#261](https://github.com/MohamedXIV/unknown-yield/issues/261) — **ACTIVE / IMPLEMENTING**, explicitly selected by the player on 2026-10-09. [Accepted scope and interaction guardrails](PHASE20_SCOPE.md). **P0–P4 (#262–#266)** completed via PRs [#274](https://github.com/MohamedXIV/unknown-yield/pull/274), [#278](https://github.com/MohamedXIV/unknown-yield/pull/278), [#280](https://github.com/MohamedXIV/unknown-yield/pull/280), [#282](https://github.com/MohamedXIV/unknown-yield/pull/282) and [#284](https://github.com/MohamedXIV/unknown-yield/pull/284) on 2026-10-09. Gap-aware belt reuse/new-only cost and the world preview are implemented; flow-aware L corners and valid directional joins are now delivered; directed pipe/gas reuse and new-only costs are also delivered; the authoritative batch demolition backend is delivered; four world-space selection modes and their UX remain pending.
 
 ### Player problem
 
@@ -560,8 +560,8 @@ P1 fixed the original all-path rejection for compatible existing ground belts an
 - #263 — **P1 DONE** idempotent/gap-aware belts and new/reuse/block preview; PR #278, merge commit `93c583aba35981ee9c03c47fe68027068b84dbaa`. Actions standard build, deterministic suite, and production-browser smoke passed; Vercel preview was blocked.
 - #264 — **P2 DONE** flow-aware L corners, safe existing connections and mobile pinch regression; PR #280, squash `9d75209e5da74fc90a4834c1064df066d52ea4ab`. Actions `37920166990` passed deterministic tests, standard build and full native-touch production browser.
 - #265 — **P3 DONE** compatible directed liquid/gas line reuse and gap filling, atomic safety, conserved contents, new-only charges and per-cell previews; PR #282, squash `afb0d49c8d21f1d8d90d85993d1bcf82f551feba`. Actions `37940072627` passed 625 tests/3 skipped, standard build and full browser.
-- #266 — **P4 NEXT / DEPENDENCY-READY** deterministic authoritative batch dismantle and result preflight; implement on merged P3 main to avoid conflicting command-file edits.
-- #267 — **P5** four player-facing dismantle selection modes, depends #266.
+- #266 — **P4 DONE** authoritative bounded safe batch dismantle, best-effort reports, deterministic dependency ordering and conserved refunds; PR #284 squash `5a8e9905e6828726fdd62d759e077c9e700515f6`. Actions run `37946886579` passed 644 tests/3 skipped, typecheck/lint/standard build/full existing browser regressions. Backend only; authored via GitHub connector and not presented as independently second-reviewed.
+- #267 — **P5 NEXT / DEPENDENCY-READY** four player-facing dismantle selection modes, depends #266 (merged).
 - #268 — **P6** accessibility and workflow ergonomics, depends #264/#267.
 - #269 — **P7** integrated browser/conservation/interaction exit, depends all delivered feature children.
 
