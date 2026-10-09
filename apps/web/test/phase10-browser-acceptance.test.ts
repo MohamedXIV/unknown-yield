@@ -3513,6 +3513,18 @@ browserIt(
           mobile: false,
         });
         await waitForExpression(`window.innerWidth === 1440 && window.innerHeight === 1000`);
+        // Switching back from the mobile touch viewport updates Chrome's
+        // window metrics before Phaser's resize pass has necessarily reached
+        // its canvas. Wait for the rendered surface to match the viewport.
+        await waitForExpression(`(() => {
+          const game = document.querySelector('.game')?.getBoundingClientRect();
+          const host = document.querySelector('.world-host')?.getBoundingClientRect();
+          const canvas = document.querySelector('canvas')?.getBoundingClientRect();
+          return game && host && canvas &&
+            game.width === window.innerWidth && game.height === window.innerHeight &&
+            host.width === window.innerWidth && host.height === window.innerHeight &&
+            canvas.width === window.innerWidth && canvas.height === window.innerHeight;
+        })()`);
         const payload = runtimePackBrowserFixture();
         await evaluate<boolean>(`(() => {
           const menu = document.querySelector('button[aria-label="Game menu"]');
@@ -3543,38 +3555,40 @@ browserIt(
         );
         await waitForExpression(`document.querySelector("canvas") !== null`);
         await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Close field brief"]')?.click(); return true; })()`);
+        await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Center camera"]')?.click(); return true; })()`);
+        await sleep(150);
         const importedPlacementView = await evaluate<{ x: number; y: number; target: string | null }>(`(() => {
           const canvas = document.querySelector("canvas"), rect = canvas.getBoundingClientRect();
-          const projected = window.__UNKNOWN_YIELD_PROJECT_WORLD__((27.5) * 32, (33.5) * 24);
+          const projected = window.__UNKNOWN_YIELD_PROJECT_WORLD__((27.5) * 32, (29.5) * 24);
           const x = rect.left + projected.x * rect.width, y = rect.top + projected.y * rect.height;
-          return {x,y,target:document.elementFromPoint(x,y)?.tagName ?? null};
+          return {x,y,target:document.elementFromPoint(x,y)?.tagName ?? null, rect:{width:rect.width,height:rect.height}, camera:window.__UNKNOWN_YIELD_CAMERA__?.() ?? null};
         })()`);
-        expect(importedPlacementView.target).toBe("CANVAS");
         console.log("PHASE20_P5_RUNTIME_DEFINITION_VIEW " + JSON.stringify(importedPlacementView));
+        expect(importedPlacementView.target).toBe("CANVAS");
         await clickBuildTool("factory", "Factory");
-        await dragWorldArea({ x: 26, y: 31 }, { x: 33, y: 36 });
+        await dragWorldArea({ x: 26, y: 27 }, { x: 33, y: 32 });
         await sleep(150);
         const runtimeFactoryPlacement = await evaluate<string>(`[...document.querySelectorAll('[role="status"]')].map((element) => element.textContent).join(" | ")`);
         expect(runtimeFactoryPlacement).toContain("Factory built");
         await evaluate<boolean>(`(() => { [...document.querySelectorAll('nav[aria-label="Build tools"] button')].find((button) => button.getAttribute("aria-label") === "Inspect")?.click(); return true; })()`);
-        await clickCell(26, 31);
+        await clickCell(26, 27);
         await waitForExpression(`document.querySelector('.context-panel') !== null`);
         await openSelectedFactory();
         await clickBuildTool("processing", "Crusher");
-        await clickCell(31, 33);
+        await clickCell(31, 29);
         await sleep(150);
         const crusherPlacement = await evaluate<string>(`[...document.querySelectorAll('[role="status"]')].map((element) => element.textContent).join(" | ")`);
         console.log("PHASE20_P5_RUNTIME_CRUSHER_PLACEMENT " + JSON.stringify(crusherPlacement));
         expect(crusherPlacement).toContain("Machine placed");
         await clickBuildTool("processing", "Polisher");
-        await clickCell(27, 33);
+        await clickCell(27, 29);
         await sleep(150);
         const polisherPlacement = await evaluate<string>(`[...document.querySelectorAll('[role="status"]')].map((element) => element.textContent).join(" | ")`);
         console.log("PHASE20_P5_RUNTIME_POLISHER_PLACEMENT " + JSON.stringify(polisherPlacement));
         expect(polisherPlacement).toContain("Machine placed");
         await evaluate<boolean>(`(() => { [...document.querySelectorAll('nav[aria-label="Build tools"] button')].find((button) => button.getAttribute("aria-label") === "Dismantle")?.click(); return true; })()`);
         await chooseMode("area-exact");
-        await dragWorldArea({ x: 27, y: 33 }, { x: 32, y: 34 });
+        await dragWorldArea({ x: 27, y: 29 }, { x: 32, y: 30 });
         await waitForExpression(`document.querySelector('[data-testid="dismantle-review"]') !== null`);
         const runtimeExactCounts = await reviewCounts();
         expect(runtimeExactCounts["Will be removed"]).toBe(1);
