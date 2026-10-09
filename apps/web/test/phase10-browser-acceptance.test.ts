@@ -2250,10 +2250,27 @@ browserIt(
         type: "touchEnd",
         touchPoints: [],
       });
-      await evaluate(`(() => {
-        document.querySelector(".build-menu-scrim")?.click();
-        return true;
-      })()`);
+      // The scrim closes on pointerdown, not on click. A DOM .click()
+      // does not fire pointerdown and can leave this full-screen touch
+      // interceptor mounted above the Game menu button.
+      const closeScrimPoint = await evaluate<{ x: number; y: number }>(
+        `(() => {
+          const rect = document.querySelector(".build-menu-scrim").getBoundingClientRect();
+          return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+        })()`,
+      );
+      await call("Input.dispatchTouchEvent", {
+        type: "touchStart",
+        touchPoints: [{ id: 8, ...closeScrimPoint }],
+      });
+      await call("Input.dispatchTouchEvent", {
+        type: "touchEnd",
+        touchPoints: [],
+      });
+      await waitForExpression(
+        `document.querySelector(".build-submenu") === null &&
+          document.querySelector(".build-menu-scrim") === null`,
+      );
 
       // Non-pinch accessibility alternatives operate through the same
       // camera controller, and React controls remain operable on mobile.
