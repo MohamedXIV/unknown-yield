@@ -85,6 +85,8 @@ export class Simulation {
       result.linePlan?.newCount === 0
     )
       return result;
+    if (result.ok && commandType === "dismantleMany" && result.batch?.removed.length === 0)
+      return result;
     if (result.ok) {
       if (
         commandType === "setDivertRoute" &&
