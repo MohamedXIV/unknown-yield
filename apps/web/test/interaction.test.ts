@@ -34,6 +34,84 @@ it("draws orthogonal paths including turns and reversed drags", () => {
   expect(p[0]).toEqual({ x: 5, y: 5 });
   expect(p.at(-1)).toEqual({ x: 2, y: 7 });
 });
+it("supports both deterministic L-corner orders in every quadrant and reverse drag", () => {
+  const snapshot = new Simulation(fixture).snapshot();
+  const origin = { x: 10, y: 10 };
+  for (const dx of [-3, 3])
+    for (const dy of [-2, 2]) {
+      const target = { x: origin.x + dx, y: origin.y + dy };
+      for (const [order, firstAxis] of [
+        ["horizontal-first", "horizontal"],
+        ["vertical-first", "vertical"],
+      ] as const) {
+        for (const [start, end] of [[origin, target], [target, origin]] as const) {
+          const path = beltPath(start, end, order);
+          expect(path[0]).toEqual(start);
+          expect(path.at(-1)).toEqual(end);
+          expect(path).toHaveLength(Math.abs(dx) + Math.abs(dy) + 1);
+          expect(
+            path[1].x === start.x ? "vertical" : "horizontal",
+          ).toBe(firstAxis);
+          for (let i = 1; i < path.length; i++)
+            expect(
+              Math.abs(path[i].x - path[i - 1].x) +
+                Math.abs(path[i].y - path[i - 1].y),
+            ).toBe(1);
+          const previous = path.at(-2)!;
+          const direction =
+            end.x > previous.x
+              ? 0
+              : end.y > previous.y
+                ? 1
+                : end.x < previous.x
+                  ? 2
+                  : 3;
+          expect(
+            buildCommand(
+              { ...DEFAULT_MODE, tool: "belt" },
+              snapshot,
+              end,
+              start,
+              order,
+            ),
+          ).toEqual({ type: "placeBelts", points: path, direction });
+        }
+      }
+    }
+});
+it("uses a chosen corner order for belts while preserving pipe routing and single-cell R", () => {
+  const s = new Simulation(fixture).snapshot();
+  const anchor = { x: 10, y: 10 },
+    end = { x: 12, y: 12 };
+  expect(
+    buildCommand({ ...DEFAULT_MODE, tool: "belt", direction: 2 }, s, end, anchor, "vertical-first"),
+  ).toMatchObject({
+    type: "placeBelts",
+    points: [
+      { x: 10, y: 10 },
+      { x: 10, y: 11 },
+      { x: 10, y: 12 },
+      { x: 11, y: 12 },
+      { x: 12, y: 12 },
+    ],
+    direction: 0,
+  });
+  expect(
+    buildCommand({ ...DEFAULT_MODE, tool: "pipe" }, s, end, anchor, "vertical-first"),
+  ).toMatchObject({
+    type: "placePipes",
+    points: [
+      { x: 10, y: 10, inlet: 2, outlet: 0 },
+      { x: 11, y: 10, inlet: 2, outlet: 0 },
+      { x: 12, y: 10, inlet: 2, outlet: 1 },
+      { x: 12, y: 11, inlet: 3, outlet: 1 },
+      { x: 12, y: 12, inlet: 3, outlet: 1 },
+    ],
+  });
+  expect(
+    buildCommand({ ...DEFAULT_MODE, tool: "belt", direction: 2 }, s, anchor, null, "vertical-first"),
+  ).toEqual({ type: "placeBelts", points: [anchor], direction: 2 });
+});
 it("uses the current rotation for single belts and handles factory drag in all directions", () => {
   const s = new Simulation(fixture).snapshot();
   expect(

@@ -48,6 +48,7 @@ export type Tool =
   | "demolish"
   // Imported, validated machine definition IDs have no predefined shortcut.
   | (string & {});
+export type BeltCornerOrder = "horizontal-first" | "vertical-first";
 export const TOOL_HOTKEYS: Record<string, string> = {
   "elevated-solid": "E",
   "underground-solid": "H",
@@ -433,16 +434,31 @@ export function toggleFactoryOpen(mode: WorldMode, id: string): WorldMode {
       : [...mode.openFactories, id],
   };
 }
-export function beltPath(a: Point, b: Point): Point[] {
+export function beltPath(
+  a: Point,
+  b: Point,
+  cornerOrder: BeltCornerOrder = "horizontal-first",
+): Point[] {
   let { x, y } = a;
   const path = [{ x, y }];
-  while (x !== b.x) {
-    x += Math.sign(b.x - x);
-    path.push({ x, y });
-  }
-  while (y !== b.y) {
-    y += Math.sign(b.y - y);
-    path.push({ x, y });
+  const moveX = () => {
+    while (x !== b.x) {
+      x += Math.sign(b.x - x);
+      path.push({ x, y });
+    }
+  };
+  const moveY = () => {
+    while (y !== b.y) {
+      y += Math.sign(b.y - y);
+      path.push({ x, y });
+    }
+  };
+  if (cornerOrder === "horizontal-first") {
+    moveX();
+    moveY();
+  } else {
+    moveY();
+    moveX();
   }
   return path;
 }
@@ -491,6 +507,7 @@ export function buildCommand(
   s: PlayerSnapshot,
   p: Point,
   anchor: Point | null,
+  cornerOrder: BeltCornerOrder = "horizontal-first",
 ): GameCommand | null {
   if (mode.tool === "factory") {
     const a = anchor ?? p;
@@ -580,7 +597,7 @@ export function buildCommand(
           };
   }
   if (mode.tool === "belt") {
-    const points = beltPath(anchor ?? p, p),
+    const points = beltPath(anchor ?? p, p, cornerOrder),
       previous = points.at(-2);
     const direction = previous
       ? p.x > previous.x

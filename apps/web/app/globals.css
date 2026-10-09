@@ -945,7 +945,7 @@ a {
   background: #1a271ce8;
   border: 1px solid var(--line);
   border-radius: 4px;
-  pointer-events: auto;
+  pointer-events: none;
   max-width: 740px;
   backdrop-filter: blur(6px);
 }
@@ -962,6 +962,7 @@ a {
 .build-hint button {
   font-size: 13px;
   white-space: nowrap;
+  pointer-events: auto;
 }
 .build-hint kbd,
 kbd {

@@ -1,7 +1,7 @@
 import type { Content } from "@site/content";
 import { beltArms } from "./junctions";
 import { amount, type Belt, type BeltPlacementPlan, type GameCommand, type Save } from "./types";
-import { beltError, key } from "./geometry";
+import { beltError, contains, footprint, key, next, socket } from "./geometry";
 
 type BeltPathCommand = Extract<GameCommand, { type: "placeBelts" }>;
 
@@ -10,6 +10,41 @@ function directionBetween(from: { x: number; y: number }, to: { x: number; y: nu
   if (to.y > from.y) return 1;
   if (to.x < from.x) return 2;
   return 3;
+}
+
+function endpointReceiverError(
+  content: Content,
+  save: Save,
+  point: { x: number; y: number },
+  direction: number,
+): string | undefined {
+  for (const machine of Object.values(save.machines)) {
+    const definition = content.machines.find(
+      (candidate) => candidate.id === machine.definitionId,
+    )!;
+    if (definition.role !== "processor" || !definition.inputStates.includes("solid"))
+      continue;
+    const input = socket(machine, definition, false);
+    if (key(input) === key(point))
+      return direction === machine.direction
+        ? undefined
+        : "Face the machine input socket to connect this route";
+    if (contains(footprint(machine, definition), next(point, direction)))
+      return "Connect through the machine's actual solid input socket";
+  }
+  for (const storage of Object.values(save.storages)) {
+    const definition = content.storages.find(
+      (candidate) => candidate.id === storage.definitionId,
+    )!;
+    const input = socket(storage, definition, false);
+    if (key(input) === key(point))
+      return direction === storage.direction
+        ? undefined
+        : "Face the storage input socket to connect this route";
+    if (contains(footprint(storage, definition), next(point, direction)))
+      return "Connect through the storage's actual input socket";
+  }
+  return undefined;
 }
 
 /** Pure placement preflight shared by preview and the authoritative commit. */
@@ -53,6 +88,10 @@ export function planBeltPlacement(
         existing.alternate !== null && existing.switched
           ? existing.alternate
           : existing.direction;
+      const endpointError =
+        index === command.points.length - 1
+          ? endpointReceiverError(content, save, point, activeDirection)
+          : undefined;
       displayDirection = next ? plannedDirection : activeDirection;
       const incomingDirection = previous
         ? directionBetween(previous, point)
@@ -73,6 +112,7 @@ export function planBeltPlacement(
         reason = "The existing belt does not accept entry from the previous cell";
       else if (next && !arms.outlets.includes(plannedDirection))
         reason = "The existing belt does not exit toward the next cell";
+      else if (endpointError) reason = endpointError;
       else if (
         arms.kind === "crossing" &&
         existing.cargo &&
@@ -96,6 +136,8 @@ export function planBeltPlacement(
       if (reason) displayDirection = activeDirection;
     } else if (!reason) {
       reason = beltError(content, save, point, plannedDirection) ?? undefined;
+      if (!reason && index === command.points.length - 1)
+        reason = endpointReceiverError(content, save, point, plannedDirection);
       kind = reason ? "blocked" : "add";
     } else {
       kind = "blocked";

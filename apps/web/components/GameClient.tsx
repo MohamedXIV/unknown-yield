@@ -143,7 +143,7 @@ const descriptions: Partial<Record<Tool, string>> = {
     "Place inside a factory. Pressure-relief baffling is learned from a prior jam.",
   depot:
     "Place on clear ground. Belts move any material in and out until full.",
-  belt: "Drag a ground path. Release to build. Click for one cell; R changes its direction.",
+  belt: "Drag a ground path. On an L turn, R switches the corner order. Click for one cell; R rotates its direction.",
   port: "Place on a factory wall. R changes flow direction. Add a belt on the port.",
   demolish:
     "Click a structure to reclaim it and its contents. Stop active machines first.",
