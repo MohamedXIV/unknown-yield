@@ -1,5 +1,6 @@
 export { Simulation } from "./simulation";
 export { planBeltPlacement } from "./belt-planning";
+export { planLinePlacement } from "./line-planning";
 export {
   applyReactionHazard,
   hazardClassDefinition,
@@ -54,6 +55,9 @@ export type {
   BeltPlacementPlan,
   BeltPlacementPosition,
   BeltPlacementKind,
+  LinePlacementPlan,
+  LinePlacementPosition,
+  LinePlacementKind,
   PlayerSnapshot,
   MachineView,
   MachineStatus,
@@ -144,10 +148,18 @@ export {
 
 export { beltArms } from "./junctions";
 
-export { advanceUndergroundRoutes, undergroundSolidCost, undergroundLiquidCost } from "./underground";
+export {
+  advanceUndergroundRoutes,
+  undergroundSolidCost,
+  undergroundLiquidCost,
+} from "./underground";
 
 export { advanceElevatedRoutes, elevatedSolidCost } from "./elevated";
-export { cardinalSpan, elevatedDeckPoints, elevatedSupportPoints } from "./geometry";
+export {
+  cardinalSpan,
+  elevatedDeckPoints,
+  elevatedSupportPoints,
+} from "./geometry";
 export {
   consumeMachineFuel,
   fuelClassDefinition,
