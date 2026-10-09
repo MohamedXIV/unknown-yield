@@ -1,8 +1,5 @@
 import { liquidConstructionCost } from "./containment";
-import {
-  undergroundLiquidCost,
-  undergroundSolidCost,
-} from "./underground";
+import { undergroundLiquidCost, undergroundSolidCost } from "./underground";
 import { elevatedSolidCost } from "./elevated";
 import {
   dispatchShipmentCommand,
@@ -19,6 +16,7 @@ import { applyAssistance, assistanceEligibility } from "./assistance";
 import { applySensingObservation } from "./sensing";
 import { requestImportCommand } from "./imports";
 import { planBeltPlacement } from "./belt-planning";
+import { planLinePlacement } from "./line-planning";
 import {
   factoryConnectionRequirements,
   factoryRelocationResumeError,
@@ -38,7 +36,6 @@ import {
   liquidPlacementError,
   liquidRects,
   overlaps,
-  next,
   inside,
   footprint,
   undergroundDirection,
@@ -322,43 +319,31 @@ export function applyCommand(
         apply,
       );
     case "placePressureLines": {
-      const cfg = c.gasLogistics;
-      if (!cfg) return fail("Gas infrastructure is not authored");
-      const stage = structuredClone(s),
-        seen = new Set<string>();
-      for (let i = 0; i < cmd.points.length; i++) {
-        const point = cmd.points[i],
-          prev = cmd.points[i - 1];
-        if (seen.has(key(point)) || point.inlet === point.outlet)
-          return fail("Invalid directed pressure line path");
-        if (
-          prev &&
-          (key(next(prev, prev.outlet)) !== key(point) ||
-            point.inlet !== (prev.outlet + 2) % 4)
-        )
-          return fail("Pressure line endpoints must connect");
-        const error = gasPlacementError(c, stage, point, "line");
-        if (error) return fail(error);
-        seen.add(key(point));
-        stage.pressureLines[key(point)] = {
-          ...point,
-          id: "preview",
-          materialId: null,
-          quantity: 0,
+      const linePlan = planLinePlacement(c, s, cmd);
+      if (!linePlan.valid)
+        return {
+          ...fail(linePlan.error ?? "Invalid directed pressure line path"),
+          cost: linePlan.cost,
+          linePlan,
         };
-      }
-      const cost = cmd.points.length * cfg.line.cost;
-      if (!affordable(cost)) return fail("Not enough structural plates");
-      if (!apply) return ok("Place pressure lines", cost);
-      pay(cost);
-      for (const point of cmd.points)
+      if (!apply)
+        return { ...ok("Place pressure lines", linePlan.cost), linePlan };
+      if (linePlan.newCount === 0)
+        return { ...ok("Pressure line path already present"), linePlan };
+      pay(linePlan.cost);
+      for (const point of linePlan.positions) {
+        if (point.kind !== "add") continue;
         s.pressureLines[key(point)] = {
-          ...point,
+          x: point.x,
+          y: point.y,
+          inlet: point.inlet,
+          outlet: point.outlet,
           id: issue("g"),
           materialId: null,
           quantity: 0,
         };
-      return ok("Pressure lines placed", cost);
+      }
+      return { ...ok("Pressure lines placed", linePlan.cost), linePlan };
     }
     case "placePressureVessel":
     case "placeCompressor": {
@@ -444,45 +429,31 @@ export function applyCommand(
         !cfg.containmentProfiles.some((p) => p.id === cmd.containmentProfileId)
       )
         return fail("Unknown liquid containment profile");
-      const stage = structuredClone(s),
-        seen = new Set<string>();
-      for (let i = 0; i < cmd.points.length; i++) {
-        const point = cmd.points[i],
-          prev = cmd.points[i - 1];
-        if (seen.has(key(point)) || point.inlet === point.outlet)
-          return fail("Invalid directed pipe path");
-        if (
-          prev &&
-          (key(next(prev, prev.outlet)) !== key(point) ||
-            point.inlet !== (prev.outlet + 2) % 4)
-        )
-          return fail("Pipe endpoints must connect");
-        const error = liquidPlacementError(c, stage, point, "pipe");
-        if (error) return fail(error);
-        seen.add(key(point));
-        stage.pipes[key(point)] = {
-          ...point,
-          id: "preview",
-          containmentProfileId: cmd.containmentProfileId,
-          materialId: null,
-          quantity: 0,
+      const linePlan = planLinePlacement(c, s, cmd);
+      if (!linePlan.valid)
+        return {
+          ...fail(linePlan.error ?? "Invalid directed pipe path"),
+          cost: linePlan.cost,
+          linePlan,
         };
-      }
-      const cost =
-        cmd.points.length *
-        liquidConstructionCost(c, "pipe", cmd.containmentProfileId);
-      if (!affordable(cost)) return fail("Not enough structural plates");
-      if (!apply) return ok("Place pipes", cost);
-      pay(cost);
-      for (const point of cmd.points)
+      if (!apply) return { ...ok("Place pipes", linePlan.cost), linePlan };
+      if (linePlan.newCount === 0)
+        return { ...ok("Pipe path already present"), linePlan };
+      pay(linePlan.cost);
+      for (const point of linePlan.positions) {
+        if (point.kind !== "add") continue;
         s.pipes[key(point)] = {
-          ...point,
+          x: point.x,
+          y: point.y,
+          inlet: point.inlet,
+          outlet: point.outlet,
           id: issue("l"),
           containmentProfileId: cmd.containmentProfileId,
           materialId: null,
           quantity: 0,
         };
-      return ok("Pipes placed", cost);
+      }
+      return { ...ok("Pipes placed", linePlan.cost), linePlan };
     }
     case "placeTank":
     case "placePump": {
@@ -740,12 +711,7 @@ export function applyCommand(
         line.y += dy;
         s.pressureLines[key(line)] = line;
       }
-      for (const item of [
-        ...pumps,
-        ...tanks,
-        ...compressors,
-        ...vessels,
-      ]) {
+      for (const item of [...pumps, ...tanks, ...compressors, ...vessels]) {
         item.x += dx;
         item.y += dy;
       }
@@ -763,10 +729,7 @@ export function applyCommand(
         return fail("Capability locked by unconfirmed knowledge");
       const placement = machinePlacement(c, s, cmd);
       if (placement.error) return fail(placement.error);
-      if (
-        placement.factoryId &&
-        s.factories[placement.factoryId]?.relocation
-      )
+      if (placement.factoryId && s.factories[placement.factoryId]?.relocation)
         return fail("Finish factory relocation before adding equipment");
       if (!affordable(def.cost)) return fail("Not enough structural plates");
       if (!apply) return ok("Place machine", def.cost);
@@ -1106,13 +1069,7 @@ export function applyCommand(
       return ok("Terminal policy updated");
     }
     case "setShipmentQuantity":
-      return shipmentQuantityCommand(
-        c,
-        s,
-        cmd.materialId,
-        cmd.quantity,
-        apply,
-      );
+      return shipmentQuantityCommand(c, s, cmd.materialId, cmd.quantity, apply);
     case "dispatchShipment":
       return dispatchShipmentCommand(c, s, apply);
     case "requestImport":
@@ -1234,12 +1191,7 @@ export function applyCommand(
         // in a real place. Dismantling must not teleport them across the map,
         // so a buffered machine cannot be reclaimed until its contents leave
         // through belts (output drains; incompatible input needs rerouting).
-        if (
-          total(m.input) +
-            total(m.output) +
-            total(m.incidentInventory) >
-          0
-        )
+        if (total(m.input) + total(m.output) + total(m.incidentInventory) > 0)
           return fail(
             "Empty the machine buffers through compatible transport first",
           );

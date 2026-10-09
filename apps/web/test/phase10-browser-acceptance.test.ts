@@ -6,8 +6,14 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import { fixture, enCatalog } from "@site/content";
-import { createContentStore, serializeStudioBundle } from "@site/content/studio";
-import { createStudioEntity, setStudioLocaleText } from "../game/studio-workbench";
+import {
+  createContentStore,
+  serializeStudioBundle,
+} from "@site/content/studio";
+import {
+  createStudioEntity,
+  setStudioLocaleText,
+} from "../game/studio-workbench";
 import {
   Simulation,
   experimentEvidenceKey,
@@ -18,7 +24,12 @@ import { expect, it } from "vitest";
 
 function runtimePackBrowserFixture(): string {
   const store = createContentStore(fixture, enCatalog);
-  store.setCell("meta", "content", "version", "world-01-v14-browser-content-pack");
+  store.setCell(
+    "meta",
+    "content",
+    "version",
+    "world-01-v14-browser-content-pack",
+  );
   createStudioEntity(store, "material", "powder");
   createStudioEntity(store, "operation", "polish");
   createStudioEntity(store, "machine", "polisher");
@@ -27,7 +38,11 @@ function runtimePackBrowserFixture(): string {
   setStudioLocaleText(store, "material.powder.name", "Polished powder");
   setStudioLocaleText(store, "operation.polish.name", "Polish");
   setStudioLocaleText(store, "machine.polisher.name", "Polisher");
-  setStudioLocaleText(store, "reaction.polish-raw.observation", "Polishing produces powder.");
+  setStudioLocaleText(
+    store,
+    "reaction.polish-raw.observation",
+    "Polishing produces powder.",
+  );
   store.setCell("machines", "polisher", "role", "processor");
   store.setCell("machines", "polisher", "operationsJson", '["polish"]');
   store.setCell("machines", "polisher", "capacity", 8);
@@ -228,12 +243,12 @@ function phase12BrowserWorld() {
   const diverterId = sim
     .snapshot()
     .belts.find((belt) => belt.x === 39 && belt.y === 37)!.id;
-  expect(
-    sim.command({ type: "rotateDivert", beltId: diverterId }).ok,
-  ).toBe(true);
-  expect(
-    sim.command({ type: "rotateDivert", beltId: diverterId }).ok,
-  ).toBe(true);
+  expect(sim.command({ type: "rotateDivert", beltId: diverterId }).ok).toBe(
+    true,
+  );
+  expect(sim.command({ type: "rotateDivert", beltId: diverterId }).ok).toBe(
+    true,
+  );
 
   return {
     save: sim.serialize(),
@@ -262,6 +277,47 @@ function phase20FlowBrowserWorld() {
   return sim.serialize();
 }
 
+function phase20LineReuseBrowserWorld() {
+  const sim = new Simulation(fixture),
+    profile = fixture.liquidLogistics!.containmentProfiles[0].id,
+    pipePoints = Array.from({ length: 5 }, (_, index) => ({
+      x: 30 + index,
+      y: 20,
+      inlet: 2,
+      outlet: 0,
+    })),
+    pressurePoints = Array.from({ length: 5 }, (_, index) => ({
+      x: 30 + index,
+      y: 22,
+      inlet: 2,
+      outlet: 0,
+    }));
+  build(sim, {
+    type: "placePipes",
+    containmentProfileId: profile,
+    points: pipePoints,
+  });
+  build(sim, { type: "placePressureLines", points: pressurePoints });
+  for (const x of [31, 33]) {
+    const pipeId = sim.serialize().pipes[`${x},20`].id,
+      pressureId = sim.serialize().pressureLines[`${x},22`].id;
+    expect(sim.command({ type: "dismantle", id: pipeId }).ok).toBe(true);
+    expect(sim.command({ type: "dismantle", id: pressureId }).ok).toBe(true);
+  }
+  return {
+    save: sim.serialize(),
+    profile,
+    pipePoints,
+    pressurePoints,
+    existingPipeIds: [30, 32, 34].map(
+      (x) => sim.serialize().pipes[`${x},20`].id,
+    ),
+    existingPressureIds: [30, 32, 34].map(
+      (x) => sim.serialize().pressureLines[`${x},22`].id,
+    ),
+  };
+}
+
 function chromeExecutable(): string | null {
   const candidates = [
     process.env.CHROME_BIN,
@@ -271,7 +327,13 @@ function chromeExecutable(): string | null {
     "/usr/bin/chromium-browser",
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
     process.env.PROGRAMFILES
-      ? join(process.env.PROGRAMFILES, "Google", "Chrome", "Application", "chrome.exe")
+      ? join(
+          process.env.PROGRAMFILES,
+          "Google",
+          "Chrome",
+          "Application",
+          "chrome.exe",
+        )
       : undefined,
     process.env["PROGRAMFILES(X86)"]
       ? join(
@@ -292,7 +354,9 @@ function chromeExecutable(): string | null {
         )
       : undefined,
   ];
-  return candidates.find((candidate) => candidate && existsSync(candidate)) ?? null;
+  return (
+    candidates.find((candidate) => candidate && existsSync(candidate)) ?? null
+  );
 }
 
 async function waitForHttp(url: string, timeoutMs = 60000): Promise<void> {
@@ -343,7 +407,10 @@ browserIt(
     : "renders the Phase 10 tools truthfully in a real browser",
   async () => {
     const chrome = chromeExecutable();
-    expect(chrome, "Chrome/Chromium must be available on the CI runner").toBeTruthy();
+    expect(
+      chrome,
+      "Chrome/Chromium must be available on the CI runner",
+    ).toBeTruthy();
 
     const exportRoot = join(process.cwd(), "apps", "web", "out");
     if (productionBrowser) {
@@ -418,9 +485,13 @@ browserIt(
       const socket = new WebSocket(page!.webSocketDebuggerUrl!);
       await new Promise<void>((resolve, reject) => {
         socket.addEventListener("open", () => resolve(), { once: true });
-        socket.addEventListener("error", () => reject(new Error("CDP socket failed")), {
-          once: true,
-        });
+        socket.addEventListener(
+          "error",
+          () => reject(new Error("CDP socket failed")),
+          {
+            once: true,
+          },
+        );
       });
 
       type CdpResult = {
@@ -457,7 +528,11 @@ browserIt(
         };
         if (message.method === "Runtime.exceptionThrown") {
           const detail = message.params?.exceptionDetails;
-          runtimeErrors.push(detail?.exception?.description ?? detail?.text ?? "Unspecified JS exception");
+          runtimeErrors.push(
+            detail?.exception?.description ??
+              detail?.text ??
+              "Unspecified JS exception",
+          );
           return;
         }
         if (!message.id || !pending.has(message.id)) return;
@@ -816,7 +891,10 @@ browserIt(
         "Relief furnace": "true",
       });
       expect(
-        await submenuState("solid-logistics", ["Underground belt", "Elevated gantry"]),
+        await submenuState("solid-logistics", [
+          "Underground belt",
+          "Elevated gantry",
+        ]),
       ).toEqual({
         "Underground belt": "false",
         "Elevated gantry": "false",
@@ -912,7 +990,10 @@ browserIt(
           ?.textContent.includes("Belt path built") !== true`,
         8000,
       );
-      const beltRoutePixels = await evaluate<{ start: { x: number; y: number }; end: { x: number; y: number } }>(
+      const beltRoutePixels = await evaluate<{
+        start: { x: number; y: number };
+        end: { x: number; y: number };
+      }>(
         `(() => {
           const rect = document.querySelector("canvas").getBoundingClientRect();
           const project = (x, y) => {
@@ -920,7 +1001,7 @@ browserIt(
             return { x: rect.left + point.x * rect.width, y: rect.top + point.y * rect.height };
           };
           return { start: project(15, 18), end: project(17, 18) };
-        })()`
+        })()`,
       );
       await call("Input.dispatchMouseEvent", {
         type: "mousePressed",
@@ -950,7 +1031,10 @@ browserIt(
       const evidenceDirectory = process.env.UNKNOWN_YIELD_EVIDENCE_DIR;
       if (evidenceDirectory) {
         mkdirSync(evidenceDirectory, { recursive: true });
-        writeFileSync(join(evidenceDirectory, "belt-gap-preview.png"), beltPreviewBytes);
+        writeFileSync(
+          join(evidenceDirectory, "belt-gap-preview.png"),
+          beltPreviewBytes,
+        );
       }
       await call("Input.dispatchMouseEvent", {
         type: "mouseReleased",
@@ -1000,23 +1084,34 @@ browserIt(
         };
       })()`);
       expect(beltGapSave.belts).toHaveLength(3);
-      expect(beltGapSave.belts.map((belt) => belt.x).sort()).toEqual([15, 16, 17]);
+      expect(beltGapSave.belts.map((belt) => belt.x).sort()).toEqual([
+        15, 16, 17,
+      ]);
       expect(new Set(beltGapSave.belts.map((belt) => belt.id)).size).toBe(3);
-      expect(beltGapSave.belts.every((belt) => belt.direction === 0)).toBe(true);
+      expect(beltGapSave.belts.every((belt) => belt.direction === 0)).toBe(
+        true,
+      );
       expect(beltGapSave.plates).toBe(597);
-      console.log("PHASE20_BELT_GAP_BROWSER_EVIDENCE " + JSON.stringify({
-        mode: browserAcceptanceMode,
-        scenario: "reuse one existing start belt and build two new cells in production browser",
-        reusedCell: { x: 15, y: 18 },
-        addedCells: [{ x: 16, y: 18 }, { x: 17, y: 18 }],
-        savedBelts: beltGapSave.belts,
-        remainingPlates: beltGapSave.plates,
-        previewScreenshot: {
-          bytes: beltPreviewBytes.length,
-          sha256: beltPreviewSha256,
-          retained: Boolean(evidenceDirectory),
-        },
-      }));
+      console.log(
+        "PHASE20_BELT_GAP_BROWSER_EVIDENCE " +
+          JSON.stringify({
+            mode: browserAcceptanceMode,
+            scenario:
+              "reuse one existing start belt and build two new cells in production browser",
+            reusedCell: { x: 15, y: 18 },
+            addedCells: [
+              { x: 16, y: 18 },
+              { x: 17, y: 18 },
+            ],
+            savedBelts: beltGapSave.belts,
+            remainingPlates: beltGapSave.plates,
+            previewScreenshot: {
+              bytes: beltPreviewBytes.length,
+              sha256: beltPreviewSha256,
+              retained: Boolean(evidenceDirectory),
+            },
+          }),
+      );
 
       const p2Seed = phase20FlowBrowserWorld();
       await evaluate(
@@ -1135,11 +1230,20 @@ browserIt(
         };
       })()`);
       expect(p2ProductionSave.belts).toHaveLength(6);
-      expect(p2ProductionSave.belts.find((belt) => belt.x === 17 && belt.y === 26)?.direction).toBe(3);
-      expect(p2ProductionSave.belts.filter((belt) => belt.y === 25).every((belt) => belt.direction === 0)).toBe(true);
       expect(
-        Object.values(p2ProductionSave.storages[Object.keys(p2ProductionSave.storages)[0]].inventory)
-          .some((quantity) => quantity > 0),
+        p2ProductionSave.belts.find((belt) => belt.x === 17 && belt.y === 26)
+          ?.direction,
+      ).toBe(3);
+      expect(
+        p2ProductionSave.belts
+          .filter((belt) => belt.y === 25)
+          .every((belt) => belt.direction === 0),
+      ).toBe(true);
+      expect(
+        Object.values(
+          p2ProductionSave.storages[Object.keys(p2ProductionSave.storages)[0]]
+            .inventory,
+        ).some((quantity) => quantity > 0),
       ).toBe(true);
       await call("Page.reload", { ignoreCache: true });
       await sleep(900);
@@ -1188,24 +1292,32 @@ browserIt(
           p2LoadedBytes,
         );
       }
-      console.log("PHASE20_P2_BELT_CORNER_BROWSER_EVIDENCE " + JSON.stringify({
-        mode: browserAcceptanceMode,
-        gesture: "vertical-first L-corner selected with R during production pointer drag",
-        route: p2ProductionSave.belts.sort((a, b) => a.y - b.y || a.x - b.x),
-        depotInventory: Object.values(
-          p2ProductionSave.storages[Object.keys(p2ProductionSave.storages)[0]].inventory,
-        ).reduce((total, quantity) => total + quantity, 0),
-        saveReload: "route direction and produced inventory restored",
-        previewScreenshot: {
-          bytes: p2PreviewBytes.length,
-          sha256: p2PreviewSha256,
-          retained: Boolean(evidenceDirectory),
-        },
-        loadedScreenshot: {
-          bytes: p2LoadedBytes.length,
-          retained: Boolean(evidenceDirectory),
-        },
-      }));
+      console.log(
+        "PHASE20_P2_BELT_CORNER_BROWSER_EVIDENCE " +
+          JSON.stringify({
+            mode: browserAcceptanceMode,
+            gesture:
+              "vertical-first L-corner selected with R during production pointer drag",
+            route: p2ProductionSave.belts.sort(
+              (a, b) => a.y - b.y || a.x - b.x,
+            ),
+            depotInventory: Object.values(
+              p2ProductionSave.storages[
+                Object.keys(p2ProductionSave.storages)[0]
+              ].inventory,
+            ).reduce((total, quantity) => total + quantity, 0),
+            saveReload: "route direction and produced inventory restored",
+            previewScreenshot: {
+              bytes: p2PreviewBytes.length,
+              sha256: p2PreviewSha256,
+              retained: Boolean(evidenceDirectory),
+            },
+            loadedScreenshot: {
+              bytes: p2LoadedBytes.length,
+              retained: Boolean(evidenceDirectory),
+            },
+          }),
+      );
 
       if (browserAcceptanceMode === "production-p2") {
         expect(runtimeErrors, runtimeErrors.join("\n")).toEqual([]);
@@ -1213,6 +1325,301 @@ browserIt(
         socket.close();
         return;
       }
+
+      const p3Seed = phase20LineReuseBrowserWorld();
+      await evaluate(
+        `localStorage.setItem("industrial-site-save-v15", ${JSON.stringify(
+          JSON.stringify(p3Seed.save),
+        )})`,
+      );
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Game menu"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `[...document.querySelectorAll("button")]
+          .some((button) => button.textContent?.includes("Load saved world"))`,
+      );
+      await evaluate(`(() => {
+        [...document.querySelectorAll("button")]
+          .find((button) => button.textContent?.includes("Load saved world"))
+          ?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector('[role="status"]')
+          ?.textContent.includes("Site restored") === true`,
+      );
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Close field brief"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector('button[aria-label="Close field brief"]') === null`,
+      );
+      await waitForExpression(
+        `document.querySelector('[role="status"]')
+          ?.textContent.includes("Site restored") !== true`,
+      );
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Pause simulation"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector(".paused-label") !== null`,
+      );
+
+      const dragWorldRoute = async (
+        start: { x: number; y: number },
+        end: { x: number; y: number },
+      ) => {
+        const pixels = await evaluate<{
+          start: { x: number; y: number };
+          end: { x: number; y: number };
+        }>(`(() => {
+          const rect = document.querySelector("canvas").getBoundingClientRect();
+          const project = (x, y) => {
+            const point = window.__UNKNOWN_YIELD_PROJECT_WORLD__((x + .5) * 32, (y + .5) * 24);
+            return { x: rect.left + point.x * rect.width, y: rect.top + point.y * rect.height };
+          };
+          return { start: project(${start.x}, ${start.y}), end: project(${end.x}, ${end.y}) };
+        })()`);
+        await call("Input.dispatchMouseEvent", {
+          type: "mousePressed",
+          ...pixels.start,
+          button: "left",
+          buttons: 1,
+          clickCount: 1,
+        });
+        await call("Input.dispatchMouseEvent", {
+          type: "mouseMoved",
+          ...pixels.end,
+          button: "left",
+          buttons: 1,
+        });
+        await sleep(140);
+        return pixels;
+      };
+      const captureP3Preview = async (name: string) => {
+        const screenshot = await call("Page.captureScreenshot", {
+          format: "png",
+          captureBeyondViewport: false,
+        });
+        const bytes = Buffer.from(
+          (screenshot as unknown as { data: string }).data,
+          "base64",
+        );
+        const sha256 = createHash("sha256").update(bytes).digest("hex");
+        if (evidenceDirectory) {
+          mkdirSync(evidenceDirectory, { recursive: true });
+          writeFileSync(join(evidenceDirectory, name), bytes);
+        }
+        return {
+          bytes: bytes.length,
+          sha256,
+          retained: Boolean(evidenceDirectory),
+        };
+      };
+      const releaseRoute = async (point: { x: number; y: number }) =>
+        call("Input.dispatchMouseEvent", {
+          type: "mouseReleased",
+          ...point,
+          button: "left",
+          buttons: 0,
+          clickCount: 1,
+        });
+      const saveLoadedWorld = async () => {
+        await evaluate(`(() => {
+          document.querySelector('button[aria-label="Game menu"]')?.click();
+          return true;
+        })()`);
+        await waitForExpression(
+          `[...document.querySelectorAll("button")]
+            .some((button) => button.textContent?.includes("Save world"))`,
+        );
+        await evaluate(`(() => {
+          [...document.querySelectorAll("button")]
+            .find((button) => button.textContent?.includes("Save world"))
+            ?.click();
+          return true;
+        })()`);
+        await waitForExpression(
+          `document.querySelector('[role="status"]')
+            ?.textContent.includes("Field record saved on this device") === true`,
+        );
+        await evaluate(`(() => {
+          document.querySelector('button[aria-label="Game menu"]')?.click();
+          return true;
+        })()`);
+      };
+
+      await clickBuildTool("liquid-logistics", "Directed pipe");
+      const pipePixels = await dragWorldRoute(
+        { x: 30, y: 20 },
+        { x: 34, y: 20 },
+      );
+      const pipePreview = await captureP3Preview("p3-pipe-gap-preview.png");
+      await releaseRoute(pipePixels.end);
+      await waitForExpression(
+        `document.querySelector('[role="status"]')
+          ?.textContent.includes("Pipes placed") === true`,
+      );
+      await saveLoadedWorld();
+      const pipeSave = await evaluate<{
+        nextId: number;
+        stock: Record<string, number>;
+        pipes: Record<
+          string,
+          {
+            id: string;
+            x: number;
+            y: number;
+            inlet: number;
+            outlet: number;
+            quantity: number;
+            materialId: string | null;
+            containmentProfileId: string;
+          }
+        >;
+      }>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
+      const pipeSegments = Object.values(pipeSave.pipes)
+          .filter((pipe) => pipe.y === 20 && pipe.x >= 30 && pipe.x <= 34)
+          .sort((a, b) => a.x - b.x),
+        pipeCost =
+          fixture.liquidLogistics!.pipe.cost +
+          fixture.liquidLogistics!.containmentProfiles.find(
+            (profile) => profile.id === p3Seed.profile,
+          )!.additionalCost.pipe;
+      expect(pipeSegments).toHaveLength(5);
+      expect([30, 32, 34].map((x) => pipeSave.pipes[`${x},20`].id)).toEqual(
+        p3Seed.existingPipeIds,
+      );
+      expect(
+        pipeSegments.filter((pipe) => pipe.x === 31 || pipe.x === 33),
+      ).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            x: 31,
+            inlet: 2,
+            outlet: 0,
+            quantity: 0,
+            materialId: null,
+          }),
+          expect.objectContaining({
+            x: 33,
+            inlet: 2,
+            outlet: 0,
+            quantity: 0,
+            materialId: null,
+          }),
+        ]),
+      );
+      expect(pipeSave.stock.plates).toBe(
+        p3Seed.save.stock.plates - 2 * pipeCost,
+      );
+
+      await waitForExpression(
+        `document.querySelector('[role="status"]')
+          ?.textContent.includes("Field record saved on this device") !== true`,
+      );
+      await clickBuildTool("gas-logistics", "Pressure line");
+      const gasPixels = await dragWorldRoute(
+        { x: 30, y: 22 },
+        { x: 34, y: 22 },
+      );
+      const gasPreview = await captureP3Preview("p3-gas-gap-preview.png");
+      await releaseRoute(gasPixels.end);
+      await waitForExpression(
+        `document.querySelector('[role="status"]')
+          ?.textContent.includes("Pressure lines placed") === true`,
+      );
+      await saveLoadedWorld();
+      const gasSave = await evaluate<{
+          nextId: number;
+          stock: Record<string, number>;
+          pressureLines: Record<
+            string,
+            {
+              id: string;
+              x: number;
+              y: number;
+              inlet: number;
+              outlet: number;
+              quantity: number;
+              materialId: string | null;
+            }
+          >;
+        }>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`),
+        gasSaveBytes = await evaluate<string>(
+          `localStorage.getItem("industrial-site-save-v15")`,
+        ),
+        gasSegments = Object.values(gasSave.pressureLines)
+          .filter((line) => line.y === 22 && line.x >= 30 && line.x <= 34)
+          .sort((a, b) => a.x - b.x),
+        gasCost = fixture.gasLogistics!.line.cost;
+      expect(gasSegments).toHaveLength(5);
+      expect(
+        [30, 32, 34].map((x) => gasSave.pressureLines[`${x},22`].id),
+      ).toEqual(p3Seed.existingPressureIds);
+      expect(gasSave.stock.plates).toBe(pipeSave.stock.plates - 2 * gasCost);
+
+      await clickBuildTool("liquid-logistics", "Directed pipe");
+      const repeatedPipePixels = await dragWorldRoute(
+        { x: 30, y: 20 },
+        { x: 34, y: 20 },
+      );
+      await releaseRoute(repeatedPipePixels.end);
+      await waitForExpression(
+        `document.querySelector('[role="status"]')
+          ?.textContent.includes("Pipe path already present") === true`,
+      );
+      await clickBuildTool("gas-logistics", "Pressure line");
+      const repeatedGasPixels = await dragWorldRoute(
+        { x: 30, y: 22 },
+        { x: 34, y: 22 },
+      );
+      await releaseRoute(repeatedGasPixels.end);
+      await waitForExpression(
+        `document.querySelector('[role="status"]')
+          ?.textContent.includes("Pressure line path already present") === true`,
+      );
+      await saveLoadedWorld();
+      const repeatedSaveBytes = await evaluate<string>(
+        `localStorage.getItem("industrial-site-save-v15")`,
+      );
+      expect(repeatedSaveBytes).toBe(gasSaveBytes);
+      console.log(
+        "PHASE20_P3_DIRECTED_LINE_BROWSER_EVIDENCE " +
+          JSON.stringify({
+            mode: browserAcceptanceMode,
+            controls: "normal production-browser pointer drags and save menu",
+            pipe: {
+              reusedIds: p3Seed.existingPipeIds,
+              added: pipeSegments.filter(
+                (pipe) => pipe.x === 31 || pipe.x === 33,
+              ),
+              newOnlyCost: 2 * pipeCost,
+              preview: pipePreview,
+            },
+            pressureLine: {
+              reusedIds: p3Seed.existingPressureIds,
+              added: gasSegments.filter(
+                (line) => line.x === 31 || line.x === 33,
+              ),
+              newOnlyCost: 2 * gasCost,
+              preview: gasPreview,
+            },
+            repeatedReuseSaveBytesIdentical: true,
+          }),
+      );
+
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Resume simulation"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector(".paused-label") === null`,
+      );
 
       const learned = hazardSave();
       const beforeEvidence = await evaluate<string>(
@@ -1675,6 +2082,8 @@ browserIt(
         version: 2,
         promoteLastUsed: false,
         lastUsedByGroup: {
+          "gas-logistics": "pressure-line",
+          "liquid-logistics": "pipe",
           processing: "sinterer",
           "solid-logistics": "belt",
           thermal: "furnace",
@@ -2049,7 +2458,10 @@ browserIt(
         zoom: number;
       }>(`window.__UNKNOWN_YIELD_CAMERA__()`);
       const wheelViewport = await evaluate<{
-        x: number; y: number; width: number; height: number;
+        x: number;
+        y: number;
+        width: number;
+        height: number;
       }>(`(() => {
         const canvas = document.querySelector(".world-host canvas");
         if (!canvas) throw new Error("Canvas missing");
@@ -2057,10 +2469,18 @@ browserIt(
         return { x: 640 - rect.left, y: 420 - rect.top,
           width: canvas.width, height: canvas.height };
       })()`);
-      const worldAtWheel = (view: { scrollX: number; scrollY: number; zoom: number }) => ({
-        x: view.scrollX + wheelViewport.width / 2 +
+      const worldAtWheel = (view: {
+        scrollX: number;
+        scrollY: number;
+        zoom: number;
+      }) => ({
+        x:
+          view.scrollX +
+          wheelViewport.width / 2 +
           (wheelViewport.x - wheelViewport.width / 2) / view.zoom,
-        y: view.scrollY + wheelViewport.height / 2 +
+        y:
+          view.scrollY +
+          wheelViewport.height / 2 +
           (wheelViewport.y - wheelViewport.height / 2) / view.zoom,
       });
       const focusBefore = worldAtWheel(initialCamera);
@@ -2074,7 +2494,9 @@ browserIt(
         code: "KeyD",
         windowsVirtualKeyCode: 68,
       });
-      await evaluate<void>(`new Promise((resolve) => setTimeout(resolve, 500))`);
+      await evaluate<void>(
+        `new Promise((resolve) => setTimeout(resolve, 500))`,
+      );
       await call("Input.dispatchKeyEvent", {
         type: "keyUp",
         key: "d",
@@ -2130,9 +2552,10 @@ browserIt(
         ),
       ).toBe("none");
 
-      const touchPanBefore = await evaluate<{ scrollX: number; scrollY: number }>(
-        `window.__UNKNOWN_YIELD_CAMERA__()`,
-      );
+      const touchPanBefore = await evaluate<{
+        scrollX: number;
+        scrollY: number;
+      }>(`window.__UNKNOWN_YIELD_CAMERA__()`);
       await call("Input.dispatchTouchEvent", {
         type: "touchStart",
         touchPoints: [{ id: 1, x: 175, y: 390 }],
@@ -2331,8 +2754,12 @@ browserIt(
         format: "png",
         captureBeyondViewport: false,
       });
-      const screenshotData = (screenshotResult as unknown as { data?: string }).data;
-      expect(screenshotData, "Mobile screenshot data must be captured").toBeTruthy();
+      const screenshotData = (screenshotResult as unknown as { data?: string })
+        .data;
+      expect(
+        screenshotData,
+        "Mobile screenshot data must be captured",
+      ).toBeTruthy();
       const screenshotBytes = Buffer.from(screenshotData!, "base64");
       const screenshotSha256 = createHash("sha256")
         .update(screenshotBytes)
@@ -2342,19 +2769,22 @@ browserIt(
       );
       // The screenshot bytes are NOT persisted as an Actions artifact.
       // Log size/digest and data provenance for the integrated exit review.
-      console.log("PHASE18_INTEGRATED_BROWSER_EVIDENCE " + JSON.stringify({
-        mode: browserAcceptanceMode,
-        desktopEnvironment,
-        mobileEnvironment,
-        screenshot: {
-          format: "png",
-          bytes: screenshotBytes.length,
-          sha256: screenshotSha256,
-          retained: false,
-        },
-        runtimeErrors,
-        performance: frameReport,
-      }));
+      console.log(
+        "PHASE18_INTEGRATED_BROWSER_EVIDENCE " +
+          JSON.stringify({
+            mode: browserAcceptanceMode,
+            desktopEnvironment,
+            mobileEnvironment,
+            screenshot: {
+              format: "png",
+              bytes: screenshotBytes.length,
+              sha256: screenshotSha256,
+              retained: false,
+            },
+            runtimeErrors,
+            performance: frameReport,
+          }),
+      );
       expect(runtimeErrors, runtimeErrors.join("\n")).toEqual([]);
 
       if (productionBrowser) {
@@ -2366,7 +2796,9 @@ browserIt(
           if (!document.querySelector('input[aria-label="Choose Studio JSON content pack"]')) menu?.click();
           return true;
         })()`);
-        await waitForExpression(`document.querySelector('input[aria-label="Choose Studio JSON content pack"]') !== null`);
+        await waitForExpression(
+          `document.querySelector('input[aria-label="Choose Studio JSON content pack"]') !== null`,
+        );
         await evaluate<boolean>(`(() => {
           const input = document.querySelector('input[aria-label="Choose Studio JSON content pack"]');
           const file = new File([${JSON.stringify(payload)}], "studio-playtest.json", { type: "application/json" });
@@ -2376,34 +2808,53 @@ browserIt(
           input.dispatchEvent(new Event("change", { bubbles: true }));
           return true;
         })()`);
-        await waitForExpression(`[...document.querySelectorAll("button")].some(b => b.textContent?.includes("Play new expedition with imported pack"))`);
+        await waitForExpression(
+          `[...document.querySelectorAll("button")].some(b => b.textContent?.includes("Play new expedition with imported pack"))`,
+        );
         await evaluate<boolean>(`(() => {
           [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Play new expedition with imported pack"))?.click();
           return true;
         })()`);
-        await waitForExpression(`localStorage.getItem("unknown-yield-active-pack-v1") !== null`);
+        await waitForExpression(
+          `localStorage.getItem("unknown-yield-active-pack-v1") !== null`,
+        );
         const postActivation = await evaluate<unknown>(`(() => ({
           menuButton: Boolean(document.querySelector('button[aria-label="Game menu"]')),
           hasCanvas: Boolean(document.querySelector('canvas')),
           storedPack: Boolean(localStorage.getItem("unknown-yield-active-pack-v1")),
           text: (document.body?.innerText ?? "").slice(-1500),
         }))()`);
-        console.log("PHASE19_PACK_ACTIVATION_DIAGNOSTIC " + JSON.stringify(postActivation));
-        await waitForExpression(`document.querySelector('button[aria-label="Game menu"]') !== null`);
+        console.log(
+          "PHASE19_PACK_ACTIVATION_DIAGNOSTIC " +
+            JSON.stringify(postActivation),
+        );
+        await waitForExpression(
+          `document.querySelector('button[aria-label="Game menu"]') !== null`,
+        );
         await evaluate<boolean>(`(() => {
           if (!document.body.textContent?.includes("Expedition controls"))
             document.querySelector('button[aria-label="Game menu"]')?.click();
           return true;
         })()`);
-        await waitForExpression(`document.body.textContent?.includes("Expedition controls") === true`);
-        const packMenuText = await evaluate<string>(`document.body.innerText.slice(-1700)`);
-        console.log("PHASE19_PACK_MENU " + JSON.stringify({ text: packMenuText }));
+        await waitForExpression(
+          `document.body.textContent?.includes("Expedition controls") === true`,
+        );
+        const packMenuText = await evaluate<string>(
+          `document.body.innerText.slice(-1700)`,
+        );
+        console.log(
+          "PHASE19_PACK_MENU " + JSON.stringify({ text: packMenuText }),
+        );
         expect(packMenuText).toContain("Offline content packs");
         await evaluate<boolean>(`(() => {
           [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Save world"))?.click();
           return true;
         })()`);
-        const packEvidence = await evaluate<{ id: string; scopedSave: boolean; locale: string }>(`(() => {
+        const packEvidence = await evaluate<{
+          id: string;
+          scopedSave: boolean;
+          locale: string;
+        }>(`(() => {
           const stored = JSON.parse(localStorage.getItem("unknown-yield-active-pack-v1"));
           const id = stored.fingerprint;
           return {
@@ -2420,36 +2871,60 @@ browserIt(
         // The static export and async persisted-pack verification both finish
         // before the test attempts to load a pack-scoped world.
         await sleep(900);
-        await waitForExpression(`document.body.textContent?.includes("UNKNOWN YIELD") === true`);
-        await waitForExpression(`document.querySelector('button[aria-label="Game menu"]') !== null`);
+        await waitForExpression(
+          `document.body.textContent?.includes("UNKNOWN YIELD") === true`,
+        );
+        await waitForExpression(
+          `document.querySelector('button[aria-label="Game menu"]') !== null`,
+        );
         await evaluate<boolean>(`(() => {
           document.querySelector('button[aria-label="Game menu"]')?.click();
           return true;
         })()`);
-        await waitForExpression(`document.body.textContent?.includes("Offline content packs") === true`);
-        await waitForExpression(`[...document.querySelectorAll("button")].some(b => b.textContent?.includes("Start new expedition with built-in content"))`);
+        await waitForExpression(
+          `document.body.textContent?.includes("Offline content packs") === true`,
+        );
+        await waitForExpression(
+          `[...document.querySelectorAll("button")].some(b => b.textContent?.includes("Start new expedition with built-in content"))`,
+        );
         await evaluate<boolean>(`(() => {
           [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Load saved world"))?.click();
           return true;
         })()`);
-        await waitForExpression(`document.body.textContent?.includes("Site restored") === true`);
+        await waitForExpression(
+          `document.body.textContent?.includes("Site restored") === true`,
+        );
         // A successful Load closes the menu, so reopen it before rollback.
         await evaluate<boolean>(`(() => {
           if (!document.body.textContent?.includes("Expedition controls"))
             document.querySelector('button[aria-label="Game menu"]')?.click();
           return true;
         })()`);
-        await waitForExpression(`[...document.querySelectorAll("button")].some(b => b.textContent?.includes("Start new expedition with built-in content"))`);
+        await waitForExpression(
+          `[...document.querySelectorAll("button")].some(b => b.textContent?.includes("Start new expedition with built-in content"))`,
+        );
         await evaluate<boolean>(`(() => {
           [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Start new expedition with built-in content"))?.click();
           return true;
         })()`);
-        await waitForExpression(`localStorage.getItem("unknown-yield-active-pack-v1") === null`);
-        expect(await evaluate<boolean>(`(() => {
+        await waitForExpression(
+          `localStorage.getItem("unknown-yield-active-pack-v1") === null`,
+        );
+        expect(
+          await evaluate<boolean>(`(() => {
           const keys = Object.keys(localStorage);
           return keys.some(k => k.startsWith("industrial-site-save-v15-pack-"));
-        })()`)).toBe(true);
-        console.log("PHASE19_RUNTIME_PACK_BROWSER " + JSON.stringify({ fingerprint: packEvidence.id, scopedSave: true, reload: true, rollback: true }));
+        })()`),
+        ).toBe(true);
+        console.log(
+          "PHASE19_RUNTIME_PACK_BROWSER " +
+            JSON.stringify({
+              fingerprint: packEvidence.id,
+              scopedSave: true,
+              reload: true,
+              rollback: true,
+            }),
+        );
         expect(runtimeErrors, runtimeErrors.join("\\n")).toEqual([]);
       }
 

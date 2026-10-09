@@ -79,6 +79,12 @@ export class Simulation {
       result.beltPlan?.newCount === 0
     )
       return result;
+    if (
+      result.ok &&
+      (commandType === "placePipes" || commandType === "placePressureLines") &&
+      result.linePlan?.newCount === 0
+    )
+      return result;
     if (result.ok) {
       if (
         commandType === "setDivertRoute" &&
@@ -86,7 +92,10 @@ export class Simulation {
       ) {
         // Idempotent district automation must not erase otherwise valid
         // throughput certificates when authoritative routing did not change.
-      } else if (commandType === "sense" || commandType === "setShipmentQuantity") {
+      } else if (
+        commandType === "sense" ||
+        commandType === "setShipmentQuantity"
+      ) {
         // Sensing and shipment selection change knowledge/intent only; neither
         // mutates production topology or physical factory state.
       } else if (

@@ -336,12 +336,7 @@ export type ImportSupplyView = Content["economy"]["imports"][number] & {
   held: number;
   allocations: number;
   reason:
-    | "fuel"
-    | "capacity"
-    | "locked"
-    | "module-missing"
-    | "incompatible"
-    | null;
+    "fuel" | "capacity" | "locked" | "module-missing" | "incompatible" | null;
 };
 export type TerminalModuleView = Content["site"]["terminalModules"][number] & {
   installed: boolean;
@@ -401,6 +396,25 @@ export type CommandResult = {
   id?: string;
   cost?: number;
   beltPlan?: BeltPlacementPlan;
+  linePlan?: LinePlacementPlan;
+};
+export type LinePlacementKind = "add" | "reuse" | "blocked";
+export type LinePlacementPosition = Point & {
+  inlet: number;
+  outlet: number;
+  kind: LinePlacementKind;
+  reason?: string;
+};
+export type LinePlacementPlan = {
+  valid: boolean;
+  positions: LinePlacementPosition[];
+  newCount: number;
+  reusedCount: number;
+  blockedCount: number;
+  cost: number;
+  available: number;
+  shortfall: number;
+  error?: string;
 };
 export type BeltPlacementKind = "add" | "reuse" | "blocked";
 export type BeltPlacementPosition = Point & {

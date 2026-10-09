@@ -43,7 +43,10 @@ export function contentKeys(c: Content): string[] {
         : [],
     ),
     ...c.economy.imports.flatMap((supply) => [supply.nameKey, supply.briefKey]),
-    ...c.economy.demandShocks.flatMap((shock) => [shock.nameKey, shock.briefKey]),
+    ...c.economy.demandShocks.flatMap((shock) => [
+      shock.nameKey,
+      shock.briefKey,
+    ]),
     ...c.economy.orders.flatMap((order) => [order.nameKey, order.briefKey]),
     ...c.economy.directives.flatMap((directive) => [
       directive.nameKey,
@@ -153,19 +156,23 @@ export const enCatalog: LocaleCatalog = {
   "ui.terminal.import.capacity": "{{used}} / {{capacity}} import cargo held",
   "ui.terminal.import.meta": "{{quantity}} units · {{cost}} fuel",
   "ui.terminal.import.held": "{{material}}: {{quantity}} held",
-  "ui.terminal.import.allocation":
-    "{{count}} company allocation available",
+  "ui.terminal.import.allocation": "{{count}} company allocation available",
   "ui.terminal.import.request": "Request {{supply}}",
   "ui.terminal.opportunity.research-meta":
     "COMPANY R&D · new off-world capability",
-  "ui.terminal.import.outlet": "Dry import outlet: ({{x}}, {{y}}) toward {{side}}",
+  "ui.terminal.import.outlet":
+    "Dry import outlet: ({{x}}, {{y}}) toward {{side}}",
   "ui.terminal.import.result.unknown": "That import supply is unavailable",
   "ui.terminal.import.result.fuel": "Not enough company fuel for this import",
   "ui.terminal.import.result.capacity": "Clear terminal import cargo first",
-  "ui.terminal.import.result.locked": "Required terminal handling is not yet certified",
-  "ui.terminal.import.result.module-missing": "Install the required terminal handling module",
-  "ui.terminal.import.result.incompatible": "The terminal module is occupied by incompatible cargo",
-  "ui.terminal.import.result.received": "Off-world cargo received at the terminal",
+  "ui.terminal.import.result.locked":
+    "Required terminal handling is not yet certified",
+  "ui.terminal.import.result.module-missing":
+    "Install the required terminal handling module",
+  "ui.terminal.import.result.incompatible":
+    "The terminal module is occupied by incompatible cargo",
+  "ui.terminal.import.result.received":
+    "Off-world cargo received at the terminal",
   "import.orbital-binder-crate.name": "Orbital binder crate",
   "import.orbital-binder-crate.brief":
     "A specialized off-world sintering feedstock unavailable from local extraction. It must leave the terminal through ordinary dry logistics.",
@@ -191,14 +198,16 @@ export const enCatalog: LocaleCatalog = {
   "terminal.module.cryo-dock.name": "Secure cryogenic dock",
   "terminal.capability.liquid-outbound.name": "Liquid outbound handling",
   "terminal.capability.gas-outbound.name": "Gas outbound handling",
-  "terminal.capability.specialized-inbound.name": "Specialized inbound handling",
+  "terminal.capability.specialized-inbound.name":
+    "Specialized inbound handling",
   "milestone.liquid-study-certified.name": "Liquid handling authorization",
   "milestone.liquid-study-certified.hint":
     "Confirm a liquid-processing trial to authorize liquid handling.",
   "milestone.gas-study-certified.name": "Gas handling authorization",
   "milestone.gas-study-certified.hint":
     "Confirm a gas-producing trial to authorize sealed gas handling.",
-  "milestone.specialized-handling-certified.name": "Specialized terminal authorization",
+  "milestone.specialized-handling-certified.name":
+    "Specialized terminal authorization",
   "milestone.specialized-handling-certified.hint":
     "Complete the sealed-process handling proof to authorize protected inbound cargo.",
   "milestone.resonance-survey-certified.name": "Resonance survey capability",
@@ -382,13 +391,18 @@ export const enCatalog: LocaleCatalog = {
   "ui.crossing.rotate": "Rotate crossing",
   "ui.crossing.remove": "Remove crossing upgrade",
   "ui.belt.preview.counts": "{{newCount}} new · {{reusedCount}} reused",
-  "ui.belt.preview.corner.horizontal-first": "Horizontal-first corner · R switches",
+  "ui.belt.preview.corner.horizontal-first":
+    "Horizontal-first corner · R switches",
   "ui.belt.preview.corner.vertical-first": "Vertical-first corner · R switches",
   "ui.belt.preview.shortfall": "Short by {{count}} plates",
-  "ui.belt.preview.crossing-wait":
-    "Crossing admission is temporarily closed",
+  "ui.belt.preview.crossing-wait": "Crossing admission is temporarily closed",
   "ui.belt.preview.splitter-choice":
     "Splitter may send cargo through its other outlet",
+  "ui.line.preview.counts":
+    "{{newCount}} new · {{reusedCount}} reused · {{blockedCount}} blocked",
+  "ui.line.preview.cost": "New segments: {{count}} {{unit}}",
+  "ui.line.preview.shortfall": "Short by {{count}} plates",
+  "ui.line.preview.blocked": "Blocked: {{reason}}",
   "ui.junction.loaded": "Empty the junction through belts first",
   "ui.junction.unknown": "Unknown junction definition",
   "ui.junction.wall": "Junctions cannot occupy factory walls or ports",
@@ -463,8 +477,7 @@ export const enCatalog: LocaleCatalog = {
   "machine.phase-quencher.unlock-hint":
     "a confirmed local Phase lattice result",
   "machine.phase-stabilizer.name": "Phase stabilizer",
-  "machine.phase-stabilizer.unlock-hint":
-    "a confirmed Phase quench result",
+  "machine.phase-stabilizer.unlock-hint": "a confirmed Phase quench result",
   "machine.crusher.name": "Crusher",
   "machine.furnace.name": "Furnace",
   "machine.sealed-furnace.name": "Sealed furnace",

@@ -320,15 +320,57 @@ describe("district route throughput invalidation", () => {
     expect(throughput(sim, factoryId)).toEqual(certified);
   });
 
+  it("preserves throughput certification when liquid and gas paths are reused", () => {
+    const { sim, factoryId } = makeLine(),
+      profile = fixture.liquidLogistics!.containmentProfiles[0].id,
+      pipes = Array.from({ length: 3 }, (_, index) => ({
+        x: 10 + index,
+        y: 10,
+        inlet: 2,
+        outlet: 0,
+      })),
+      pressureLines = Array.from({ length: 3 }, (_, index) => ({
+        x: 10 + index,
+        y: 12,
+        inlet: 2,
+        outlet: 0,
+      }));
+    expect(
+      sim.command({
+        type: "placePipes",
+        containmentProfileId: profile,
+        points: pipes,
+      }).ok,
+    ).toBe(true);
+    expect(
+      sim.command({ type: "placePressureLines", points: pressureLines }).ok,
+    ).toBe(true);
+    const certified = certify(sim, factoryId),
+      before = sim.serialize();
+
+    expect(
+      sim.command({
+        type: "placePipes",
+        containmentProfileId: profile,
+        points: pipes,
+      }),
+    ).toMatchObject({ ok: true, cost: 0, linePlan: { newCount: 0 } });
+    expect(
+      sim.command({ type: "placePressureLines", points: pressureLines }),
+    ).toMatchObject({ ok: true, cost: 0, linePlan: { newCount: 0 } });
+    expect(sim.serialize()).toEqual(before);
+    expect(throughput(sim, factoryId)).toEqual(certified);
+  });
+
   it("preserves certification on idempotent route selection and resets on a real route change", () => {
     const { sim, factoryId } = makeLine(),
-      divert = sim.snapshot().belts.find(
-        (belt) => belt.x === 35 && belt.y === 27,
-      )!;
+      divert = sim
+        .snapshot()
+        .belts.find((belt) => belt.x === 35 && belt.y === 27)!;
     expect(divert).toBeDefined();
-    expect(
-      sim.command({ type: "rotateDivert", beltId: divert.id }).ok,
-    ).toBe(true);
+    expect(sim.command({ type: "rotateDivert", beltId: divert.id }).ok).toBe(
+      true,
+    );
 
     const certified = certify(sim, factoryId);
     expect(certified.state).toBe("stable");

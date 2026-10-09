@@ -30,7 +30,10 @@ import {
   type ArtAssetId,
 } from "./art-assets";
 import { deriveFeedbackEvents, type FeedbackEvent } from "./feedback";
-import { derivePlacementFeedback, type PlacementFeedbackEvent } from "./placement-feedback";
+import {
+  derivePlacementFeedback,
+  type PlacementFeedbackEvent,
+} from "./placement-feedback";
 import { IndustrialFeedbackAudio } from "./audio-feedback";
 import {
   CameraNavigation,
@@ -38,10 +41,7 @@ import {
   type CameraView,
 } from "./camera-navigation";
 import { TouchGestureArbiter, type TouchPoint } from "./touch-gesture";
-import {
-  DEFAULT_GAME_PREFERENCES,
-  type GamePreferences,
-} from "./preferences";
+import { DEFAULT_GAME_PREFERENCES, type GamePreferences } from "./preferences";
 import {
   browserPerformanceEnabled,
   finishBrowserMetric,
@@ -55,7 +55,10 @@ export type WorldControls = {
   setPreferences(preferences: GamePreferences): void;
   getCameraView(): (CameraView & { target: CameraView }) | null;
   getFps(): number | null;
-  projectWorldPoint(worldX: number, worldY: number): { x: number; y: number } | null;
+  projectWorldPoint(
+    worldX: number,
+    worldY: number,
+  ): { x: number; y: number } | null;
   zoomBy(factor: number): void;
   home(): void;
   destroy(): void;
@@ -274,11 +277,15 @@ export function createWorld(
       const renderer = this.game.renderer;
       const gl = "gl" in renderer ? renderer.gl : null;
       const gpuLimit = gl ? Number(gl.getParameter(gl.MAX_TEXTURE_SIZE)) : 4096;
-      const textureLimit = Number.isFinite(gpuLimit) && gpuLimit > 0
-        ? Math.min(4096, gpuLimit) : 4096;
+      const textureLimit =
+        Number.isFinite(gpuLimit) && gpuLimit > 0
+          ? Math.min(4096, gpuLimit)
+          : 4096;
       const canBakeGround =
-        worldWidth > 0 && worldHeight > 0 &&
-        worldWidth <= textureLimit && worldHeight <= textureLimit &&
+        worldWidth > 0 &&
+        worldHeight > 0 &&
+        worldWidth <= textureLimit &&
+        worldHeight <= textureLimit &&
         worldWidth * worldHeight <= 4_194_304;
       if (canBakeGround) {
         const groundKey = "site:static-ground";
@@ -330,7 +337,10 @@ export function createWorld(
       this.game.canvas.addEventListener("pointercancel", cancelNativeTouch);
       this.events.once("shutdown", () => {
         this.game.canvas.removeEventListener("touchcancel", cancelNativeTouch);
-        this.game.canvas.removeEventListener("pointercancel", cancelNativeTouch);
+        this.game.canvas.removeEventListener(
+          "pointercancel",
+          cancelNativeTouch,
+        );
       });
       this.input.on("pointermove", (p: Phaser.Input.Pointer) => {
         if (p.wasTouch) {
@@ -366,7 +376,8 @@ export function createWorld(
           (!this.hover ||
             nextHover.x !== this.hover.x ||
             nextHover.y !== this.hover.y)
-        ) this.invalidateOverlays();
+        )
+          this.invalidateOverlays();
         this.hover = nextHover;
       });
       this.input.on("pointerdown", (p: Phaser.Input.Pointer) => {
@@ -392,7 +403,11 @@ export function createWorld(
           );
           if (gesture?.kind === "tap")
             actions.select(
-              hitTest(snapshot, this.screenCell(gesture.point), mode.openFactories),
+              hitTest(
+                snapshot,
+                this.screenCell(gesture.point),
+                mode.openFactories,
+              ),
             );
           if (gesture?.kind === "build") {
             const origin = this.screenCell(gesture.start);
@@ -519,9 +534,9 @@ export function createWorld(
       const width = snapshot.map.width * X;
       const height = snapshot.map.height * Y;
       this.mapBoundary.clear();
-      this.mapBoundary.lineStyle(2, 0xa3ad8e, 0.38).strokeRect(
-        1, 1, Math.max(0, width - 2), Math.max(0, height - 2),
-      );
+      this.mapBoundary
+        .lineStyle(2, 0xa3ad8e, 0.38)
+        .strokeRect(1, 1, Math.max(0, width - 2), Math.max(0, height - 2));
     }
     private screenCell(p: TouchPoint): Point {
       const w = this.cameras.main.getWorldPoint(p.x, p.y);
@@ -550,8 +565,10 @@ export function createWorld(
     }
     private motionReduced(): boolean {
       const reduced = preferences.accessibility.reducedMotion;
-      return reduced === "on" ||
-        (reduced === "system" && this.reducedMotionQuery?.matches === true);
+      return (
+        reduced === "on" ||
+        (reduced === "system" && this.reducedMotionQuery?.matches === true)
+      );
     }
     private cameraInstant(): boolean {
       return !preferences.camera.smooth || this.motionReduced();
@@ -579,7 +596,10 @@ export function createWorld(
       this.navigation.setZoomLimits(limits.minZoom, limits.maxZoom);
     }
     syncMapBounds() {
-      this.navigation.setWorldSize(snapshot.map.width * X, snapshot.map.height * Y);
+      this.navigation.setWorldSize(
+        snapshot.map.width * X,
+        snapshot.map.height * Y,
+      );
       this.syncCameraLimits();
       this.drawMapBoundary();
     }
@@ -644,22 +664,33 @@ export function createWorld(
           x = event.at.x * X,
           y = event.at.y * Y,
           pulse = this.add.graphics().setDepth(940);
-        const placement = event.kind === "placement-light" ||
-          event.kind === "placement-heavy";
+        const placement =
+          event.kind === "placement-light" || event.kind === "placement-heavy";
         if (placement) {
           const r = (event as PlacementFeedbackEvent).footprint;
-          pulse.lineStyle(event.kind === "placement-heavy" ? 2.5 : 1.5, cue.tint, 0.86)
-            .strokeRect(r.x * X + 2, r.y * Y + 2,
-              Math.max(2, r.width * X - 4), Math.max(2, r.height * Y - 4));
+          pulse
+            .lineStyle(
+              event.kind === "placement-heavy" ? 2.5 : 1.5,
+              cue.tint,
+              0.86,
+            )
+            .strokeRect(
+              r.x * X + 2,
+              r.y * Y + 2,
+              Math.max(2, r.width * X - 4),
+              Math.max(2, r.height * Y - 4),
+            );
           // A few fixed dust/spark dashes: no particle emitters or allocations per tick.
           if (event.kind === "placement-heavy") {
             for (const dx of [-16, 0, 16]) {
-              pulse.lineStyle(1, cue.tint, 0.55)
+              pulse
+                .lineStyle(1, cue.tint, 0.55)
                 .lineBetween(x + dx - 3, y + 9, x + dx + 3, y + 6);
             }
           }
         } else {
-          pulse.lineStyle(event.kind === "hazard" ? 4 : 2, cue.tint, 0.95)
+          pulse
+            .lineStyle(event.kind === "hazard" ? 4 : 2, cue.tint, 0.95)
             .strokeCircle(x, y, cue.radius);
         }
         if (event.kind === "warning" || event.kind === "hazard")
@@ -1058,8 +1089,12 @@ export function createWorld(
             Math.abs(route.exit.x - route.entry.x) +
             Math.abs(route.exit.y - route.entry.y),
           progress = 1 - route.cargo.remainingSteps / span,
-          x = (route.entry.x + 0.5 + (route.exit.x - route.entry.x) * progress) * X,
-          y = (route.entry.y + 0.5 + (route.exit.y - route.entry.y) * progress) * Y,
+          x =
+            (route.entry.x + 0.5 + (route.exit.x - route.entry.x) * progress) *
+            X,
+          y =
+            (route.entry.y + 0.5 + (route.exit.y - route.entry.y) * progress) *
+            Y,
           material = snapshot.materials.find(
             (m) => m.id === route.cargo!.materialId,
           );
@@ -1078,14 +1113,10 @@ export function createWorld(
             Math.abs(route.exit.y - route.entry.y),
           progress = 1 - route.cargo.remainingSteps / span,
           x =
-            (route.entry.x +
-              0.5 +
-              (route.exit.x - route.entry.x) * progress) *
+            (route.entry.x + 0.5 + (route.exit.x - route.entry.x) * progress) *
             X,
           y =
-            (route.entry.y +
-              0.5 +
-              (route.exit.y - route.entry.y) * progress) *
+            (route.entry.y + 0.5 + (route.exit.y - route.entry.y) * progress) *
               Y -
             14,
           material = snapshot.materials.find(
@@ -1105,8 +1136,12 @@ export function createWorld(
             Math.abs(route.exit.x - route.entry.x) +
             Math.abs(route.exit.y - route.entry.y),
           progress = 1 - route.remainingSteps / span,
-          x = (route.entry.x + 0.5 + (route.exit.x - route.entry.x) * progress) * X,
-          y = (route.entry.y + 0.5 + (route.exit.y - route.entry.y) * progress) * Y,
+          x =
+            (route.entry.x + 0.5 + (route.exit.x - route.entry.x) * progress) *
+            X,
+          y =
+            (route.entry.y + 0.5 + (route.exit.y - route.entry.y) * progress) *
+            Y,
           material = snapshot.materials.find((m) => m.id === route.materialId);
         g.fillStyle(color(material?.color ?? "#69bac8")).fillCircle(x, y, 5);
       }
@@ -1575,7 +1610,8 @@ export function createWorld(
       // Do not allocate / compute any instrumentation data during
       // ordinary gameplay. Frame tracking is explicitly opt-in via ?perf=1.
       const previousView = browserPerformanceEnabled()
-        ? this.navigation.getView() : null;
+        ? this.navigation.getView()
+        : null;
       const nextView = this.navigation.advance(delta);
       this.applyCamera(nextView);
       if (previousView) {
@@ -1693,8 +1729,10 @@ export function createWorld(
             ? {
                 x: Math.min(selectedRoute.entry.x, selectedRoute.exit.x),
                 y: Math.min(selectedRoute.entry.y, selectedRoute.exit.y),
-                width: Math.abs(selectedRoute.exit.x - selectedRoute.entry.x) + 1,
-                height: Math.abs(selectedRoute.exit.y - selectedRoute.entry.y) + 1,
+                width:
+                  Math.abs(selectedRoute.exit.x - selectedRoute.entry.x) + 1,
+                height:
+                  Math.abs(selectedRoute.exit.y - selectedRoute.entry.y) + 1,
               }
             : mode.selected === "terminal"
               ? snapshot.map.terminal
@@ -1821,41 +1859,69 @@ export function createWorld(
         command.type === "placePipes" ||
         command.type === "placePressureLines"
       ) {
-        for (const p of command.points) {
+        for (let i = 0; i < command.points.length; i++) {
+          const p = command.points[i],
+            planPosition = result.linePlan?.positions[i],
+            kind = planPosition?.kind ?? (result.ok ? "add" : "blocked"),
+            lineTint =
+              kind === "reuse"
+                ? 0x79c5bd
+                : kind === "blocked"
+                  ? 0xe79b7c
+                  : 0xbdd79f;
           ghost
+            .fillStyle(lineTint, kind === "add" ? 0.2 : 0.08)
             .fillRect(p.x * X, p.y * Y, X, Y)
+            .lineStyle(2, lineTint, 0.95)
             .strokeRect(p.x * X, p.y * Y, X, Y);
-          this.arrow(
-            ghost,
-            (p.x + 0.5) * X,
-            (p.y + 0.5) * Y,
-            p.outlet,
-            tint,
-            5,
-          );
+          if (kind === "blocked")
+            ghost
+              .lineStyle(2, lineTint, 0.95)
+              .lineBetween(
+                p.x * X + 7,
+                p.y * Y + 5,
+                p.x * X + X - 7,
+                p.y * Y + Y - 5,
+              )
+              .lineBetween(
+                p.x * X + X - 7,
+                p.y * Y + 5,
+                p.x * X + 7,
+                p.y * Y + Y - 5,
+              );
+          else {
+            const centerX = (p.x + 0.5) * X,
+              centerY = (p.y + 0.5) * Y;
+            if (kind === "reuse")
+              ghost.fillStyle(lineTint, 0.95).fillCircle(centerX, centerY, 2.5);
+            this.arrow(ghost, centerX, centerY, p.outlet, lineTint, 5);
+          }
         }
       } else if (command.type === "placeBelts")
         for (let i = 0; i < command.points.length; i++) {
           const p = command.points[i],
             n = command.points[i + 1],
             planPosition = result.beltPlan?.positions[i],
-            dir = planPosition?.direction ?? (n
-              ? n.x > p.x
-                ? 0
-                : n.y > p.y
-                  ? 1
-                  : n.x < p.x
-                    ? 2
-                    : 3
-              : command.direction),
+            dir =
+              planPosition?.direction ??
+              (n
+                ? n.x > p.x
+                  ? 0
+                  : n.y > p.y
+                    ? 1
+                    : n.x < p.x
+                      ? 2
+                      : 3
+                : command.direction),
             kind = planPosition?.kind ?? (result.ok ? "add" : "blocked"),
-            tint = kind === "reuse"
-              ? 0x79c5bd
-              : kind === "blocked"
-                ? 0xe79b7c
-                : result.ok
-                  ? 0xbdd79f
-                  : 0xd5a975;
+            tint =
+              kind === "reuse"
+                ? 0x79c5bd
+                : kind === "blocked"
+                  ? 0xe79b7c
+                  : result.ok
+                    ? 0xbdd79f
+                    : 0xd5a975;
           ghost
             .fillStyle(tint, kind === "add" ? 0.2 : 0.08)
             .fillRect(p.x * X, p.y * Y, X, Y)
@@ -1866,8 +1932,18 @@ export function createWorld(
           if (kind === "blocked") {
             ghost
               .lineStyle(2, tint, 0.95)
-              .lineBetween(p.x * X + 7, p.y * Y + 5, p.x * X + X - 7, p.y * Y + Y - 5)
-              .lineBetween(p.x * X + X - 7, p.y * Y + 5, p.x * X + 7, p.y * Y + Y - 5);
+              .lineBetween(
+                p.x * X + 7,
+                p.y * Y + 5,
+                p.x * X + X - 7,
+                p.y * Y + Y - 5,
+              )
+              .lineBetween(
+                p.x * X + X - 7,
+                p.y * Y + 5,
+                p.x * X + 7,
+                p.y * Y + Y - 5,
+              );
           } else {
             if (kind === "reuse")
               ghost.fillStyle(tint, 0.95).fillCircle(centerX, centerY, 2.5);
@@ -1916,6 +1992,31 @@ export function createWorld(
             : "") +
           (beltNotices.length ? " · " + beltNotices.join(" · ") : "")
         : "";
+      const lineSummary = result.linePlan
+        ? " · " +
+          translate("ui.line.preview.counts", {
+            newCount: result.linePlan.newCount,
+            reusedCount: result.linePlan.reusedCount,
+            blockedCount: result.linePlan.blockedCount,
+          }) +
+          " · " +
+          translate("ui.line.preview.cost", {
+            count: result.linePlan.cost,
+            unit: this.buildUnit(),
+          }) +
+          (result.linePlan.shortfall > 0
+            ? " · " +
+              translate("ui.line.preview.shortfall", {
+                count: result.linePlan.shortfall,
+              })
+            : "") +
+          (result.linePlan.blockedCount > 0 && result.linePlan.error
+            ? " · " +
+              translate("ui.line.preview.blocked", {
+                reason: result.linePlan.error,
+              })
+            : "")
+        : "";
       const cornerChoice =
         command.type === "placeBelts" &&
         this.anchor !== null &&
@@ -1930,7 +2031,6 @@ export function createWorld(
           : "";
       this.tooltip
         .setVisible(true)
-        .setPosition((this.hover.x + 1) * X, (this.hover.y + 1) * Y + 12)
         .setText(
           this.hover.x +
             "," +
@@ -1941,9 +2041,29 @@ export function createWorld(
               : result.message) +
             cornerChoice +
             beltSummary +
-            (result.cost ? " · " + result.cost + " " + this.buildUnit() : ""),
+            lineSummary +
+            (!result.linePlan && result.cost
+              ? " · " + result.cost + " " + this.buildUnit()
+              : ""),
         )
         .setColor(result.ok ? "#d3e4ba" : "#f0ba9a");
+      const tooltipX = (this.hover.x + 1) * X,
+        tooltipY = (this.hover.y + 1) * Y + 12;
+      if (result.linePlan) {
+        const camera = this.cameras.main,
+          view = camera.worldView,
+          margin = 8 / camera.zoom;
+        this.tooltip.setPosition(
+          Math.max(
+            view.x + margin,
+            Math.min(tooltipX, view.right - this.tooltip.width - margin),
+          ),
+          Math.max(
+            view.y + margin,
+            Math.min(tooltipY, view.bottom - this.tooltip.height - margin),
+          ),
+        );
+      } else this.tooltip.setPosition(tooltipX, tooltipY);
       finishBrowserMetric("world-dynamic-draw", dynamicDrawStartedAt);
     }
   }
@@ -1967,7 +2087,8 @@ export function createWorld(
     setSnapshot: (s) => {
       const startedAt = startBrowserMetric();
       const events = deriveFeedbackEvents(snapshot, s);
-      const worldChanged = snapshot.map.width !== s.map.width ||
+      const worldChanged =
+        snapshot.map.width !== s.map.width ||
         snapshot.map.height !== s.map.height;
       snapshot = s;
       if (worldChanged) scene?.syncMapBounds();
@@ -1995,9 +2116,10 @@ export function createWorld(
     getCameraView: () => scene?.getCameraView() ?? null,
     // Phaser already estimates its render-loop cadence. Avoid an extra RAF
     // or a React state update for each frame just to show a counter.
-    getFps: () => scene && Number.isFinite(game.loop.actualFps)
-      ? game.loop.actualFps
-      : null,
+    getFps: () =>
+      scene && Number.isFinite(game.loop.actualFps)
+        ? game.loop.actualFps
+        : null,
     projectWorldPoint: (x, y) => scene?.projectWorldPoint(x, y) ?? null,
     zoomBy: (factor) => scene?.zoomBy(factor),
     home: () => scene?.home(),
