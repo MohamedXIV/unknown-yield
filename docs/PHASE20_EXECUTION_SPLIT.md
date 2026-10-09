@@ -36,7 +36,7 @@ There is **no installed Codex Cloud action in this chat** that can launch its VM
 >
 > This repository is **public; the user explicitly authorizes GitHub Actions**. Ready-PR CI (normal Ubuntu/Node 24 build) may resolve the earlier Codex VM stdout/Next TypeScript subprocess limitation. An alternative build remains diagnostic only, not a normal-build PASS. Browser-test world interaction if changed; don't claim physical-device proof.
 >
-> #266 is now the single next runtime issue. After its independently reviewed merge, #267 adds four player-facing dismantle modes. Keep one canonical branch/PR per issue, exact-head test evidence, and report open risks; ChatGPT owns separate GitHub-side review. Do not create competing PRs. Report exact tested SHA, changed files, checks, actual failures/risks and requested follow-up; ChatGPT owns separate GitHub-side review.
+> #266 is now the single next runtime issue. After its independently reviewed merge, #267 adds four player-facing dismantle modes. Keep one canonical branch/PR per issue, with exact tested SHA, changed files, checks, browser evidence, remaining risks and handoff to ChatGPT for independent GitHub-side review.
 
 ## Handoff back to ChatGPT
 
