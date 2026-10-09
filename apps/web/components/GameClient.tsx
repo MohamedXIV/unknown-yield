@@ -900,16 +900,7 @@ function GameClientInner() {
           <button
             aria-label="Game menu"
             title="Expedition menu"
-            onTouchEnd={(event) => {
-              // Direct touch activation avoids depending on Chromium's
-              // synthesized click after the mobile long-press gestures.
-              // Prevent the compatibility click from toggling the menu twice.
-              event.preventDefault();
-              setPanel((current) => (current === "menu" ? null : "menu"));
-            }}
-            onClick={() =>
-              setPanel((current) => (current === "menu" ? null : "menu"))
-            }
+            onClick={() => setPanel(panel === "menu" ? null : "menu")}
           >
             <Glyph type="menu" />
           </button>
