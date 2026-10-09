@@ -17,6 +17,7 @@ import { applySensingObservation } from "./sensing";
 import { requestImportCommand } from "./imports";
 import { planBeltPlacement } from "./belt-planning";
 import { planLinePlacement } from "./line-planning";
+import { dismantleBatch } from "./dismantle-batch";
 import {
   factoryConnectionRequirements,
   factoryRelocationResumeError,
@@ -194,6 +195,10 @@ const schema = z.discriminatedUnion("type", [
     route: z.enum(["primary", "alternate"]),
   }),
   z.object({ type: z.literal("dismantle"), id: z.string() }),
+  z.object({
+    type: z.literal("dismantleMany"),
+    ids: z.array(z.string().min(1).max(128)).max(1024),
+  }),
   z.object({
     type: z.literal("setEnabled"),
     machineId: z.string(),
@@ -1099,6 +1104,10 @@ export function applyCommand(
         messageKey: "ui.terminal.assistance.result.approved",
       };
     }
+    case "dismantleMany":
+      return dismantleBatch(c, s, cmd.ids, apply, (stage, id) =>
+        applyCommand(c, stage, { type: "dismantle", id }, true),
+      );
     case "dismantle": {
       {
         const elevated = Object.hasOwn(s.elevatedSolids, cmd.id)
