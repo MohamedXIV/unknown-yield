@@ -88,7 +88,9 @@ Recommended initial cap: **256 unique candidate IDs per command**; an over-limit
 - `removed[]`: authoritative successful IDs;
 - `blocked[]`: id + stable reason;
 - `ignored[]`: stale/filtered/non-destructible IDs as applicable;
-- `recoveredBuildMaterial`: actual net change of construction material when reclaim is applied; distinguish carried cargo from recovered construction if necessary.
+- `reclaimedStructureMaterial`: construction material released from **embodied structures** (not simply the net stock change).
+- `retrievedCargo`: any physical cargo recovered by a legal individual dismantle (ordinary belt carrying build-material can return one cargo unit as well as its construction plates; loaded junctions still block).
+- `netBuildStockDelta`: actual change in build-material stock during the authoritative batch, which may equal **structural refund + recovered cargo**. These values must reconcile without counting recovered cargo as extra structure or blindly summing `CommandResult.cost`.
 
 **Batch policy:** safe deterministic **best-effort**, not blind all-or-nothing: independent eligible targets are reclaimed and protected targets remain untouched; visibly report both categories. Revalidate every single-target restriction on a staged authoritative state before mutation. Evaluate dependencies in stable order: loose lines/routes, machines/transfer devices/storage and equipment, ports after attached transport, factory shell last. For adjacent/non-dependent IDs, use stable ID order. If a blocked child remains, its parent must still be blocked. Do not use a hypothetical successful removal to hide an actual failed child.
 
