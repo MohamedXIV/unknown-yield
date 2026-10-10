@@ -2179,7 +2179,7 @@ export function createWorld(
               : result.message) +
             cornerChoice +
             pathSummary +
-            (!result.linePlan && result.cost
+            (!pathPlan && result.cost
               ? " · " + result.cost + " " + this.buildUnit()
               : ""),
         )
@@ -2190,6 +2190,12 @@ export function createWorld(
         const camera = this.cameras.main,
           view = camera.worldView,
           margin = 8 / camera.zoom;
+        // Keep the non-color legend readable within the actual camera view,
+        // including phone widths, instead of clipping one huge tooltip line.
+        this.tooltip.setWordWrapWidth(
+          Math.min(340, Math.max(120, view.width - margin * 2)),
+          true,
+        );
         this.tooltip.setPosition(
           Math.max(
             view.x + margin,
