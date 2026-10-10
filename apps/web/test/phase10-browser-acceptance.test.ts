@@ -1387,6 +1387,20 @@ browserIt(
         `document.querySelector(".build-hint")?.textContent
           ?.includes("On an L turn, R switches the corner order") === true`,
       );
+      await waitForExpression(
+        `document.querySelector('[data-testid="belt-corner-order"]')
+          ?.getAttribute('aria-pressed') === 'false'`,
+      );
+      await evaluate(`document.querySelector('[data-testid="belt-corner-order"]')?.click()`);
+      await waitForExpression(
+        `document.querySelector('[data-testid="belt-corner-order"]')
+          ?.getAttribute('aria-pressed') === 'true'`,
+      );
+      await evaluate(`document.querySelector('[data-testid="belt-corner-order"]')?.click()`);
+      await waitForExpression(
+        `document.querySelector('[data-testid="belt-corner-order"]')
+          ?.getAttribute('aria-pressed') === 'false'`,
+      );
       const p2RoutePixels = await evaluate<{
         start: { x: number; y: number };
         end: { x: number; y: number };
