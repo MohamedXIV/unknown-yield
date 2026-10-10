@@ -450,7 +450,7 @@ export function createWorld(
             if (this.activeAreaTouch) {
               this.finishAreaSelection(origin, end);
             } else {
-              const command = buildCommand(mode, snapshot, end, origin);
+              const command = buildCommand(mode, snapshot, end, origin, mode.beltCornerOrder);
               if (command) this.place(command);
             }
           }
@@ -640,6 +640,10 @@ export function createWorld(
         ...(mode.dismantleMode === "area-all" ? {} : { ...this.areaAnchor }),
       });
       this.areaAnchor = {};
+    }
+    updateCornerOrder(order: BeltCornerOrder) {
+      this.beltCornerOrder = order;
+      this.invalidateOverlays();
     }
     cancelTouch() {
       this.touch.cancel();
@@ -2248,7 +2252,9 @@ export function createWorld(
     setMode: (m) => {
       const rebuild = mode.openFactories.join() !== m.openFactories.join();
       if (m.tool !== mode.tool) scene?.cancelTouch();
+      const cornerChanged = m.beltCornerOrder !== mode.beltCornerOrder;
       mode = m;
+      if (cornerChanged) scene?.updateCornerOrder(m.beltCornerOrder);
       scene?.invalidateOverlays();
       if (rebuild) scene?.markDirty();
     },
