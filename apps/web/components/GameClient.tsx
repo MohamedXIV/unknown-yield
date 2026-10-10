@@ -60,6 +60,7 @@ import {
 import GameHost from "./GameHost";
 import { sampleBuildTool } from "../game/tool-sampling";
 import { previewDismantleArea, sameDismantleAreaReview } from "../game/dismantle-review";
+import { classifyDismantleEntity, dismantleEntityGeometry } from "../game/dismantle-selection";
 import type { DismantleSelectionMode, DismantleSelectionRequest } from "../game/dismantle-selection";
 function Glyph({ type, size = 20 }: { type: string; size?: number }) {
   const paths: Record<string, string> = {
@@ -184,7 +185,9 @@ function GameClientInner() {
     ),
     [activePack, setActivePack] = useState<RuntimePack | null>(null),
     [pendingPack, setPendingPack] = useState<RuntimePack | null>(null),
-    [packReady, setPackReady] = useState(false);
+    [packReady, setPackReady] = useState(false),
+    [keyboardAreaOpen, setKeyboardAreaOpen] = useState(false),
+    [keyboardBounds, setKeyboardBounds] = useState({ fromX: 0, fromY: 0, toX: 0, toY: 0 });
   const cancelGroupHold = useRef<(() => void) | null>(null);
   const dismantleDialog = useRef<HTMLDivElement>(null);
   const suppressGroupClick = useRef<ToolGroupId | null>(null);
@@ -345,6 +348,26 @@ function GameClientInner() {
     setMode((m) => ({ ...m, dismantleReview: null }));
   const disarmTouchArea = () =>
     setMode((m) => ({ ...m, touchAreaArmed: false }));
+  const selectedBounds = mode.selected
+    ? dismantleEntityGeometry(snapshot, mode.selected)?.footprint
+    : null;
+  const reviewKeyboardArea = () => {
+    const anchorId = mode.selected;
+    const classified = anchorId ? classifyDismantleEntity(session.snapshot(), anchorId) : null;
+    const anchor = classified?.kind === "player-built" ? classified.entity : null;
+    openAreaReview({
+      mode: mode.dismantleMode,
+      from: { x: keyboardBounds.fromX, y: keyboardBounds.fromY },
+      to: { x: keyboardBounds.toX, y: keyboardBounds.toY },
+      openFactoryIds: [...mode.openFactories],
+      ...(mode.dismantleMode === "area-all"
+        ? {}
+        : {
+            anchorId,
+            ...(anchor ? { anchorExactType: anchor.exactType, anchorFamily: anchor.family } : {}),
+          }),
+    });
+  };
   const chooseDismantleMode = (dismantleMode: DismantleSelectionMode) =>
     setMode((m) => ({
       ...m,
@@ -3352,6 +3375,16 @@ function GameClientInner() {
             {mode.dismantleMode !== "single" && (
               <button
                 type="button"
+                data-testid="keyboard-area-toggle"
+                aria-expanded={keyboardAreaOpen}
+                onClick={() => setKeyboardAreaOpen((open) => !open)}
+              >
+                {t("ui.dismantle.keyboard.toggle")}
+              </button>
+            )}
+            {mode.dismantleMode !== "single" && (
+              <button
+                type="button"
                 className="touch-area-arm"
                 data-testid="dismantle-touch-arm"
                 aria-pressed={mode.touchAreaArmed}
@@ -3361,6 +3394,55 @@ function GameClientInner() {
               </button>
             )}
           </section>
+        )}
+        {mode.tool === "demolish" && mode.dismantleMode !== "single" && keyboardAreaOpen && (
+          <form
+            className="keyboard-area-form"
+            data-testid="keyboard-area-form"
+            aria-label={t("ui.dismantle.keyboard.label")}
+            onSubmit={(event) => {
+              event.preventDefault();
+              reviewKeyboardArea();
+            }}
+          >
+            {(["fromX", "fromY", "toX", "toY"] as const).map((name) => (
+              <label key={name}>
+                {t(`ui.dismantle.keyboard.${name}`)}
+                <input
+                  required
+                  type="number"
+                  step="1"
+                  min="0"
+                  max={name.endsWith("X") ? snapshot.map.width - 1 : snapshot.map.height - 1}
+                  value={keyboardBounds[name]}
+                  onChange={(event) => {
+                    const value = event.target.valueAsNumber;
+                    if (Number.isFinite(value))
+                      setKeyboardBounds((bounds) => ({
+                        ...bounds,
+                        [name]: Math.trunc(value),
+                      }));
+                  }}
+                />
+              </label>
+            ))}
+            <button
+              type="button"
+              disabled={!selectedBounds}
+              onClick={() => {
+                if (!selectedBounds) return;
+                setKeyboardBounds({
+                  fromX: selectedBounds.x,
+                  fromY: selectedBounds.y,
+                  toX: selectedBounds.x + selectedBounds.width - 1,
+                  toY: selectedBounds.y + selectedBounds.height - 1,
+                });
+              }}
+            >
+              {t("ui.dismantle.keyboard.use-selected")}
+            </button>
+            <button type="submit">{t("ui.dismantle.keyboard.review")}</button>
+          </form>
         )}
         {mode.tool !== "select" && (
           <div className="build-hint">
