@@ -58,6 +58,8 @@ import {
   type GamePreferences,
 } from "../game/preferences";
 import GameHost from "./GameHost";
+import { previewDismantleArea, sameDismantleAreaReview } from "../game/dismantle-review";
+import type { DismantleSelectionMode, DismantleSelectionRequest } from "../game/dismantle-selection";
 function Glyph({ type, size = 20 }: { type: string; size?: number }) {
   const paths: Record<string, string> = {
     "elevated-solid": "M3 17h18 M5 17V8 M19 17V8 M5 8h14 M9 8V5 M15 8V5",
@@ -151,6 +153,12 @@ const descriptions: Partial<Record<Tool, string>> = {
 function GameClientInner() {
   const uiRenderStartedAt = startBrowserMetric();
   const { t } = useTranslation();
+  const dismantleReasonLabel = (reason?: string) => {
+    if (!reason) return "";
+    const key = `ui.dismantle.reason.${reason}`;
+    const translated = t(key);
+    return translated === key ? reason : translated;
+  };
   const [session] = useState(() => new Session()),
     [snapshot, setSnapshot] = useState(() => session.snapshot());
   const [mode, setMode] = useState<WorldMode>(DEFAULT_MODE),
@@ -177,6 +185,7 @@ function GameClientInner() {
     [pendingPack, setPendingPack] = useState<RuntimePack | null>(null),
     [packReady, setPackReady] = useState(false);
   const cancelGroupHold = useRef<(() => void) | null>(null);
+  const dismantleDialog = useRef<HTMLDivElement>(null);
   const suppressGroupClick = useRef<ToolGroupId | null>(null);
   const keyboardGroupHold = useRef<{
     groupId: ToolGroupId;
@@ -252,6 +261,9 @@ function GameClientInner() {
     [],
   );
   useEffect(() => setOpenToolGroup(null), [panel]);
+  useEffect(() => {
+    if (mode.dismantleReview) dismantleDialog.current?.focus();
+  }, [mode.dismantleReview]);
   const unlockFor = (tool: Tool) =>
     snapshot.definitions.find((definition) => definition.id === tool)?.unlock;
   const toolLocked = (tool: Tool) => unlockFor(tool)?.unlocked === false;
@@ -261,8 +273,16 @@ function GameClientInner() {
       setNotice({ ok: false, message: t(unlock.hintKey) });
       return;
     }
-    setMode((m) => ({ ...m, tool, selected: null }));
-    setPanel(null);
+    const keepSelection = tool === "demolish" && mode.selected !== null;
+    setMode((m) => ({
+      ...m,
+      tool,
+      dismantleMode: tool === "demolish" ? "single" : m.dismantleMode,
+      selected: keepSelection ? m.selected : null,
+      touchAreaArmed: false,
+      dismantleReview: null,
+    }));
+    setPanel(keepSelection ? "selection" : null);
   };
   const select = (id: string | null) => {
     if (id === "terminal")
@@ -292,6 +312,58 @@ function GameClientInner() {
       setPanel(null);
     }
     return result;
+  };
+  const openAreaReview = (request: DismantleSelectionRequest) => {
+    const current = session.snapshot();
+    const review = previewDismantleArea(current, request, (command) =>
+      session.preview(command),
+    );
+    setMode((m) => ({ ...m, touchAreaArmed: false, dismantleReview: review }));
+  };
+  const cancelAreaReview = () =>
+    setMode((m) => ({ ...m, dismantleReview: null }));
+  const disarmTouchArea = () =>
+    setMode((m) => ({ ...m, touchAreaArmed: false }));
+  const chooseDismantleMode = (dismantleMode: DismantleSelectionMode) =>
+    setMode((m) => ({
+      ...m,
+      dismantleMode,
+      touchAreaArmed: false,
+      dismantleReview: null,
+    }));
+  const confirmAreaReview = () => {
+    const shown = mode.dismantleReview;
+    if (!shown?.canConfirm) return;
+    const current = previewDismantleArea(session.snapshot(), shown.request, (command) =>
+      session.preview(command),
+    );
+    if (!sameDismantleAreaReview(shown, current)) {
+      setMode((m) => ({ ...m, touchAreaArmed: false, dismantleReview: current }));
+      setNotice({ ok: false, message: t("ui.dismantle.review.changed") });
+      return;
+    }
+    const result = session.command({ type: "dismantleMany", ids: current.candidateIds });
+    const removed = result.batch?.removed ?? [];
+    setMode((m) => ({
+      ...m,
+      touchAreaArmed: false,
+      dismantleReview: null,
+      ...(m.selected && removed.includes(m.selected) ? { selected: null } : {}),
+    }));
+    if (mode.selected && removed.includes(mode.selected)) setPanel(null);
+    const blockedCount = result.batch?.blocked.length ?? 0;
+    const ignoredCount = result.batch?.ignored.length ?? 0;
+    setNotice({
+      ...result,
+      message: result.ok
+        ? t("ui.dismantle.result", {
+            removed: removed.length,
+            blocked: blockedCount,
+            ignored: ignoredCount,
+            plates: result.batch?.netBuildStockDelta ?? 0,
+          })
+        : result.message,
+    });
   };
   const importPack = async (file: File | undefined) => {
     if (!file) return;
@@ -821,6 +893,9 @@ function GameClientInner() {
           rotate: () =>
             setMode((m) => ({ ...m, direction: (m.direction + 1) % 4 })),
           toggleFactory,
+          reviewArea: openAreaReview,
+          cancelAreaReview,
+          disarmTouchArea,
         }}
       /> : <div className="world-host" role="status">Validating selected content pack…</div>}
       <header className="hud-top">
@@ -3232,18 +3307,53 @@ function GameClientInner() {
         </aside>
       )}
       <div className="build-zone">
+        {mode.tool === "demolish" && (
+          <section className="dismantle-modes" aria-label={t("ui.dismantle.mode.label")}>
+            <span>{t("ui.dismantle.mode.label")}</span>
+            {([
+              ["single", "ui.dismantle.mode.single"],
+              ["area-all", "ui.dismantle.mode.all"],
+              ["area-exact", "ui.dismantle.mode.exact"],
+              ["area-family", "ui.dismantle.mode.family"],
+            ] as const).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                data-testid={`dismantle-mode-${value}`}
+                aria-pressed={mode.dismantleMode === value}
+                className={mode.dismantleMode === value ? "active" : ""}
+                onClick={() => chooseDismantleMode(value)}
+              >
+                {t(label)}
+              </button>
+            ))}
+            {mode.dismantleMode !== "single" && (
+              <button
+                type="button"
+                className="touch-area-arm"
+                data-testid="dismantle-touch-arm"
+                aria-pressed={mode.touchAreaArmed}
+                onClick={() => setMode((m) => ({ ...m, touchAreaArmed: true }))}
+              >
+                {t(mode.touchAreaArmed ? "ui.dismantle.touch.armed" : "ui.dismantle.touch.arm")}
+              </button>
+            )}
+          </section>
+        )}
         {mode.tool !== "select" && (
           <div className="build-hint">
             <strong>{toolName(mode.tool)}</strong>
-            <span>{toolDescription(mode.tool)}</span>
-            <button
+            <span>
+              {mode.tool === "demolish" && mode.dismantleMode !== "single"
+                ? t("ui.dismantle.drag")
+                : toolDescription(mode.tool)}
+            </span>
+            {mode.tool !== "demolish" && <button
               aria-label="Rotate build direction"
-              onClick={() =>
-                setMode((m) => ({ ...m, direction: (m.direction + 1) % 4 }))
-              }
+              onClick={() => setMode((m) => ({ ...m, direction: (m.direction + 1) % 4 }))}
             >
               <kbd>R</kbd> {["→", "↓", "←", "↑"][mode.direction]}
-            </button>
+            </button>}
             <button
               aria-label="Cancel building"
               onClick={() => setTool("select")}
@@ -3396,6 +3506,93 @@ function GameClientInner() {
           <span>R rotate · Esc cancel · Home center</span>
         </div>
       </div>
+      {mode.dismantleReview && (
+        <div className="dismantle-review-backdrop">
+          <section
+            className="dismantle-review"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="dismantle-review-title"
+            aria-describedby="dismantle-review-summary"
+            tabIndex={-1}
+            ref={dismantleDialog}
+            data-testid="dismantle-review"
+            onContextMenu={(event) => {
+              event.preventDefault();
+              cancelAreaReview();
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") {
+                event.preventDefault();
+                event.stopPropagation();
+                cancelAreaReview();
+              } else if (event.key === "Enter" && event.target === event.currentTarget && mode.dismantleReview?.canConfirm) {
+                event.preventDefault();
+                event.stopPropagation();
+                confirmAreaReview();
+              } else if (event.key === "Tab") {
+                const focusable = event.currentTarget.querySelectorAll<HTMLButtonElement>("button:not([disabled])");
+                const first = focusable[0];
+                const last = focusable[focusable.length - 1];
+                if (event.shiftKey && (document.activeElement === first || event.target === event.currentTarget)) {
+                  event.preventDefault();
+                  last?.focus();
+                } else if (!event.shiftKey && document.activeElement === last) {
+                  event.preventDefault();
+                  first?.focus();
+                }
+              }
+            }}
+          >
+            <small>{t("ui.dismantle.review.eyebrow")}</small>
+            <h2 id="dismantle-review-title">{t("ui.dismantle.review.title")}</h2>
+            <p id="dismantle-review-summary">
+              {mode.dismantleReview.invalidAnchorReason
+                ? t("ui.dismantle.review.invalid-anchor", { reason: dismantleReasonLabel(mode.dismantleReview.invalidAnchorReason) })
+                : t("ui.dismantle.review.selection", {
+                    x: mode.dismantleReview.area?.x ?? 0,
+                    y: mode.dismantleReview.area?.y ?? 0,
+                    width: mode.dismantleReview.area?.width ?? 0,
+                    height: mode.dismantleReview.area?.height ?? 0,
+                  })}
+            </p>
+            <dl className="dismantle-review-counts">
+              <div><dt>{t("ui.dismantle.review.ready")}</dt><dd>{mode.dismantleReview.selectedCount}</dd></div>
+              <div><dt>{t("ui.dismantle.review.blocked")}</dt><dd>{mode.dismantleReview.blockedCount}</dd></div>
+              <div><dt>{t("ui.dismantle.review.ignored")}</dt><dd>{mode.dismantleReview.ignoredCount}</dd></div>
+            </dl>
+            <dl className="dismantle-review-refunds">
+              <div><dt>{t("ui.dismantle.review.reclaimed")}</dt><dd>{mode.dismantleReview.reclaimedStructureMaterial}</dd></div>
+              <div><dt>{t("ui.dismantle.review.cargo")}</dt><dd>{mode.dismantleReview.retrievedCargo}</dd></div>
+              <div><dt>{t("ui.dismantle.review.net")}</dt><dd>{mode.dismantleReview.netBuildStockDelta >= 0 ? "+" : ""}{mode.dismantleReview.netBuildStockDelta}</dd></div>
+            </dl>
+            {(mode.dismantleReview.error || mode.dismantleReview.invalidAnchorReason) && (
+              <p className="dismantle-review-error" role="alert">
+                {mode.dismantleReview.error ?? mode.dismantleReview.invalidAnchorReason}
+              </p>
+            )}
+            <ol className="dismantle-review-items" aria-label={t("ui.dismantle.review.items")}>
+              {mode.dismantleReview.items.slice(0, 10).map((item, index) => (
+                <li key={`${item.id}-${index}`} className={`status-${item.status}`}>
+                  <strong>{t(`ui.dismantle.item.${item.status}`)}</strong>
+                  {item.reason && <span>{dismantleReasonLabel(item.reason)}</span>}
+                </li>
+              ))}
+              {mode.dismantleReview.items.length > 10 && (
+                <li>{t("ui.dismantle.review.more", { count: mode.dismantleReview.items.length - 10 })}</li>
+              )}
+            </ol>
+            <div className="dismantle-review-actions">
+              <button type="button" className="secondary" onClick={cancelAreaReview}>
+                {t("ui.dismantle.review.cancel")}
+              </button>
+              <button type="button" className="danger" disabled={!mode.dismantleReview.canConfirm} onClick={confirmAreaReview}>
+                {t("ui.dismantle.review.confirm")}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </main>
   );
 }

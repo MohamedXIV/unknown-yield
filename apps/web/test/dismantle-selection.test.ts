@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { fixture } from "@site/content";
+import { fixture, validateContent } from "@site/content";
 import { Simulation, type PlayerSnapshot } from "@site/sim-core";
 import * as interaction from "../game/interaction";
 
@@ -457,6 +457,16 @@ it("freezes exact and family filters at the anchor and never falls back", () => 
     }).candidates.map(({ id }) => id),
   ).toEqual(["belt-a"]);
 
+  const changedAnchor = api.selectDismantleCandidates(snapshot, {
+    mode: "area-exact",
+    ...region,
+    anchorId: "belt-a",
+    anchorExactType: "machine:crusher",
+    openFactoryIds: [],
+  });
+  expect(changedAnchor.invalidAnchorReason).toBe("anchor-changed");
+  expect(changedAnchor.candidates).toEqual([]);
+
   for (const anchorId of ["terminal", "stale-id"]) {
     const invalid = api.selectDismantleCandidates(snapshot, {
       mode: "area-exact",
@@ -467,4 +477,92 @@ it("freezes exact and family filters at the anchor and never falls back", () => 
     expect(invalid.invalidAnchorReason).not.toBeNull();
     expect(invalid.candidates).toEqual([]);
   }
+});
+
+it("previews family-area removals through dismantleMany with exact refund and blocker totals", () => {
+  const contentDraft = structuredClone(fixture);
+  contentDraft.materials.find((material) => material.id === "liquid-0")!.known = true;
+  const content = validateContent(contentDraft);
+  const sim = new Simulation(content);
+  const belts = sim.command({
+    type: "placeBelts",
+    points: [
+      { x: 45, y: 45 },
+      { x: 46, y: 45 },
+    ],
+    direction: 0,
+  });
+  expect(belts.ok, belts.message).toBe(true);
+  const pipe = sim.command({
+    type: "placePipes",
+    containmentProfileId: "lined",
+    points: [{ x: 47, y: 45, inlet: 2, outlet: 0 }],
+  });
+  expect(pipe.ok, pipe.message).toBe(true);
+
+  const loaded = sim.serialize();
+  loaded.pipes["47,45"].materialId = "liquid-0";
+  loaded.pipes["47,45"].quantity = 1;
+  loaded.flows.produced["liquid-0"] = 1;
+  const restored = sim.load(loaded);
+  expect(restored.ok, restored.message).toBe(true);
+
+  const before = sim.serialize(),
+    snapshot = sim.snapshot(),
+    ids = snapshot.belts.map((belt) => belt.id),
+    request = {
+      mode: "area-family",
+      from: { x: 45, y: 45 },
+      to: { x: 47, y: 45 },
+      anchorId: ids[0],
+      anchorFamily: "transport-lines",
+      openFactoryIds: [],
+    };
+  const api = interaction as unknown as {
+    previewDismantleArea?: (
+      current: PlayerSnapshot,
+      selection: Record<string, unknown>,
+      preview: (command: Parameters<Simulation["preview"]>[0]) => ReturnType<Simulation["preview"]>,
+    ) => {
+      candidateIds: string[];
+      selectedCount: number;
+      blockedCount: number;
+      ignoredCount: number;
+      reclaimedStructureMaterial: number;
+      retrievedCargo: number;
+      netBuildStockDelta: number;
+      items: { id: string; status: string; reason?: string }[];
+      canConfirm: boolean;
+    };
+  };
+
+  expect(api.previewDismantleArea).toBeTypeOf("function");
+  const review = api.previewDismantleArea!(snapshot, request, (command) =>
+    sim.preview(command),
+  );
+  expect(review.candidateIds).toHaveLength(3);
+  expect(review.selectedCount).toBe(2);
+  expect(review.blockedCount).toBe(1);
+  expect(review.ignoredCount).toBe(0);
+  expect(review.reclaimedStructureMaterial).toBeGreaterThan(0);
+  expect(review.retrievedCargo).toBe(0);
+  expect(review.netBuildStockDelta).toBe(review.reclaimedStructureMaterial);
+  expect(review.items.find((item) => item.id === snapshot.pipes[0].id)).toMatchObject({
+    status: "blocked",
+    reason: expect.any(String),
+  });
+  expect(review.canConfirm).toBe(true);
+  expect(sim.serialize()).toEqual(before);
+  const changedCargoSnapshot = structuredClone(snapshot);
+  changedCargoSnapshot.pipes[0].quantity += 1;
+  const reviewApi = interaction as unknown as {
+    sameDismantleAreaReview?: (a: unknown, b: unknown) => boolean;
+  };
+  expect(reviewApi.sameDismantleAreaReview).toBeTypeOf("function");
+  const changedReview = api.previewDismantleArea!(
+    changedCargoSnapshot,
+    request,
+    (command) => sim.preview(command),
+  );
+  expect(reviewApi.sameDismantleAreaReview!(review, changedReview)).toBe(false);
 });

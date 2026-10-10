@@ -4,6 +4,7 @@ import type { Session } from "../game/session";
 import type { WorldMode } from "../game/interaction";
 import type { GamePreferences } from "../game/preferences";
 import type { WorldControls, WorldActions } from "../game/world";
+import { dismantleEntityStateFingerprint } from "../game/dismantle-selection";
 export default function GameHost({
   session,
   mode,
@@ -47,6 +48,9 @@ export default function GameHost({
           mode: (t) => latest.current.actions.mode(t),
           rotate: () => latest.current.actions.rotate(),
           toggleFactory: (id) => latest.current.actions.toggleFactory(id),
+          reviewArea: (request) => latest.current.actions.reviewArea(request),
+          cancelAreaReview: () => latest.current.actions.cancelAreaReview(),
+          disarmTouchArea: () => latest.current.actions.disarmTouchArea(),
         };
         const world = createWorld(
           element.current,
@@ -63,6 +67,10 @@ export default function GameHost({
             x: number,
             y: number,
           ) => ReturnType<WorldControls["projectWorldPoint"]>;
+          __UNKNOWN_YIELD_SIMULATION__?: {
+            tick(): number;
+            dismantleFingerprint(ids: readonly string[]): string;
+          };
         };
         const cameraProbe = new URLSearchParams(window.location.search).get("perf") === "1";
         if (cameraProbe) {
@@ -70,6 +78,11 @@ export default function GameHost({
             controls.current?.getCameraView() ?? null;
           probeWindow.__UNKNOWN_YIELD_PROJECT_WORLD__ = (x, y) =>
             controls.current?.projectWorldPoint(x, y) ?? null;
+          probeWindow.__UNKNOWN_YIELD_SIMULATION__ = {
+            tick: () => session.snapshot().tick,
+            dismantleFingerprint: (ids) =>
+              dismantleEntityStateFingerprint(session.snapshot(), ids),
+          };
         }
         const unsubscribe = session.subscribe(() =>
           world.setSnapshot(session.snapshot()),
@@ -79,6 +92,7 @@ export default function GameHost({
           if (cameraProbe) {
             delete probeWindow.__UNKNOWN_YIELD_CAMERA__;
             delete probeWindow.__UNKNOWN_YIELD_PROJECT_WORLD__;
+            delete probeWindow.__UNKNOWN_YIELD_SIMULATION__;
           }
           controls.current = null;
           world.destroy();

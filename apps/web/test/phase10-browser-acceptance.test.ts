@@ -15,11 +15,13 @@ import {
   setStudioLocaleText,
 } from "../game/studio-workbench";
 import {
+  auditLedger,
   Simulation,
   experimentEvidenceKey,
   initializeKnownMarkets,
   type GameCommand,
 } from "@site/sim-core";
+import type { Save } from "@site/sim-core";
 import { expect, it } from "vitest";
 
 function runtimePackBrowserFixture(): string {
@@ -318,6 +320,139 @@ function phase20LineReuseBrowserWorld() {
   };
 }
 
+function phase20DismantleBrowserWorld() {
+  const sim = new Simulation(fixture);
+  build(sim, {
+    type: "placeMachine",
+    definitionId: "extractor",
+    x: 15,
+    y: 25,
+    direction: 0,
+  });
+  build(sim, {
+    type: "placeStorage",
+    definitionId: "depot",
+    x: 22,
+    y: 24,
+    direction: 0,
+  });
+  build(sim, {
+    type: "placeBelts",
+    points: [
+      ...Array.from({ length: 5 }, (_, index) => ({ x: 17 + index, y: 26 })),
+      { x: 21, y: 25 },
+    ],
+    direction: 0,
+  });
+  const emptyBeltIds: string[] = [];
+  for (const [x, y] of [[30, 30], [31, 30], [36, 30], [37, 30], [38, 30], [39, 30], [46, 30], [47, 30], [48, 30], [49, 30]] as const)
+    emptyBeltIds.push(build(sim, { type: "placeBelts", points: [{ x, y }], direction: 0 }));
+  build(sim, {
+    type: "placePressureLines",
+    points: [{ x: 32, y: 30, inlet: 2, outlet: 0 }],
+  });
+  build(sim, {
+    type: "placeBelts",
+    points: [{ x: 30, y: 32 }],
+    direction: 0,
+  });
+  build(sim, {
+    type: "placePipes",
+    containmentProfileId: "standard",
+    points: [{ x: 31, y: 32, inlet: 2, outlet: 0 }],
+  });
+  build(sim, {
+    type: "placePressureLines",
+    points: [{ x: 32, y: 32, inlet: 2, outlet: 0 }],
+  });
+  const familyFactoryId = build(sim, {
+    type: "placeFactory",
+    x: 40,
+    y: 30,
+    width: 6,
+    height: 6,
+  });
+  build(sim, {
+    type: "placeMachine",
+    definitionId: "crusher",
+    x: 41,
+    y: 31,
+    direction: 0,
+  });
+  const exactFactoryId = build(sim, {
+    type: "placeFactory",
+    x: 25,
+    y: 20,
+    width: 13,
+    height: 6,
+  });
+  for (const [definitionId, x] of [
+    ["crusher", 26],
+    ["crusher", 30],
+    ["furnace", 34],
+  ] as const)
+    build(sim, { type: "placeMachine", definitionId, x, y: 21, direction: 0 });
+  build(sim, {
+    type: "placeStorage",
+    definitionId: "depot",
+    x: 40,
+    y: 40,
+    direction: 0,
+  });
+  build(sim, {
+    type: "placeUndergroundSolid",
+    entry: { x: 43, y: 40 },
+    exit: { x: 45, y: 40 },
+  });
+  const factoryId = build(sim, {
+    type: "placeFactory",
+    x: 52,
+    y: 40,
+    width: 6,
+    height: 6,
+  });
+  const childId = build(sim, {
+    type: "placeMachine",
+    definitionId: "crusher",
+    x: 54,
+    y: 42,
+    direction: 0,
+  });
+  expect(sim.command({ type: "setEnabled", machineId: childId, enabled: false }).ok).toBe(true);
+
+  const loaded = sim.serialize();
+  const gasKnowledge = fixture.reactions.find(
+    (reaction) => reaction.id === "vaporize-liquid-0",
+  )!;
+  loaded.knowledge.push(gasKnowledge.id);
+  loaded.evidence[
+    experimentEvidenceKey(
+      gasKnowledge.operation,
+      gasKnowledge.input,
+      gasKnowledge.processConditionId ?? null,
+    )
+  ] = {
+    operationId: gasKnowledge.operation,
+    inputId: gasKnowledge.input,
+    processConditionId: gasKnowledge.processConditionId ?? null,
+    state: "confirmed",
+  };
+  loaded.pressureLines["32,30"].materialId = "gas-0";
+  loaded.pressureLines["32,30"].quantity = 1;
+  loaded.flows.produced["gas-0"] = 1;
+  initializeKnownMarkets(fixture, loaded);
+  const restored = sim.load(loaded);
+  expect(restored.ok, restored.message).toBe(true);
+  return {
+    save: sim.serialize(),
+    emptyBeltIds,
+    familyFactoryId,
+    exactFactoryId,
+    factoryId,
+    childId,
+  };
+}
+
 function chromeExecutable(): string | null {
   const candidates = [
     process.env.CHROME_BIN,
@@ -358,6 +493,18 @@ function chromeExecutable(): string | null {
     candidates.find((candidate) => candidate && existsSync(candidate)) ?? null
   );
 }
+
+it("builds a save-valid, ledger-balanced Phase 20 P5 browser world", () => {
+  const world = phase20DismantleBrowserWorld();
+  const restored = new Simulation(fixture).load(world.save);
+  expect(restored.ok, restored.message).toBe(true);
+  expect(auditLedger(fixture, world.save).mismatches).toEqual([]);
+  expect(world.save.pressureLines["32,30"]).toMatchObject({
+    materialId: "gas-0",
+    quantity: 1,
+  });
+  expect(world.save.machines[world.childId]?.enabled).toBe(false);
+});
 
 async function waitForHttp(url: string, timeoutMs = 60000): Promise<void> {
   const deadline = Date.now() + timeoutMs;
@@ -1428,6 +1575,30 @@ browserIt(
           buttons: 0,
           clickCount: 1,
         });
+      const dragWorldArea = async (
+        start: { x: number; y: number },
+        end: { x: number; y: number },
+      ) => {
+        const pixels = await dragWorldRoute(start, end);
+        await releaseRoute(pixels.end);
+        return pixels;
+      };
+      const captureP5Screenshot = async (name: string) => {
+        const screenshot = await call("Page.captureScreenshot", {
+          format: "png",
+          captureBeyondViewport: false,
+        });
+        const bytes = Buffer.from(
+          (screenshot as unknown as { data: string }).data,
+          "base64",
+        );
+        const sha256 = createHash("sha256").update(bytes).digest("hex");
+        if (evidenceDirectory) {
+          mkdirSync(evidenceDirectory, { recursive: true });
+          writeFileSync(join(evidenceDirectory, name), bytes);
+        }
+        return { bytes: bytes.length, sha256, retained: Boolean(evidenceDirectory) };
+      };
       const saveLoadedWorld = async () => {
         await evaluate(`(() => {
           document.querySelector('button[aria-label="Game menu"]')?.click();
@@ -1612,6 +1783,550 @@ browserIt(
             repeatedReuseSaveBytesIdentical: true,
           }),
       );
+
+      const p5Seed = phase20DismantleBrowserWorld();
+      await evaluate(
+        `localStorage.setItem("industrial-site-save-v15", ${JSON.stringify(
+          JSON.stringify(p5Seed.save),
+        )})`,
+      );
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Game menu"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `[...document.querySelectorAll("button")].some((button) => button.textContent?.includes("Load saved world"))`,
+      );
+      await evaluate(`(() => {
+        [...document.querySelectorAll("button")].find((button) => button.textContent?.includes("Load saved world"))?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector('[role="status"]')?.textContent.includes("Site restored") === true`,
+      );
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Close field brief"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(`document.querySelector('button[aria-label="Close field brief"]') === null`);
+      const p5Paused = await evaluate<boolean>(`document.querySelector(".paused-label") !== null`);
+      if (!p5Paused)
+        await evaluate(`document.querySelector('button[aria-label="Pause simulation"]')?.click()`);
+      await waitForExpression(`document.querySelector(".paused-label") !== null`);
+
+      const dismantleButton = await evaluate<boolean>(`(() => {
+        const button = [...document.querySelectorAll('nav[aria-label="Build tools"] button')]
+          .find((entry) => entry.getAttribute("aria-label") === "Dismantle");
+        button?.click();
+        return button !== undefined;
+      })()`);
+      expect(dismantleButton).toBe(true);
+      await waitForExpression(`document.querySelector('[data-testid="dismantle-mode-single"]')?.getAttribute("aria-pressed") === "true"`);
+      const singleClickPoint = await evaluate<{ x: number; y: number; rect: { left: number; top: number; right: number; bottom: number }; target: { tag: string; className: string; aria: string | null } | null }>(`(() => { const canvas = document.querySelector("canvas"), rect = canvas.getBoundingClientRect(), projected = window.__UNKNOWN_YIELD_PROJECT_WORLD__((39.5) * 32, (30.5) * 24), x = rect.left + projected.x * rect.width, y = rect.top + projected.y * rect.height, target = document.elementFromPoint(x,y); return {x,y,rect:{left:rect.left,top:rect.top,right:rect.right,bottom:rect.bottom},target:target ? {tag:target.tagName,className:target.className,aria:target.getAttribute("aria-label")} : null}; })()`);
+      expect(singleClickPoint.x).toBeGreaterThan(singleClickPoint.rect.left);
+      expect(singleClickPoint.x).toBeLessThan(singleClickPoint.rect.right);
+      expect(singleClickPoint.y).toBeGreaterThan(singleClickPoint.rect.top);
+      expect(singleClickPoint.y).toBeLessThan(singleClickPoint.rect.bottom);
+      expect(singleClickPoint.target?.tag).toBe("CANVAS");
+      await clickCell(39, 30);
+      await sleep(400);
+      const singleClickStatus = await evaluate<string>(`[...document.querySelectorAll('[role="status"]')].map((entry) => entry.textContent ?? "").join(" | ")`);
+      const singleClickScreenshot = await captureP5Screenshot("p5-single-default-click.png");
+      await saveLoadedWorld();
+      const p5AfterSingle = await evaluate<Save>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
+      console.log("PHASE20_P5_SINGLE_CLICK_DIAGNOSTIC " + JSON.stringify({ singleClickPoint, singleClickStatus, savedBelt: p5AfterSingle.belts["39,30"] ?? null, remainingAdjacentBelt: p5AfterSingle.belts["38,30"] ?? null, screenshot: singleClickScreenshot }));
+      expect(p5AfterSingle.belts["39,30"]).toBeUndefined();
+      expect(singleClickStatus).toContain("Belt and cargo reclaimed");
+      expect(p5AfterSingle.belts["38,30"]).toBeDefined();
+
+      const chooseMode = async (modeId: string) => {
+        await evaluate<boolean>(`(() => {
+          const button = document.querySelector('[data-testid="dismantle-mode-${modeId}"]');
+          if (!button) throw new Error("Dismantle mode missing: ${modeId}");
+          button.click();
+          return true;
+        })()`);
+        await waitForExpression(`document.querySelector('[data-testid="dismantle-mode-${modeId}"]')?.getAttribute("aria-pressed") === "true"`);
+      };
+      const reviewCounts = async () => evaluate<Record<string, number>>(`(() => {
+        const root = document.querySelector('[data-testid="dismantle-review"]');
+        if (!root) throw new Error("Dismantle review did not open");
+        return Object.fromEntries([...root.querySelectorAll(".dismantle-review-counts > div")]
+          .map((entry) => [entry.querySelector("dt")?.textContent ?? "", Number(entry.querySelector("dd")?.textContent ?? 0)]));
+      })()`);
+      const cancelDismantleReview = async (keyboard = false) => {
+        if (keyboard) await pressKey("Escape", "Escape", 27);
+        else await evaluate<boolean>(`(() => {
+          document.querySelector('[data-testid="dismantle-review"] button.secondary')?.click();
+          return true;
+        })()`);
+        await waitForExpression(`document.querySelector('[data-testid="dismantle-review"]') === null`);
+      };
+      const openSelectedFactory = async () => {
+        await evaluate<boolean>(`(() => {
+          if ([...document.querySelectorAll("button")]
+            .some((entry) => entry.textContent?.includes("Close roof"))) return true;
+          const button = [...document.querySelectorAll("button")]
+            .find((entry) => entry.textContent?.includes("Open interior"));
+          if (!button) throw new Error("Selected factory's open-interior control is missing. Panel: " +
+            (document.querySelector(".context-panel")?.innerText ?? "none") +
+            "; buttons: " + [...document.querySelectorAll("button")].map((entry) => entry.innerText).join(" | "));
+          button.click();
+          return true;
+        })()`);
+        await waitForExpression(`[...document.querySelectorAll("button")].some((button) => button.textContent?.includes("Close roof"))`);
+      };
+      await chooseMode("area-all");
+      await dragWorldArea({ x: 30, y: 30 }, { x: 32, y: 30 });
+      await waitForExpression(`document.querySelector('[data-testid="dismantle-review"]') !== null`);
+      const cancelCounts = await reviewCounts();
+      expect(cancelCounts).toEqual({
+        "Will be removed": 2,
+        "Blocked · kept in place": 1,
+        "Ignored · outside filter or protected": 0,
+      });
+      const beforeCancelSave = await evaluate<string>(`localStorage.getItem("industrial-site-save-v15")`);
+      const cancelScreenshot = await captureP5Screenshot("p5-area-cancel-review.png");
+      const cancelPoint = await evaluate<{ x: number; y: number }>(`(() => { const r = document.querySelector('[data-testid="dismantle-review"]').getBoundingClientRect(); return {x:r.left+r.width/2,y:r.top+r.height/2}; })()`);
+      await call("Input.dispatchMouseEvent", { type: "mousePressed", ...cancelPoint, button: "right", buttons: 2 });
+      await call("Input.dispatchMouseEvent", { type: "mouseReleased", ...cancelPoint, button: "right", buttons: 0 });
+      await waitForExpression(`document.querySelector('[data-testid="dismantle-review"]') === null`);
+      await saveLoadedWorld();
+      expect(await evaluate<string>(`localStorage.getItem("industrial-site-save-v15")`)).toBe(beforeCancelSave);
+
+      await dragWorldArea({ x: 30, y: 30 }, { x: 32, y: 30 });
+      await waitForExpression(`document.querySelector('[data-testid="dismantle-review"]') !== null`);
+      const partialScreenshot = await captureP5Screenshot("p5-area-blocked-review.png");
+      const preflightText = await evaluate<string>(`document.querySelector('[data-testid="dismantle-review"]')?.innerText ?? ""`);
+      expect(preflightText).toContain("Blocked · kept in place");
+      expect(preflightText).toContain("Cargo plates recovered");
+      await evaluate<boolean>(`(() => {
+        const button = document.querySelector('[data-testid="dismantle-review"] button.danger');
+        if (!button || button.hasAttribute("disabled")) throw new Error("Partial removal must be explicitly confirmable");
+        button.click();
+        return true;
+      })()`);
+      await waitForExpression(`document.querySelector('[role="status"]')?.textContent.includes("Removed 2") === true`);
+      await saveLoadedWorld();
+      const p5AfterPartial = await evaluate<Save>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
+      expect(p5AfterPartial.belts["30,30"]).toBeUndefined();
+      expect(p5AfterPartial.belts["31,30"]).toBeUndefined();
+      expect(p5AfterPartial.pressureLines["32,30"]).toMatchObject({
+        id: p5Seed.save.pressureLines["32,30"].id,
+        materialId: "gas-0",
+        quantity: 1,
+      });
+      expect(auditLedger(fixture, p5AfterPartial).mismatches).toEqual([]);
+
+      await evaluate<boolean>(`(() => { [...document.querySelectorAll('nav[aria-label="Build tools"] button')].find((button) => button.getAttribute("aria-label") === "Inspect")?.click(); return true; })()`);
+      await clickCell(25, 20);
+      await waitForExpression(`document.querySelector('.context-panel') !== null`);
+      const exactFactoryInspector = await evaluate<string>(`document.querySelector('.context-panel')?.innerText ?? ""`);
+      expect(exactFactoryInspector).toContain("Factory 25");
+      await openSelectedFactory();
+      await clickCell(40, 30);
+      await waitForExpression(`document.querySelector('.context-panel') !== null`);
+      const familyFactoryInspector = await evaluate<string>(`document.querySelector('.context-panel')?.innerText ?? ""`);
+      expect(familyFactoryInspector).toContain("Factory");
+      await openSelectedFactory();
+      await evaluate<boolean>(`(() => { [...document.querySelectorAll('nav[aria-label="Build tools"] button')].find((button) => button.getAttribute("aria-label") === "Dismantle")?.click(); return true; })()`);
+      await chooseMode("area-exact");
+      await dragWorldArea({ x: 26, y: 21 }, { x: 36, y: 24 });
+      await waitForExpression(`document.querySelector('[data-testid="dismantle-review"]') !== null`);
+      const exactCounts = await reviewCounts();
+      const exactReviewText = await evaluate<string>(`document.querySelector('[data-testid="dismantle-review"]')?.innerText ?? ""`);
+      const exactScreenshot = await captureP5Screenshot("p5-area-exact-type-review.png");
+      console.log("PHASE20_P5_EXACT_FILTER_DIAGNOSTIC " + JSON.stringify({ exactFactoryInspector, familyFactoryInspector, exactCounts, exactReviewText, screenshot: exactScreenshot }));
+      expect(exactCounts["Will be removed"]).toBe(2);
+      expect(exactCounts["Ignored · outside filter or protected"]).toBe(2);
+      await evaluate<boolean>(`(() => { document.querySelector('[data-testid="dismantle-review"] button.danger')?.click(); return true; })()`);
+      await waitForExpression(`document.querySelector('[role="status"]')?.textContent.includes("Removed 2") === true`);
+      await saveLoadedWorld();
+      const p5AfterExact = await evaluate<Save>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
+      expect(Object.values(p5AfterExact.machines).filter((machine) => machine.x >= 26 && machine.x <= 36 && machine.y === 21).map((machine) => machine.definitionId)).toEqual(["furnace"]);
+
+      await chooseMode("area-family");
+      await dragWorldArea({ x: 30, y: 32 }, { x: 45, y: 31 });
+      await waitForExpression(`document.querySelector('[data-testid="dismantle-review"]') !== null`);
+      const familyCounts = await reviewCounts();
+      expect(familyCounts["Will be removed"]).toBe(3);
+      expect(familyCounts["Ignored · outside filter or protected"]).toBe(2);
+      await evaluate<boolean>(`(() => { document.querySelector('[data-testid="dismantle-review"] button.danger')?.click(); return true; })()`);
+      await waitForExpression(`document.querySelector('[role="status"]')?.textContent.includes("Removed 3") === true`);
+      await saveLoadedWorld();
+      const p5AfterFamily = await evaluate<Save>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
+      expect(p5AfterFamily.belts["30,32"]).toBeUndefined();
+      expect(p5AfterFamily.pipes["31,32"]).toBeUndefined();
+      expect(p5AfterFamily.pressureLines["32,32"]).toBeUndefined();
+      expect(Object.values(p5AfterFamily.machines).some((machine) => machine.x === 41 && machine.y === 31)).toBe(true);
+
+      await chooseMode("area-exact");
+      const deposit = fixture.site.deposits[0];
+      const depositAnchor = {
+        x: deposit.x + deposit.width - 1,
+        y: deposit.y + deposit.height - 1,
+      };
+      await dragWorldArea(depositAnchor, {
+        x: depositAnchor.x + 1,
+        y: depositAnchor.y + 1,
+      });
+      await waitForExpression(`document.querySelector('[data-testid="dismantle-review"]') !== null`);
+      const protectedAnchorText = await evaluate<string>(`document.querySelector('[data-testid="dismantle-review"]')?.innerText ?? ""`);
+      expect(protectedAnchorText).toContain("Area filter unavailable");
+      expect(protectedAnchorText).toContain("Resource deposits cannot be dismantled");
+      expect(await evaluate<boolean>(`document.querySelector('[data-testid="dismantle-review"] button.danger')?.hasAttribute("disabled") ?? false`)).toBe(true);
+      await cancelDismantleReview(true);
+
+      await chooseMode("area-all");
+      await dragWorldArea({ x: 36, y: 30 }, { x: 37, y: 30 });
+      await waitForExpression(`document.querySelector('[data-testid="dismantle-review"]') !== null`);
+      const forwardCounts = await reviewCounts();
+      await cancelDismantleReview();
+      await dragWorldArea({ x: 37, y: 30 }, { x: 36, y: 30 });
+      await waitForExpression(`document.querySelector('[data-testid="dismantle-review"]') !== null`);
+      expect(await reviewCounts()).toEqual(forwardCounts);
+      await cancelDismantleReview();
+      const beforeReverseSave = await evaluate<string>(`localStorage.getItem("industrial-site-save-v15")`);
+      await saveLoadedWorld();
+      expect(await evaluate<string>(`localStorage.getItem("industrial-site-save-v15")`)).toBe(beforeReverseSave);
+
+      await dragWorldArea({ x: 40, y: 40 }, { x: 40, y: 40 });
+      await waitForExpression(`document.querySelector('[data-testid="dismantle-review"]') !== null`);
+      const partialFootprintText = await evaluate<string>(`document.querySelector('[data-testid="dismantle-review"]')?.innerText ?? ""`);
+      expect(partialFootprintText).toContain("Include the full structure footprint");
+      expect((await reviewCounts())["Ignored · outside filter or protected"]).toBe(1);
+      await cancelDismantleReview();
+
+      await dragWorldArea({ x: 43, y: 40 }, { x: 45, y: 40 });
+      await waitForExpression(`document.querySelector('[data-testid="dismantle-review"]') !== null`);
+      expect((await reviewCounts())["Will be removed"]).toBe(1);
+      const routeRows = await evaluate<number>(`document.querySelectorAll('[data-testid="dismantle-review"] .dismantle-review-items li.status-selected').length`);
+      expect(routeRows).toBe(1);
+      await cancelDismantleReview();
+
+      const panForFactory = await evaluate<{ x: number; y: number }>(`(() => { const r = document.querySelector("canvas").getBoundingClientRect(); return {x:r.left+r.width/2,y:r.top+r.height/2}; })()`);
+      await call("Input.dispatchMouseEvent", { type: "mousePressed", ...panForFactory, button: "right", buttons: 2 });
+      // A physical leftward drag shifts the camera east toward this factory.
+      // Upward movement also brings its full southern footprint off the lower viewport edge.
+      await call("Input.dispatchMouseEvent", { type: "mouseMoved", x: panForFactory.x - 500, y: panForFactory.y - 140, button: "right", buttons: 2 });
+      await call("Input.dispatchMouseEvent", { type: "mouseReleased", x: panForFactory.x - 500, y: panForFactory.y - 140, button: "right", buttons: 0 });
+      await waitForExpression(`(() => {
+        const camera = window.__UNKNOWN_YIELD_CAMERA__?.();
+        return camera?.target &&
+          Math.abs(camera.scrollX - camera.target.scrollX) < 0.05 &&
+          Math.abs(camera.scrollY - camera.target.scrollY) < 0.05 &&
+          Math.abs(camera.zoom - camera.target.zoom) < 0.0001;
+      })()`);
+      const closedFactoryPixels = await dragWorldArea({ x: 52, y: 40 }, { x: 57, y: 45 });
+      const closedFactoryDiagnostic = await evaluate<Record<string, unknown>>(`(() => {
+        const canvas = document.querySelector("canvas"), rect = canvas.getBoundingClientRect();
+        const point = (x, y) => {
+          const p = window.__UNKNOWN_YIELD_PROJECT_WORLD__((x + .5) * 32, (y + .5) * 24);
+          return { x: rect.left + p.x * rect.width, y: rect.top + p.y * rect.height };
+        };
+        const start = point(52, 40), end = point(57, 45);
+        const target = (p) => { const e = document.elementFromPoint(p.x, p.y); return e ? {tag:e.tagName, cls:String(e.className), label:e.getAttribute("aria-label")} : null; };
+        return { rect:{left:rect.left,top:rect.top,right:rect.right,bottom:rect.bottom}, camera:window.__UNKNOWN_YIELD_CAMERA__(), projected:{start,end}, target:{start:target(start),end:target(end)}, review:!!document.querySelector('[data-testid="dismantle-review"]'), status:document.querySelector('[role="status"]')?.innerText };
+      })()`);
+      console.log("PHASE20_P5_CLOSED_FACTORY_DIAGNOSTIC " + JSON.stringify({ pixels: closedFactoryPixels, ...closedFactoryDiagnostic }));
+      await waitForExpression(`document.querySelector('[data-testid="dismantle-review"]') !== null`);
+      const closedFactoryCounts = await reviewCounts();
+      expect(closedFactoryCounts["Blocked · kept in place"]).toBe(1);
+      expect(closedFactoryCounts["Ignored · outside filter or protected"]).toBe(1);
+      const closedFactoryScreenshot = await captureP5Screenshot("p5-closed-factory-preview.png");
+      await cancelDismantleReview();
+      await evaluate<boolean>(`(() => { [...document.querySelectorAll('nav[aria-label="Build tools"] button')].find((button) => button.getAttribute("aria-label") === "Inspect")?.click(); return true; })()`);
+      await clickCell(52, 40);
+      await waitForExpression(`document.querySelector('.context-panel') !== null`);
+      await openSelectedFactory();
+      await evaluate<boolean>(`(() => { document.querySelector('.context-panel button[aria-label="Close panel"]')?.click(); return true; })()`);
+      await waitForExpression(`document.querySelector('.context-panel') === null`);
+      await evaluate<boolean>(`(() => { [...document.querySelectorAll('nav[aria-label="Build tools"] button')].find((button) => button.getAttribute("aria-label") === "Dismantle")?.click(); return true; })()`);
+      await chooseMode("area-all");
+      await dragWorldArea({ x: 52, y: 40 }, { x: 57, y: 45 });
+      await waitForExpression(`document.querySelector('[data-testid="dismantle-review"]') !== null`);
+      const openFactoryCounts = await reviewCounts();
+      expect(openFactoryCounts["Will be removed"]).toBe(2);
+      console.log("PHASE20_P5_OPEN_FACTORY_PREVIEW " + JSON.stringify(openFactoryCounts));
+      const openFactoryScreenshot = await captureP5Screenshot("p5-open-factory-preview.png");
+      await evaluate<boolean>(`(() => { document.querySelector('[data-testid="dismantle-review"] button.danger')?.click(); return true; })()`);
+      await waitForExpression(`document.querySelector('[role="status"]')?.textContent.includes("Removed 2") === true`);
+      await waitForExpression(`document.querySelector('[data-testid="dismantle-review"]') === null && document.querySelector('.context-panel') === null`);
+      await saveLoadedWorld();
+      const p5AfterFactory = await evaluate<Save>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
+      expect(p5AfterFactory.factories[p5Seed.factoryId]).toBeUndefined();
+      expect(p5AfterFactory.machines[p5Seed.childId]).toBeUndefined();
+
+      const cameraBeforeRightPan = await evaluate<{ scrollX: number; scrollY: number }>(`window.__UNKNOWN_YIELD_CAMERA__()`);
+      const panPoint = await evaluate<{ x: number; y: number }>(`(() => { const r = document.querySelector("canvas").getBoundingClientRect(); return {x:r.left+r.width/2,y:r.top+r.height/2}; })()`);
+      await call("Input.dispatchMouseEvent", { type: "mousePressed", ...panPoint, button: "right", buttons: 2 });
+      await call("Input.dispatchMouseEvent", { type: "mouseMoved", x: panPoint.x + 75, y: panPoint.y + 45, button: "right", buttons: 2 });
+      await call("Input.dispatchMouseEvent", { type: "mouseReleased", x: panPoint.x + 75, y: panPoint.y + 45, button: "right", buttons: 0 });
+      const cameraAfterRightPan = await evaluate<{ scrollX: number; scrollY: number }>(`window.__UNKNOWN_YIELD_CAMERA__()`);
+      expect(Math.hypot(cameraAfterRightPan.scrollX - cameraBeforeRightPan.scrollX, cameraAfterRightPan.scrollY - cameraBeforeRightPan.scrollY)).toBeGreaterThan(0);
+      expect(await evaluate<boolean>(`document.querySelector('[data-testid="dismantle-review"]') === null`)).toBe(true);
+
+      await pressKey("x", "KeyX", 88);
+      await waitForExpression(`document.querySelector('[data-testid="dismantle-mode-single"]')?.getAttribute("aria-pressed") === "true"`);
+      await evaluate<boolean>(`(() => { const button = document.querySelector('[data-testid="dismantle-mode-area-family"]'); button?.focus(); return !!button; })()`);
+      await pressKey(" ", "Space", 32);
+      await waitForExpression(`document.querySelector('[data-testid="dismantle-mode-area-family"]')?.getAttribute("aria-pressed") === "true"`);
+      await evaluate<boolean>(`(() => { document.querySelector('[data-testid="dismantle-mode-area-all"]')?.focus(); return true; })()`);
+      await pressKey(" ", "Space", 32);
+      await waitForExpression(`document.querySelector('[data-testid="dismantle-mode-area-all"]')?.getAttribute("aria-pressed") === "true"`);
+      await dragWorldArea({ x: 38, y: 30 }, { x: 38, y: 30 });
+      await waitForExpression(`document.querySelector('[data-testid="dismantle-review"]') !== null`);
+      await waitForExpression(`document.activeElement?.matches('[data-testid="dismantle-review"]') === true`);
+      const accessibleReviewText = await evaluate<string>(`document.querySelector('[data-testid="dismantle-review"]')?.innerText ?? ""`);
+      expect(accessibleReviewText).toContain("Will be removed");
+      const reviewItemsLabel = await evaluate<string>(
+        `document.querySelector('[data-testid="dismantle-review"] .dismantle-review-items')?.getAttribute("aria-label") ?? ""`,
+      );
+      expect(reviewItemsLabel).toBe("Selection details");
+      const reducedMotionScreenshot = await (async () => {
+        await call("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: "reduce" }] });
+        const screenshot = await captureP5Screenshot("p5-reduced-motion-review.png");
+        await call("Emulation.setEmulatedMedia", { features: [] });
+        return screenshot;
+      })();
+      await pressKey("Enter", "Enter", 13);
+      await waitForExpression(`document.querySelector('[data-testid="dismantle-review"]') === null`);
+      await waitForExpression(`document.querySelector('[role="status"]')?.textContent.includes("Removed 1") === true`);
+      await saveLoadedWorld();
+      const p5AfterKeyboardConfirm = await evaluate<Save>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
+      expect(p5AfterKeyboardConfirm.belts["38,30"]).toBeUndefined();
+
+      await call("Emulation.setDeviceMetricsOverride", {
+        width: 390,
+        height: 844,
+        deviceScaleFactor: 2,
+        mobile: true,
+      });
+      await call("Emulation.setTouchEmulationEnabled", { enabled: true, maxTouchPoints: 3 });
+      await waitForExpression(`window.innerWidth === 390 && window.innerHeight === 844`);
+      await call("Page.navigate", { url: appUrl });
+      await waitForExpression(
+        `document.readyState === "complete" &&
+          !!document.querySelector("canvas") &&
+          !!document.querySelector('nav[aria-label="Build tools"]')`,
+      );
+      await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Game menu"]')?.click(); return true; })()`);
+      await waitForExpression(`document.body.textContent?.includes("Expedition controls") === true`);
+      await evaluate<boolean>(`(() => { [...document.querySelectorAll("button")].find((button) => button.textContent?.includes("Load saved world"))?.click(); return true; })()`);
+      await waitForExpression(`document.querySelector('[role="status"]')?.textContent.includes("Site restored") === true`);
+      await evaluate<boolean>(`(() => { document.querySelector('nav[aria-label="Build tools"] button[aria-label="Dismantle"]')?.click(); return true; })()`);
+      await waitForExpression(`document.querySelector('[data-testid="dismantle-mode-single"]') !== null`);
+      await chooseMode("area-all");
+      const touchArmVisible = await evaluate<boolean>(`getComputedStyle(document.querySelector('[data-testid="dismantle-touch-arm"]')).display !== "none"`);
+      expect(touchArmVisible).toBe(true);
+      const sendTouch = (type: string, touchPoints: { x: number; y: number; id: number }[]) =>
+        call("Input.dispatchTouchEvent", { type, touchPoints });
+      const canvasCenter = await evaluate<{ x: number; y: number }>(`(() => { const r = document.querySelector("canvas").getBoundingClientRect(); return {x:r.left+r.width/2,y:r.top+r.height/2}; })()`);
+      const canvasTouchTarget = await evaluate<string>(`(() => { const r = document.querySelector("canvas").getBoundingClientRect(); return document.elementFromPoint(r.left+r.width/2,r.top+r.height/2)?.tagName ?? ""; })()`);
+      expect(canvasTouchTarget).toBe("CANVAS");
+      const cameraBeforeTouchPan = await evaluate<{ scrollX: number; scrollY: number; zoom: number }>(`window.__UNKNOWN_YIELD_CAMERA__()`);
+      await sendTouch("touchStart", [{ ...canvasCenter, id: 1 }]);
+      await sendTouch("touchMove", [{ x: canvasCenter.x + 56, y: canvasCenter.y + 35, id: 1 }]);
+      await sendTouch("touchEnd", []);
+      await evaluate<void>(`new Promise((resolve) => setTimeout(resolve, 350))`);
+      const cameraAfterTouchPan = await evaluate<{ scrollX: number; scrollY: number; zoom: number }>(`window.__UNKNOWN_YIELD_CAMERA__()`);
+      expect(Math.hypot(cameraAfterTouchPan.scrollX - cameraBeforeTouchPan.scrollX, cameraAfterTouchPan.scrollY - cameraBeforeTouchPan.scrollY)).toBeGreaterThan(0);
+      expect(await evaluate<boolean>(`document.querySelector('[data-testid="dismantle-review"]') === null`)).toBe(true);
+
+      const center = canvasCenter;
+      const cameraBeforePinch = await evaluate<{ zoom: number }>(`window.__UNKNOWN_YIELD_CAMERA__()`);
+      await sendTouch("touchStart", [
+        { x: center.x - 35, y: center.y, id: 2 },
+        { x: center.x + 35, y: center.y, id: 3 },
+      ]);
+      await sendTouch("touchMove", [
+        { x: center.x - 65, y: center.y, id: 2 },
+        { x: center.x + 65, y: center.y, id: 3 },
+      ]);
+      await sendTouch("touchEnd", []);
+      await evaluate<void>(`new Promise((resolve) => setTimeout(resolve, 350))`);
+      const cameraAfterPinch = await evaluate<{ zoom: number }>(`window.__UNKNOWN_YIELD_CAMERA__()`);
+      expect(Math.abs(cameraAfterPinch.zoom - cameraBeforePinch.zoom)).toBeGreaterThan(0.001);
+      expect(await evaluate<boolean>(`document.querySelector('[data-testid="dismantle-review"]') === null`)).toBe(true);
+
+      const tapSelector = async (selector: string) => {
+        const point = await evaluate<{ x: number; y: number }>(`(() => {
+          const selector = ${JSON.stringify(selector)};
+          const r = document.querySelector(selector)?.getBoundingClientRect();
+          if (!r) throw new Error("Touch target missing: " + selector);
+          return {x:r.left+r.width/2,y:r.top+r.height/2};
+        })()`);
+        await sendTouch("touchStart", [{ ...point, id: 4 }]);
+        await sendTouch("touchEnd", []);
+      };
+      await tapSelector('button[aria-label="Game menu"]');
+      await waitForExpression(`document.body.textContent?.includes("Expedition controls") === true`);
+      await tapSelector('button[aria-label="Game menu"]');
+      await waitForExpression(`document.body.textContent?.includes("Expedition controls") !== true`);
+      await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Center camera"]')?.click(); return true; })()`);
+      await sleep(500);
+
+      await tapSelector('[data-testid="dismantle-touch-arm"]');
+      await sendTouch("touchStart", [{ ...canvasCenter, id: 5 }]);
+      await sendTouch("touchCancel", []);
+      await waitForExpression(`document.querySelector('[data-testid="dismantle-review"]') === null`);
+      expect(await evaluate<boolean>(`document.querySelector('[data-testid="dismantle-touch-arm"]')?.getAttribute("aria-pressed") !== "true"`)).toBe(true);
+
+      await tapSelector('[data-testid="dismantle-touch-arm"]');
+      const canvasEdges = await evaluate<{ start: { x: number; y: number }; outside: { x: number; y: number } }>(`(() => { const r = document.querySelector("canvas").getBoundingClientRect(); return {start:{x:r.left+r.width/2,y:r.top+r.height/2},outside:{x:r.right+24,y:r.top+r.height/2}}; })()`);
+      await sendTouch("touchStart", [{ ...canvasEdges.start, id: 7 }]);
+      await sendTouch("touchMove", [{ ...canvasEdges.outside, id: 7 }]);
+      await sendTouch("touchEnd", []);
+      await waitForExpression(`document.querySelector('[data-testid="dismantle-review"]') === null`);
+      expect(await evaluate<boolean>(`document.querySelector('[data-testid="dismantle-touch-arm"]')?.getAttribute("aria-pressed") !== "true"`)).toBe(true);
+
+      const touchCell = async (x: number, y: number) => evaluate<{ x: number; y: number }>(`(() => {
+        const canvas = document.querySelector("canvas"), rect = canvas.getBoundingClientRect();
+        const projected = window.__UNKNOWN_YIELD_PROJECT_WORLD__(((${x} + .5) * 32), ((${y} + .5) * 24));
+        return {x:rect.left+projected.x*rect.width,y:rect.top+projected.y*rect.height};
+      })()`);
+      // The fixture pair initially sits under the fixed right-edge zoom controls
+      // at the phone viewport. Start on the verified canvas center and pan left.
+      const cameraBeforeTouchReposition = await evaluate<{ scrollX: number; scrollY: number }>(`window.__UNKNOWN_YIELD_CAMERA__()`);
+      await sendTouch("touchStart", [{ ...canvasCenter, id: 8 }]);
+      await sendTouch("touchMove", [{ x: canvasCenter.x - 160, y: canvasCenter.y, id: 8 }]);
+      await sendTouch("touchEnd", []);
+      await evaluate<void>(`new Promise((resolve) => setTimeout(resolve, 350))`);
+      const cameraAfterTouchReposition = await evaluate<{ scrollX: number; scrollY: number }>(`window.__UNKNOWN_YIELD_CAMERA__()`);
+      expect(Math.hypot(cameraAfterTouchReposition.scrollX - cameraBeforeTouchReposition.scrollX, cameraAfterTouchReposition.scrollY - cameraBeforeTouchReposition.scrollY)).toBeGreaterThan(0);
+      const touchStartPoint = await touchCell(36, 30), touchEndPoint = await touchCell(37, 30);
+      const touchTargetTags = await evaluate<{ start: string | null; end: string | null }>(`(() => {
+        const target = (p) => document.elementFromPoint(p.x,p.y)?.tagName ?? null;
+        return {start:target(${JSON.stringify(touchStartPoint)}),end:target(${JSON.stringify(touchEndPoint)})};
+      })()`);
+      await tapSelector('[data-testid="dismantle-touch-arm"]');
+      const mobileTouchBefore = await evaluate<Record<string, unknown>>(`(() => {
+        const arm = document.querySelector('[data-testid="dismantle-touch-arm"]');
+        const canvas = document.querySelector("canvas"), rect = canvas.getBoundingClientRect();
+        const target = (p) => document.elementFromPoint(p.x,p.y)?.tagName ?? null;
+        return {armed:arm?.getAttribute("aria-pressed"), viewport:{width:innerWidth,height:innerHeight}, canvas:{left:rect.left,top:rect.top,width:rect.width,height:rect.height}, start:${JSON.stringify(touchStartPoint)}, end:${JSON.stringify(touchEndPoint)}, targetStart:target(${JSON.stringify(touchStartPoint)}), targetEnd:target(${JSON.stringify(touchEndPoint)}), camera:window.__UNKNOWN_YIELD_CAMERA__(), repositionCamera:{before:${JSON.stringify(cameraBeforeTouchReposition)},after:${JSON.stringify(cameraAfterTouchReposition)}}};
+      })()`);
+      console.log("PHASE20_P5_MOBILE_TOUCH_INPUT " + JSON.stringify(mobileTouchBefore));
+      expect(mobileTouchBefore.armed).toBe("true");
+      expect(mobileTouchBefore.targetStart).toBe("CANVAS");
+      expect(mobileTouchBefore.targetEnd).toBe("CANVAS");
+      expect(touchTargetTags).toEqual({start:"CANVAS",end:"CANVAS"});
+      await sendTouch("touchStart", [{ ...touchStartPoint, id: 6 }]);
+      await sendTouch("touchMove", [{ ...touchEndPoint, id: 6 }]);
+      await sendTouch("touchEnd", []);
+      await evaluate<void>(`new Promise((resolve) => setTimeout(resolve, 350))`);
+      const mobileTouchAfter = await evaluate<Record<string, unknown>>(`(() => ({review:!!document.querySelector('[data-testid="dismantle-review"]'), armed:document.querySelector('[data-testid="dismantle-touch-arm"]')?.getAttribute("aria-pressed"), status:document.querySelector('[role="status"]')?.innerText, camera:window.__UNKNOWN_YIELD_CAMERA__()}))()`);
+      console.log("PHASE20_P5_MOBILE_TOUCH_RESULT " + JSON.stringify(mobileTouchAfter));
+      if (!mobileTouchAfter.review) await waitForExpression(`document.querySelector('[data-testid="dismantle-review"]') !== null`);
+      expect((await reviewCounts())["Will be removed"]).toBe(2);
+      const touchReviewScreenshot = await captureP5Screenshot("p5-mobile-touch-review.png");
+      await tapSelector('[data-testid="dismantle-review"] button.danger');
+      await waitForExpression(`document.querySelector('[data-testid="dismantle-review"]') === null`);
+      await saveLoadedWorld();
+      const p5AfterTouchConfirm = await evaluate<Save>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
+      expect(p5AfterTouchConfirm.belts["36,30"]).toBeUndefined();
+      expect(p5AfterTouchConfirm.belts["37,30"]).toBeUndefined();
+      await call("Emulation.setTouchEmulationEnabled", { enabled: false });
+      await call("Emulation.setDeviceMetricsOverride", {
+        width: 1440,
+        height: 1000,
+        deviceScaleFactor: 1,
+        mobile: false,
+      });
+      await waitForExpression(`window.innerWidth === 1440 && window.innerHeight === 1000`);
+
+      // U17: a live simulation change invalidates the explicit preflight.
+      await waitForExpression(`(() => {
+        const canvas = document.querySelector("canvas"), rect = canvas?.getBoundingClientRect();
+        return rect?.width === innerWidth && rect?.height === innerHeight;
+      })()`);
+      await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Center camera"]')?.click(); return true; })()`);
+      await sleep(120);
+      await waitForExpression(`(() => {
+        const camera = window.__UNKNOWN_YIELD_CAMERA__?.();
+        return camera?.target &&
+          Math.abs(camera.scrollX - camera.target.scrollX) < 0.05 &&
+          Math.abs(camera.scrollY - camera.target.scrollY) < 0.05 &&
+          Math.abs(camera.zoom - camera.target.zoom) < 0.0001;
+      })()`);
+      await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Resume simulation"]')?.click(); return true; })()`);
+      await waitForExpression(`document.querySelector(".paused-label") === null`);
+      await waitForExpression(`document.querySelector('button[aria-label="Pause simulation"]') !== null`);
+      const stalePixels = await dragWorldRoute({ x: 15, y: 25 }, { x: 21, y: 26 });
+      const staleTargetElement = await evaluate<Record<string, unknown>>(`(() => {
+        const p = ${JSON.stringify(stalePixels.start)}, canvas = document.querySelector("canvas"), rect = canvas.getBoundingClientRect();
+        const target = document.elementFromPoint(p.x,p.y);
+        return {tag:target?.tagName ?? null, className:target ? String(target.className) : null, aria:target?.getAttribute("aria-label") ?? null, rect:{left:rect.left,top:rect.top,width:rect.width,height:rect.height}, camera:window.__UNKNOWN_YIELD_CAMERA__()};
+      })()`);
+      console.log("PHASE20_P5_STALE_TARGET " + JSON.stringify({ pixels:stalePixels, target:staleTargetElement }));
+      await releaseRoute(stalePixels.end);
+      await waitForExpression(`document.querySelector('[data-testid="dismantle-review"]') !== null`);
+      const staleReviewBefore = await evaluate<string>(`document.querySelector('[data-testid="dismantle-review"]')?.innerText ?? ""`);
+      const staleReviewCanConfirm = await evaluate<boolean>(`document.querySelector('[data-testid="dismantle-review"] button.danger')?.hasAttribute("disabled") === false`);
+      expect((await reviewCounts())["Will be removed"]).toBeGreaterThan(0);
+      console.log("PHASE20_P5_STALE_REVIEW_BEFORE " + JSON.stringify({ text: staleReviewBefore, canConfirm: staleReviewCanConfirm }));
+      const staleTargetIds = [
+        ...Object.values(p5Seed.save.machines)
+          .filter((machine) => machine.x === 15 && machine.y === 25)
+          .map(({ id }) => id),
+        ...Object.values(p5Seed.save.belts)
+          .filter((belt) =>
+            (belt.y === 26 && belt.x >= 17 && belt.x <= 21) ||
+            (belt.x === 21 && belt.y === 25),
+          )
+          .map(({ id }) => id),
+      ];
+      expect(staleTargetIds).toHaveLength(7);
+      const liveStateBefore = await evaluate<{ tick: number; fingerprint: string }>(
+        `(() => ({tick:window.__UNKNOWN_YIELD_SIMULATION__.tick(), fingerprint:window.__UNKNOWN_YIELD_SIMULATION__.dismantleFingerprint(${JSON.stringify(staleTargetIds)})}))()`,
+      );
+      await waitForExpression(
+        `(() => { const simulation = window.__UNKNOWN_YIELD_SIMULATION__; return simulation.tick() > ${liveStateBefore.tick} && simulation.dismantleFingerprint(${JSON.stringify(staleTargetIds)}) !== ${JSON.stringify(liveStateBefore.fingerprint)}; })()`,
+        15000,
+      );
+      const liveStateAfter = await evaluate<{ tick: number; fingerprint: string }>(
+        `(() => ({tick:window.__UNKNOWN_YIELD_SIMULATION__.tick(), fingerprint:window.__UNKNOWN_YIELD_SIMULATION__.dismantleFingerprint(${JSON.stringify(staleTargetIds)})}))()`,
+      );
+      expect(liveStateAfter.tick).toBeGreaterThan(liveStateBefore.tick);
+      expect(liveStateAfter.fingerprint).not.toBe(liveStateBefore.fingerprint);
+      console.log("PHASE20_P5_STALE_LIVE_STATE " + JSON.stringify({ before: liveStateBefore, after: liveStateAfter }));
+      await evaluate<boolean>(`(() => { document.querySelector('[data-testid="dismantle-review"] button.danger')?.click(); return true; })()`);
+      await sleep(100);
+      const staleReviewClickResult = await evaluate<Record<string, unknown>>(`(() => ({status:[...document.querySelectorAll('[role="status"]')].map((element) => element.textContent), review:document.querySelector('[data-testid="dismantle-review"]')?.innerText ?? null, disabled:document.querySelector('[data-testid="dismantle-review"] button.danger')?.hasAttribute("disabled") ?? null}))()`);
+      console.log("PHASE20_P5_STALE_REVIEW_CLICK " + JSON.stringify(staleReviewClickResult));
+      await waitForExpression(`document.querySelector('[role="status"]')?.textContent.includes("world changed") === true`);
+      expect(await evaluate<boolean>(`document.querySelector('[data-testid="dismantle-review"]') !== null`)).toBe(true);
+      const staleReviewAfter = await evaluate<string>(`document.querySelector('[data-testid="dismantle-review"]')?.innerText ?? ""`);
+      const staleReviewScreenshot = await captureP5Screenshot("p5-stale-review-revalidated.png");
+      await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Pause simulation"]')?.click(); return true; })()`);
+      await waitForExpression(`document.querySelector(".paused-label") !== null`);
+      await cancelDismantleReview();
+      await saveLoadedWorld();
+      const staleTarget = await evaluate<boolean>(`Object.values(JSON.parse(localStorage.getItem("industrial-site-save-v15") ?? "null").machines).some((machine) => machine.x === 15 && machine.y === 25)`);
+      expect(staleTarget).toBe(true);
+
+      console.log("PHASE20_P5_DESKTOP_BROWSER_EVIDENCE " + JSON.stringify({
+        mode: browserAcceptanceMode,
+        cases: {
+          U01_singleDefault: "removed one belt through normal X-tool click",
+          U02_cancelNoMutation: { counts: cancelCounts, unchangedSavedBytes: true, screenshot: cancelScreenshot },
+          U03_partialLoadedLine: { blockedPreviewScreenshot: partialScreenshot, loadedGasQuantity: p5AfterPartial.pressureLines["32,30"].quantity, ledgerMismatches: auditLedger(fixture, p5AfterPartial).mismatches.length },
+          U04_exactDefinition: { counts: exactCounts, screenshot: exactScreenshot },
+          U05_familyTaxonomy: familyCounts,
+          U06_protectedAnchor: "deposit anchor rejected; confirm disabled",
+          U07_reversedDrag: "same preview counts in both directions; save unchanged",
+          U08_partialFootprint: "ignored with full-footprint explanation",
+          U09_routeIdentity: "one selected route for both endpoints",
+          U10_factoryVisibility: { closed: closedFactoryCounts, closedScreenshot: closedFactoryScreenshot, openScreenshot: openFactoryScreenshot },
+          U11_rightDragPan: { before: cameraBeforeRightPan, after: cameraAfterRightPan },
+          U16_inspectorCleared: "selected factory dismantled; inspector and highlight cleared",
+          U14_keyboardAndConfirm: { keyboardSingleAndAreaModes: true, enterConfirmedOneBelt: true, reducedMotionScreenshot },
+          U15_nonColorLabels: { text: accessibleReviewText, screenshot: reducedMotionScreenshot },
+          U12_touchPanPinchAndNativeMenu: { pan: cameraAfterTouchPan, pinchZoom: cameraAfterPinch.zoom },
+          U13_armedTouchConfirm: { screenshot: touchReviewScreenshot, count: 2 },
+          U17_snapshotRevalidation: { staleReviewBefore, staleReviewAfter, targetStillPresent: staleTarget, screenshot: staleReviewScreenshot },
+        },
+      }));
 
       await evaluate(`(() => {
         document.querySelector('button[aria-label="Resume simulation"]')?.click();
@@ -2790,6 +3505,26 @@ browserIt(
       if (productionBrowser) {
         // Real prebuilt browser, no Studio route or code rebuild: inject an
         // actual exported Studio JSON as a file-input change (not a sim shortcut).
+        await call("Emulation.setTouchEmulationEnabled", { enabled: false });
+        await call("Emulation.setDeviceMetricsOverride", {
+          width: 1440,
+          height: 1000,
+          deviceScaleFactor: 1,
+          mobile: false,
+        });
+        await waitForExpression(`window.innerWidth === 1440 && window.innerHeight === 1000`);
+        // Switching back from the mobile touch viewport updates Chrome's
+        // window metrics before Phaser's resize pass has necessarily reached
+        // its canvas. Wait for the rendered surface to match the viewport.
+        await waitForExpression(`(() => {
+          const game = document.querySelector('.game')?.getBoundingClientRect();
+          const host = document.querySelector('.world-host')?.getBoundingClientRect();
+          const canvas = document.querySelector('canvas')?.getBoundingClientRect();
+          return game && host && canvas &&
+            game.width === window.innerWidth && game.height === window.innerHeight &&
+            host.width === window.innerWidth && host.height === window.innerHeight &&
+            canvas.width === window.innerWidth && canvas.height === window.innerHeight;
+        })()`);
         const payload = runtimePackBrowserFixture();
         await evaluate<boolean>(`(() => {
           const menu = document.querySelector('button[aria-label="Game menu"]');
@@ -2818,6 +3553,54 @@ browserIt(
         await waitForExpression(
           `localStorage.getItem("unknown-yield-active-pack-v1") !== null`,
         );
+        await waitForExpression(`document.querySelector("canvas") !== null`);
+        await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Close field brief"]')?.click(); return true; })()`);
+        await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Center camera"]')?.click(); return true; })()`);
+        await sleep(150);
+        const importedPlacementView = await evaluate<{ x: number; y: number; target: string | null }>(`(() => {
+          const canvas = document.querySelector("canvas"), rect = canvas.getBoundingClientRect();
+          const projected = window.__UNKNOWN_YIELD_PROJECT_WORLD__((27.5) * 32, (29.5) * 24);
+          const x = rect.left + projected.x * rect.width, y = rect.top + projected.y * rect.height;
+          return {x,y,target:document.elementFromPoint(x,y)?.tagName ?? null, rect:{width:rect.width,height:rect.height}, camera:window.__UNKNOWN_YIELD_CAMERA__?.() ?? null};
+        })()`);
+        console.log("PHASE20_P5_RUNTIME_DEFINITION_VIEW " + JSON.stringify(importedPlacementView));
+        expect(importedPlacementView.target).toBe("CANVAS");
+        await clickBuildTool("factory", "Factory");
+        await dragWorldArea({ x: 26, y: 27 }, { x: 33, y: 32 });
+        await sleep(150);
+        const runtimeFactoryPlacement = await evaluate<string>(`[...document.querySelectorAll('[role="status"]')].map((element) => element.textContent).join(" | ")`);
+        expect(runtimeFactoryPlacement).toContain("Factory built");
+        await evaluate<boolean>(`(() => { [...document.querySelectorAll('nav[aria-label="Build tools"] button')].find((button) => button.getAttribute("aria-label") === "Inspect")?.click(); return true; })()`);
+        await clickCell(26, 27);
+        await waitForExpression(`document.querySelector('.context-panel') !== null`);
+        await openSelectedFactory();
+        await clickBuildTool("processing", "Crusher");
+        await clickCell(31, 29);
+        await sleep(150);
+        const crusherPlacement = await evaluate<string>(`[...document.querySelectorAll('[role="status"]')].map((element) => element.textContent).join(" | ")`);
+        console.log("PHASE20_P5_RUNTIME_CRUSHER_PLACEMENT " + JSON.stringify(crusherPlacement));
+        expect(crusherPlacement).toContain("Machine placed");
+        await clickBuildTool("processing", "Polisher");
+        await clickCell(27, 29);
+        await sleep(150);
+        const polisherPlacement = await evaluate<string>(`[...document.querySelectorAll('[role="status"]')].map((element) => element.textContent).join(" | ")`);
+        console.log("PHASE20_P5_RUNTIME_POLISHER_PLACEMENT " + JSON.stringify(polisherPlacement));
+        expect(polisherPlacement).toContain("Machine placed");
+        await evaluate<boolean>(`(() => { [...document.querySelectorAll('nav[aria-label="Build tools"] button')].find((button) => button.getAttribute("aria-label") === "Dismantle")?.click(); return true; })()`);
+        await chooseMode("area-exact");
+        await dragWorldArea({ x: 27, y: 29 }, { x: 32, y: 30 });
+        await waitForExpression(`document.querySelector('[data-testid="dismantle-review"]') !== null`);
+        const runtimeExactCounts = await reviewCounts();
+        expect(runtimeExactCounts["Will be removed"]).toBe(1);
+        expect(runtimeExactCounts["Ignored · outside filter or protected"]).toBe(2);
+        const runtimeExactScreenshot = await captureP5Screenshot("p5-runtime-definition-exact-review.png");
+        await cancelDismantleReview(true);
+        console.log("PHASE20_P5_RUNTIME_DEFINITION_BROWSER " + JSON.stringify({
+          importedDefinition: "polisher",
+          exactFilter: runtimeExactCounts,
+          importedToolUnlocked: true,
+          screenshot: runtimeExactScreenshot,
+        }));
         const postActivation = await evaluate<unknown>(`(() => ({
           menuButton: Boolean(document.querySelector('button[aria-label="Game menu"]')),
           hasCanvas: Boolean(document.querySelector('canvas')),
@@ -2941,5 +3724,5 @@ browserIt(
       stop(server);
     }
   },
-  120000,
+  300000,
 );

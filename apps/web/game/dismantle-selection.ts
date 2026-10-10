@@ -37,6 +37,10 @@ export type DismantleSelectionRequest = {
   from?: Point;
   to?: Point;
   anchorId?: string | null;
+  /** Exact type captured at pointer-down; prevents an anchor ID being reused. */
+  anchorExactType?: string | null;
+  /** Semantic family captured at pointer-down; prevents an anchor ID being reused. */
+  anchorFamily?: DismantleFamily | null;
   openFactoryIds?: readonly string[];
 };
 
@@ -496,7 +500,24 @@ export function selectDismantleCandidates(
         ignored: [{ id: anchorId, reason: "hidden-in-closed-factory" }],
       };
     anchor = classified.entity;
-    filterToken = mode === "area-exact" ? anchor.exactType : anchor.family;
+    const frozenToken = mode === "area-exact"
+      ? request.anchorExactType
+      : request.anchorFamily;
+    if (frozenToken !== undefined && frozenToken !== null) {
+      const currentToken = mode === "area-exact" ? anchor.exactType : anchor.family;
+      if (currentToken !== frozenToken)
+        return {
+          mode,
+          area,
+          anchor: null,
+          invalidAnchorReason: "anchor-changed",
+          candidates: [],
+          ignored: [{ id: anchor.id, reason: "anchor-changed" }],
+        };
+      filterToken = frozenToken;
+    } else {
+      filterToken = mode === "area-exact" ? anchor.exactType : anchor.family;
+    }
   }
 
   const candidates: DismantleEntity[] = [];
@@ -569,4 +590,69 @@ export function selectDismantleCandidates(
     candidates,
     ignored: ignoredList,
   };
+}
+
+/** Geometry for previewing ignored IDs without duplicating the taxonomy. */
+export function dismantleEntityGeometry(
+  snapshot: PlayerSnapshot,
+  id: string,
+): DismantleEntity | { id: string; footprint: Rect; routeEndpoints?: readonly [Point, Point] } | null {
+  const classification = publicClassification(id, internalClassifications(snapshot).get(id));
+  if (classification.kind === "player-built") return classification.entity;
+  const protectedEntity = protectedEntities(snapshot).find((entry) => entry.id === id);
+  return protectedEntity
+    ? { id, footprint: { ...protectedEntity.footprint } }
+    : null;
+}
+
+/** Relevant persisted object state for invalidating an open preflight. */
+export function dismantleEntityStateFingerprint(
+  snapshot: PlayerSnapshot,
+  ids: readonly string[],
+): string {
+  const collections: readonly [string, readonly { id: string }[]][] = [
+    ["belts", snapshot.belts],
+    ["pipes", snapshot.pipes],
+    ["pressureLines", snapshot.pressureLines],
+    ["undergroundSolids", snapshot.undergroundSolids],
+    ["undergroundLiquids", snapshot.undergroundLiquids],
+    ["elevatedSolids", snapshot.elevatedSolids],
+    ["machines", snapshot.machines],
+    ["storages", snapshot.storages],
+    ["tanks", snapshot.tanks],
+    ["pressureVessels", snapshot.pressureVessels],
+    ["pumps", snapshot.pumps],
+    ["compressors", snapshot.compressors],
+    ["factories", snapshot.factories],
+  ];
+  const byId = new Map<string, unknown>();
+  for (const id of ids) {
+    for (const [collection, entries] of collections) {
+      const entity = entries.find((entry) => entry.id === id);
+      if (entity) {
+        byId.set(id, [collection, entity]);
+        const ownerId = "factoryId" in entity && typeof entity.factoryId === "string"
+          ? entity.factoryId
+          : null;
+        if (ownerId) {
+          const owner = snapshot.factories.find((factory) => factory.id === ownerId);
+          if (owner) byId.set(ownerId, ["factories", owner]);
+        }
+        break;
+      }
+      for (const factory of snapshot.factories) {
+        const port = factory.ports.find((entry) => entry.id === id);
+        if (port) {
+          byId.set(id, ["factory-port", port, factory]);
+          byId.set(factory.id, ["factories", factory]);
+          break;
+        }
+      }
+      if (byId.has(id)) break;
+    }
+    if (id === "terminal") byId.set(id, ["terminal", snapshot.map.terminal]);
+    const protectedEntity = protectedEntities(snapshot).find((entity) => entity.id === id);
+    if (protectedEntity) byId.set(id, ["protected", protectedEntity]);
+  }
+  return JSON.stringify([...byId].sort(([a], [b]) => compareId(a, b)));
 }
