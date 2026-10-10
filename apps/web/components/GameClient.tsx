@@ -3452,6 +3452,24 @@ function GameClientInner() {
                 ? t("ui.dismantle.drag")
                 : toolDescription(mode.tool)}
             </span>
+            {mode.tool === "belt" && (
+              <button
+                type="button"
+                data-testid="belt-corner-order"
+                aria-label={t("ui.build.corner.label")}
+                aria-pressed={mode.beltCornerOrder === "vertical-first"}
+                onClick={() => setMode((m) => ({
+                  ...m,
+                  beltCornerOrder: m.beltCornerOrder === "horizontal-first"
+                    ? "vertical-first"
+                    : "horizontal-first",
+                }))}
+              >
+                {t(mode.beltCornerOrder === "horizontal-first"
+                  ? "ui.build.corner.horizontal"
+                  : "ui.build.corner.vertical")}
+              </button>
+            )}
             {mode.tool !== "demolish" && <button
               aria-label="Rotate build direction"
               onClick={() => setMode((m) => ({ ...m, direction: (m.direction + 1) % 4 }))}
