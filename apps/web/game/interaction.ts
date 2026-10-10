@@ -423,6 +423,7 @@ export type WorldMode = {
   selected: string | null;
   openFactories: string[];
   dismantleMode: DismantleSelectionMode;
+  beltCornerOrder: BeltCornerOrder;
   touchAreaArmed: boolean;
   dismantleReview: DismantleAreaReview | null;
 };
@@ -433,6 +434,7 @@ export const DEFAULT_MODE: WorldMode = {
   selected: null,
   openFactories: [],
   dismantleMode: "single",
+  beltCornerOrder: "horizontal-first",
   touchAreaArmed: false,
   dismantleReview: null,
 };
