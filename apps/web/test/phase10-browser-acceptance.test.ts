@@ -1260,6 +1260,104 @@ browserIt(
           }),
       );
 
+      // P6: exercise actual production canvas sampling and compact keyboard-area
+      // review before the next fixture replaces this site. No source inventory,
+      // physical contents or construction truth may be cloned by pipette.
+      const sampleId = beltGapSave.belts.find((belt) => belt.x === 15)!.id;
+      const sampleStateBefore = await evaluate<string>(
+        `window.__UNKNOWN_YIELD_SIMULATION__?.dismantleFingerprint([${JSON.stringify(sampleId)}])`,
+      );
+      await pressKey("Escape", "Escape", 27);
+      await clickCell(15, 18);
+      await waitForExpression(
+        `document.querySelector('[data-testid="sample-selected-tool"]')?.disabled === false`,
+      );
+      await evaluate(`document.querySelector('[data-testid="sample-selected-tool"]')?.click()`);
+      await waitForExpression(
+        `document.querySelector(".build-hint strong")?.textContent === "Belt"`,
+      );
+      await clickBuildTool("processing", "Crusher");
+      await waitForExpression(
+        `document.querySelector(".build-hint strong")?.textContent === "Crusher"`,
+      );
+      await call("Input.dispatchMouseEvent", {
+        type: "mousePressed",
+        ...beltRoutePixels.start,
+        button: "left",
+        buttons: 1,
+        modifiers: 1,
+        clickCount: 1,
+      });
+      await call("Input.dispatchMouseEvent", {
+        type: "mouseReleased",
+        ...beltRoutePixels.start,
+        button: "left",
+        buttons: 0,
+        modifiers: 1,
+        clickCount: 1,
+      });
+      await waitForExpression(
+        `document.querySelector(".build-hint strong")?.textContent === "Belt"`,
+      );
+      const sampleStateAfter = await evaluate<string>(
+        `window.__UNKNOWN_YIELD_SIMULATION__?.dismantleFingerprint([${JSON.stringify(sampleId)}])`,
+      );
+      expect(sampleStateAfter).toBe(sampleStateBefore);
+      console.log("PHASE20_P6_SAMPLE_BROWSER_EVIDENCE " + JSON.stringify({
+        selectedButton: true, altClick: true, sampledTool: "belt",
+        unchangedStructureFingerprint: sampleStateBefore === sampleStateAfter,
+      }));
+
+      await pressKey("Escape", "Escape", 27);
+      await clickCell(15, 18);
+      await pressKey("x", "KeyX", 88);
+      await waitForExpression(
+        `document.querySelector('[data-testid="dismantle-mode-area-all"]') !== null`,
+      );
+      await evaluate(`(() => {
+        document.querySelector('[data-testid="dismantle-mode-area-all"]')?.click();
+        document.querySelector('[data-testid="keyboard-area-toggle"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector('[data-testid="keyboard-area-form"]') !== null`,
+      );
+      await evaluate(`(() => {
+        const form = document.querySelector('[data-testid="keyboard-area-form"]');
+        [...form.querySelectorAll('button')].find(b =>
+          b.textContent?.includes('Use selected bounds'))?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `(() => {
+          const fields = [...document.querySelectorAll('[data-testid="keyboard-area-form"] input')];
+          return fields.length === 4 &&
+            fields.map(field => Number(field.value)).join(',') === '15,18,15,18';
+        })()`,
+      );
+      await evaluate(`(() => {
+        const form = document.querySelector('[data-testid="keyboard-area-form"]');
+        form.querySelector('button[type="submit"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(
+        `document.querySelector('[data-testid="dismantle-review"]') !== null`,
+      );
+      expect(await evaluate<string>(
+        `document.querySelector('[data-testid="dismantle-review"]')?.textContent ?? ""`,
+      )).toContain("Review dismantling");
+      await pressKey("Escape", "Escape", 27);
+      await waitForExpression(
+        `document.querySelector('[data-testid="dismantle-review"]') === null`,
+      );
+      expect(await evaluate<string>(
+        `window.__UNKNOWN_YIELD_SIMULATION__?.dismantleFingerprint([${JSON.stringify(sampleId)}])`,
+      )).toBe(sampleStateBefore);
+      console.log("PHASE20_P6_KEYBOARD_AREA_BROWSER_EVIDENCE " + JSON.stringify({
+        areaFromSelectedBounds: "15,18→15,18",
+        realWorldPreflight: true, cancelledWithoutMutation: true,
+      }));
+
       const p2Seed = phase20FlowBrowserWorld();
       await evaluate(
         `localStorage.setItem("industrial-site-save-v15", ${JSON.stringify(
