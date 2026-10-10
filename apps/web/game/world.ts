@@ -425,7 +425,7 @@ export function createWorld(
           actions.cancelAreaReview();
         this.hover = this.cell(p);
         this.anchor = this.hover;
-        this.beltCornerOrder = "horizontal-first";
+        this.beltCornerOrder = mode.beltCornerOrder;
         this.captureAreaAnchor(this.anchor);
       });
       this.input.on("pointerup", (p: Phaser.Input.Pointer) => {
