@@ -58,6 +58,7 @@ import {
   type GamePreferences,
 } from "../game/preferences";
 import GameHost from "./GameHost";
+import { sampleBuildTool } from "../game/tool-sampling";
 import { previewDismantleArea, sameDismantleAreaReview } from "../game/dismantle-review";
 import type { DismantleSelectionMode, DismantleSelectionRequest } from "../game/dismantle-selection";
 function Glyph({ type, size = 20 }: { type: string; size?: number }) {
@@ -283,6 +284,26 @@ function GameClientInner() {
       dismantleReview: null,
     }));
     setPanel(keepSelection ? "selection" : null);
+  };
+  const sample = (id: string | null) => {
+    const picked = sampleBuildTool(session.snapshot(), id);
+    if (!picked) {
+      setNotice({ ok: false, message: t("ui.build.sample.unavailable") });
+      return;
+    }
+    const unlock = unlockFor(picked.tool);
+    if (unlock && !unlock.unlocked) {
+      setNotice({ ok: false, message: t(unlock.hintKey) });
+      return;
+    }
+    setTool(picked.tool);
+    setMode((m) => ({
+      ...m,
+      ...(picked.direction === undefined ? {} : { direction: picked.direction }),
+      ...(picked.containmentProfileId === undefined
+        ? {} : { containmentProfileId: picked.containmentProfileId }),
+    }));
+    setNotice({ ok: true, message: t("ui.build.sample.selected") });
   };
   const select = (id: string | null) => {
     if (id === "terminal")
@@ -896,6 +917,7 @@ function GameClientInner() {
           reviewArea: openAreaReview,
           cancelAreaReview,
           disarmTouchArea,
+          sample,
         }}
       /> : <div className="world-host" role="status">Validating selected content pack…</div>}
       <header className="hud-top">
@@ -3369,6 +3391,17 @@ function GameClientInner() {
             onPointerDown={() => setOpenToolGroup(null)}
           />
         )}
+        <button
+          type="button"
+          className="build-sample-button"
+          data-testid="sample-selected-tool"
+          disabled={!mode.selected || !sampleBuildTool(snapshot, mode.selected)}
+          onClick={() => sample(mode.selected)}
+          aria-label={t("ui.build.sample.selected-label")}
+          title={t("ui.build.sample.hint")}
+        >
+          {t("ui.build.sample.button")}
+        </button>
         <nav className="build-bar" aria-label="Build tools">
           {BUILD_PALETTE.map((entry) => {
             if (entry.kind === "tool") {
