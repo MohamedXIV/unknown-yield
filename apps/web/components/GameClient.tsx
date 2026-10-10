@@ -1150,6 +1150,18 @@ function GameClientInner() {
             )}
             {panel === "selection" && (
               <>
+                {mode.selected && sampleBuildTool(snapshot, mode.selected) && (
+                  <button
+                    type="button"
+                    className="build-sample-button"
+                    data-testid="sample-selected-tool"
+                    onClick={() => sample(mode.selected)}
+                    aria-label={t("ui.build.sample.selected-label")}
+                    title={t("ui.build.sample.hint")}
+                  >
+                    {t("ui.build.sample.button")}
+                  </button>
+                )}
                 {selectedDefinition && (
                   <>
                     <p>
@@ -3491,17 +3503,6 @@ function GameClientInner() {
             onPointerDown={() => setOpenToolGroup(null)}
           />
         )}
-        <button
-          type="button"
-          className="build-sample-button"
-          data-testid="sample-selected-tool"
-          disabled={!mode.selected || !sampleBuildTool(snapshot, mode.selected)}
-          onClick={() => sample(mode.selected)}
-          aria-label={t("ui.build.sample.selected-label")}
-          title={t("ui.build.sample.hint")}
-        >
-          {t("ui.build.sample.button")}
-        </button>
         <nav className="build-bar" aria-label="Build tools">
           {BUILD_PALETTE.map((entry) => {
             if (entry.kind === "tool") {
