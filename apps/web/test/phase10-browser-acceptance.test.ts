@@ -1314,11 +1314,11 @@ browserIt(
       await waitForExpression(
         `document.querySelector('[data-testid="dismantle-mode-area-all"]') !== null`,
       );
-      await evaluate(`(() => {
-        document.querySelector('[data-testid="dismantle-mode-area-all"]')?.click();
-        document.querySelector('[data-testid="keyboard-area-toggle"]')?.click();
-        return true;
-      })()`);
+      await evaluate(`document.querySelector('[data-testid="dismantle-mode-area-all"]')?.click()`);
+      await waitForExpression(
+        `document.querySelector('[data-testid="keyboard-area-toggle"]') !== null`,
+      );
+      await evaluate(`document.querySelector('[data-testid="keyboard-area-toggle"]')?.click()`);
       await waitForExpression(
         `document.querySelector('[data-testid="keyboard-area-form"]') !== null`,
       );
