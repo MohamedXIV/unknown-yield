@@ -58,7 +58,9 @@ import {
   type GamePreferences,
 } from "../game/preferences";
 import GameHost from "./GameHost";
+import { sampleBuildTool } from "../game/tool-sampling";
 import { previewDismantleArea, sameDismantleAreaReview } from "../game/dismantle-review";
+import { classifyDismantleEntity, dismantleEntityGeometry } from "../game/dismantle-selection";
 import type { DismantleSelectionMode, DismantleSelectionRequest } from "../game/dismantle-selection";
 function Glyph({ type, size = 20 }: { type: string; size?: number }) {
   const paths: Record<string, string> = {
@@ -183,7 +185,9 @@ function GameClientInner() {
     ),
     [activePack, setActivePack] = useState<RuntimePack | null>(null),
     [pendingPack, setPendingPack] = useState<RuntimePack | null>(null),
-    [packReady, setPackReady] = useState(false);
+    [packReady, setPackReady] = useState(false),
+    [keyboardAreaOpen, setKeyboardAreaOpen] = useState(false),
+    [keyboardBounds, setKeyboardBounds] = useState({ fromX: 0, fromY: 0, toX: 0, toY: 0 });
   const cancelGroupHold = useRef<(() => void) | null>(null);
   const dismantleDialog = useRef<HTMLDivElement>(null);
   const suppressGroupClick = useRef<ToolGroupId | null>(null);
@@ -284,6 +288,26 @@ function GameClientInner() {
     }));
     setPanel(keepSelection ? "selection" : null);
   };
+  const sample = (id: string | null) => {
+    const picked = sampleBuildTool(session.snapshot(), id);
+    if (!picked) {
+      setNotice({ ok: false, message: t("ui.build.sample.unavailable") });
+      return;
+    }
+    const unlock = unlockFor(picked.tool);
+    if (unlock && !unlock.unlocked) {
+      setNotice({ ok: false, message: t(unlock.hintKey) });
+      return;
+    }
+    setTool(picked.tool);
+    setMode((m) => ({
+      ...m,
+      ...(picked.direction === undefined ? {} : { direction: picked.direction }),
+      ...(picked.containmentProfileId === undefined
+        ? {} : { containmentProfileId: picked.containmentProfileId }),
+    }));
+    setNotice({ ok: true, message: t("ui.build.sample.selected") });
+  };
   const select = (id: string | null) => {
     if (id === "terminal")
       setOnboarding((state) => ({ ...state, terminalOpened: true }));
@@ -324,6 +348,26 @@ function GameClientInner() {
     setMode((m) => ({ ...m, dismantleReview: null }));
   const disarmTouchArea = () =>
     setMode((m) => ({ ...m, touchAreaArmed: false }));
+  const selectedBounds = mode.selected
+    ? dismantleEntityGeometry(snapshot, mode.selected)?.footprint
+    : null;
+  const reviewKeyboardArea = () => {
+    const anchorId = mode.selected;
+    const classified = anchorId ? classifyDismantleEntity(session.snapshot(), anchorId) : null;
+    const anchor = classified?.kind === "player-built" ? classified.entity : null;
+    openAreaReview({
+      mode: mode.dismantleMode,
+      from: { x: keyboardBounds.fromX, y: keyboardBounds.fromY },
+      to: { x: keyboardBounds.toX, y: keyboardBounds.toY },
+      openFactoryIds: [...mode.openFactories],
+      ...(mode.dismantleMode === "area-all"
+        ? {}
+        : {
+            anchorId,
+            ...(anchor ? { anchorExactType: anchor.exactType, anchorFamily: anchor.family } : {}),
+          }),
+    });
+  };
   const chooseDismantleMode = (dismantleMode: DismantleSelectionMode) =>
     setMode((m) => ({
       ...m,
@@ -896,6 +940,7 @@ function GameClientInner() {
           reviewArea: openAreaReview,
           cancelAreaReview,
           disarmTouchArea,
+          sample,
         }}
       /> : <div className="world-host" role="status">Validating selected content pack…</div>}
       <header className="hud-top">
@@ -1105,6 +1150,18 @@ function GameClientInner() {
             )}
             {panel === "selection" && (
               <>
+                {mode.selected && sampleBuildTool(snapshot, mode.selected) && (
+                  <button
+                    type="button"
+                    className="build-sample-button"
+                    data-testid="sample-selected-tool"
+                    onClick={() => sample(mode.selected)}
+                    aria-label={t("ui.build.sample.selected-label")}
+                    title={t("ui.build.sample.hint")}
+                  >
+                    {t("ui.build.sample.button")}
+                  </button>
+                )}
                 {selectedDefinition && (
                   <>
                     <p>
@@ -3330,6 +3387,16 @@ function GameClientInner() {
             {mode.dismantleMode !== "single" && (
               <button
                 type="button"
+                data-testid="keyboard-area-toggle"
+                aria-expanded={keyboardAreaOpen}
+                onClick={() => setKeyboardAreaOpen((open) => !open)}
+              >
+                {t("ui.dismantle.keyboard.toggle")}
+              </button>
+            )}
+            {mode.dismantleMode !== "single" && (
+              <button
+                type="button"
                 className="touch-area-arm"
                 data-testid="dismantle-touch-arm"
                 aria-pressed={mode.touchAreaArmed}
@@ -3340,6 +3407,55 @@ function GameClientInner() {
             )}
           </section>
         )}
+        {mode.tool === "demolish" && mode.dismantleMode !== "single" && keyboardAreaOpen && (
+          <form
+            className="keyboard-area-form"
+            data-testid="keyboard-area-form"
+            aria-label={t("ui.dismantle.keyboard.label")}
+            onSubmit={(event) => {
+              event.preventDefault();
+              reviewKeyboardArea();
+            }}
+          >
+            {(["fromX", "fromY", "toX", "toY"] as const).map((name) => (
+              <label key={name}>
+                {t(`ui.dismantle.keyboard.${name.toLowerCase()}`)}
+                <input
+                  required
+                  type="number"
+                  step="1"
+                  min="0"
+                  max={name.endsWith("X") ? snapshot.map.width - 1 : snapshot.map.height - 1}
+                  value={keyboardBounds[name]}
+                  onChange={(event) => {
+                    const value = event.target.valueAsNumber;
+                    if (Number.isFinite(value))
+                      setKeyboardBounds((bounds) => ({
+                        ...bounds,
+                        [name]: Math.trunc(value),
+                      }));
+                  }}
+                />
+              </label>
+            ))}
+            <button
+              type="button"
+              disabled={!selectedBounds}
+              onClick={() => {
+                if (!selectedBounds) return;
+                setKeyboardBounds({
+                  fromX: selectedBounds.x,
+                  fromY: selectedBounds.y,
+                  toX: selectedBounds.x + selectedBounds.width - 1,
+                  toY: selectedBounds.y + selectedBounds.height - 1,
+                });
+              }}
+            >
+              {t("ui.dismantle.keyboard.use-selected")}
+            </button>
+            <button type="submit">{t("ui.dismantle.keyboard.review")}</button>
+          </form>
+        )}
         {mode.tool !== "select" && (
           <div className="build-hint">
             <strong>{toolName(mode.tool)}</strong>
@@ -3348,6 +3464,24 @@ function GameClientInner() {
                 ? t("ui.dismantle.drag")
                 : toolDescription(mode.tool)}
             </span>
+            {mode.tool === "belt" && (
+              <button
+                type="button"
+                data-testid="belt-corner-order"
+                aria-label={t("ui.build.corner.label")}
+                aria-pressed={mode.beltCornerOrder === "vertical-first"}
+                onClick={() => setMode((m) => ({
+                  ...m,
+                  beltCornerOrder: m.beltCornerOrder === "horizontal-first"
+                    ? "vertical-first"
+                    : "horizontal-first",
+                }))}
+              >
+                {t(mode.beltCornerOrder === "horizontal-first"
+                  ? "ui.build.corner.horizontal"
+                  : "ui.build.corner.vertical")}
+              </button>
+            )}
             {mode.tool !== "demolish" && <button
               aria-label="Rotate build direction"
               onClick={() => setMode((m) => ({ ...m, direction: (m.direction + 1) % 4 }))}
