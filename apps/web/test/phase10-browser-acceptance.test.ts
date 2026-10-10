@@ -1276,9 +1276,9 @@ browserIt(
       await waitForExpression(
         `document.querySelector(".build-hint strong")?.textContent === "Belt"`,
       );
-      await clickBuildTool("processing", "Crusher");
+      await clickBuildTool("processing", "Sinterer");
       await waitForExpression(
-        `document.querySelector(".build-hint strong")?.textContent === "Crusher"`,
+        `document.querySelector(".build-hint strong")?.textContent === "Sinterer"`,
       );
       await call("Input.dispatchMouseEvent", {
         type: "mousePressed",
