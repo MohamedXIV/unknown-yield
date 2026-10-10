@@ -3407,7 +3407,7 @@ function GameClientInner() {
           >
             {(["fromX", "fromY", "toX", "toY"] as const).map((name) => (
               <label key={name}>
-                {t(`ui.dismantle.keyboard.${name}`)}
+                {t(`ui.dismantle.keyboard.${name.toLowerCase()}`)}
                 <input
                   required
                   type="number"
