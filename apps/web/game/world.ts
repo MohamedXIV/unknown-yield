@@ -77,6 +77,7 @@ export type WorldActions = {
   reviewArea(request: DismantleSelectionRequest): void;
   cancelAreaReview(): void;
   disarmTouchArea(): void;
+  sample(id: string | null): void;
 };
 const X = ART_CAMERA.cellWidth,
   Y = ART_CAMERA.cellHeight;
@@ -462,7 +463,9 @@ export function createWorld(
         }
         if (p.button !== 0 || !this.anchor) return;
         const cell = this.cell(p);
-        if (mode.tool === "demolish" && mode.dismantleMode !== "single") {
+        if (p.event instanceof MouseEvent && p.event.altKey) {
+          actions.sample(hitTest(snapshot, cell, mode.openFactories));
+        } else if (mode.tool === "demolish" && mode.dismantleMode !== "single") {
           this.finishAreaSelection(this.anchor, cell);
         } else if (mode.tool === "select") {
           const id = hitTest(snapshot, cell, mode.openFactories);
