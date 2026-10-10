@@ -317,7 +317,7 @@ export function createWorld(
       this.tooltip = this.add
         .text(0, 0, "", {
           fontFamily: "Consolas,monospace",
-          fontSize: 11,
+          fontSize: 12,
           color: "#e2dfc3",
           backgroundColor: "#172018ed",
           padding: { x: 9, y: 6 },
@@ -2134,51 +2134,33 @@ export function createWorld(
               : "",
           ].filter(Boolean)
         : [];
-      const beltSummary = result.beltPlan
-        ? " · " +
-          translate("ui.belt.preview.counts", {
-            newCount: result.beltPlan.newCount,
-            reusedCount: result.beltPlan.reusedCount,
+      const pathPlan = result.beltPlan ?? result.linePlan;
+      const pathSummary = pathPlan
+        ? "\n" +
+          translate("ui.build.plan.counts", {
+            newCount: pathPlan.newCount,
+            reusedCount: pathPlan.reusedCount,
+            blockedCount: pathPlan.blockedCount,
           }) +
-          (result.beltPlan.shortfall > 0
-            ? " · " +
-              translate("ui.belt.preview.shortfall", {
-                count: result.beltPlan.shortfall,
-              })
-            : "") +
-          (beltNotices.length ? " · " + beltNotices.join(" · ") : "")
-        : "";
-      const lineSummary = result.linePlan
-        ? " · " +
-          translate("ui.line.preview.counts", {
-            newCount: result.linePlan.newCount,
-            reusedCount: result.linePlan.reusedCount,
-            blockedCount: result.linePlan.blockedCount,
-          }) +
-          " · " +
-          translate("ui.line.preview.cost", {
-            count: result.linePlan.cost,
+          "\n" +
+          translate("ui.build.plan.cost", {
+            count: pathPlan.cost,
             unit: this.buildUnit(),
           }) +
-          (result.linePlan.shortfall > 0
-            ? " · " +
-              translate("ui.line.preview.shortfall", {
-                count: result.linePlan.shortfall,
-              })
+          (pathPlan.shortfall > 0
+            ? "\n" + translate("ui.build.plan.shortfall", { count: pathPlan.shortfall })
             : "") +
-          (result.linePlan.blockedCount > 0 && result.linePlan.error
-            ? " · " +
-              translate("ui.line.preview.blocked", {
-                reason: result.linePlan.error,
-              })
-            : "")
+          (pathPlan.blockedCount > 0 && pathPlan.error
+            ? "\n" + translate("ui.build.plan.blocked", { reason: pathPlan.error })
+            : "") +
+          (beltNotices.length ? "\n" + beltNotices.join(" · ") : "")
         : "";
       const cornerChoice =
         command.type === "placeBelts" &&
         this.anchor !== null &&
         this.anchor.x !== this.hover.x &&
         this.anchor.y !== this.hover.y
-          ? " · " +
+          ? "\n" +
             translate(
               this.beltCornerOrder === "horizontal-first"
                 ? "ui.belt.preview.corner.horizontal-first"
@@ -2196,8 +2178,7 @@ export function createWorld(
               ? translate(result.messageKey)
               : result.message) +
             cornerChoice +
-            beltSummary +
-            lineSummary +
+            pathSummary +
             (!result.linePlan && result.cost
               ? " · " + result.cost + " " + this.buildUnit()
               : ""),
@@ -2205,7 +2186,7 @@ export function createWorld(
         .setColor(result.ok ? "#d3e4ba" : "#f0ba9a");
       const tooltipX = (this.hover.x + 1) * X,
         tooltipY = (this.hover.y + 1) * Y + 12;
-      if (result.linePlan) {
+      if (pathPlan) {
         const camera = this.cameras.main,
           view = camera.worldView,
           margin = 8 / camera.zoom;
