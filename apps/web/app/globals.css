@@ -813,6 +813,29 @@ a {
   pointer-events: none;
   z-index: 7;
 }
+.build-sample-button {
+  position: relative;
+  z-index: 2;
+  align-self: center;
+  margin-bottom: 6px;
+  padding: 7px 13px;
+  min-height: 34px;
+  background: #26342a;
+  color: #e9e2bf;
+  border: 1px solid #988e60;
+  border-radius: 4px;
+  font: 11px var(--mono);
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+.build-sample-button:focus-visible {
+  outline: 2px solid #ebcf87;
+  outline-offset: 2px;
+}
+.build-sample-button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
 .dismantle-modes {
   position: relative;
   z-index: 2;
