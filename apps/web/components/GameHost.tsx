@@ -51,6 +51,7 @@ export default function GameHost({
           reviewArea: (request) => latest.current.actions.reviewArea(request),
           cancelAreaReview: () => latest.current.actions.cancelAreaReview(),
           disarmTouchArea: () => latest.current.actions.disarmTouchArea(),
+          sample: (id) => latest.current.actions.sample(id),
         };
         const world = createWorld(
           element.current,
