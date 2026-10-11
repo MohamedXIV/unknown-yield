@@ -1,6 +1,6 @@
 # Phase 20 P7 — Integrated Acceptance & Exit Review
 
-**Status:** Technical acceptance evidence is ready for independent review. Issue #269 and parent #261 remain open pending acceptance. This review does not authorize a merge or deployment.
+**Status:** **Phase 20 technical exit ACCEPTED** on 2026-10-11. [PR #290](https://github.com/MohamedXIV/unknown-yield/pull/290) passed independent GitHub review and was squash-merged as `831492a88d4d1a1ca777c1a94319c358bf57bc83`. Issue #269 and epic #261 are closed after verification. No deployment was authorized or forced.
 
 **Source baseline:** Live `main` at `1c4cd051f538ca3a7577d2bb416f555a9780f29c` when the P7 branch was created. P0–P6 were already merged at that head.
 
@@ -19,6 +19,8 @@ All requested local checks passed on the P7 working tree:
 | Production-browser acceptance | `CI=1 UNKNOWN_YIELD_BROWSER_ACCEPTANCE=production npx vitest run apps/web/test/phase10-browser-acceptance.test.ts --reporter=verbose` | 2 tests passed in 291.45 seconds |
 
 The browser used the built static export and Chromium 151 on Linux. Desktop coverage ran at 1440×1000, DPR 1. Touch coverage used Chrome DevTools emulation at 390×844, DPR 2. The browser test completed without runtime errors.
+
+**Independent exact-head gate:** [GitHub Actions #38138962657](https://github.com/MohamedXIV/unknown-yield/actions/runs/38138962657) completed successfully on PR head `0e2dc89953884baa5cb1cee8b2725120305c5ba0`, with 124 test files/650 passed/3 skipped, typecheck, lint, normal production build, and two production-browser acceptance tests. CI browser evidence recorded an integrated resume of tick 7→9, zero ledger mismatches, and zero runtime errors. The 10→12 observation below is the separate reported local run. A dedicated browser assertion for **Escape while the destructive confirmation dialog is open** was not included; both dialog and world input handlers have a source-level cancellation guard, but that keypress is not claimed as independently browser-proven.
 
 ## Integrated expedition evidence
 
@@ -59,4 +61,4 @@ The P7 build, save/reload, resumed simulation, and P5 demolition sequence use on
 
 ## Exit decision
 
-The requested deterministic checks and integrated production-browser acceptance pass. P7 is submitted for independent review in one focused PR for #269. Keep #269 and #261 open until the review is accepted; stop before merge.
+**PASS — technical Phase 20 exit accepted.** The independent PR review, exact-head CI checks, integrated browser evidence, save/knowledge/conservation checks and merge are complete. P7 #269 and epic #261 are closed. The explicitly deferred physical-device comfort, cross-browser/accessibility review, GPU profiling, and historical 32-factory performance budget remain deferred/unmet; completion of this phase does **not** certify those targets. Vercel deployment remains separate.
