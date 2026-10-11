@@ -344,6 +344,32 @@ function phase20DismantleBrowserWorld() {
     ],
     direction: 0,
   });
+  const logisticsFactoryId = build(sim, {
+    type: "placeFactory",
+    x: 19,
+    y: 17,
+    width: 6,
+    height: 6,
+  });
+  build(sim, {
+    type: "placePort",
+    factoryId: logisticsFactoryId,
+    x: 19,
+    y: 20,
+    direction: 0,
+  });
+  const integratedBeltIds = [
+    build(sim, { type: "placeBelts", points: [{ x: 15, y: 18 }], direction: 1 }),
+    build(sim, { type: "placeBelts", points: [{ x: 15, y: 20 }], direction: 0 }),
+    build(sim, { type: "placeBelts", points: [{ x: 17, y: 20 }], direction: 0 }),
+  ];
+  const emptyFactoryId = build(sim, {
+    type: "placeFactory",
+    x: 38,
+    y: 19,
+    width: 6,
+    height: 6,
+  });
   const emptyBeltIds: string[] = [];
   for (const [x, y] of [[30, 30], [31, 30], [36, 30], [37, 30], [38, 30], [39, 30], [46, 30], [47, 30], [48, 30], [49, 30]] as const)
     emptyBeltIds.push(build(sim, { type: "placeBelts", points: [{ x, y }], direction: 0 }));
@@ -420,32 +446,76 @@ function phase20DismantleBrowserWorld() {
   });
   expect(sim.command({ type: "setEnabled", machineId: childId, enabled: false }).ok).toBe(true);
 
+  const lineProfileId = "lined",
+    pipePoints = Array.from({ length: 5 }, (_, index) => ({
+      x: 30 + index,
+      y: 16,
+      inlet: 2,
+      outlet: 0,
+    })),
+    pressurePoints = Array.from({ length: 5 }, (_, index) => ({
+      x: 30 + index,
+      y: 18,
+      inlet: 2,
+      outlet: 0,
+    }));
+  build(sim, {
+    type: "placePipes",
+    containmentProfileId: lineProfileId,
+    points: pipePoints,
+  });
+  build(sim, { type: "placePressureLines", points: pressurePoints });
+  for (const x of [31, 33]) {
+    const pipeId = sim.serialize().pipes[`${x},16`].id,
+      pressureLineId = sim.serialize().pressureLines[`${x},18`].id;
+    expect(sim.command({ type: "dismantle", id: pipeId }).ok).toBe(true);
+    expect(sim.command({ type: "dismantle", id: pressureLineId }).ok).toBe(true);
+  }
+
   const loaded = sim.serialize();
-  const gasKnowledge = fixture.reactions.find(
-    (reaction) => reaction.id === "vaporize-liquid-0",
-  )!;
-  loaded.knowledge.push(gasKnowledge.id);
-  loaded.evidence[
-    experimentEvidenceKey(
-      gasKnowledge.operation,
-      gasKnowledge.input,
-      gasKnowledge.processConditionId ?? null,
-    )
-  ] = {
-    operationId: gasKnowledge.operation,
-    inputId: gasKnowledge.input,
-    processConditionId: gasKnowledge.processConditionId ?? null,
-    state: "confirmed",
-  };
+  const liquidKnowledge = fixture.reactions.find(
+      (reaction) => reaction.id === "liquefy-raw",
+    )!,
+    gasKnowledge = fixture.reactions.find(
+      (reaction) => reaction.id === "vaporize-liquid-0",
+    )!;
+  for (const reaction of [liquidKnowledge, gasKnowledge]) {
+    if (!loaded.knowledge.includes(reaction.id)) loaded.knowledge.push(reaction.id);
+    loaded.evidence[
+      experimentEvidenceKey(
+        reaction.operation,
+        reaction.input,
+        reaction.processConditionId ?? null,
+      )
+    ] = {
+      operationId: reaction.operation,
+      inputId: reaction.input,
+      processConditionId: reaction.processConditionId ?? null,
+      state: "confirmed",
+    };
+  }
+  loaded.pipes["32,16"].materialId = "liquid-0";
+  loaded.pipes["32,16"].quantity = 1;
+  loaded.pressureLines["32,18"].materialId = "gas-0";
+  loaded.pressureLines["32,18"].quantity = 1;
   loaded.pressureLines["32,30"].materialId = "gas-0";
   loaded.pressureLines["32,30"].quantity = 1;
-  loaded.flows.produced["gas-0"] = 1;
+  loaded.flows.produced["liquid-0"] =
+    (loaded.flows.produced["liquid-0"] ?? 0) + 1;
+  loaded.flows.produced["gas-0"] =
+    (loaded.flows.produced["gas-0"] ?? 0) + 2;
+  loaded.stock.plates -= 1;
+  loaded.belts["39,30"].cargo = "plates";
   initializeKnownMarkets(fixture, loaded);
   const restored = sim.load(loaded);
   expect(restored.ok, restored.message).toBe(true);
   return {
     save: sim.serialize(),
     emptyBeltIds,
+    integratedBeltIds,
+    logisticsFactoryId,
+    emptyFactoryId,
+    lineProfileId,
     familyFactoryId,
     exactFactoryId,
     factoryId,
@@ -494,16 +564,32 @@ function chromeExecutable(): string | null {
   );
 }
 
-it("builds a save-valid, ledger-balanced Phase 20 P5 browser world", () => {
+it("builds a save-valid, ledger-balanced Phase 20 P7 expedition fixture", () => {
   const world = phase20DismantleBrowserWorld();
-  const restored = new Simulation(fixture).load(world.save);
+  const restoredSimulation = new Simulation(fixture),
+    restored = restoredSimulation.load(world.save);
   expect(restored.ok, restored.message).toBe(true);
   expect(auditLedger(fixture, world.save).mismatches).toEqual([]);
+  expect(world.save.belts["39,30"].cargo).toBe("plates");
+  expect(world.save.pipes["32,16"]).toMatchObject({
+    materialId: "liquid-0",
+    quantity: 1,
+    containmentProfileId: "lined",
+  });
+  expect(world.save.pressureLines["32,18"]).toMatchObject({
+    materialId: "gas-0",
+    quantity: 1,
+  });
   expect(world.save.pressureLines["32,30"]).toMatchObject({
     materialId: "gas-0",
     quantity: 1,
   });
   expect(world.save.machines[world.childId]?.enabled).toBe(false);
+  expect(restoredSimulation.snapshot().observations.map(({ textKey }) => textKey)).not.toContain(
+    "reaction.precipitate-liquid-0.observation",
+  );
+  expect(world.save.knowledge).not.toContain("precipitate-liquid-0");
+  expect(world.save.knowledge).not.toContain("collect-gas-0");
 });
 
 async function waitForHttp(url: string, timeoutMs = 60000): Promise<void> {
@@ -1897,6 +1983,7 @@ browserIt(
       );
 
       const p5Seed = phase20DismantleBrowserWorld();
+      const p7SeedWorldBytes = JSON.stringify(p5Seed.save);
       await evaluate(
         `localStorage.setItem("industrial-site-save-v15", ${JSON.stringify(
           JSON.stringify(p5Seed.save),
@@ -1926,6 +2013,292 @@ browserIt(
         await evaluate(`document.querySelector('button[aria-label="Pause simulation"]')?.click()`);
       await waitForExpression(`document.querySelector(".paused-label") !== null`);
 
+      // P7 keeps the full construction, reuse, reload, and demolition journey
+      // inside this one saved expedition. Game Configuration is migrated
+      // independently through the production settings UI.
+      const p7PreferenceMemory = {
+        "gas-logistics": "pressure-line",
+        "liquid-logistics": "pipe",
+        processing: "sinterer",
+        "solid-logistics": "belt",
+        thermal: "furnace",
+      };
+      await evaluate(`localStorage.setItem("unknown-yield-game-preferences", ${JSON.stringify(JSON.stringify({
+        version: 1,
+        buildPalette: {
+          promoteLastUsed: true,
+          lastUsedByGroup: p7PreferenceMemory,
+        },
+      }))})`);
+      await call("Page.reload", { ignoreCache: true });
+      await waitForExpression(
+        `document.readyState === "complete" && !!document.querySelector("canvas") && !!document.querySelector('nav[aria-label="Build tools"]')`,
+      );
+      await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Game menu"]')?.click(); return true; })()`);
+      await waitForExpression(
+        `[...document.querySelectorAll("button")].some((button) => button.textContent?.includes("Game settings & controls"))`,
+      );
+      await evaluate<boolean>(`(() => { [...document.querySelectorAll("button")].find((button) => button.textContent?.includes("Game settings & controls"))?.click(); return true; })()`);
+      await waitForExpression(`document.body.textContent?.includes("Configuration version 2.") === true`);
+      const migratedPreferencesBeforeCommit = await evaluate<{ checked: boolean; version: number; memory: Record<string, string> }>(`(() => {
+        const saved = JSON.parse(localStorage.getItem("unknown-yield-game-preferences"));
+        return {
+          checked: document.querySelector('[aria-label="Promote last-used group tool"]')?.checked ?? null,
+          version: document.querySelector(".context-panel")?.textContent?.includes("Configuration version 2.") ? 2 : 0,
+          memory: saved.buildPalette.lastUsedByGroup,
+        };
+      })()`);
+      expect(migratedPreferencesBeforeCommit).toMatchObject({
+        checked: true,
+        version: 2,
+        memory: p7PreferenceMemory,
+      });
+      await evaluate<boolean>(`(() => {
+        const toggle = document.querySelector('[aria-label="Promote last-used group tool"]');
+        toggle.click();
+        toggle.click();
+        return true;
+      })()`);
+      const migratedPreferences = await evaluate<{ version: number; buildPalette: { promoteLastUsed: boolean; lastUsedByGroup: Record<string, string> } }>(`JSON.parse(localStorage.getItem("unknown-yield-game-preferences"))`);
+      expect(migratedPreferences).toMatchObject({
+        version: 2,
+        buildPalette: {
+          promoteLastUsed: true,
+          lastUsedByGroup: p7PreferenceMemory,
+        },
+      });
+      expect(await evaluate<string>(`localStorage.getItem("industrial-site-save-v15")`)).toBe(p7SeedWorldBytes);
+      await evaluate<boolean>(`(() => { document.querySelector('[aria-label="Close panel"]')?.click(); return true; })()`);
+      await waitForExpression(`document.querySelector(".context-panel") === null`);
+      await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Game menu"]')?.click(); return true; })()`);
+      await waitForExpression(`[...document.querySelectorAll("button")].some((button) => button.textContent?.includes("Load saved world"))`);
+      await evaluate<boolean>(`(() => { [...document.querySelectorAll("button")].find((button) => button.textContent?.includes("Load saved world"))?.click(); return true; })()`);
+      await waitForExpression(`document.querySelector('[role="status"]')?.textContent.includes("Site restored") === true`);
+      await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Close field brief"]')?.click(); return true; })()`);
+      await waitForExpression(`document.querySelector('button[aria-label="Close field brief"]') === null`);
+      const p7RestoredPaused = await evaluate<boolean>(`document.querySelector(".paused-label") !== null`);
+      if (!p7RestoredPaused)
+        await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Pause simulation"]')?.click(); return true; })()`);
+      await waitForExpression(`document.querySelector(".paused-label") !== null`);
+
+      const p7InitialSave = await evaluate<Save>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
+      const p7Oracle = new Simulation(fixture);
+      expect(p7Oracle.load(p7InitialSave).ok).toBe(true);
+      expect(auditLedger(fixture, p7InitialSave).mismatches).toEqual([]);
+      const beltCommand: GameCommand = {
+        type: "placeBelts",
+        points: [
+          { x: 15, y: 18 }, { x: 15, y: 19 }, { x: 15, y: 20 },
+          { x: 16, y: 20 }, { x: 17, y: 20 }, { x: 18, y: 20 }, { x: 19, y: 20 },
+        ],
+        direction: 0,
+      };
+      const beltPreviewBefore = JSON.stringify(p7Oracle.serialize());
+      const beltPreview = p7Oracle.preview(beltCommand);
+      expect(JSON.stringify(p7Oracle.serialize())).toBe(beltPreviewBefore);
+      expect(beltPreview.ok).toBe(true);
+      expect(beltPreview.beltPlan).toMatchObject({
+        valid: true, newCount: 4, reusedCount: 3, blockedCount: 0,
+        cost: 4 * fixture.site.beltCost,
+      });
+      const beltToolFingerprint = await evaluate<string>(`window.__UNKNOWN_YIELD_SIMULATION__?.dismantleFingerprint([${JSON.stringify(p5Seed.integratedBeltIds[0])}])`);
+      await clickBuildTool("solid-logistics", "Belt");
+      const cornerOrderBefore = await evaluate<string>(`document.querySelector('[data-testid="belt-corner-order"]')?.getAttribute("aria-pressed") ?? "missing"`);
+      expect(cornerOrderBefore).not.toBe("missing");
+      if (cornerOrderBefore !== "true")
+        await evaluate<boolean>(`(() => { document.querySelector('[data-testid="belt-corner-order"]')?.click(); return true; })()`);
+      await waitForExpression(`document.querySelector('[data-testid="belt-corner-order"]')?.getAttribute("aria-pressed") === "true"`);
+      const cornerOrderWasVerticalFirst = await evaluate<boolean>(`document.querySelector('[data-testid="belt-corner-order"]')?.getAttribute("aria-pressed") === "true"`);
+      expect(cornerOrderWasVerticalFirst).toBe(true);
+      const integratedBeltPixels = await dragWorldRoute({ x: 15, y: 18 }, { x: 19, y: 20 });
+      const integratedBeltCanvas = await evaluate<{ left: number; top: number; right: number; bottom: number }>(`(() => { const rect = document.querySelector("canvas").getBoundingClientRect(); return {left:rect.left,top:rect.top,right:rect.right,bottom:rect.bottom}; })()`);
+      for (const point of [integratedBeltPixels.start, integratedBeltPixels.end]) {
+        expect(point.x).toBeGreaterThan(integratedBeltCanvas.left);
+        expect(point.x).toBeLessThan(integratedBeltCanvas.right);
+        expect(point.y).toBeGreaterThan(integratedBeltCanvas.top);
+        expect(point.y).toBeLessThan(integratedBeltCanvas.bottom);
+      }
+      const integratedBeltPreviewScreenshot = await captureP5Screenshot("p7-integrated-belt-l-corner-preview.png");
+      await releaseRoute(integratedBeltPixels.end);
+      await sleep(250);
+      const integratedBeltUiDiagnostic = await evaluate<{ statuses: string[]; hint: string; camera: unknown; targets: Array<{ x: number; y: number; tag: string | null; className: string | null }> }>(`(() => {
+        const canvas = document.querySelector("canvas"), rect = canvas.getBoundingClientRect();
+        const target = (x, y) => { const point = window.__UNKNOWN_YIELD_PROJECT_WORLD__((x + .5) * 32, (y + .5) * 24), px = rect.left + point.x * rect.width, py = rect.top + point.y * rect.height, element = document.elementFromPoint(px, py); return { x: px, y: py, tag: element?.tagName ?? null, className: element ? String(element.className) : null }; };
+        return { statuses: [...document.querySelectorAll('[role="status"]')].map((entry) => entry.textContent ?? ""), hint: document.querySelector(".build-hint")?.textContent ?? "", camera: window.__UNKNOWN_YIELD_CAMERA__?.(), targets: [target(15, 18), target(19, 20)] };
+      })()`);
+      console.log("PHASE20_P7_BELT_COMMIT_DIAGNOSTIC " + JSON.stringify({ pixels: integratedBeltPixels, ui: integratedBeltUiDiagnostic, previewScreenshot: integratedBeltPreviewScreenshot }));
+      await waitForExpression(`document.querySelector('[role="status"]')?.textContent.includes("Belt path built") === true`);
+      const beltCommit = p7Oracle.command(beltCommand);
+      expect(beltCommit.ok).toBe(true);
+      await saveLoadedWorld();
+      const afterIntegratedBelts = await evaluate<Save>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
+      for (const [x, y] of [[15, 18], [15, 20], [17, 20]] as const)
+        expect(afterIntegratedBelts.belts[`${x},${y}`]).toEqual(p7InitialSave.belts[`${x},${y}`]);
+      expect(afterIntegratedBelts.belts["39,30"]).toEqual(p7InitialSave.belts["39,30"]);
+      expect(afterIntegratedBelts.factories[p5Seed.logisticsFactoryId]?.ports).toEqual(
+        p7InitialSave.factories[p5Seed.logisticsFactoryId]?.ports,
+      );
+      for (const key of ["15,19", "16,20", "18,20", "19,20"])
+        expect(afterIntegratedBelts.belts[key]).toBeDefined();
+      expect(afterIntegratedBelts.stock.plates).toBe(
+        p7InitialSave.stock.plates - beltPreview.beltPlan!.cost,
+      );
+      expect(auditLedger(fixture, afterIntegratedBelts).mismatches).toEqual([]);
+      expect(p7Oracle.serialize().belts).toEqual(afterIntegratedBelts.belts);
+      expect(await evaluate<string>(`window.__UNKNOWN_YIELD_SIMULATION__?.dismantleFingerprint([${JSON.stringify(p5Seed.integratedBeltIds[0])}])`)).toBe(beltToolFingerprint);
+
+      await pressKey("Escape", "Escape", 27);
+      const sampledBeltId = p7InitialSave.belts["17,20"].id;
+      const sampledBeltFingerprintBefore = await evaluate<string>(`window.__UNKNOWN_YIELD_SIMULATION__?.dismantleFingerprint([${JSON.stringify(sampledBeltId)}])`);
+      await clickCell(17, 20);
+      await waitForExpression(`document.querySelector('[data-testid="sample-selected-tool"]')?.disabled === false`);
+      await evaluate<boolean>(`document.querySelector('[data-testid="sample-selected-tool"]')?.click()`);
+      await waitForExpression(`document.querySelector(".build-hint strong")?.textContent === "Belt"`);
+      const sampledBeltFingerprintAfter = await evaluate<string>(`window.__UNKNOWN_YIELD_SIMULATION__?.dismantleFingerprint([${JSON.stringify(sampledBeltId)}])`);
+      expect(sampledBeltFingerprintAfter).toBe(sampledBeltFingerprintBefore);
+
+      const pipeCommand: GameCommand = {
+        type: "placePipes",
+        containmentProfileId: p5Seed.lineProfileId,
+        points: Array.from({ length: 5 }, (_, index) => ({ x: 30 + index, y: 16, inlet: 2, outlet: 0 })),
+      };
+      const pipePreviewBefore = JSON.stringify(p7Oracle.serialize());
+      const p7PipePlan = p7Oracle.preview(pipeCommand);
+      expect(JSON.stringify(p7Oracle.serialize())).toBe(pipePreviewBefore);
+      expect(p7PipePlan.ok).toBe(true);
+      expect(p7PipePlan.linePlan).toMatchObject({ valid: true, newCount: 2, reusedCount: 3, blockedCount: 0 });
+      await clickBuildTool("liquid-logistics", "Directed pipe");
+      await waitForExpression(`document.querySelector('select[aria-label="Build containment profile"]') !== null`);
+      const selectedPipeProfile = await evaluate<string>(`document.querySelector('select[aria-label="Build containment profile"]')?.value ?? ""`);
+      if (selectedPipeProfile !== p5Seed.lineProfileId) {
+        await evaluate<boolean>(`(() => { document.querySelector('select[aria-label="Build containment profile"]')?.focus(); return true; })()`);
+        await pressKey("Home", "Home", 36);
+        await pressKey("ArrowDown", "ArrowDown", 40);
+        await pressKey("Enter", "Enter", 13);
+      }
+      await waitForExpression(`document.querySelector('select[aria-label="Build containment profile"]')?.value === ${JSON.stringify(p5Seed.lineProfileId)}`);
+      const integratedPipePixels = await dragWorldRoute({ x: 30, y: 16 }, { x: 34, y: 16 });
+      const integratedPipePreviewScreenshot = await captureP5Screenshot("p7-integrated-liquid-gap-preview.png");
+      const integratedPipeUiDiagnostic = await evaluate<{ canvas: { left: number; top: number; right: number; bottom: number }; statuses: string[]; hint: string; points: Array<{ x: number; y: number; tag: string | null; className: string | null }> }>(`(() => {
+        const canvas = document.querySelector("canvas"), rect = canvas.getBoundingClientRect();
+        const point = (x, y) => { const projected = window.__UNKNOWN_YIELD_PROJECT_WORLD__((x + .5) * 32, (y + .5) * 24), px = rect.left + projected.x * rect.width, py = rect.top + projected.y * rect.height, element = document.elementFromPoint(px, py); return {x:px,y:py,tag:element?.tagName ?? null,className:element ? String(element.className) : null}; };
+        return { canvas:{left:rect.left,top:rect.top,right:rect.right,bottom:rect.bottom}, statuses:[...document.querySelectorAll('[role="status"]')].map((entry) => entry.textContent ?? ""), hint:document.querySelector(".build-hint")?.textContent ?? "", points:[point(30,16),point(34,16)] };
+      })()`);
+      console.log("PHASE20_P7_PIPE_DRAG_DIAGNOSTIC " + JSON.stringify({ pixels: integratedPipePixels, ui: integratedPipeUiDiagnostic, previewScreenshot: integratedPipePreviewScreenshot }));
+      await releaseRoute(integratedPipePixels.end);
+      await sleep(250);
+      console.log("PHASE20_P7_PIPE_RELEASE_DIAGNOSTIC " + JSON.stringify(await evaluate<{ statuses: string[]; hint: string }>(`({statuses:[...document.querySelectorAll('[role="status"]')].map((entry) => entry.textContent ?? ""), hint:document.querySelector(".build-hint")?.textContent ?? ""})`)));
+      await waitForExpression(`document.querySelector('[role="status"]')?.textContent.includes("Pipes placed") === true`);
+      const pipeCommit = p7Oracle.command(pipeCommand);
+      expect(pipeCommit.ok).toBe(true);
+      await saveLoadedWorld();
+      const afterIntegratedPipes = await evaluate<Save>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
+      for (const x of [30, 32, 34])
+        expect(afterIntegratedPipes.pipes[`${x},16`]).toEqual(p7InitialSave.pipes[`${x},16`]);
+      expect(afterIntegratedPipes.pipes["32,16"]).toMatchObject({
+        materialId: "liquid-0", quantity: 1, containmentProfileId: p5Seed.lineProfileId,
+      });
+      expect(afterIntegratedPipes.pipes["31,16"]).toBeDefined();
+      expect(afterIntegratedPipes.pipes["33,16"]).toBeDefined();
+      expect(afterIntegratedPipes.stock.plates).toBe(
+        afterIntegratedBelts.stock.plates - p7PipePlan.linePlan!.cost,
+      );
+      expect(auditLedger(fixture, afterIntegratedPipes).mismatches).toEqual([]);
+      expect(p7Oracle.serialize().pipes).toEqual(afterIntegratedPipes.pipes);
+
+      const gasCommand: GameCommand = {
+        type: "placePressureLines",
+        points: Array.from({ length: 5 }, (_, index) => ({ x: 30 + index, y: 18, inlet: 2, outlet: 0 })),
+      };
+      const gasPreviewBefore = JSON.stringify(p7Oracle.serialize());
+      const p7GasPlan = p7Oracle.preview(gasCommand);
+      expect(JSON.stringify(p7Oracle.serialize())).toBe(gasPreviewBefore);
+      expect(p7GasPlan.ok).toBe(true);
+      expect(p7GasPlan.linePlan).toMatchObject({ valid: true, newCount: 2, reusedCount: 3, blockedCount: 0 });
+      await clickBuildTool("gas-logistics", "Pressure line");
+      const integratedGasPixels = await dragWorldRoute({ x: 30, y: 18 }, { x: 34, y: 18 });
+      const integratedGasPreviewScreenshot = await captureP5Screenshot("p7-integrated-gas-gap-preview.png");
+      await releaseRoute(integratedGasPixels.end);
+      await waitForExpression(`document.querySelector('[role="status"]')?.textContent.includes("Pressure lines placed") === true`);
+      const gasCommit = p7Oracle.command(gasCommand);
+      expect(gasCommit.ok).toBe(true);
+      await saveLoadedWorld();
+      const afterIntegratedGas = await evaluate<Save>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
+      for (const x of [30, 32, 34])
+        expect(afterIntegratedGas.pressureLines[`${x},18`]).toEqual(p7InitialSave.pressureLines[`${x},18`]);
+      expect(afterIntegratedGas.pressureLines["32,18"]).toMatchObject({ materialId: "gas-0", quantity: 1 });
+      expect(afterIntegratedGas.pressureLines["32,30"]).toEqual(p7InitialSave.pressureLines["32,30"]);
+      expect(afterIntegratedGas.pressureLines["31,18"]).toBeDefined();
+      expect(afterIntegratedGas.pressureLines["33,18"]).toBeDefined();
+      expect(afterIntegratedGas.stock.plates).toBe(
+        afterIntegratedPipes.stock.plates - p7GasPlan.linePlan!.cost,
+      );
+      expect(auditLedger(fixture, afterIntegratedGas).mismatches).toEqual([]);
+      expect(p7Oracle.serialize().pressureLines).toEqual(afterIntegratedGas.pressureLines);
+
+      const savedExpeditionBytes = await evaluate<string>(`localStorage.getItem("industrial-site-save-v15")`);
+      await call("Page.reload", { ignoreCache: true });
+      await waitForExpression(
+        `document.readyState === "complete" && !!document.querySelector("canvas") && !!document.querySelector('nav[aria-label="Build tools"]')`,
+      );
+      await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Game menu"]')?.click(); return true; })()`);
+      await waitForExpression(`[...document.querySelectorAll("button")].some((button) => button.textContent?.includes("Load saved world"))`);
+      await evaluate<boolean>(`(() => { [...document.querySelectorAll("button")].find((button) => button.textContent?.includes("Load saved world"))?.click(); return true; })()`);
+      await waitForExpression(`document.querySelector('[role="status"]')?.textContent.includes("Site restored") === true`);
+      await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Close field brief"]')?.click(); return true; })()`);
+      await waitForExpression(`document.querySelector('button[aria-label="Close field brief"]') === null`);
+      const p7ReloadPaused = await evaluate<boolean>(`document.querySelector(".paused-label") !== null`);
+      if (!p7ReloadPaused)
+        await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Pause simulation"]')?.click(); return true; })()`);
+      await waitForExpression(`document.querySelector(".paused-label") !== null`);
+      const reloadedSave = await evaluate<Save>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
+      expect(JSON.stringify(reloadedSave)).toBe(savedExpeditionBytes);
+      expect(reloadedSave.belts).toEqual(afterIntegratedBelts.belts);
+      expect(reloadedSave.pipes).toEqual(afterIntegratedPipes.pipes);
+      expect(reloadedSave.pressureLines).toEqual(afterIntegratedGas.pressureLines);
+      const hiddenKnowledgeOracle = new Simulation(fixture);
+      expect(hiddenKnowledgeOracle.load(reloadedSave).ok).toBe(true);
+      const observedKeys = hiddenKnowledgeOracle.snapshot().observations.map(({ textKey }) => textKey);
+      expect(observedKeys).not.toContain("reaction.precipitate-liquid-0.observation");
+      expect(observedKeys).not.toContain("reaction.collect-gas-0.observation");
+      expect(reloadedSave.knowledge).not.toContain("precipitate-liquid-0");
+      expect(reloadedSave.knowledge).not.toContain("collect-gas-0");
+      const hiddenObservationText = await evaluate<string>(`document.body.textContent ?? ""`);
+      expect(hiddenObservationText).not.toContain(enCatalog["reaction.precipitate-liquid-0.observation"]);
+      expect(hiddenObservationText).not.toContain(enCatalog["reaction.collect-gas-0.observation"]);
+      const reloadedPreferences = await evaluate<{ version: number; buildPalette: { lastUsedByGroup: Record<string, string> } }>(`JSON.parse(localStorage.getItem("unknown-yield-game-preferences"))`);
+      expect(reloadedPreferences).toMatchObject({ version: 2, buildPalette: { lastUsedByGroup: p7PreferenceMemory } });
+      expect(auditLedger(fixture, reloadedSave).mismatches).toEqual([]);
+
+      const tickBeforeResume = await evaluate<number>(`window.__UNKNOWN_YIELD_SIMULATION__.tick()`);
+      await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Resume simulation"]')?.click(); return true; })()`);
+      await waitForExpression(`window.__UNKNOWN_YIELD_SIMULATION__.tick() > ${tickBeforeResume}`, 15000);
+      const tickAfterResume = await evaluate<number>(`window.__UNKNOWN_YIELD_SIMULATION__.tick()`);
+      await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Pause simulation"]')?.click(); return true; })()`);
+      await waitForExpression(`document.querySelector(".paused-label") !== null`);
+      await saveLoadedWorld();
+      const afterResumedSimulation = await evaluate<Save>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
+      expect(tickAfterResume).toBeGreaterThan(tickBeforeResume);
+      expect(auditLedger(fixture, afterResumedSimulation).mismatches).toEqual([]);
+      const finalHiddenKnowledgeOracle = new Simulation(fixture);
+      expect(finalHiddenKnowledgeOracle.load(afterResumedSimulation).ok).toBe(true);
+      expect(finalHiddenKnowledgeOracle.snapshot().observations.map(({ textKey }) => textKey)).not.toContain("reaction.precipitate-liquid-0.observation");
+      expect(finalHiddenKnowledgeOracle.snapshot().observations.map(({ textKey }) => textKey)).not.toContain("reaction.collect-gas-0.observation");
+      console.log("PHASE20_P7_INTEGRATED_BROWSER_EVIDENCE " + JSON.stringify({
+        mode: browserAcceptanceMode,
+        expeditionCount: 1,
+        constructions: {
+          belts: { reusedCount: beltPreview.beltPlan?.reusedCount, newCount: beltPreview.beltPlan?.newCount, cost: beltPreview.beltPlan?.cost, reusedIdsUnchanged: true, factoryPortPreserved: true, previewScreenshot: integratedBeltPreviewScreenshot },
+          liquid: { reusedCount: p7PipePlan.linePlan?.reusedCount, newCount: p7PipePlan.linePlan?.newCount, cost: p7PipePlan.linePlan?.cost, reusedIdsAndLoadedCargoUnchanged: true, profileId: p5Seed.lineProfileId, previewScreenshot: integratedPipePreviewScreenshot },
+          gas: { reusedCount: p7GasPlan.linePlan?.reusedCount, newCount: p7GasPlan.linePlan?.newCount, cost: p7GasPlan.linePlan?.cost, reusedIdsAndLoadedCargoUnchanged: true, previewScreenshot: integratedGasPreviewScreenshot },
+        },
+        gameConfiguration: { version: migratedPreferences.version, independentOfWorldSave: true },
+        toolSampling: { selected: "Belt", sampledStructureFingerprintUnchanged: true },
+        hiddenKnowledgeBoundary: { liquidPrecipitation: false, gasCollection: false },
+        reload: { exactSavedBytes: true, ledgerMismatches: auditLedger(fixture, reloadedSave).mismatches.length },
+        resumedSimulation: { tickBefore: tickBeforeResume, tickAfter: tickAfterResume, ledgerMismatches: auditLedger(fixture, afterResumedSimulation).mismatches.length },
+      }));
+
       const dismantleButton = await evaluate<boolean>(`(() => {
         const button = [...document.querySelectorAll('nav[aria-label="Build tools"] button')]
           .find((entry) => entry.getAttribute("aria-label") === "Dismantle");
@@ -1940,6 +2313,7 @@ browserIt(
       expect(singleClickPoint.y).toBeGreaterThan(singleClickPoint.rect.top);
       expect(singleClickPoint.y).toBeLessThan(singleClickPoint.rect.bottom);
       expect(singleClickPoint.target?.tag).toBe("CANVAS");
+      const p5BeforeSingle = await evaluate<Save>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
       await clickCell(39, 30);
       await sleep(400);
       const singleClickStatus = await evaluate<string>(`[...document.querySelectorAll('[role="status"]')].map((entry) => entry.textContent ?? "").join(" | ")`);
@@ -1950,6 +2324,10 @@ browserIt(
       expect(p5AfterSingle.belts["39,30"]).toBeUndefined();
       expect(singleClickStatus).toContain("Belt and cargo reclaimed");
       expect(p5AfterSingle.belts["38,30"]).toBeDefined();
+      expect(p5AfterSingle.stock.plates - p5BeforeSingle.stock.plates).toBe(
+        fixture.site.beltCost + 1,
+      );
+      expect(auditLedger(fixture, p5AfterSingle).mismatches).toEqual([]);
 
       const chooseMode = async (modeId: string) => {
         await evaluate<boolean>(`(() => {
@@ -2021,6 +2399,9 @@ browserIt(
       await waitForExpression(`document.querySelector('[role="status"]')?.textContent.includes("Removed 2") === true`);
       await saveLoadedWorld();
       const p5AfterPartial = await evaluate<Save>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
+      expect(p5AfterPartial.stock.plates - p5AfterSingle.stock.plates).toBe(
+        2 * fixture.site.beltCost,
+      );
       expect(p5AfterPartial.belts["30,30"]).toBeUndefined();
       expect(p5AfterPartial.belts["31,30"]).toBeUndefined();
       expect(p5AfterPartial.pressureLines["32,30"]).toMatchObject({
@@ -2034,7 +2415,9 @@ browserIt(
       await clickCell(25, 20);
       await waitForExpression(`document.querySelector('.context-panel') !== null`);
       const exactFactoryInspector = await evaluate<string>(`document.querySelector('.context-panel')?.innerText ?? ""`);
-      expect(exactFactoryInspector).toContain("Factory 25");
+      expect(exactFactoryInspector).toContain(
+        `Factory ${p5Seed.exactFactoryId.slice(1)}`,
+      );
       await openSelectedFactory();
       await clickCell(40, 30);
       await waitForExpression(`document.querySelector('.context-panel') !== null`);
@@ -2056,6 +2439,10 @@ browserIt(
       await saveLoadedWorld();
       const p5AfterExact = await evaluate<Save>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
       expect(Object.values(p5AfterExact.machines).filter((machine) => machine.x >= 26 && machine.x <= 36 && machine.y === 21).map((machine) => machine.definitionId)).toEqual(["furnace"]);
+      expect(p5AfterExact.stock.plates - p5AfterPartial.stock.plates).toBe(
+        2 * fixture.machines.find((machine) => machine.id === "crusher")!.cost,
+      );
+      expect(auditLedger(fixture, p5AfterExact).mismatches).toEqual([]);
 
       await chooseMode("area-family");
       await dragWorldArea({ x: 30, y: 32 }, { x: 45, y: 31 });
@@ -2071,6 +2458,31 @@ browserIt(
       expect(p5AfterFamily.pipes["31,32"]).toBeUndefined();
       expect(p5AfterFamily.pressureLines["32,32"]).toBeUndefined();
       expect(Object.values(p5AfterFamily.machines).some((machine) => machine.x === 41 && machine.y === 31)).toBe(true);
+      const standardPipeProfile = fixture.liquidLogistics!.containmentProfiles.find((profile) => profile.id === "standard")!;
+      expect(p5AfterFamily.stock.plates - p5AfterExact.stock.plates).toBe(
+        fixture.site.beltCost +
+        fixture.liquidLogistics!.pipe.cost + standardPipeProfile.additionalCost.pipe +
+        fixture.gasLogistics!.line.cost,
+      );
+      expect(auditLedger(fixture, p5AfterFamily).mismatches).toEqual([]);
+
+      const p5BeforeEmptyFactory = p5AfterFamily;
+      await chooseMode("area-all");
+      await dragWorldArea({ x: 38, y: 19 }, { x: 43, y: 24 });
+      await waitForExpression(`document.querySelector('[data-testid="dismantle-review"]') !== null`);
+      expect(await reviewCounts()).toMatchObject({ "Will be removed": 1 });
+      const emptyFactoryRefundReview = await evaluate<string>(`document.querySelector('[data-testid="dismantle-review"]')?.innerText ?? ""`);
+      expect(emptyFactoryRefundReview).toContain("Net plates returned");
+      expect(emptyFactoryRefundReview).toContain("+36");
+      await evaluate<boolean>(`(() => { document.querySelector('[data-testid="dismantle-review"] button.danger')?.click(); return true; })()`);
+      await waitForExpression(`document.querySelector('[role="status"]')?.textContent.includes("Removed 1") === true`);
+      await saveLoadedWorld();
+      const p5AfterEmptyFactory = await evaluate<Save>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
+      expect(p5AfterEmptyFactory.factories[p5Seed.emptyFactoryId]).toBeUndefined();
+      expect(p5AfterEmptyFactory.stock.plates - p5BeforeEmptyFactory.stock.plates).toBe(
+        6 * 6 * fixture.site.factoryCellCost,
+      );
+      expect(auditLedger(fixture, p5AfterEmptyFactory).mismatches).toEqual([]);
 
       await chooseMode("area-exact");
       const deposit = fixture.site.deposits[0];
@@ -2420,11 +2832,12 @@ browserIt(
       console.log("PHASE20_P5_DESKTOP_BROWSER_EVIDENCE " + JSON.stringify({
         mode: browserAcceptanceMode,
         cases: {
-          U01_singleDefault: "removed one belt through normal X-tool click",
+          U01_singleDefault: { removedOneLoadedBeltThroughNormalClick: true, authoritativeRefund: fixture.site.beltCost + 1 },
           U02_cancelNoMutation: { counts: cancelCounts, unchangedSavedBytes: true, screenshot: cancelScreenshot },
-          U03_partialLoadedLine: { blockedPreviewScreenshot: partialScreenshot, loadedGasQuantity: p5AfterPartial.pressureLines["32,30"].quantity, ledgerMismatches: auditLedger(fixture, p5AfterPartial).mismatches.length },
+          U03_partialLoadedLine: { blockedPreviewScreenshot: partialScreenshot, loadedGasQuantity: p5AfterPartial.pressureLines["32,30"].quantity, refund: 2 * fixture.site.beltCost, ledgerMismatches: auditLedger(fixture, p5AfterPartial).mismatches.length },
           U04_exactDefinition: { counts: exactCounts, screenshot: exactScreenshot },
           U05_familyTaxonomy: familyCounts,
+          U18_emptyFactoryRefund: { removedFactoryId: p5Seed.emptyFactoryId, refund: 6 * 6 * fixture.site.factoryCellCost },
           U06_protectedAnchor: "deposit anchor rejected; confirm disabled",
           U07_reversedDrag: "same preview counts in both directions; save unchanged",
           U08_partialFootprint: "ignored with full-footprint explanation",
@@ -3836,5 +4249,5 @@ browserIt(
       stop(server);
     }
   },
-  300000,
+  600000,
 );
