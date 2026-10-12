@@ -194,6 +194,8 @@ Do not add 3D runtime dependencies to support the asset-generation pipeline.
 
 3D blockouts/renders are source/reference assets used to create consistent 2D output.
 
+**Approved visual/fiction direction:** follow [docs/WORLD_IDENTITY.md](docs/WORLD_IDENTITY.md): physical-world Dieselpunk industrial retrofuturism, separately styled pulp/mid-century state propaganda, readable world-first menus/HUD, and truthful engineering feedback beneath satirical official copy. Do not default to glossy/rounded Atompunk, generic junkyard grit, a SaaS dashboard shell, or provisional `Varkov-45` example lore as canon. Never rename stable simulation IDs for surface-level worldbuilding.
+
 ## 12. Development workflow
 
 For roadmap work, read `docs/EXECUTION.md` and the active GitHub issue. Issue #2 is the archived execution history. Use docs/EXECUTION.md for current direction and the next explicitly agreed gameplay issue for active scope; preserve dependencies within that scope.

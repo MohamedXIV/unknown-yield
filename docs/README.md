@@ -17,11 +17,12 @@ This directory is the project design and engineering source of truth. Documents 
 11. [PHASE6_EXIT_REVIEW.md](PHASE6_EXIT_REVIEW.md) — accepted readable-belt and controlled-junction Phase 6 gate.
 12. [PHASE7_PROFILING.md](PHASE7_PROFILING.md) — measured scale/performance evidence and the intentionally deferred budget gap.
 13. [PHASE9_EXIT_REVIEW.md](PHASE9_EXIT_REVIEW.md) — accepted material-state logistics, containment and terminal-handling Phase 9 gate.
-14. [ART_PIPELINE.md](ART_PIPELINE.md) — 2D presentation and the 3D-blockout-to-2D AI-assisted asset workflow.
-15. [ROADMAP.md](ROADMAP.md) — proof-driven implementation phases and acceptance gates.
-16. [EXECUTION.md](EXECUTION.md) — live issue order and execution workflow for humans/agents.
-17. [DECISIONS.md](DECISIONS.md) — accepted decisions that should not be casually reopened.
-18. [../AGENTS.md](../AGENTS.md) — implementation rules for humans and coding agents.
+14. [WORLD_IDENTITY.md](WORLD_IDENTITY.md) — **approved Dieselpunk world, pulp/state-propaganda identity, fiction tone, UI/menu/onboarding voice and data-driven naming** (target; not an art implementation claim).
+15. [ART_PIPELINE.md](ART_PIPELINE.md) — 2D presentation and the 3D-blockout-to-2D AI-assisted asset workflow.
+16. [ROADMAP.md](ROADMAP.md) — proof-driven implementation phases and acceptance gates.
+17. [EXECUTION.md](EXECUTION.md) — live issue order and execution workflow for humans/agents.
+18. [DECISIONS.md](DECISIONS.md) — accepted decisions that should not be casually reopened.
+19. [../AGENTS.md](../AGENTS.md) — implementation rules for humans and coding agents.
 
 ## Documentation principles
 

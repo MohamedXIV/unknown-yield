@@ -294,7 +294,7 @@ Current conceptual tiers:
 - advanced fuel;
 - exotic or research-grade fuel.
 
-Names and exact rules remain content decisions.
+Names and exact rules remain content decisions. The **current implementation** distinguishes abstract ordinary **company operating allocation** (`Save.fuel`) from **physically imported** advanced/research operating fuels in terminal modules. Fictional laboratory designations and public product names belong to the presentation/content layer, not to save IDs or new physical-fuel rules. See [WORLD_IDENTITY.md](WORLD_IDENTITY.md) and [PHASE15_FUEL_PROGRESSION.md](PHASE15_FUEL_PROGRESSION.md).
 
 Higher fuel classes should enable qualitatively different operations or infrastructure rather than only multiplying output.
 
@@ -345,11 +345,13 @@ Desired direction:
 
 This creates meaningful cost without requiring the player to manually rebuild a solved interior.
 
-## 9. Tone
+## 9. World, fiction and tone
 
-The world can be visually serious and industrial without making the simulation humorless.
+The accepted direction is **Dieselpunk industrial retrofuturism** in the actual physical world, contrasted with **mid-century pulp-science-fiction and state-propaganda illustration** in the fictional government's posters, menus and broadcasts. The production authority is a fictional authoritarian, state-socialist industrial apparatus with military/bureaucratic leadership. The expedition operator is an appointed functionary, not a private startup founder.
 
-Unexpected reactions may produce emergent, Sims-like stories:
+The state's heroic language of collective labor, sacrifice, scientific progress and quotas should contrast with actual factory conditions, administrative contradictions and occasional corruption or coercion. The tone allows both comedy and darker subtext, without turning Unknown Yield into a dialogue/campaign game. A recurring official voice can color state-issued instructions and corporate directives.
+
+**Engineering evidence must always remain accurate** even if official propaganda euphemizes an accident. Humor also emerges from real, explainable industrial reactions:
 
 - runaway foam;
 - a vibrating reactor;
@@ -357,7 +359,9 @@ Unexpected reactions may produce emergent, Sims-like stories:
 - a corrosive slurry eating the wrong pipe;
 - a machine contaminating an adjacent line.
 
-The humor should emerge from understandable systems rather than joke writing pasted on top.
+World-first UI, a clearly labeled Main Menu, incremental Field Brief onboarding and a consistent fictional naming system support the game without replacing free-form industrial discovery. Story/flavor is a **presentation layer on existing validated systems**, not an alternate source of simulation truth or hidden recipes. Proper nouns and individual equipment names are not canon merely because this direction is accepted.
+
+See [WORLD_IDENTITY.md](WORLD_IDENTITY.md) (binding visual/fiction style bible), [ART_PIPELINE.md](ART_PIPELINE.md) and [PHASE16_ONBOARDING.md](PHASE16_ONBOARDING.md).
 
 ## 10. Explicit non-goals for the foundation
 

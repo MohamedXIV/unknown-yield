@@ -8,6 +8,10 @@ The game is not intended to be a Factorio clone, a colony sim, or a combat game.
 2. **Factory as function** — factories are player-sized buildings with editable interiors. Once stabilized, a factory can be treated as a readable black box with explicit inputs, outputs, throughput, and hazards.
 3. **Company dependency** — production has an economic purpose. Exports earn fuel allocation and unlock corporate capability, while the terminal remains the operational link to off-world infrastructure.
 
+## World identity (approved direction)
+
+The physical expedition is **heavy Dieselpunk industrial retrofuturism**; the fictional authoritarian state advertises it with colorful **mid-century industrial/space propaganda and pulp sci-fi art**. Satirical official messaging contrasts with truthful, readable engineering evidence. This is a **design/art target**, not a claim that prototype visuals, names or menus have already been replaced. See the [World Identity & Style Bible](docs/WORLD_IDENTITY.md).
+
 ## Core loop
 
 ```text

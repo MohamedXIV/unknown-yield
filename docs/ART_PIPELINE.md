@@ -84,24 +84,17 @@ Questions to settle in an early art test:
 
 Do not build a large asset library before this contract is fixed.
 
-## 5. Visual style
+## 5. Visual style — locked direction
 
-The exact final style is intentionally not locked yet.
+The approved style is **Dieselpunk industrial retrofuturism for the physical world, contrasted with colorful mid-century industrial/space propaganda and pulp sci-fi illustration for the fictional state's official messaging.** See [WORLD_IDENTITY.md](WORLD_IDENTITY.md) for the full art/narrative/naming contract.
 
-The pipeline should support stylization without requiring photorealistic rendering.
+- Real machinery: heavy, angular, reinforced and comprehensible at gameplay zoom; painted steel, service detail, serial plates, pipework and consistent state/port silhouettes.
+- Official imagery: bold heroic workers, rockets, production slogans, graphic optimism and confident limited-color print treatments. Propaganda should **not** determine factory geometry.
+- Planet: unusual, discoverable material cues that contrast with institutional standardization.
+- Avoid rounded glossy/cute Atompunk as the base game world, generic rust-only junkyards, flat vector prototypes, noisy cinematic filters and photorealistic 3D production obligations.
+- State, hazard and material distinctions must remain readable independently of color, with strong silhouette and lighting consistency.
 
-Desired qualities:
-
-- readable at gameplay zoom;
-- industrial but not sterile;
-- strong silhouettes;
-- distinct material families;
-- enough texture/detail to avoid flat vector appearance;
-- coherent lighting and shadow language;
-- visually understandable input/output ports;
-- visible machine operating state.
-
-Avoid choosing a style that requires AAA-grade 3D material polish for every asset.
+This locks **direction**, not specific sprites, final palette, fictional names or an expensive new rendering technique. The existing 3D-blockout-to-2D pipeline, fixed projection and performance/accessibility constraints remain.
 
 ## 6. Machine asset structure
 

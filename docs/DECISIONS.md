@@ -503,3 +503,35 @@ When evidence requires a change:
 ## D-037 — Contained pump failure recovers through physical handling
 
 Approved #112 scope: one optional authored pump exposure captures bounded conserved cargo instead of delivering it, stops normal feed, and requires explicit protected service drainage, empty upgrade, repair and restart. This is the sole approved exception to #110 no-mutation incompatibility refusal. It is deterministic and fuel-free on failed delivery/service; no leaks, RNG, pressure physics, spreading hazards or generic recovery framework. sim-core owns rule/state/reservations/ledger/save; presentation consumes safe snapshots. Save 18/world-01-v11/browser v12 are disposable pre-release versions. #113 and Phase 11 remain separate scopes.
+
+---
+
+## D-038 — Dieselpunk is the physical world's visual identity
+
+**Status:** accepted 2026-10-12 (art direction; asset rollout not yet implemented).
+
+The playable world is **heavy, functional, authoritarian Dieselpunk industrial retrofuturism**. The fixed 2D three-quarter camera and controlled 3D-blockout -> 2D sprite pipeline remain unchanged. Machinery is standardized, angular and credible, not uniformly rusty junk or glossy/cute rounded Atompunk. Strange alien substances contrast with disciplined human-built industry. Screen readability overrides decorative period fidelity.
+
+Bright **mid-century state industrial/space propaganda** and **pulp sci-fi illustration** are a *separate official graphic layer* (posters, broadcasts, menu art), not the machinery art style. Raygun Gothic / Atomic Age advertising can contribute selectively to propaganda imagery, not to base-world geometry.
+
+**Source of truth:** [WORLD_IDENTITY.md](WORLD_IDENTITY.md), [ART_PIPELINE.md](ART_PIPELINE.md).
+
+## D-039 — Fictional state-industrial satire colors, but never overrides, simulation
+
+**Status:** accepted 2026-10-12 (narrative direction; campaign and specific proper nouns not approved).
+
+The expedition is operated for a fictional **authoritarian state-socialist industrial bureaucracy**; its officials may be generals/commissars, the player an appointed comrade/operator, and its official communications comically over-celebrate quotas, discoveries and patriotic labor. Satire may reveal bureaucratic hypocrisy, corruption, repression and darker consequences over time. Do not duplicate real government iconography wholesale or require new characters/cinematics/dialogue subsystems to express it.
+
+**Rule:** Official reports may spin an incident, but machine states, player-facing engineering diagnosis, inventory accounting, hidden-recipe boundaries and material conservation stay truthful. Flavor is not authoritative gameplay state. The UI remains world-first, with a clear main menu and progressive non-coercive onboarding.
+
+**Source of truth:** [WORLD_IDENTITY.md](WORLD_IDENTITY.md), [GAME_DESIGN.md](GAME_DESIGN.md).
+
+## D-040 — Coherent fictional naming uses presentation identities, not renamed simulation IDs
+
+**Status:** accepted 2026-10-12 (authoring principle; example material names are provisional).
+
+Content naming should convey institutional design families, laboratory designations, authorized product names and occasional field nicknames. Existing stable IDs and save references remain unchanged when names change; localization keys and authorable content own the player-facing presentation. A fictional example such as `MK-OIL/45` / `Varkov-45` does **not** make that fuel canonical or change its physics.
+
+Ordinary `Save.fuel` is presently **abstract company operating allocation**, while higher-grade imports are **physical tracked materials**; do not misdescribe the former as a barrel/tank simply to improve its name. Current content/locale packs are supported, but arbitrary runtime art/animation pack substitution is **not** implemented by the present fixed art registry.
+
+**Source of truth:** [WORLD_IDENTITY.md](WORLD_IDENTITY.md), [CONTENT_MODEL.md](CONTENT_MODEL.md), [PHASE15_FUEL_PROGRESSION.md](PHASE15_FUEL_PROGRESSION.md).
