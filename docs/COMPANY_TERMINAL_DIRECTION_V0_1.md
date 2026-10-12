@@ -242,6 +242,6 @@ No actual user-playtest metrics, implementation proof or final pixel-perfect moc
 
 **Leading but still open:** A as daily console, B for detailed manifest, C for occasional broadcasts; ratio of paper vs steel; right-edge versus other docking; amount of poster illustration inside Work/Company; how to emphasize the physically selected dock without overlay overload.
 
-**Field Notebook companion:** [Field Notebook Direction v0.1](FIELD_NOTEBOOK_DIRECTION_V0_1.md) proposes a quieter state-issued science archive using only known evidence. **Next joint review:** compare focused mockups and revisit shared UI grammar only after Inspector, Terminal and Notebook have been evaluated together.
+**Field Notebook companion:** [Field Notebook Direction v0.1](FIELD_NOTEBOOK_DIRECTION_V0_1.md) proposes a quieter state-issued science archive using only known evidence. **Shared grammar now drafted:** [Shared UI Visual Grammar v0.1](SHARED_UI_VISUAL_GRAMMAR_V0_1.md) combines the Inspector, Terminal and Notebook into one consistent style/behavior vocabulary for focused mockups. Final layout remains open.
 
 **Document history:** v0.1 brainstorm direction created 2026-10-12; documentation-only, no new phase or art/runtime implementation.

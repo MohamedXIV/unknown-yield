@@ -6,7 +6,9 @@
 
 **Exploratory companion (not adopted decisions):** [UX/UI, Game Art & Experience Brainstorm v0-alpha](UX_UI_ART_BRAINSTORM_V0_ALPHA.md) preserves reference games, candidate screen compositions, artistic approaches and open questions without overriding this approved direction.
 
-**Chosen conceptual Main Menu:** [C — Propaganda Meets Reality (v0.1)](MAIN_MENU_DIRECTION_V0_1.md) and [operational HUD direction (v0.1)](HUD_DIRECTION_V0_1.md) are under design review. The companion [Company Terminal direction (v0.1)](COMPANY_TERMINAL_DIRECTION_V0_1.md) explores a more theatrical institutional console tied to real freight and obligations; [Field Notebook v0.1](FIELD_NOTEBOOK_DIRECTION_V0_1.md) explores quieter earned scientific records. They do **not** change the accepted physical Dieselpunk/propaganda split or claim finished art.
+**Cross-screen working design (not implemented):** [Shared UI Visual Grammar v0.1](SHARED_UI_VISUAL_GRAMMAR_V0_1.md) proposes a unified palette, typography, surfaces, status semantics and UI/art mockup plan while preserving this accepted world identity.
+
+**Chosen conceptual Main Menu: [C — Propaganda Meets Reality (v0.1)](MAIN_MENU_DIRECTION_V0_1.md) and [operational HUD direction (v0.1)](HUD_DIRECTION_V0_1.md) are under design review. The companion [Company Terminal direction (v0.1)](COMPANY_TERMINAL_DIRECTION_V0_1.md) explores a more theatrical institutional console tied to real freight and obligations; [Field Notebook v0.1](FIELD_NOTEBOOK_DIRECTION_V0_1.md) explores quieter earned scientific records. They do **not** change the accepted physical Dieselpunk/propaganda split or claim finished art.
 
 ## 1. The three visual layers
 

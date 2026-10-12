@@ -264,7 +264,7 @@ Do not treat automated UI tests as proof of fun or beauty. Review sketches and a
 - **Rejected** — preserve the discarded idea and the reason so it isn't rediscovered endlessly.
 - **Still open** — the question and what experience, screenshot, mockup or playtest would settle it.
 
-**v0.1 direction documented:** [Main Menu](MAIN_MENU_DIRECTION_V0_1.md), [HUD](HUD_DIRECTION_V0_1.md), [Factory & Machine Inspector](FACTORY_INSPECTOR_DIRECTION_V0_1.md), and [Company Terminal](COMPANY_TERMINAL_DIRECTION_V0_1.md) and [Field Notebook](FIELD_NOTEBOOK_DIRECTION_V0_1.md). A future review can select 2–3 real screenshots *per surface*, resolve open placements and generate initial production-feasible wireframes. That version label is **not** a GitHub milestone/phase or promise to implement. Don't create issues until we agree on the concrete design.
+**v0.1 direction documented:** [Main Menu](MAIN_MENU_DIRECTION_V0_1.md), [HUD](HUD_DIRECTION_V0_1.md), [Factory & Machine Inspector](FACTORY_INSPECTOR_DIRECTION_V0_1.md), and [Company Terminal](COMPANY_TERMINAL_DIRECTION_V0_1.md) and [Field Notebook](FIELD_NOTEBOOK_DIRECTION_V0_1.md). Shared appearance, voice and comparison rules are now gathered in [Shared UI Visual Grammar v0.1](SHARED_UI_VISUAL_GRAMMAR_V0_1.md). A future review can select 2–3 real screenshots *per surface*, resolve open placements and generate initial production-feasible wireframes. That version label is **not** a GitHub milestone/phase or promise to implement. Don't create issues until we agree on the concrete design.
 
 ---
 

@@ -259,6 +259,6 @@ No pass/fail metrics are claimed without real players/visual review and actual b
 
 **Not approved/implemented:** A/B/C selection, final panel size, knowledge-search/index, authored material dossier art pack, in-world jump shortcuts, visual graph, history/replay or new mechanics.
 
-**Next discussion:** compare the **three technical workspaces as one UI system** — Inspector (machine truth), Terminal (state bureaucracy and cargo), Notebook (earned science) — and draft a **Shared UI Visual Grammar / Screen Architecture v0.1** only after review. No automatic implementation or new phases.
+**Next discussion:** compare the **three technical workspaces as one UI system** — Inspector (machine truth), Terminal (state bureaucracy and cargo), Notebook (earned science). A first [Shared UI Visual Grammar v0.1](SHARED_UI_VISUAL_GRAMMAR_V0_1.md) now catalogs cross-screen tokens/semantics and proposes controlled mockups; **no final art or implementation is approved yet**.
 
 **Document history:** v0.1 initial concept recorded 2026-10-12, documentation-only.
