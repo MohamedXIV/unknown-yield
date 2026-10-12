@@ -1,5 +1,7 @@
 # Unknown Yield — UX/UI, Game Art & Experience Brainstorm v0-alpha
 
+> **Design choice recorded 2026-10-12:** **Concept C — Hybrid: Propaganda Meets Reality** is the chosen Main Menu direction. Detailed composition is [Main Menu Direction v0.1](MAIN_MENU_DIRECTION_V0_1.md); its companion is [HUD Direction v0.1](HUD_DIRECTION_V0_1.md). This **narrows one choice** without finalizing the HUD or implementing artwork. Keep A/B below as preserved alternatives, not competing defaults.
+>
 > **Status: EXPLORATORY WORKING DRAFT — 2026-10-12.**
 >
 > This is an **idea inventory and discussion map**, not an approved final UI specification, art-production backlog, new roadmap phase, or assertion that new assets/menus were implemented. Its purpose is to preserve promising inspirations and disagreements while we converge through critique, screenshots, mockups and playtests.
@@ -222,7 +224,7 @@ Before a large art pass, compare **the same representative content** across a sm
 
 1. **World composition sheet** — one deposit, one extractor, one factory exterior and interior, a short belt/pipe run, a terminal, a visible new material and a small state poster. Show actual gameplay zoom and far zoom.
 2. **High-frequency task flow** — select machine → identify bottleneck → fix route → confirm recovery. Try a restrained “industrial instrument” styling vs more conventional compact inspector.
-3. **Main Menu concepts A/B/C** — check whether they communicate diesel industry, propaganda contradiction and what players actually do.
+3. **Selected Main Menu C / Hybrid** — compare candidate compositions of the selected direction; retain A/B as earlier explorations, not equal finalist directions. See [Main Menu Direction v0.1](MAIN_MENU_DIRECTION_V0_1.md).
 4. **Notebook / Terminal concept** — compare documentary bureaucracy against data legibility; validate that scientific evidence still reads truthfully.
 5. **Motion & sound strip** — working/idle/blocked/accident and first successful export, with reduced-motion equivalent.
 
@@ -262,7 +264,7 @@ Do not treat automated UI tests as proof of fun or beauty. Review sketches and a
 - **Rejected** — preserve the discarded idea and the reason so it isn't rediscovered endlessly.
 - **Still open** — the question and what experience, screenshot, mockup or playtest would settle it.
 
-Possible next discussion iteration: **v0.1** could select 2–3 real reference screenshots *per surface*, mark layout decisions and produce initial production-feasible wireframes. That version label is **not** a GitHub milestone/phase or promise to implement. Don't create issues until we agree on the concrete design.
+**v0.1 direction documented:** [Main Menu](MAIN_MENU_DIRECTION_V0_1.md) and [HUD](HUD_DIRECTION_V0_1.md). A future review can select 2–3 real screenshots *per surface*, resolve open placements and generate initial production-feasible wireframes. That version label is **not** a GitHub milestone/phase or promise to implement. Don't create issues until we agree on the concrete design.
 
 ---
 

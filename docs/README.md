@@ -19,11 +19,13 @@ This directory is the project design and engineering source of truth. Documents 
 13. [PHASE9_EXIT_REVIEW.md](PHASE9_EXIT_REVIEW.md) — accepted material-state logistics, containment and terminal-handling Phase 9 gate.
 14. [WORLD_IDENTITY.md](WORLD_IDENTITY.md) — **approved Dieselpunk world, pulp/state-propaganda identity, fiction tone, UI/menu/onboarding voice and data-driven naming** (target; not an art implementation claim).
 15. [UX_UI_ART_BRAINSTORM_V0_ALPHA.md](UX_UI_ART_BRAINSTORM_V0_ALPHA.md) — **exploratory v0-alpha** UI/UX, industrial game art, visual references, onboarding feel and open decisions; not an approved specification.
-16. [ART_PIPELINE.md](ART_PIPELINE.md) — 2D presentation and the 3D-blockout-to-2D AI-assisted asset workflow.
-17. [ROADMAP.md](ROADMAP.md) — proof-driven implementation phases and acceptance gates.
-18. [EXECUTION.md](EXECUTION.md) — live issue order and execution workflow for humans/agents.
-19. [DECISIONS.md](DECISIONS.md) — accepted decisions that should not be casually reopened.
-20. [../AGENTS.md](../AGENTS.md) — implementation rules for humans and coding agents.
+16. [MAIN_MENU_DIRECTION_V0_1.md](MAIN_MENU_DIRECTION_V0_1.md) — **chosen Concept C**: hybrid propaganda/industrial-reality Main Menu; working states, presentation and unresolved decisions.
+17. [HUD_DIRECTION_V0_1.md](HUD_DIRECTION_V0_1.md) — exploratory world-first HUD zones, inspector, build access and temporary analysis overlays; placements are not final.
+18. [ART_PIPELINE.md](ART_PIPELINE.md) — 2D presentation and the 3D-blockout-to-2D AI-assisted asset workflow.
+19. [ROADMAP.md](ROADMAP.md) — proof-driven implementation phases and acceptance gates.
+20. [EXECUTION.md](EXECUTION.md) — live issue order and execution workflow for humans/agents.
+21. [DECISIONS.md](DECISIONS.md) — accepted decisions that should not be casually reopened.
+22. [../AGENTS.md](../AGENTS.md) — implementation rules for humans and coding agents.
 
 ## Documentation principles
 

@@ -6,6 +6,8 @@
 
 **Exploratory companion (not adopted decisions):** [UX/UI, Game Art & Experience Brainstorm v0-alpha](UX_UI_ART_BRAINSTORM_V0_ALPHA.md) preserves reference games, candidate screen compositions, artistic approaches and open questions without overriding this approved direction.
 
+**Chosen conceptual Main Menu:** [C — Propaganda Meets Reality (v0.1)](MAIN_MENU_DIRECTION_V0_1.md) and [operational HUD direction (v0.1)](HUD_DIRECTION_V0_1.md) are under design review. They do **not** change the accepted physical Dieselpunk/propaganda split or claim finished art.
+
 ## 1. The three visual layers
 
 | Layer | Accepted language | Avoid |
