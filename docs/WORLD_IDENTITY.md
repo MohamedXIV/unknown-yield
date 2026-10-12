@@ -4,6 +4,8 @@
 
 **One-line brief:** **A harsh diesel-industrial state expedition sold to its citizens through colorful mid-century space-age propaganda.**
 
+**Exploratory companion (not adopted decisions):** [UX/UI, Game Art & Experience Brainstorm v0-alpha](UX_UI_ART_BRAINSTORM_V0_ALPHA.md) preserves reference games, candidate screen compositions, artistic approaches and open questions without overriding this approved direction.
+
 ## 1. The three visual layers
 
 | Layer | Accepted language | Avoid |

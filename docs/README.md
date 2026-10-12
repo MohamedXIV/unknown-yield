@@ -18,11 +18,12 @@ This directory is the project design and engineering source of truth. Documents 
 12. [PHASE7_PROFILING.md](PHASE7_PROFILING.md) — measured scale/performance evidence and the intentionally deferred budget gap.
 13. [PHASE9_EXIT_REVIEW.md](PHASE9_EXIT_REVIEW.md) — accepted material-state logistics, containment and terminal-handling Phase 9 gate.
 14. [WORLD_IDENTITY.md](WORLD_IDENTITY.md) — **approved Dieselpunk world, pulp/state-propaganda identity, fiction tone, UI/menu/onboarding voice and data-driven naming** (target; not an art implementation claim).
-15. [ART_PIPELINE.md](ART_PIPELINE.md) — 2D presentation and the 3D-blockout-to-2D AI-assisted asset workflow.
-16. [ROADMAP.md](ROADMAP.md) — proof-driven implementation phases and acceptance gates.
-17. [EXECUTION.md](EXECUTION.md) — live issue order and execution workflow for humans/agents.
-18. [DECISIONS.md](DECISIONS.md) — accepted decisions that should not be casually reopened.
-19. [../AGENTS.md](../AGENTS.md) — implementation rules for humans and coding agents.
+15. [UX_UI_ART_BRAINSTORM_V0_ALPHA.md](UX_UI_ART_BRAINSTORM_V0_ALPHA.md) — **exploratory v0-alpha** UI/UX, industrial game art, visual references, onboarding feel and open decisions; not an approved specification.
+16. [ART_PIPELINE.md](ART_PIPELINE.md) — 2D presentation and the 3D-blockout-to-2D AI-assisted asset workflow.
+17. [ROADMAP.md](ROADMAP.md) — proof-driven implementation phases and acceptance gates.
+18. [EXECUTION.md](EXECUTION.md) — live issue order and execution workflow for humans/agents.
+19. [DECISIONS.md](DECISIONS.md) — accepted decisions that should not be casually reopened.
+20. [../AGENTS.md](../AGENTS.md) — implementation rules for humans and coding agents.
 
 ## Documentation principles
 
