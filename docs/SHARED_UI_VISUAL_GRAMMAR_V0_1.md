@@ -295,6 +295,6 @@ A useful output is a **single side-by-side contact sheet or 16:9 screenshots wit
 
 - **2026-10-12 — v0.1 created:** reconciles accepted Dieselpunk/propaganda identity and five UI exploration docs into shared material/type/color/behavior/voice/asset rules; records misleading aspects of generated Inspector concepts.
 - **Pending visual review:** no final hexes, fonts, brand mark, panel geometry, specific art assets or confirmed A/B/C for Inspector/Terminal/Notebook.
-- **Suggested next deliverable:** controlled visual mockups/contact sheet for comparison and iterative v0.2 edits, **not** a new epic.
+- **First contact-sheet exploration delivered:** [Visual Mockups v0.2 — First Comparative Review](VISUAL_MOCKUPS_V0_2_REVIEW.md) records two conversation-created concept sheets, what to keep/reject and data/art caveats. Images remain in the design conversation, **not committed as approved runtime art**. The next proof must use a real snapshot and clearer per-screen 16:9 captures, not a new epic.
 
 **Related source of truth:** [GAME_DESIGN.md](GAME_DESIGN.md), [ECONOMY.md](ECONOMY.md), [CONTENT_MODEL.md](CONTENT_MODEL.md), [ART_PIPELINE.md](ART_PIPELINE.md), [PHASE16_PRODUCTION_UX.md](PHASE16_PRODUCTION_UX.md).
