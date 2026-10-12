@@ -23,11 +23,12 @@ This directory is the project design and engineering source of truth. Documents 
 17. [HUD_DIRECTION_V0_1.md](HUD_DIRECTION_V0_1.md) — exploratory world-first HUD zones, inspector, build access and temporary analysis overlays; placements are not final.
 18. [FACTORY_INSPECTOR_DIRECTION_V0_1.md](FACTORY_INSPECTOR_DIRECTION_V0_1.md) — exploratory factory/machine technical dossier, authoritative throughput certification, physical buffers, damage/recovery, relocation/reshape layout and open wireframe decisions.
 19. [COMPANY_TERMINAL_DIRECTION_V0_1.md](COMPANY_TERMINAL_DIRECTION_V0_1.md) — exploratory Directorate Company Terminal; physical freight/manifest/imports, obligations, directives, propaganda, and open concept variants.
-20. [ART_PIPELINE.md](ART_PIPELINE.md) — 2D presentation and the 3D-blockout-to-2D AI-assisted asset workflow.
-21. [ROADMAP.md](ROADMAP.md) — proof-driven implementation phases and acceptance gates.
-22. [EXECUTION.md](EXECUTION.md) — live issue order and execution workflow for humans/agents.
-23. [DECISIONS.md](DECISIONS.md) — accepted decisions that should not be casually reopened.
-24. [../AGENTS.md](../AGENTS.md) — implementation rules for humans and coding agents.
+20. [FIELD_NOTEBOOK_DIRECTION_V0_1.md](FIELD_NOTEBOOK_DIRECTION_V0_1.md) — exploratory Field Journal, known-material dossiers, confirmed/hinted evidence and hazard recording without hidden recipe spoilers.
+21. [ART_PIPELINE.md](ART_PIPELINE.md) — 2D presentation and the 3D-blockout-to-2D AI-assisted asset workflow.
+22. [ROADMAP.md](ROADMAP.md) — proof-driven implementation phases and acceptance gates.
+23. [EXECUTION.md](EXECUTION.md) — live issue order and execution workflow for humans/agents.
+24. [DECISIONS.md](DECISIONS.md) — accepted decisions that should not be casually reopened.
+25. [../AGENTS.md](../AGENTS.md) — implementation rules for humans and coding agents.
 
 ## Documentation principles
 
