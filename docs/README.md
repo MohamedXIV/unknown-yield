@@ -27,10 +27,11 @@ This directory is the project design and engineering source of truth. Documents 
 21. [SHARED_UI_VISUAL_GRAMMAR_V0_1.md](SHARED_UI_VISUAL_GRAMMAR_V0_1.md) — exploratory cross-screen design system: Dieselpunk/propaganda materials, color/type/interaction/voice grammar, art families and evidence-based mockup plan.
 22. [VISUAL_MOCKUPS_V0_2_REVIEW.md](VISUAL_MOCKUPS_V0_2_REVIEW.md) — first two comparative visual concept sheets, approved-vs-invented-data review and next focused screenshot proof.
 23. [ART_PIPELINE.md](ART_PIPELINE.md) — 2D presentation and the 3D-blockout-to-2D AI-assisted asset workflow.
-24. [ROADMAP.md](ROADMAP.md) — proof-driven implementation phases and acceptance gates.
-25. [EXECUTION.md](EXECUTION.md) — live issue order and execution workflow for humans/agents.
-26. [DECISIONS.md](DECISIONS.md) — accepted decisions that should not be casually reopened.
-27. [../AGENTS.md](../AGENTS.md) — implementation rules for humans and coding agents.
+24. [DATA_DRIVEN_INDUSTRIAL_BEHAVIOR_V1.md](DATA_DRIVEN_INDUSTRIAL_BEHAVIOR_V1.md) — **approved future design (2026-10-13)** for machine states/art/SFX, material capabilities/operating envelopes, reliability, rich outcomes and P0–P3 acceptance. Not yet implemented.
+25. [ROADMAP.md](ROADMAP.md) — proof-driven implementation phases and acceptance gates.
+26. [EXECUTION.md](EXECUTION.md) — live issue order and execution workflow for humans/agents.
+27. [DECISIONS.md](DECISIONS.md) — accepted decisions that should not be casually reopened.
+28. [../AGENTS.md](../AGENTS.md) — implementation rules for humans and coding agents.
 
 ## Documentation principles
 
