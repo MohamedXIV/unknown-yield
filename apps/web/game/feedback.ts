@@ -1,4 +1,5 @@
 import type { PlayerSnapshot, Point } from "@site/sim-core";
+import type { MachineAudioCue } from "@site/content";
 
 export type FeedbackKind =
   | "machine-start"
@@ -11,6 +12,8 @@ export type FeedbackKind =
 
 export type FeedbackEvent = {
   kind: FeedbackKind;
+  /** Optional authored sound identity; does not alter semantic/visual feedback. */
+  audioCue?: MachineAudioCue;
   id: string;
   at?: Point;
 };
@@ -61,26 +64,30 @@ export function deriveFeedbackEvents(
   const push = (event: FeedbackEvent) =>
     events.set(event.kind + ":" + event.id, event);
 
+  const audioByDefinition = new Map(next.definitions.map((def) => [def.id, def.presentation?.audio]));
   const previousMachines = new Map(
     previous.machines.map((machine) => [machine.id, machine]),
   );
   for (const machine of next.machines) {
     const before = previousMachines.get(machine.id);
     const at = center(machine.x, machine.y, machine.width, machine.height);
+    const authored = audioByDefinition.get(machine.definitionId);
+    const cue = (candidate: MachineAudioCue | undefined, fallback: MachineAudioCue) =>
+      candidate && candidate !== fallback ? { audioCue: candidate } : {};
     if (
       before &&
       before.status !== "processing" &&
       machine.status === "processing"
     )
-      push({ kind: "machine-start", id: machine.id, at });
+      push({ kind: "machine-start", id: machine.id, at, ...cue(authored?.start, "machine-start") });
     if (
       before &&
       !warningStatuses.has(before.status) &&
       warningStatuses.has(machine.status)
     )
-      push({ kind: "warning", id: machine.id + ":" + machine.status, at });
+      push({ kind: "warning", id: machine.id + ":" + machine.status, at, ...cue(authored?.blocked, "warning") });
     if (!before?.incident && machine.incident)
-      push({ kind: "hazard", id: "machine:" + machine.id, at });
+      push({ kind: "hazard", id: "machine:" + machine.id, at, ...cue(authored?.incident, "hazard") });
   }
 
   const previousPumps = new Map(previous.pumps.map((pump) => [pump.id, pump]));
