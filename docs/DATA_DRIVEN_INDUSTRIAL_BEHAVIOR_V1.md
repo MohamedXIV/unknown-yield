@@ -1,6 +1,6 @@
 # Data-Driven Industrial Behavior v1 — approved design contract
 
-**Status:** APPROVED DESIGN, NOT IMPLEMENTED. Accepted 2026-10-13 after the player's explicit confirmation. This document authorizes **design and implementation planning**, not a claim that runtime behavior or assets exist. The implementation sequence is P0–P3; each phase needs its own acceptance evidence.
+**Status:** APPROVED DESIGN. P0 foundation PARTIALLY IMPLEMENTED via [PR #298](https://github.com/MohamedXIV/unknown-yield/pull/298) on 2026-10-13; P0 remains OPEN, P1–P3 are NOT IMPLEMENTED. This contract describes the intended full system, not a claim that wear, wrecks, new reaction logic, or final art/audio exist. Each phase needs separate acceptance evidence.
 
 **Project boundaries:** [Content Model](CONTENT_MODEL.md), [Simulation](SIMULATION.md), [Art Pipeline](ART_PIPELINE.md), [World Identity](WORLD_IDENTITY.md), [Phase 16 acceptance](PHASE16_EXIT_REVIEW.md), and [Decisions](DECISIONS.md) remain authoritative for existing behavior. Preserve the established Pure TS sim-core / TinyBase authoring / Zod validation / Phaser-React presentation division, hidden truth vs player knowledge, physical conservation and exact deterministic save/load.
 
@@ -133,3 +133,8 @@ Rules are named, typed, bounded, validated **declarative evaluators**; no arbitr
 Not approved: full chemistry/thermodynamics solver, arbitrary emergent substance synthesis, runtime mod scripting, a new state-management stack, Rust/WASM/ECS rewrite, rebuild of the whole 2D asset library, free background material disposal, chance-based arbitrary factory destruction, or replacing existing authored recipes overnight.
 
 No runtime PR, content migration, save migration, test result, browser acceptance or art asset is implied by acceptance of **this design**. A phase is only **implemented** after code, versioning, tests, integration evidence and actual player-visible behavior land.
+
+
+## Implementation checkpoint — 2026-10-13
+
+[P0 foundational PR #298](https://github.com/MohamedXIV/unknown-yield/pull/298) merged at `690951c3d9d17b2b2f5acf2efea9e62bc9400536` after CI run [#38418283199](https://github.com/MohamedXIV/unknown-yield/actions/runs/38418283199) passed tests, typecheck, lint, build and production-browser acceptance. Introduced an optional versioned machine presentation manifest on content definitions, authored extractor startup sound and status colors, public-state presentation resolver, physical-condition type boundary with safe fallback, Studio manifest round-trips, and focused regressions. The **current sim does not yet track true wear, damage or wreck state**; the display does not invent those states. The first Dieselpunk extractor art [PR #291](https://github.com/MohamedXIV/unknown-yield/pull/291) remains open and explicitly awaits visual review. P0 also still needs validated full state art/logo and bounded operating-loop audio before its own exit can be claimed. Vercel's independent build rate-limit check is not a runtime test result.
