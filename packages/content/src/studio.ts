@@ -62,6 +62,7 @@ const sortedEntries = <T>(record: Record<string, T>) =>
 const empty = (value: string | undefined) => value ?? "";
 
 const machineRow = (machine: Content["machines"][number]) => ({
+  presentationJson: JSON.stringify(machine.presentation ?? null),
   nameKey: machine.nameKey,
   role: machine.role,
   maxExtractionDepth: machine.maxExtractionDepth,
@@ -287,6 +288,18 @@ function parseStringArray(
   return value;
 }
 
+function optionalPresentation(row: Record<string, unknown>, label: string): unknown {
+  const raw = row.presentationJson;
+  if (raw === undefined || raw === "" || raw === "null") return undefined;
+  if (typeof raw !== "string")
+    throw new Error(label + " presentation must be JSON text");
+  try {
+    return JSON.parse(raw) as unknown;
+  } catch {
+    throw new Error(label + " presentation must be valid JSON");
+  }
+}
+
 function parseOperations(
   row: Record<string, unknown>,
   label: string,
@@ -397,6 +410,9 @@ function candidateFromStore(store: Store, base: Content): unknown {
       id,
       nameKey: stringCell(row, "nameKey", label),
       role: stringCell(row, "role", label),
+      ...(optionalPresentation(row, label) === undefined
+        ? {}
+        : { presentation: optionalPresentation(row, label) }),
       maxExtractionDepth: numberCell(
         { maxExtractionDepth: row.maxExtractionDepth ?? 0 },
         "maxExtractionDepth",

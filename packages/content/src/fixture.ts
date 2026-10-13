@@ -296,6 +296,25 @@ export const fixture = validateContent({
       id: "extractor",
       nameKey: "machine.extractor.name",
       role: "extractor",
+      presentation: {
+        version: 1,
+        assets: {
+          base: "machine-extractor",
+          incidentOverlay: "effect-scorch",
+        },
+        indicatorColors: {
+          idle: "#c0c6a9",
+          working: "#b2d68a",
+          blocked: "#d6a66e",
+          incident: "#e57865",
+          disabled: "#727866",
+        },
+        audio: {
+          start: "machine-heavy-start",
+          blocked: "warning",
+          incident: "hazard",
+        },
+      },
       operations: [],
       capacity: 8,
       fuel: 1,

@@ -30,10 +30,10 @@ import {
   ART_CAMERA,
   artAsset,
   preloadRepresentativeArt,
-  representativeMachineAsset,
   type ArtAssetId,
 } from "./art-assets";
 import { deriveFeedbackEvents, type FeedbackEvent } from "./feedback";
+import { resolveMachinePresentation } from "./machine-presentation";
 import {
   derivePlacementFeedback,
   type PlacementFeedbackEvent,
@@ -1263,7 +1263,10 @@ export function createWorld(
         );
         const x = (m.x + m.width / 2) * X,
           y = (m.y + m.height / 2) * Y,
-          representativeArt = representativeMachineAsset(m.definitionId);
+          representativeArt = resolveMachinePresentation(
+            m,
+            snapshot.definitions.find((d) => d.id === m.definitionId),
+          ).assetId;
         if (representativeArt)
           this.artImage(
             representativeArt,
@@ -1755,13 +1758,12 @@ export function createWorld(
       }
       for (const m of snapshot.machines) {
         if (m.factoryId && !mode.openFactories.includes(m.factoryId)) continue;
-        g.fillStyle(
-          m.status === "processing"
-            ? 0xb2d68a
-            : m.enabled
-              ? 0xd6a66e
-              : 0x727866,
-        ).fillCircle((m.x + m.width) * X - 8, m.y * Y - 1, 3);
+        const presentation = resolveMachinePresentation(
+          m,
+          snapshot.definitions.find((d) => d.id === m.definitionId),
+        );
+        g.fillStyle(presentation.indicatorColor)
+          .fillCircle((m.x + m.width) * X - 8, m.y * Y - 1, 3);
         if (m.job) {
           g.fillStyle(0x151e15).fillRect(
             m.x * X,

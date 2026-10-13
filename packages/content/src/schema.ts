@@ -1,4 +1,5 @@
 import { checkContainment } from "./containment";
+import { machinePresentationSchema } from "./machine-presentation";
 import { z } from "zod";
 import { enCatalog, localeKeySchema, validateLocaleCoverage } from "./locale";
 const id = z
@@ -62,6 +63,7 @@ export const contentSchema = z.object({
         id,
         nameKey: localeKeySchema,
         role: z.enum(["extractor", "processor"]),
+        presentation: machinePresentationSchema.optional(),
         maxExtractionDepth: count.default(0),
         sourceKind: z.enum(["atmosphere"]).optional(),
         processConditionId: id.optional(),
