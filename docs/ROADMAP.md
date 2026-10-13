@@ -571,6 +571,8 @@ The production browser must demonstrate gap-fill/reuse and correct directional c
 
 ## Approved next design track — Data-Driven Industrial Behavior v1 (2026-10-13)
 
+**Tracking:** [Epic #292](https://github.com/MohamedXIV/unknown-yield/issues/292); [P0 #293](https://github.com/MohamedXIV/unknown-yield/issues/293) → [P1 #294](https://github.com/MohamedXIV/unknown-yield/issues/294) → [P2 #295](https://github.com/MohamedXIV/unknown-yield/issues/295) → [P3 #296](https://github.com/MohamedXIV/unknown-yield/issues/296).
+
 **Status:** DESIGN APPROVED; implementation, schedule and acceptance remain pending. This is a separately selected extension following the current foundation, **not** a retroactive PASS for Phases 7, 8 or 20 and not a claim that the machine-failure/asset systems are already complete. [Design and acceptance contract](DATA_DRIVEN_INDUSTRIAL_BEHAVIOR_V1.md); decision D-041.
 
 The staged dependency order is:
