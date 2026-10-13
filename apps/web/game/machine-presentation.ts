@@ -1,6 +1,6 @@
 import type { MachineDefinitionView, MachineView } from "@site/sim-core";
 import { ART_ASSETS, representativeMachineAsset, type ArtAssetId } from "./art-assets";
-import type { MachineAudioCue } from "@site/content/machine-presentation";
+import type { MachineAudioCue } from "@site/content";
 
 /** Future damage states must come from the authoritative sim, never an art RNG. */
 export type MachinePhysicalCondition = "intact" | "worn" | "damaged" | "wrecked";
