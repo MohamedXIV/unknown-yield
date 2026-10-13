@@ -38,6 +38,7 @@ describe("authoritative production feedback", () => {
 
     expect(deriveFeedbackEvents(before, processing)).toContainEqual({
       kind: "machine-start",
+      audioCue: "machine-heavy-start",
       id,
       at: {
         x: machine.x + machine.width / 2,
