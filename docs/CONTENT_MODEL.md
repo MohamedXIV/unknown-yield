@@ -55,6 +55,10 @@ Unlock state is not separately authored or persisted at runtime: it is derived f
 
 A reaction may carry one optional authored hazard descriptor with a stable hazard ID plus localized name/observation keys. Hazards are only valid on reactions with an explicit process condition. The fixture adds an `oversealed` Heat setup: `raw + heat + oversealed` produces tracked vitrified residue and a deterministic `chamber-blowout` incident. The hazardous batch still consumes/produces material through the normal reaction ledger; the consequence is operational, not material deletion. The affected machine enters a persisted incident lockout, disables automatic operation, and exposes only the occurred localized incident through the player snapshot. Re-enabling the machine explicitly acknowledges/clears the incident; no generic damage/repair framework exists.
 
+## Approved future extension — industrial behavior v1 (not yet implemented)
+
+[Data-Driven Industrial Behavior v1](DATA_DRIVEN_INDUSTRIAL_BEHAVIOR_V1.md) is the accepted next design direction as of 2026-10-13. It adds machine operating envelopes/modes, independent material mechanical/chemical traits, wear/damage/failure and physical maintenance, richer conserved multiple outcomes, and visual/audio state manifests in a staged implementation. **Do not treat these new conceptual fields as current `packages/content/src/schema.ts` functionality.** The old exact reaction tuples, current containment behavior, save/content schemas and art registry remain in force until a verified migration.
+
 ## 1. Purpose
 
 Unknown Yield depends on a large amount of interconnected content. The project should treat this content as a first-class database rather than scattering balance and recipe logic across scene code.

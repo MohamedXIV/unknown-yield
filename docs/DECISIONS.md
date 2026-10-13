@@ -535,3 +535,18 @@ Content naming should convey institutional design families, laboratory designati
 Ordinary `Save.fuel` is presently **abstract company operating allocation**, while higher-grade imports are **physical tracked materials**; do not misdescribe the former as a barrel/tank simply to improve its name. Current content/locale packs are supported, but arbitrary runtime art/animation pack substitution is **not** implemented by the present fixed art registry.
 
 **Source of truth:** [WORLD_IDENTITY.md](WORLD_IDENTITY.md), [CONTENT_MODEL.md](CONTENT_MODEL.md), [PHASE15_FUEL_PROGRESSION.md](PHASE15_FUEL_PROGRESSION.md).
+
+
+---
+
+## D-041 — Data-driven industrial behavior is capability- and property-based
+
+**Status:** accepted 2026-10-13 — **design contract only; runtime implementation pending**.
+
+Machines specify capabilities, operating envelopes, resource needs, reliability profiles and presentation references; materials specify independent physical/chemical/handling properties. Operating conditions, installed tooling and current machine condition resolve nominal/strained/impossible operation, throughput, yield, wear and risk. A material's display tier is not the authoritative gate; real impossibilities (power, penetration, containment, phase/port and safety) remain enforceable.
+
+**Wear, damage and incident state are distinct**, and operational state is independent of physical condition. Presentation is a data-authored mapping from sanitized simulation state/events to assets/SFX with fallback, never a simulation authority. Designer-hidden transformations may produce multiple conserved outputs/byproducts; general rules handle non-recipe failures and stress without creating arbitrary new substances. All events require a physical cause, observable effect, useful non-spoiling explanation and exact ledger accounting. Deterministic failures and repair/recovery must survive save/load.
+
+Implementation is deliberately incremental: **P0 presentation → P1 compatibility → P2 reliability → P3 rich outcomes/Studio**, with a small real extractor/material vertical proof before breadth. No chemistry solver, arbitrary JSON scripting, Rust/ECS rewrite or regression to generic fixed tier gates.
+
+**Source of truth:** [DATA_DRIVEN_INDUSTRIAL_BEHAVIOR_V1.md](DATA_DRIVEN_INDUSTRIAL_BEHAVIOR_V1.md). D-023's prior narrow authored hazards and exact-match reactions remain the **implemented** behavior until explicitly migrated; this decision expands the approved *target* rather than falsely claiming those systems have already been replaced.
