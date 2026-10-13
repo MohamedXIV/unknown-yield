@@ -55,9 +55,9 @@ Unlock state is not separately authored or persisted at runtime: it is derived f
 
 A reaction may carry one optional authored hazard descriptor with a stable hazard ID plus localized name/observation keys. Hazards are only valid on reactions with an explicit process condition. The fixture adds an `oversealed` Heat setup: `raw + heat + oversealed` produces tracked vitrified residue and a deterministic `chamber-blowout` incident. The hazardous batch still consumes/produces material through the normal reaction ledger; the consequence is operational, not material deletion. The affected machine enters a persisted incident lockout, disables automatic operation, and exposes only the occurred localized incident through the player snapshot. Re-enabling the machine explicitly acknowledges/clears the incident; no generic damage/repair framework exists.
 
-## Approved future extension — industrial behavior v1 (not yet implemented)
+## Approved industrial behavior v1 extension — P0 foundation only
 
-[Data-Driven Industrial Behavior v1](DATA_DRIVEN_INDUSTRIAL_BEHAVIOR_V1.md) is the accepted next design direction as of 2026-10-13. It adds machine operating envelopes/modes, independent material mechanical/chemical traits, wear/damage/failure and physical maintenance, richer conserved multiple outcomes, and visual/audio state manifests in a staged implementation. **Do not treat these new conceptual fields as current `packages/content/src/schema.ts` functionality.** The old exact reaction tuples, current containment behavior, save/content schemas and art registry remain in force until a verified migration.
+[Data-Driven Industrial Behavior v1](DATA_DRIVEN_INDUSTRIAL_BEHAVIOR_V1.md) is the accepted design direction as of 2026-10-13. The optional machine presentation schema and Studio round-trip landed via PR #298; further stages add machine operating envelopes/modes, independent material mechanical/chemical traits, wear/damage/failure and physical maintenance, richer conserved multiple outcomes, and visual/audio state manifests in a staged implementation. **Only the P0 presentation manifest is current `packages/content/src/schema.ts` functionality; the new physical/operational traits are not.** The old exact reaction tuples, current containment behavior, save/content schemas and art registry remain in force until a verified migration.
 
 ## 1. Purpose
 
