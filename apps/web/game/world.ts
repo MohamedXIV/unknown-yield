@@ -1287,16 +1287,21 @@ export function createWorld(
           }
           g.lineStyle(5, 0x59695e).lineBetween(x, y - 7, x, y + 7);
         } else if (m.role === "extractor") {
-          g.lineStyle(6, 0x485642).lineBetween(x - 16, y - 5, x - 16, y - 47);
-          g.lineStyle(5, 0xb7b28a).lineBetween(x - 16, y - 47, x + 14, y - 47);
-          g.lineStyle(4, 0xc3b379).lineBetween(x + 14, y - 47, x + 14, y + 3);
-          for (let i = 0; i < 4; i++)
-            g.lineStyle(2, 0x5b664c).lineBetween(
-              x + 8,
-              y - 37 + i * 9,
-              x + 20,
-              y - 32 + i * 9,
-            );
+          // A representative extractor SVG owns the entire mast + auger.
+          // Keep the old graphics-only rig solely for extractor definitions
+          // without an art override; otherwise two drill silhouettes overlap.
+          if (!representativeArt) {
+            g.lineStyle(6, 0x485642).lineBetween(x - 16, y - 5, x - 16, y - 47);
+            g.lineStyle(5, 0xb7b28a).lineBetween(x - 16, y - 47, x + 14, y - 47);
+            g.lineStyle(4, 0xc3b379).lineBetween(x + 14, y - 47, x + 14, y + 3);
+            for (let i = 0; i < 4; i++)
+              g.lineStyle(2, 0x5b664c).lineBetween(
+                x + 8,
+                y - 37 + i * 9,
+                x + 20,
+                y - 32 + i * 9,
+              );
+          }
         } else if (m.definitionId === "crusher") {
           g.fillStyle(0x263025).fillEllipse(x, y - 15, 38, 23);
           g.lineStyle(4, 0xc1c6a1).strokeEllipse(x, y - 15, 38, 23);

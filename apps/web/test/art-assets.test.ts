@@ -80,6 +80,21 @@ describe("Phase 16 representative art contract", () => {
     );
   });
 
+  it("keeps the first diesel extractor's mast, drive and auger in its real 2x2 art contract", () => {
+    const asset = artAsset("machine-extractor");
+    expect(asset.sourceSize).toEqual({ width: 96, height: 88 });
+    expect(asset.footprint).toEqual({ width: 2, height: 2 });
+    expect(asset.anchor).toEqual({ x: 0.5, y: 0.78 });
+    const svg = readFileSync(
+      resolve(process.cwd(), "apps/web/public", asset.src.slice(1)),
+      "utf8",
+    );
+    expect(svg).toContain("Derrrick uprights");
+    expect(svg).toContain("Overhead beam");
+    expect(svg).toContain("Mechanical lowering carriage");
+    expect(svg).not.toMatch(/<foreignObject\b/i);
+  });
+
   it("maps only representative machine definitions to art overrides", () => {
     expect(representativeMachineAsset("extractor")).toBe("machine-extractor");
     expect(representativeMachineAsset("deep-extractor")).toBe(
