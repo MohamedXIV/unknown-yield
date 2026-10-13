@@ -1,4 +1,5 @@
 import type { FeedbackEvent, FeedbackKind } from "./feedback";
+import type { MachineAudioCue } from "@site/content";
 
 type AudioContextWithWebkit = Window & {
   webkitAudioContext?: typeof AudioContext;
@@ -30,7 +31,7 @@ export class IndustrialFeedbackAudio {
         if (now - this.lastConstructionAt < 0.11) continue;
         this.lastConstructionAt = now;
       }
-      this.playKind(event.kind);
+      this.playKind(event.audioCue ?? event.kind);
     }
   }
 
@@ -84,7 +85,7 @@ export class IndustrialFeedbackAudio {
     source.start();
   }
 
-  private playKind(kind: FeedbackKind): void {
+  private playKind(kind: FeedbackKind | MachineAudioCue): void {
     switch (kind) {
       case "placement-light":
         this.tone(255, 0.035, 0.017, "triangle");
@@ -92,6 +93,10 @@ export class IndustrialFeedbackAudio {
       case "placement-heavy":
         this.tone(105, 0.095, 0.035, "triangle");
         this.tone(174, 0.055, 0.018, "sine", 0.025);
+        break;
+      case "machine-heavy-start":
+        this.tone(73, 0.16, 0.035, "sawtooth");
+        this.tone(115, 0.12, 0.025, "triangle", 0.045);
         break;
       case "machine-start":
         this.tone(118, 0.09, 0.045, "square");
