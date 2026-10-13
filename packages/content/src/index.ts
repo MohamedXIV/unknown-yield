@@ -20,3 +20,10 @@ export {
   type LocaleCatalog,
 } from "./locale";
 export { fixture } from "./fixture";
+
+export {
+  machinePresentationSchema,
+  machineAudioCueSchema,
+  type MachinePresentationDefinition,
+  type MachineAudioCue,
+} from "./machine-presentation";
