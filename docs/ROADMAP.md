@@ -569,6 +569,19 @@ P1 fixed the original all-path rejection for compatible existing ground belts an
 
 The production browser must demonstrate gap-fill/reuse and correct directional connections, all four dismantle modes including loaded/protected structures, accurate new-only costs and reclaimed material conservation, save/reload, desktop/keyboard/touch-emulated cancel semantics and no gameplay JS exceptions. Physical-device 60 FPS and subjective feel require separate real-user evidence; Phase 7 32-factory budget remains recorded as unmet/deferred. #269 and #261 were closed after independent exact-head acceptance. This technical exit does not certify physical devices, 32-factory performance, or Vercel deployment. No new phase is implicitly approved.
 
+## Approved next design track — Data-Driven Industrial Behavior v1 (2026-10-13)
+
+**Status:** DESIGN APPROVED; implementation, schedule and acceptance remain pending. This is a separately selected extension following the current foundation, **not** a retroactive PASS for Phases 7, 8 or 20 and not a claim that the machine-failure/asset systems are already complete. [Design and acceptance contract](DATA_DRIVEN_INDUSTRIAL_BEHAVIOR_V1.md); decision D-041.
+
+The staged dependency order is:
+
+1. **P0 — Machine Identity & Presentation:** logos/icons, sprite/animation/audio manifests, orthogonal operational + condition state resolver, graceful asset/audio fallback and truthful state inspector. Respect the active first Dieselpunk extractor art PR; do not create parallel art implementations.
+2. **P1 — Material Compatibility & Operating Envelopes:** numeric physical material traits, capability profiles, operating modes and nominal/strained/impossible operation. Prove one extractor against three materially distinct deposits, then add a fourth using data alone.
+3. **P2 — Reliability & Failure Lifecycle:** persisted wear vs integrity vs incidents, deterministic stress/risk, repair/maintenance/salvage and conservation.
+4. **P3 — Rich Outcomes & Content Studio:** multi-output/byproduct transformations, conditional yield and bounded generic non-recipe outcomes with Studio editors, validation and preview.
+
+**Global acceptance:** pure TS sim-core remains authoritative; authored hidden outcome truth remains private; full material ledger always balances; exact replay/save/load preserves incidents; no arbitrary factory-killing RNG, generic chemistry solver, scripting plugins, new ECS/Rust rewrites or unnecessary broad art asset production. Phase work is not marked DONE until verified separately.
+
 ## Deferred decisions
 
 Do not prematurely lock:
