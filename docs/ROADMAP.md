@@ -573,7 +573,7 @@ The production browser must demonstrate gap-fill/reuse and correct directional c
 
 **Tracking:** [Epic #292](https://github.com/MohamedXIV/unknown-yield/issues/292); [P0 #293](https://github.com/MohamedXIV/unknown-yield/issues/293) → [P1 #294](https://github.com/MohamedXIV/unknown-yield/issues/294) → [P2 #295](https://github.com/MohamedXIV/unknown-yield/issues/295) → [P3 #296](https://github.com/MohamedXIV/unknown-yield/issues/296).
 
-**Status:** DESIGN APPROVED; implementation, schedule and acceptance remain pending. This is a separately selected extension following the current foundation, **not** a retroactive PASS for Phases 7, 8 or 20 and not a claim that the machine-failure/asset systems are already complete. [Design and acceptance contract](DATA_DRIVEN_INDUSTRIAL_BEHAVIOR_V1.md); decision D-041.
+**Status:** DESIGN APPROVED; P0 FOUNDATION MERGED via [PR #298](https://github.com/MohamedXIV/unknown-yield/pull/298) (2026-10-13, CI #38418283199 all workflow steps PASS), but **P0 full acceptance is still open**, and P1–P3 remain planned. The optional content manifest, public-state resolver, authored extractor sound/indicator cue and Studio round-trip are implemented; final art/logo states and pooled operating loops are not. This is a separately selected extension following the current foundation, **not** a retroactive PASS for Phases 7, 8 or 20 and not a claim that the machine-failure/asset systems are already complete. [Design and acceptance contract](DATA_DRIVEN_INDUSTRIAL_BEHAVIOR_V1.md); decision D-041.
 
 The staged dependency order is:
 
