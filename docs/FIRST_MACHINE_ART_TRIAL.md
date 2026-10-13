@@ -11,7 +11,7 @@
 
 ## What this trial changes
 
-- Replaces **only this existing SVG source** with a more complete fixed-view hand-authored vector rendering of the *same* drill machine: reinforced bolted base, angular enclosure, louvered machinery, overhead support, motor carriage, brass-finished screw/auger and structural shadow.
+- Replaces **only this existing SVG source** with a more complete fixed-view hand-authored vector rendering of the *same* drill machine: reinforced bolted base, angular enclosure, louvered machinery, overhead support, motor carriage, brass-finished screw/auger and structural shadow. The SVG separates the major visual parts into semantic `extractor-chassis`, `extractor-engine`, `extractor-mast`, `extractor-auger` groups so a later art pass can reuse the design without inventing extra machines.
 - Preserves `96×88`, alpha/transparency, registry path, stable texture key, machine footprint, anchor, rotation handling and real simulation logic.
 - Suppresses the redundant Graphics mast only when the SVG art override already represents an extractor; the fallback graphics remains for other extractor definitions.
 - Adds a small regression test proving size, anchor and recognizable structural parts.

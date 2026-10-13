@@ -89,7 +89,9 @@ describe("Phase 16 representative art contract", () => {
       resolve(process.cwd(), "apps/web/public", asset.src.slice(1)),
       "utf8",
     );
-    expect(svg).toContain("Derrrick uprights");
+    for (const part of ["extractor-chassis", "extractor-engine", "extractor-mast", "extractor-auger"]) {
+      expect(svg).toContain(`id="${part}"`);
+    }
     expect(svg).toContain("Overhead beam");
     expect(svg).toContain("Mechanical lowering carriage");
     expect(svg).not.toMatch(/<foreignObject\b/i);
