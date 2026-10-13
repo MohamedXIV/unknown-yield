@@ -30,6 +30,9 @@ describe("Content Studio authoring core", () => {
       store.getCell("machines", "deep-extractor", "maxExtractionDepth"),
     ).toBe(20);
     expect(
+      JSON.parse(store.getCell("machines", "extractor", "presentationJson") as string),
+    ).toEqual(fixture.machines.find((machine) => machine.id === "extractor")?.presentation);
+    expect(
       store.getCell("machines", "deep-extractor", "fuelClassId"),
     ).toBe("advanced-propellant");
     expect(
@@ -59,6 +62,22 @@ describe("Content Studio authoring core", () => {
     expect(hasStudioEntity(store, "operation", "heat")).toBe(true);
     expect(hasStudioEntity(store, "machine", "sealed-furnace")).toBe(true);
     expect(hasStudioEntity(store, "reaction", "heat-raw-sealed")).toBe(true);
+  });
+
+  it("preserves a per-machine presentation manifest during edits and rejects invalid JSON", () => {
+    const store = createContentStore(fixture, enCatalog);
+    const original = fixture.machines.find((machine) => machine.id === "extractor")!;
+    const updated = {
+      ...original.presentation!,
+      assets: { ...original.presentation!.assets, working: "machine-crusher" },
+    };
+    store.setCell("machines", "extractor", "presentationJson", JSON.stringify(updated));
+    const content = contentFromStore(store, fixture);
+    expect(content.machines.find((machine) => machine.id === "extractor")?.presentation)
+      .toEqual(updated);
+    store.setCell("machines", "extractor", "presentationJson", "{not-json");
+    expect(() => contentFromStore(store, fixture))
+      .toThrow(/presentation must be valid JSON/);
   });
 
   it("authors coordinated material, operation, machine, reaction and locale records in one versioned bundle", () => {
