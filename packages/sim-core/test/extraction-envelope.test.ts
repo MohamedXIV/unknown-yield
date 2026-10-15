@@ -1,5 +1,5 @@
 import { fixture, validateSimulationContent } from "@site/content";
-import { Simulation, assessMineralExtraction } from "../src/index";
+import { Simulation, assessMineralExtraction, auditLedger } from "../src/index";
 import { describe, expect, it } from "vitest";
 
 function setup(material: "ferrite" | "raw", content = fixture) {
@@ -37,6 +37,13 @@ describe("P1a mechanical envelope — real material-dependent mineral extraction
     hard.sim.step(20 * fixture.tickMs);
     expect(hard.machine().job?.remaining).toBe(5);
     expect(hard.machine().progress).toBeCloseTo(0.8);
+    const saved = hard.sim.serialize();
+    const restored = new Simulation(fixture);
+    expect(restored.load(saved)).toMatchObject({ ok: true });
+    hard.sim.step(800);
+    restored.step(800);
+    expect(restored.serialize()).toEqual(hard.sim.serialize());
+    expect(auditLedger(fixture, restored.serialize()).ok).toBe(true);
   });
 
   it("blocks impossible load without extracting a deposit unit or consuming fuel", () => {
@@ -81,9 +88,21 @@ describe("P1a mechanical envelope — real material-dependent mineral extraction
       id: "ore-four-field", material: "ore-four",
       x: 28, y: 43, width: 2, height: 2, units: 30,
     });
-    expect(assessMineralExtraction(base, {
+    const next = validateSimulationContent(base);
+    expect(assessMineralExtraction(next, {
       ...machine, depositId: "ore-four-field",
     }).compatibility).toBe("strained");
+    const added = new Simulation(next);
+    const result = added.command({
+      type: "placeMachine", definitionId: "extractor",
+      x: 28, y: 43, direction: 0,
+    });
+    expect(result.ok, result.message).toBe(true);
+    expect(added.snapshot().machines.find((m) => m.id === result.id))
+      .toMatchObject({ extractionCompatibility: "strained", durationTicks: 30 });
+    added.step(next.tickMs);
+    expect(added.serialize().deposits["ore-four-field"]).toBe(29);
+    expect(auditLedger(next, added.serialize()).ok).toBe(true);
   });
 
   it("legacy/unprofiled machines and materials retain the original extraction time and cost", () => {
