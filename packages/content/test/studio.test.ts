@@ -31,6 +31,9 @@ describe("Content Studio authoring core", () => {
     expect(
       JSON.parse(store.getCell("machines", "extractor", "extractionEnvelopeJson") as string),
     ).toEqual(fixture.machines.find((m) => m.id === "extractor")?.extractionEnvelope);
+    expect(
+      JSON.parse(store.getCell("machines", "extractor", "operatingModesJson") as string),
+    ).toEqual(fixture.machines.find((m) => m.id === "extractor")?.operatingModes);
     expect(catalogFromStore(store)).toEqual(enCatalog);
     expect(
       store.getCell("machines", "deep-extractor", "maxExtractionDepth"),

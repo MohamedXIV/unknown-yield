@@ -8,6 +8,18 @@ import {
 import { createContentStore, contentFromStore } from "../src/studio";
 
 describe("content boundary", () => {
+  it("rejects duplicate modes, invalid pressure and missing envelope", () => {
+    const a = structuredClone(fixture);
+    const extractor = a.machines.find((m) => m.id === "extractor")!;
+    extractor.operatingModes.push(structuredClone(extractor.operatingModes[0]!));
+    expect(() => validateContent(a)).toThrow(/Duplicate operating mode/);
+    const b = structuredClone(fixture);
+    b.machines.find((m) => m.id === "extractor")!.operatingModes[1]!.extraFuel = -1;
+    expect(() => validateContent(b)).toThrow();
+    const c = structuredClone(fixture);
+    delete c.machines.find((m) => m.id === "extractor")!.extractionEnvelope;
+    expect(() => validateContent(c)).toThrow(/Operating modes require/);
+  });
   it("rejects malformed mechanics and invalid extractor envelopes", () => {
     const c = structuredClone(fixture);
     c.materials.find((m) => m.id === "raw")!.mechanics!.hardness = 11;
@@ -34,7 +46,7 @@ describe("content boundary", () => {
   it("accepts the complete tiny scenario", () => {
     const c = validateContent(fixture);
     expect(c.machines).toHaveLength(15);
-    expect(c.version).toBe("world-01-v15");
+    expect(c.version).toBe("world-01-v16");
     expect(c.storages).toHaveLength(1);
     expect(c.storages[0]).toMatchObject({ id: "depot", capacity: 40 });
     expect(c.site.stagingCapacity).toBe(24);

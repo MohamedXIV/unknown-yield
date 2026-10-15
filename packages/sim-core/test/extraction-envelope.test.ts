@@ -116,3 +116,88 @@ describe("P1a mechanical envelope — real material-dependent mineral extraction
     });
   });
 });
+
+
+describe("P1b authored operating modes — command, save and physics parity", () => {
+  it("starts steady; force mode is a real fuel/throughput tradeoff", () => {
+    const { sim, id, machine } = setup("raw");
+    expect(machine().operatingModeId).toBe("steady");
+    expect(machine()).toMatchObject({ durationTicks: 25, fuelCost: 2 });
+    const before = structuredClone(sim.serialize());
+    const set = { type: "setOperatingMode", machineId: id, modeId: "force" };
+    expect(sim.preview(set).ok).toBe(true);
+    expect(sim.serialize()).toEqual(before);
+    expect(sim.command(set).ok).toBe(true);
+    expect(machine()).toMatchObject({
+      operatingModeId: "force", extractionCompatibility: "nominal",
+      durationTicks: 17, fuelCost: 3,
+    });
+    const fuel = sim.serialize().fuel;
+    sim.step(fixture.tickMs);
+    expect(sim.serialize().fuel).toBe(fuel - 3);
+    expect(machine().job?.remaining).toBe(17);
+    expect(sim.preview({ type: "setOperatingMode", machineId: id, modeId: "steady" }).ok)
+      .toBe(false);
+    const started = structuredClone(sim.serialize());
+    expect(sim.command({ type: "setOperatingMode", machineId: id, modeId: "steady" }).ok)
+      .toBe(false);
+    expect(sim.serialize()).toEqual(started);
+    const restored = new Simulation(fixture);
+    expect(restored.load(sim.serialize()).ok).toBe(true);
+    sim.step(400);
+    restored.step(400);
+    expect(restored.serialize()).toEqual(sim.serialize());
+    expect(auditLedger(fixture, restored.serialize()).ok).toBe(true);
+    expect(sim.command({ type: "setOperatingMode", machineId: id, modeId: "imaginary" }).ok)
+      .toBe(false);
+  });
+
+  it("force mode raises physical hard limit without bypassing greater impossibility", () => {
+    const c = structuredClone(fixture);
+    c.materials.find((m) => m.id === "raw")!.mechanics = {
+      hardness: 5, abrasiveness: 2, brittleness: 1,
+    }; // load 11: steady max 10, force max 12
+    const { sim, id, machine } = setup("raw", validateSimulationContent(c));
+    expect(machine().status).toBe("material-too-hard");
+    const untouched = sim.serialize();
+    sim.step(1000);
+    expect(sim.serialize().deposits).toEqual(untouched.deposits);
+    expect(sim.serialize().fuel).toBe(untouched.fuel);
+    expect(sim.command({ type: "setOperatingMode", machineId: id, modeId: "force" }).ok)
+      .toBe(true);
+    expect(machine()).toMatchObject({
+      status: "ready", extractionCompatibility: "strained",
+      durationTicks: 30, fuelCost: 6,
+    });
+    sim.step(c.tickMs);
+    expect(sim.serialize().fuel).toBe(untouched.fuel - 6);
+    expect(auditLedger(c, sim.serialize()).ok).toBe(true);
+    const tougher = structuredClone(c);
+    tougher.materials.find((m) => m.id === "raw")!.mechanics = {
+      hardness: 9, abrasiveness: 3, brittleness: 0,
+    };
+    expect(assessMineralExtraction(tougher, {
+      definitionId: "extractor", depositId: "veined-field", operatingModeId: "force",
+    }).compatibility).toBe("impossible");
+  });
+
+  it("validates persisted mode identity and migrates schema 27 to the default mode", () => {
+    const { sim, id } = setup("raw");
+    const saved = sim.serialize();
+    expect(saved.schemaVersion).toBe(28);
+    const tampered = structuredClone(saved);
+    tampered.machines[id]!.operatingModeId = "not-a-mode";
+    expect(new Simulation(fixture).load(tampered).ok).toBe(false);
+    const missing = structuredClone(saved);
+    delete (missing.machines[id] as Partial<typeof missing.machines[string]>).operatingModeId;
+    expect(new Simulation(fixture).load(missing).ok).toBe(false);
+    const legacy = structuredClone(saved);
+    legacy.schemaVersion = 27;
+    delete (legacy.machines[id] as Partial<typeof legacy.machines[string]>).operatingModeId;
+    const loaded = new Simulation(fixture);
+    expect(loaded.load(legacy).ok).toBe(true);
+    expect(loaded.serialize().schemaVersion).toBe(28);
+    expect(loaded.snapshot().machines.find((m) => m.id === id)!.operatingModeId).toBe("steady");
+    expect(auditLedger(fixture, loaded.serialize()).ok).toBe(true);
+  });
+});

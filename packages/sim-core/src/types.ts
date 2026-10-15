@@ -128,6 +128,7 @@ export type Machine = Point & {
   factoryId: string | null;
   depositId: string | null;
   operation: string | null;
+  operatingModeId: string | null;
   enabled: boolean;
   incident: string | null;
   incidentInventory: Inventory;
@@ -517,6 +518,7 @@ export type GameCommand =
   | { type: "dismantleMany"; ids: string[] }
   | { type: "recoverMachineIncident"; machineId: string }
   | { type: "setEnabled"; machineId: string; enabled: boolean }
+  | { type: "setOperatingMode"; machineId: string; modeId: string }
   | { type: "setOperation"; machineId: string; operation: string }
   | { type: "setPolicy"; materialId: string; policy: "keep" | "export" }
   | { type: "setShipmentQuantity"; materialId: string; quantity: number }

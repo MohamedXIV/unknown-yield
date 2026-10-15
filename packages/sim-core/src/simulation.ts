@@ -391,6 +391,7 @@ export class Simulation {
           durationMs: extraction.durationTicks * c.tickMs,
           fuelCost: extraction.fuelCost,
           extractionCompatibility: extraction.compatibility,
+          // Operating mode identity comes from persisted authoritative state.
           fuelClassId: d.fuelClassId ?? null,
           status: status(c, s, m),
           progress: m.job ? 1 - m.job.remaining / extraction.durationTicks : 0,

@@ -64,6 +64,7 @@ const empty = (value: string | undefined) => value ?? "";
 const machineRow = (machine: Content["machines"][number]) => ({
   presentationJson: JSON.stringify(machine.presentation ?? null),
   extractionEnvelopeJson: JSON.stringify(machine.extractionEnvelope ?? null),
+  operatingModesJson: JSON.stringify(machine.operatingModes),
   nameKey: machine.nameKey,
   role: machine.role,
   maxExtractionDepth: machine.maxExtractionDepth,
@@ -290,6 +291,17 @@ function parseStringArray(
   return value;
 }
 
+function parseObjectArray(value: unknown, label: string): unknown[] {
+  if (typeof value !== "string") throw new Error(label + " must be JSON text");
+  let parsed: unknown;
+  try { parsed = JSON.parse(value); }
+  catch { throw new Error(label + " must be valid JSON"); }
+  if (!Array.isArray(parsed) || parsed.some((item) =>
+    !item || typeof item !== "object" || Array.isArray(item)))
+    throw new Error(label + " must be a JSON object array");
+  return parsed;
+}
+
 function optionalJsonObject(
   row: Record<string, unknown>, field: string, label: string,
 ): unknown {
@@ -429,6 +441,9 @@ function candidateFromStore(store: Store, base: Content): unknown {
       id,
       nameKey: stringCell(row, "nameKey", label),
       role: stringCell(row, "role", label),
+      operatingModes: parseObjectArray(
+        row.operatingModesJson ?? "[]", label + " operating modes",
+      ),
       ...(optionalJsonObject(row, "extractionEnvelopeJson", label) === undefined
         ? {}
         : { extractionEnvelope: optionalJsonObject(row, "extractionEnvelopeJson", label) }),

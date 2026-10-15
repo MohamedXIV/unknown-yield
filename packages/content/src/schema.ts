@@ -70,6 +70,14 @@ export const contentSchema = z.object({
         nameKey: localeKeySchema,
         role: z.enum(["extractor", "processor"]),
         presentation: machinePresentationSchema.optional(),
+        operatingModes: z.array(z.object({
+          id,
+          nameKey: localeKeySchema,
+          nominalLoadBonus: z.number().int().min(0).max(10),
+          maximumLoadBonus: z.number().int().min(0).max(10),
+          durationBps: z.number().int().min(1000).max(20000),
+          extraFuel: count,
+        }).strict()).max(4).default([]),
         extractionEnvelope: z.object({
           nominalLoad: z.number().int().min(0).max(30),
           maximumLoad: z.number().int().min(0).max(30),
@@ -660,6 +668,13 @@ function validateContentInternal(
   }
   const fuelClassIds = new Set(c.fuelClasses.map((entry) => entry.id));
   for (const m of c.machines) {
+    if (m.operatingModes.length && !m.extractionEnvelope)
+      throw new Error("Operating modes require a mineral extraction envelope");
+    if (new Set(m.operatingModes.map((mode) => mode.id)).size !== m.operatingModes.length)
+      throw new Error("Duplicate operating mode IDs");
+    for (const mode of m.operatingModes)
+      if (mode.nameKey !== "machine." + m.id + ".mode." + mode.id + ".name")
+        throw new Error("Operating mode localization key must match machine and ID");
     if (m.extractionEnvelope &&
         (m.role !== "extractor" || m.sourceKind === "atmosphere" ||
         m.extractionEnvelope.nominalLoad > m.extractionEnvelope.maximumLoad))

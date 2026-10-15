@@ -1692,6 +1692,28 @@ function GameClientInner() {
                           : ""}
                       </p>
                     )}
+                    {snapshot.definitions.find((d) => d.id === machine.definitionId)!.operatingModes.length > 0 && (
+                      <label className="operation-label">
+                        {t("ui.machine.mode.label")}
+                        <select
+                          aria-label={t("ui.machine.mode.label")}
+                          value={machine.operatingModeId ?? ""}
+                          disabled={!!machine.job}
+                          title={machine.job ? t("ui.machine.mode.busy") : undefined}
+                          onChange={(e) => act({
+                            type: "setOperatingMode",
+                            machineId: machine.id,
+                            modeId: e.target.value,
+                          })}
+                        >
+                          {snapshot.definitions.find((d) => d.id === machine.definitionId)!.operatingModes.map((option) => (
+                            <option key={option.id} value={option.id}>
+                              {t(option.nameKey)}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
                     {machine.operation && (
                       <label className="operation-label">
                         Operation

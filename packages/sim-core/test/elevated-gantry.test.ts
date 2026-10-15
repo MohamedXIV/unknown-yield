@@ -137,14 +137,14 @@ it("charges and refunds authored deck plus support cost exactly", () => {
 
 it("migrates schema 26 exactly to empty elevated routes and requires them in schema 27", () => {
   const current = new Simulation(fixture).serialize();
-  expect(current.schemaVersion).toBe(27);
+  expect(current.schemaVersion).toBe(28);
 
   const legacy = structuredClone(current) as Record<string, unknown>;
   legacy.schemaVersion = 26;
   delete legacy.elevatedSolids;
   const migrated = new Simulation(fixture);
   expect(migrated.load(legacy).ok).toBe(true);
-  expect(migrated.serialize().schemaVersion).toBe(27);
+  expect(migrated.serialize().schemaVersion).toBe(28);
   expect(migrated.serialize().elevatedSolids).toEqual({});
 
   const missing = structuredClone(current) as Record<string, unknown>;
