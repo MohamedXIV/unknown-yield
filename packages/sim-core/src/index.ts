@@ -1,4 +1,6 @@
 export { Simulation } from "./simulation";
+export { assessMineralExtraction } from "./extraction-envelope";
+export type { ExtractionAssessment } from "./extraction-envelope";
 export { planBeltPlacement } from "./belt-planning";
 export { planLinePlacement } from "./line-planning";
 export { dismantleBatch } from "./dismantle-batch";

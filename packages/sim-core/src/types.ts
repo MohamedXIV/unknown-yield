@@ -110,6 +110,7 @@ export const MACHINE_STATUSES = [
   "incident",
   "disabled",
   "deposit-exhausted",
+  "material-too-hard",
   "source-exhausted",
   "needs-compatible-input",
   "needs-input",
@@ -548,6 +549,7 @@ export type MachineView = Omit<Machine, "job" | "incident"> & {
   durationTicks: number;
   durationMs: number;
   fuelCost: number;
+  extractionCompatibility: "nominal" | "strained" | "impossible";
   fuelClassId: string | null;
   status: MachineStatus;
   progress: number;

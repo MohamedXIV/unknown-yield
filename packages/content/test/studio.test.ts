@@ -25,6 +25,12 @@ describe("Content Studio authoring core", () => {
     expect(bundle.content).toEqual(fixture);
     expect(bundle.locale).toEqual(enCatalog);
     expect(contentFromStore(store, fixture)).toEqual(fixture);
+    expect(
+      JSON.parse(store.getCell("materials", "raw", "mechanicsJson") as string),
+    ).toEqual(fixture.materials.find((m) => m.id === "raw")?.mechanics);
+    expect(
+      JSON.parse(store.getCell("machines", "extractor", "extractionEnvelopeJson") as string),
+    ).toEqual(fixture.machines.find((m) => m.id === "extractor")?.extractionEnvelope);
     expect(catalogFromStore(store)).toEqual(enCatalog);
     expect(
       store.getCell("machines", "deep-extractor", "maxExtractionDepth"),

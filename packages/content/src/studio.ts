@@ -63,6 +63,7 @@ const empty = (value: string | undefined) => value ?? "";
 
 const machineRow = (machine: Content["machines"][number]) => ({
   presentationJson: JSON.stringify(machine.presentation ?? null),
+  extractionEnvelopeJson: JSON.stringify(machine.extractionEnvelope ?? null),
   nameKey: machine.nameKey,
   role: machine.role,
   maxExtractionDepth: machine.maxExtractionDepth,
@@ -169,10 +170,11 @@ export function createContentStore(
     .setTable(
       "materials",
       Object.fromEntries(
-        content.materials.map(({ id, requiredContainment, ...row }) => [
+        content.materials.map(({ id, requiredContainment, mechanics, ...row }) => [
           id,
           {
             ...row,
+            mechanicsJson: JSON.stringify(mechanics ?? null),
             requiredContainmentJson: JSON.stringify(requiredContainment),
           },
         ]),
@@ -288,6 +290,20 @@ function parseStringArray(
   return value;
 }
 
+function optionalJsonObject(
+  row: Record<string, unknown>, field: string, label: string,
+): unknown {
+  const raw = row[field];
+  if (raw === undefined || raw === "" || raw === "null") return undefined;
+  if (typeof raw !== "string") throw new Error(label + " " + field + " must be JSON text");
+  let value: unknown;
+  try { value = JSON.parse(raw); }
+  catch { throw new Error(label + " " + field + " must be valid JSON"); }
+  if (!value || typeof value !== "object" || Array.isArray(value))
+    throw new Error(label + " " + field + " must be a JSON object");
+  return value;
+}
+
 function optionalPresentation(row: Record<string, unknown>, label: string): unknown {
   const raw = row.presentationJson;
   if (raw === undefined || raw === "" || raw === "null") return undefined;
@@ -343,6 +359,9 @@ function candidateFromStore(store: Store, base: Content): unknown {
       nameKey: stringCell(row, "nameKey", label),
       color: stringCell(row, "color", label),
       known: booleanCell(row, "known", label),
+      ...(optionalJsonObject(row, "mechanicsJson", label) === undefined
+        ? {}
+        : { mechanics: optionalJsonObject(row, "mechanicsJson", label) }),
       handlingState: row.handlingState ?? "solid",
       requiredContainment: parseOperations(
         { operationsJson: row.requiredContainmentJson ?? "[]" },
@@ -410,6 +429,9 @@ function candidateFromStore(store: Store, base: Content): unknown {
       id,
       nameKey: stringCell(row, "nameKey", label),
       role: stringCell(row, "role", label),
+      ...(optionalJsonObject(row, "extractionEnvelopeJson", label) === undefined
+        ? {}
+        : { extractionEnvelope: optionalJsonObject(row, "extractionEnvelopeJson", label) }),
       ...(optionalPresentation(row, label) === undefined
         ? {}
         : { presentation: optionalPresentation(row, label) }),

@@ -28,6 +28,11 @@ const statusCopy: Record<
     title: "Machine disabled",
     detail: "Its buffers remain physical. Re-enable it when this line should resume.",
   },
+  "material-too-hard": {
+    tone: "warn",
+    title: "Machine cannot penetrate this deposit",
+    detail: "The mineral exceeds the current tool capability. Try a stronger extractor; no material has been removed.",
+  },
   "deposit-exhausted": {
     tone: "warn",
     title: "Deposit exhausted",
@@ -198,6 +203,15 @@ export function selectionOverview(
   const machine = snapshot.machines.find((entry) => entry.id === selectedId);
   if (machine) {
     const copy = statusCopy[machine.status];
+    if (machine.extractionCompatibility === "strained" &&
+        (machine.status === "processing" || machine.status === "ready")) {
+      return {
+        tone: "warn" as const,
+        eyebrow: "MACHINE · HIGH MECHANICAL LOAD",
+        title: "Extraction under strain",
+        detail: "This material takes longer and consumes more operating fuel per batch. The extractor is still physically capable; no wear system is simulated yet.",
+      };
+    }
     return {
       ...copy,
       eyebrow: "MACHINE · " + machine.status.replaceAll("-", " ").toUpperCase(),
