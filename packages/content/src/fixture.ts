@@ -993,8 +993,8 @@ export const fixture = validateContent({
         // starter extractor; larger seam stays gated by resonance surveying.
         id: "catalyst-outcrop",
         material: "catalyst",
-        x: 54,
-        y: 24,
+        x: 45,
+        y: 48,
         width: 5,
         height: 5,
         units: 90,
