@@ -46,12 +46,13 @@ export function machineFuelBlock(
   c: Content,
   s: Pick<Save, "fuel" | "milestones" | "terminalModules">,
   definition: MachineDefinition,
+  fuelCost = definition.fuel,
 ): "fuel-class-locked" | "needs-special-fuel" | "needs-fuel" | null {
   if (!definition.fuelClassId)
-    return s.fuel < definition.fuel ? "needs-fuel" : null;
+    return s.fuel < fuelCost ? "needs-fuel" : null;
   if (!fuelClassUnlocked(c, s, definition.fuelClassId))
     return "fuel-class-locked";
-  return fuelClassHeld(c, s, definition.fuelClassId) < definition.fuel
+  return fuelClassHeld(c, s, definition.fuelClassId) < fuelCost
     ? "needs-special-fuel"
     : null;
 }
@@ -60,16 +61,17 @@ export function consumeMachineFuel(
   c: Content,
   s: Pick<Save, "fuel" | "milestones" | "terminalModules" | "flows">,
   definition: MachineDefinition,
+  fuelCost = definition.fuel,
 ): void {
-  const blocked = machineFuelBlock(c, s, definition);
+  const blocked = machineFuelBlock(c, s, definition, fuelCost);
   if (blocked) throw new Error("Cannot consume unavailable machine fuel");
   if (!definition.fuelClassId) {
-    s.fuel -= definition.fuel;
+    s.fuel -= fuelCost;
     return;
   }
   const fuelClass = fuelClassDefinition(c, definition.fuelClassId)!;
   const contents = s.terminalModules[fuelClass.terminalModuleId]!;
-  contents.quantity -= definition.fuel;
+  contents.quantity -= fuelCost;
   if (contents.quantity === 0) contents.materialId = null;
-  change(s.flows.consumed, fuelClass.materialId, definition.fuel);
+  change(s.flows.consumed, fuelClass.materialId, fuelCost);
 }
