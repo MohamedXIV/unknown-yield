@@ -71,7 +71,7 @@ describe("P1c — third real mineral, discovery and physical extraction", () => 
     expect(JSON.stringify(sim.snapshot())).not.toContain("catalyst-seam-a");
     expect(JSON.stringify(sim.serialize())).not.toContain("catalyst-seam-a");
     const basic = sim.command({
-      type: "placeMachine", definitionId: "extractor", x: 54, y: 24, direction: 0,
+      type: "placeMachine", definitionId: "extractor", x: 45, y: 48, direction: 0,
     });
     expect(basic.ok, basic.message).toBe(true);
     const id = basic.id!;
@@ -100,7 +100,7 @@ describe("P1c — third real mineral, discovery and physical extraction", () => 
     const sim = new Simulation(fixture);
     expect(sim.preview({
       type: "placeMachine", definitionId: "deep-extractor",
-      x: 54, y: 24, direction: 0,
+      x: 45, y: 48, direction: 0,
     }).ok).toBe(false);
     expect(sim.command({
       type: "sense", capabilityId: "resonance-probe", x: 57, y: 10,
@@ -120,7 +120,7 @@ describe("P1c — third real mineral, discovery and physical extraction", () => 
 
     const deep = sim.command({
       type: "placeMachine", definitionId: "deep-extractor",
-      x: 54, y: 24, direction: 0,
+      x: 45, y: 48, direction: 0,
     });
     expect(deep.ok, deep.message).toBe(true);
     const id = deep.id!;
