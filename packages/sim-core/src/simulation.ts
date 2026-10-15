@@ -8,6 +8,7 @@ import {
   solidDiagnostics,
 } from "./production";
 import { auditLedger } from "./ledger";
+import { assessMineralExtraction } from "./extraction-envelope";
 import { machineUnlocked } from "./progression";
 import { hazardDefinition } from "./hazards";
 import {
@@ -364,6 +365,7 @@ export class Simulation {
       machines: Object.values(s.machines).map((m) => {
         const d = c.machines.find((d) => d.id === m.definitionId)!;
         const r = footprint(m, d);
+        const extraction = assessMineralExtraction(c, m);
         const incident = m.incident
           ? hazardDefinition(c, m.incident)
           : undefined;
@@ -385,12 +387,13 @@ export class Simulation {
           width: r.width,
           height: r.height,
           capacity: d.capacity,
-          durationTicks: d.durationTicks,
-          durationMs: d.durationTicks * c.tickMs,
-          fuelCost: d.fuel,
+          durationTicks: extraction.durationTicks,
+          durationMs: extraction.durationTicks * c.tickMs,
+          fuelCost: extraction.fuelCost,
+          extractionCompatibility: extraction.compatibility,
           fuelClassId: d.fuelClassId ?? null,
           status: status(c, s, m),
-          progress: m.job ? 1 - m.job.remaining / d.durationTicks : 0,
+          progress: m.job ? 1 - m.job.remaining / extraction.durationTicks : 0,
         };
       }),
       pressureLines: Object.values(s.pressureLines),
