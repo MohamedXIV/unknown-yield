@@ -42,6 +42,12 @@ export const contentSchema = z.object({
         handlingState: z.enum(["solid", "liquid", "gas"]).default("solid"),
         requiredContainment: capabilities,
         known: z.boolean(),
+        // P1a: comparable ordinal laboratory traits, not an unrestricted chemistry solver.
+        mechanics: z.object({
+          hardness: z.number().int().min(0).max(10),
+          abrasiveness: z.number().int().min(0).max(10),
+          brittleness: z.number().int().min(0).max(10),
+        }).strict().optional(),
       }),
     )
     .min(1),
@@ -64,6 +70,12 @@ export const contentSchema = z.object({
         nameKey: localeKeySchema,
         role: z.enum(["extractor", "processor"]),
         presentation: machinePresentationSchema.optional(),
+        extractionEnvelope: z.object({
+          nominalLoad: z.number().int().min(0).max(30),
+          maximumLoad: z.number().int().min(0).max(30),
+          strainedDurationPerLoadBps: z.number().int().min(0).max(10000),
+          strainedFuelPerLoad: z.number().int().min(0).max(10),
+        }).strict().optional(),
         maxExtractionDepth: count.default(0),
         sourceKind: z.enum(["atmosphere"]).optional(),
         processConditionId: id.optional(),
@@ -648,6 +660,10 @@ function validateContentInternal(
   }
   const fuelClassIds = new Set(c.fuelClasses.map((entry) => entry.id));
   for (const m of c.machines) {
+    if (m.extractionEnvelope &&
+        (m.role !== "extractor" || m.sourceKind === "atmosphere" ||
+        m.extractionEnvelope.nominalLoad > m.extractionEnvelope.maximumLoad))
+      throw new Error("Extraction envelope needs a mineral extractor and valid load limits");
     if (m.fuelClassId && !fuelClassIds.has(m.fuelClassId))
       throw new Error("Machine references missing fuel class");
     if (m.unlock) {
