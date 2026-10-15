@@ -11,30 +11,38 @@ export default function GameHost({
   actions,
   homeToken,
   preferences,
+  paused,
 }: {
   session: Session;
   mode: WorldMode;
   actions: WorldActions;
   homeToken: number;
   preferences: GamePreferences;
+  paused: boolean;
 }) {
   const element = useRef<HTMLDivElement>(null),
     controls = useRef<WorldControls | null>(null),
     fpsOutput = useRef<HTMLOutputElement>(null),
-    latest = useRef({ mode, actions, preferences });
+    latest = useRef({ mode, actions, preferences, paused });
   const [error, setError] = useState("");
   // The parent recreates the actions bridge when its 100ms simulation
   // snapshot updates. Keep callbacks fresh without reapplying Phaser camera
   // preferences and mode on every unrelated React commit.
   useEffect(() => {
-    latest.current = { mode, actions, preferences };
-  }, [mode, actions, preferences]);
+    latest.current = { mode, actions, preferences, paused };
+  }, [mode, actions, preferences, paused]);
   useEffect(() => {
     controls.current?.setMode(mode);
   }, [mode]);
   useEffect(() => {
     controls.current?.setPreferences(preferences);
   }, [preferences]);
+  useEffect(() => {
+    const sync = () => controls.current?.setAudible(!paused && !document.hidden);
+    sync();
+    document.addEventListener("visibilitychange", sync);
+    return () => document.removeEventListener("visibilitychange", sync);
+  }, [paused]);
   useEffect(() => {
     let cancelled = false,
       teardown: (() => void) | undefined;
@@ -61,6 +69,7 @@ export default function GameHost({
           latest.current.preferences,
         );
         controls.current = world;
+        world.setAudible(!latest.current.paused && !document.hidden);
         // Opt-in read-only browser evidence for camera input acceptance.
         const probeWindow = window as Window & {
           __UNKNOWN_YIELD_CAMERA__?: () => ReturnType<WorldControls["getCameraView"]>;
