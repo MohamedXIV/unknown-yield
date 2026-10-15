@@ -64,6 +64,7 @@ const empty = (value: string | undefined) => value ?? "";
 const machineRow = (machine: Content["machines"][number]) => ({
   presentationJson: JSON.stringify(machine.presentation ?? null),
   extractionEnvelopeJson: JSON.stringify(machine.extractionEnvelope ?? null),
+  operatingModesJson: JSON.stringify(machine.operatingModes),
   nameKey: machine.nameKey,
   role: machine.role,
   maxExtractionDepth: machine.maxExtractionDepth,
@@ -429,6 +430,9 @@ function candidateFromStore(store: Store, base: Content): unknown {
       id,
       nameKey: stringCell(row, "nameKey", label),
       role: stringCell(row, "role", label),
+      operatingModes: parseOperations({
+        operationsJson: row.operatingModesJson ?? "[]",
+      }, label + " operating modes"),
       ...(optionalJsonObject(row, "extractionEnvelopeJson", label) === undefined
         ? {}
         : { extractionEnvelope: optionalJsonObject(row, "extractionEnvelopeJson", label) }),
