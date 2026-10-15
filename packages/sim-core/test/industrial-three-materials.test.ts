@@ -56,7 +56,7 @@ describe("P1c — third real mineral, discovery and physical extraction", () => 
     expect(assessMineralExtraction(fixture, {
       definitionId: "deep-extractor", depositId: "catalyst-outcrop",
     })).toMatchObject({
-      compatibility: "strained", durationTicks: 36, fuelCost: 2, stressLoad: 15,
+      compatibility: "strained", durationTicks: 36, fuelCost: 1, stressLoad: 15,
     });
     expect(assessMineralExtraction(fixture, {
       definitionId: "deep-extractor", depositId: "veined-field",
@@ -71,7 +71,7 @@ describe("P1c — third real mineral, discovery and physical extraction", () => 
     expect(JSON.stringify(sim.snapshot())).not.toContain("catalyst-seam-a");
     expect(JSON.stringify(sim.serialize())).not.toContain("catalyst-seam-a");
     const basic = sim.command({
-      type: "placeMachine", definitionId: "extractor", x: 45, y: 48, direction: 0,
+      type: "placeMachine", definitionId: "extractor", x: 5, y: 49, direction: 0,
     });
     expect(basic.ok, basic.message).toBe(true);
     const id = basic.id!;
@@ -100,7 +100,7 @@ describe("P1c — third real mineral, discovery and physical extraction", () => 
     const sim = new Simulation(fixture);
     expect(sim.preview({
       type: "placeMachine", definitionId: "deep-extractor",
-      x: 45, y: 48, direction: 0,
+      x: 5, y: 49, direction: 0,
     }).ok).toBe(false);
     expect(sim.command({
       type: "sense", capabilityId: "resonance-probe", x: 57, y: 10,
@@ -120,13 +120,13 @@ describe("P1c — third real mineral, discovery and physical extraction", () => 
 
     const deep = sim.command({
       type: "placeMachine", definitionId: "deep-extractor",
-      x: 45, y: 48, direction: 0,
+      x: 5, y: 49, direction: 0,
     });
     expect(deep.ok, deep.message).toBe(true);
     const id = deep.id!;
     expect(machineAt(sim, id)).toMatchObject({
       status: "needs-special-fuel", extractionCompatibility: "strained",
-      durationTicks: 36, fuelCost: 2,
+      durationTicks: 36, fuelCost: 1,
     });
     expect(sim.command({ type: "installTerminalModule", definitionId: "gas-dock" }).ok)
       .toBe(true);
@@ -143,7 +143,7 @@ describe("P1c — third real mineral, discovery and physical extraction", () => 
     expect(inBatch.deposits["catalyst-outcrop"]).toBe(
       preBatch.deposits["catalyst-outcrop"] - 1,
     );
-    expect(inBatch.terminalModules["gas-dock"].quantity).toBe(2);
+    expect(inBatch.terminalModules["gas-dock"].quantity).toBe(3);
     expect(machineAt(sim, id)).toMatchObject({
       status: "processing", job: { remaining: 36 },
     });
