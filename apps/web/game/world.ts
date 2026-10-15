@@ -39,6 +39,7 @@ import {
   type PlacementFeedbackEvent,
 } from "./placement-feedback";
 import { IndustrialFeedbackAudio } from "./audio-feedback";
+import { planMachineLoops } from "./machine-audio-planning";
 import {
   CameraNavigation,
   cameraZoomLimits,
@@ -57,6 +58,7 @@ export type WorldControls = {
   setSnapshot(s: PlayerSnapshot): void;
   setMode(mode: WorldMode): void;
   setPreferences(preferences: GamePreferences): void;
+  setAudible(audible: boolean): void;
   getCameraView(): (CameraView & { target: CameraView }) | null;
   getFps(): number | null;
   projectWorldPoint(
@@ -98,6 +100,7 @@ export function createWorld(
   initialPreferences: GamePreferences = DEFAULT_GAME_PREFERENCES,
 ): WorldControls {
   const feedbackAudio = new IndustrialFeedbackAudio();
+  let audible = false;
   let snapshot = initial,
     mode = initialMode,
     preferences = initialPreferences,
@@ -127,6 +130,7 @@ export function createWorld(
         ? window.matchMedia("(prefers-reduced-motion: reduce)")
         : null;
     private dirty = true;
+    private machineAudioElapsedMs = 0;
     // World overlays are world-space Graphics, not animations. Redrawing them
     // every RAF creates fresh geometry/upload work even when only camera
     // scroll/zoom changed. Snapshot and input events invalidate them instead.
@@ -394,7 +398,8 @@ export function createWorld(
       });
       this.input.on("pointerdown", (p: Phaser.Input.Pointer) => {
         this.invalidateOverlays();
-        if (preferences.interface.soundEffects) void feedbackAudio.enable();
+        if (preferences.interface.soundEffects)
+          void feedbackAudio.enable().then(() => this.syncMachineAudio());
         if (p.wasTouch) {
           const result = this.touch.down(p.id, { x: p.x, y: p.y });
           if (result?.kind === "cancel-build") {
@@ -524,7 +529,8 @@ export function createWorld(
       );
       const down = (e: KeyboardEvent) => {
         if (editing()) return;
-        if (preferences.interface.soundEffects) void feedbackAudio.enable();
+        if (preferences.interface.soundEffects)
+          void feedbackAudio.enable().then(() => this.syncMachineAudio());
         const k = e.key.toLowerCase();
         this.keys.add(k);
         if (
@@ -1681,6 +1687,26 @@ export function createWorld(
       }
       this.seenDiscoveries = new Set(snapshot.observations.map(observationKey));
     }
+    syncMachineAudio() {
+      const camera = this.cameras.main;
+      if (!camera) return;
+      const topLeft = camera.getWorldPoint(0, 0);
+      const bottomRight = camera.getWorldPoint(camera.width, camera.height);
+      const targets = planMachineLoops(
+        snapshot,
+        {
+          left: topLeft.x,
+          top: topLeft.y,
+          right: bottomRight.x,
+          bottom: bottomRight.y,
+        },
+        mode.openFactories,
+      );
+      feedbackAudio.syncLoops(
+        targets,
+        audible && preferences.interface.soundEffects && !document.hidden,
+      );
+    }
     update(_time: number, delta: number) {
       if (!this.dynamic) return;
       recordBrowserMetric("frame-interval", delta);
@@ -1720,6 +1746,12 @@ export function createWorld(
         : null;
       const nextView = this.navigation.advance(delta);
       this.applyCamera(nextView);
+      // Do not allocate or reprioritize voices at frame cadence.
+      this.machineAudioElapsedMs += Math.min(delta, 100);
+      if (this.machineAudioElapsedMs >= 250) {
+        this.machineAudioElapsedMs = 0;
+        this.syncMachineAudio();
+      }
       if (previousView) {
         recordCameraPacing(
           nextView.zoom / this.homeZoom(),
@@ -2258,11 +2290,20 @@ export function createWorld(
       mode = m;
       if (cornerChanged) scene?.updateCornerOrder(m.beltCornerOrder);
       scene?.invalidateOverlays();
-      if (rebuild) scene?.markDirty();
+      if (rebuild) {
+        scene?.markDirty();
+        scene?.syncMachineAudio();
+      }
     },
     setPreferences: (next) => {
       preferences = next;
       scene?.setCameraPreferences(next);
+      scene?.syncMachineAudio();
+    },
+    setAudible: (next) => {
+      audible = next;
+      if (!next) feedbackAudio.stopLoops();
+      else scene?.syncMachineAudio();
     },
     getCameraView: () => scene?.getCameraView() ?? null,
     // Phaser already estimates its render-loop cadence. Avoid an extra RAF
