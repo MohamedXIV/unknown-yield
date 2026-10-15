@@ -285,7 +285,11 @@ describe("terminal staging", () => {
   });
 
   it("backs terminal arrivals up deterministically when staging is full", () => {
-    const s = alienLine();
+    // Isolate the physical backpressure gate from the newly authored
+    // P1a raw-extraction fuel surcharge; staging must still hit its hard cap.
+    const content = structuredClone(fixture);
+    content.economy.startFuel = 500;
+    const s = alienLine(new Simulation(content));
     expect(
       s.command({ type: "setPolicy", materialId: "granules", policy: "keep" })
         .ok,
