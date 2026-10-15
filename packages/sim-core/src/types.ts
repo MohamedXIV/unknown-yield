@@ -128,6 +128,7 @@ export type Machine = Point & {
   factoryId: string | null;
   depositId: string | null;
   operation: string | null;
+  operatingModeId: string | null;
   enabled: boolean;
   incident: string | null;
   incidentInventory: Inventory;
