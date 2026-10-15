@@ -8,6 +8,19 @@ import {
 import { createContentStore, contentFromStore } from "../src/studio";
 
 describe("content boundary", () => {
+  it("rejects malformed mechanics and invalid extractor envelopes", () => {
+    const c = structuredClone(fixture);
+    c.materials.find((m) => m.id === "raw")!.mechanics!.hardness = 11;
+    expect(() => validateContent(c)).toThrow();
+    const b = structuredClone(fixture);
+    b.machines.find((m) => m.id === "extractor")!.extractionEnvelope!.nominalLoad = 20;
+    expect(() => validateContent(b)).toThrow(/valid load limits/);
+    const wrong = structuredClone(fixture);
+    wrong.machines.find((m) => m.id === "crusher")!.extractionEnvelope =
+      wrong.machines.find((m) => m.id === "extractor")!.extractionEnvelope;
+    expect(() => validateContent(wrong)).toThrow(/mineral extractor/);
+  });
+
   it("requires positive integral transport windows on crossings only", () => {
     for (const windowSteps of [undefined, 0, -1, 1.5]) {
       const c = structuredClone(fixture);
