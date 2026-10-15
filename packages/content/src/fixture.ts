@@ -298,6 +298,26 @@ export const fixture = validateContent({
       id: "extractor",
       nameKey: "machine.extractor.name",
       role: "extractor",
+      // Provisional P1b: steady is P1a-equivalent; force trades fuel for
+      // higher usable pressure/capacity and quicker ordinary batches.
+      operatingModes: [
+        {
+          id: "steady",
+          nameKey: "machine.extractor.mode.steady.name",
+          nominalLoadBonus: 0,
+          maximumLoadBonus: 0,
+          durationBps: 10000,
+          extraFuel: 0,
+        },
+        {
+          id: "force",
+          nameKey: "machine.extractor.mode.force.name",
+          nominalLoadBonus: 2,
+          maximumLoadBonus: 2,
+          durationBps: 8500,
+          extraFuel: 2,
+        },
+      ],
       // Provisional P1a balance: ferrite load 3 nominal; raw load 7 strained.
       extractionEnvelope: {
         nominalLoad: 6,
