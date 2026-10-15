@@ -24,6 +24,8 @@ export { fixture } from "./fixture";
 export {
   machinePresentationSchema,
   machineAudioCueSchema,
+  machineOperatingLoopSchema,
   type MachinePresentationDefinition,
   type MachineAudioCue,
+  type MachineOperatingLoop,
 } from "./machine-presentation";

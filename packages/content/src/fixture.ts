@@ -311,6 +311,7 @@ export const fixture = validateContent({
         },
         audio: {
           start: "machine-heavy-start",
+          runningLoop: "diesel-drive",
           blocked: "warning",
           incident: "hazard",
         },

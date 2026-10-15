@@ -10,6 +10,8 @@ import { z } from "zod";
  */
 const assetId = z.string().regex(/^[a-z][a-z0-9-]*$/);
 const tint = z.string().regex(/^#[0-9a-fA-F]{6}$/);
+/** Small closed sonic vocabulary, not arbitrary URLs or per-machine audio scripts. */
+export const machineOperatingLoopSchema = z.enum(["diesel-drive", "rotary-drive"]);
 export const machineAudioCueSchema = z.enum([
   "machine-start",
   "machine-heavy-start",
@@ -37,8 +39,10 @@ export const machinePresentationSchema = z.object({
     start: machineAudioCueSchema.optional(),
     blocked: machineAudioCueSchema.optional(),
     incident: machineAudioCueSchema.optional(),
+    runningLoop: machineOperatingLoopSchema.optional(),
   }).default({}),
 });
 
 export type MachinePresentationDefinition = z.infer<typeof machinePresentationSchema>;
 export type MachineAudioCue = z.infer<typeof machineAudioCueSchema>;
+export type MachineOperatingLoop = z.infer<typeof machineOperatingLoopSchema>;

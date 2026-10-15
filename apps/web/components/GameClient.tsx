@@ -927,6 +927,7 @@ function GameClientInner() {
         key={activePack?.fingerprint ?? "built-in"}
         session={session}
         mode={mode}
+        paused={paused}
         homeToken={homeToken}
         preferences={preferences}
         actions={{

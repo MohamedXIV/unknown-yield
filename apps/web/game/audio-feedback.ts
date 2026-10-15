@@ -1,5 +1,6 @@
 import type { FeedbackEvent, FeedbackKind } from "./feedback";
-import type { MachineAudioCue } from "@site/content";
+import type { MachineAudioCue, MachineOperatingLoop } from "@site/content";
+import type { MachineLoopTarget } from "./machine-audio-planning";
 
 type AudioContextWithWebkit = Window & {
   webkitAudioContext?: typeof AudioContext;
@@ -8,9 +9,15 @@ type AudioContextWithWebkit = Window & {
 export class IndustrialFeedbackAudio {
   private context: AudioContext | null = null;
   private lastConstructionAt = -Infinity;
+  private readonly loops = new Map<string, {
+    kind: MachineOperatingLoop;
+    oscillator: OscillatorNode;
+    gain: GainNode;
+  }>();
+  private destroyed = false;
 
   async enable(): Promise<void> {
-    if (typeof window === "undefined") return;
+    if (this.destroyed || typeof window === "undefined") return;
     if (!this.context) {
       const Constructor =
         window.AudioContext ??
@@ -35,7 +42,58 @@ export class IndustrialFeedbackAudio {
     }
   }
 
+  /** Keep at most the director's bounded, audible machine set alive. */
+  syncLoops(targets: readonly MachineLoopTarget[], enabled: boolean): void {
+    const context = this.context;
+    if (this.destroyed || !enabled || !context || context.state !== "running") {
+      this.stopLoops();
+      return;
+    }
+    const next = new Map(targets.slice(0, 3).map((target) => [target.id, target]));
+    for (const [id, voice] of this.loops) {
+      const target = next.get(id);
+      if (!target || target.kind !== voice.kind) this.stopLoop(id);
+    }
+    for (const target of next.values()) {
+      let voice = this.loops.get(target.id);
+      if (!voice) {
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
+        oscillator.type = target.kind === "diesel-drive" ? "triangle" : "sawtooth";
+        oscillator.frequency.setValueAtTime(
+          target.kind === "diesel-drive" ? 65 : 92,
+          context.currentTime,
+        );
+        gain.gain.setValueAtTime(0.0001, context.currentTime);
+        oscillator.connect(gain).connect(context.destination);
+        oscillator.start();
+        voice = { oscillator, gain, kind: target.kind };
+        this.loops.set(target.id, voice);
+      }
+      // AudioParam scheduling does not create per-frame React state or timers.
+      voice.gain.gain.setTargetAtTime(target.volume, context.currentTime, 0.07);
+    }
+  }
+
+  private stopLoop(id: string): void {
+    const voice = this.loops.get(id);
+    if (!voice) return;
+    this.loops.delete(id);
+    const now = this.context?.currentTime ?? 0;
+    voice.gain.gain.cancelScheduledValues(now);
+    voice.gain.gain.setTargetAtTime(0.0001, now, 0.015);
+    // Release every oscillator explicitly; no hidden audio lives after pause.
+    voice.oscillator.stop(now + 0.1);
+  }
+
+  stopLoops(): void {
+    for (const id of [...this.loops.keys()]) this.stopLoop(id);
+  }
+
   destroy(): void {
+    if (this.destroyed) return;
+    this.destroyed = true;
+    this.stopLoops();
     void this.context?.close();
     this.context = null;
   }
