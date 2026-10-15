@@ -518,6 +518,7 @@ export type GameCommand =
   | { type: "dismantleMany"; ids: string[] }
   | { type: "recoverMachineIncident"; machineId: string }
   | { type: "setEnabled"; machineId: string; enabled: boolean }
+  | { type: "setOperatingMode"; machineId: string; modeId: string }
   | { type: "setOperation"; machineId: string; operation: string }
   | { type: "setPolicy"; materialId: string; policy: "keep" | "export" }
   | { type: "setShipmentQuantity"; materialId: string; quantity: number }
