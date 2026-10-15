@@ -1,6 +1,6 @@
 # Data-Driven Industrial Behavior v1 — approved design contract
 
-**Status:** APPROVED DESIGN. P0 foundation PARTIALLY IMPLEMENTED via [PR #298](https://github.com/MohamedXIV/unknown-yield/pull/298) on 2026-10-13; P0 remains OPEN, P1–P3 are NOT IMPLEMENTED. This contract describes the intended full system, not a claim that wear, wrecks, new reaction logic, or final art/audio exist. Each phase needs separate acceptance evidence.
+**Status:** APPROVED DESIGN. P0 foundations PARTIALLY IMPLEMENTED via [PR #298](https://github.com/MohamedXIV/unknown-yield/pull/298) and [PR #299](https://github.com/MohamedXIV/unknown-yield/pull/299) through 2026-10-15; P0 remains OPEN, P1–P3 are NOT IMPLEMENTED. This contract describes the intended full system, not a claim that wear, wrecks, new reaction logic, or final art/audio exist. Each phase needs separate acceptance evidence.
 
 **Project boundaries:** [Content Model](CONTENT_MODEL.md), [Simulation](SIMULATION.md), [Art Pipeline](ART_PIPELINE.md), [World Identity](WORLD_IDENTITY.md), [Phase 16 acceptance](PHASE16_EXIT_REVIEW.md), and [Decisions](DECISIONS.md) remain authoritative for existing behavior. Preserve the established Pure TS sim-core / TinyBase authoring / Zod validation / Phaser-React presentation division, hidden truth vs player knowledge, physical conservation and exact deterministic save/load.
 
@@ -146,3 +146,6 @@ Implementation proposal on branch `feat/293-ambient-machine-audio`: `audio.runni
 The planner runs at most about four times per second during camera navigation. The sound engine does not open an `AudioContext` until a player pointer/keyboard gesture. Pause, document visibility and the existing sound-effects preference silence operating voices immediately; one-shot alert semantics remain unchanged. The audio engine reads sanitized public state only and never touches sim inventory, jobs or time.
 
 This does **not** supply approved real machinery recordings, multi-layer engine SFX, worn/damaged/wrecked physical states, or a new art pack. Do not mark P0 complete based only on this audio slice or substitute temporary procedural audio for final approved assets.
+
+
+**Audio implementation checkpoint, 2026-10-15:** [PR #299](https://github.com/MohamedXIV/unknown-yield/pull/299) merged at `979b490df5f6ab7b23bc7d8f7f6ba3d22318b494`; [CI #38690580623](https://github.com/MohamedXIV/unknown-yield/actions/runs/38690580623) passed 661 tests/3 skipped, typecheck, lint, build and 2 browser cases. Bounded on-screen running-loop selection and pause/mute/visibility handling now exist. Real production-quality audio, full machine states/art and physical damage still do not. The earlier draft paragraph describing proposed audio should now be read as implemented technical behavior only.
