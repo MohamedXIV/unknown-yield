@@ -203,6 +203,15 @@ export function selectionOverview(
   const machine = snapshot.machines.find((entry) => entry.id === selectedId);
   if (machine) {
     const copy = statusCopy[machine.status];
+    if (machine.extractionCompatibility === "strained" &&
+        (machine.status === "processing" || machine.status === "ready")) {
+      return {
+        tone: "warn" as const,
+        eyebrow: "MACHINE · HIGH MECHANICAL LOAD",
+        title: "Extraction under strain",
+        detail: "This material takes longer and consumes more operating fuel per batch. The extractor is still physically capable; no wear system is simulated yet.",
+      };
+    }
     return {
       ...copy,
       eyebrow: "MACHINE · " + machine.status.replaceAll("-", " ").toUpperCase(),
