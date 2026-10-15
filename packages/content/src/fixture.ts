@@ -1,6 +1,6 @@
 import { validateContent } from "./schema";
 export const fixture = validateContent({
-  version: "world-01-v16",
+  version: "world-01-v17",
   tickMs: 100,
   containmentCapabilities: [
     {
@@ -144,6 +144,9 @@ export const fixture = validateContent({
     {
       id: "catalyst",
       nameKey: "material.catalyst.name",
+      // Provisional P1c: fracture-resistant, very abrasive mineral.
+      // Load = 2 * 6 + 4 - 1 = 15; ordinary cutter maxes at 10/12.
+      mechanics: { hardness: 6, abrasiveness: 4, brittleness: 1 },
       color: "#d5c4a1",
       known: true,
     },
@@ -358,6 +361,17 @@ export const fixture = validateContent({
       nameKey: "machine.deep-extractor.name",
       role: "extractor",
       maxExtractionDepth: 20,
+      // Real high-capability cutter: abrasive catalyst slows batches and
+      // exposes stress for P2. Preserve the imported propellant economy so
+      // existing Phase-lattice expeditions still have physical fuel.
+      extractionEnvelope: {
+        nominalLoad: 14,
+        maximumLoad: 18,
+        strainedDurationPerLoadBps: 2000,
+        // Keep late-game imported fuel budget viable: mode stress is a
+        // separate input to P2 wear, not prematurely extra special fuel.
+        strainedFuelPerLoad: 0,
+      },
       fuelClassId: "advanced-propellant",
       unlock: {
         reactionId: "heat-raw-sealed",
@@ -976,6 +990,17 @@ export const fixture = validateContent({
         width: 6,
         height: 6,
         units: 3000,
+      },
+      {
+        // Surface trace is deliberately reachable but too hard for the
+        // starter extractor; larger seam stays gated by resonance surveying.
+        id: "catalyst-outcrop",
+        material: "catalyst",
+        x: 5,
+        y: 49,
+        width: 5,
+        height: 5,
+        units: 90,
       },
       {
         id: "north-ferrite",
