@@ -361,13 +361,16 @@ export const fixture = validateContent({
       nameKey: "machine.deep-extractor.name",
       role: "extractor",
       maxExtractionDepth: 20,
-      // Real high-capability tool, slower and uses more imported propellant
-      // only when mechanically strained. Raw/ferrite stay nominal.
+      // Real high-capability cutter: abrasive catalyst slows batches and
+      // exposes stress for P2. Preserve the imported propellant economy so
+      // existing Phase-lattice expeditions still have physical fuel.
       extractionEnvelope: {
         nominalLoad: 14,
         maximumLoad: 18,
         strainedDurationPerLoadBps: 2000,
-        strainedFuelPerLoad: 1,
+        // Keep late-game imported fuel budget viable: mode stress is a
+        // separate input to P2 wear, not prematurely extra special fuel.
+        strainedFuelPerLoad: 0,
       },
       fuelClassId: "advanced-propellant",
       unlock: {
@@ -993,8 +996,8 @@ export const fixture = validateContent({
         // starter extractor; larger seam stays gated by resonance surveying.
         id: "catalyst-outcrop",
         material: "catalyst",
-        x: 45,
-        y: 48,
+        x: 5,
+        y: 49,
         width: 5,
         height: 5,
         units: 90,
