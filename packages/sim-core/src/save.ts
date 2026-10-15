@@ -24,6 +24,7 @@ import {
   exchangeDefinition,
 } from "./market";
 import { machineUnlocked } from "./progression";
+import { assessMineralExtraction } from "./extraction-envelope";
 import { hazardDefinition } from "./hazards";
 import { milestoneSatisfied, refreshMilestones } from "./milestones";
 import { assistanceDefinition } from "./assistance";
@@ -1071,7 +1072,7 @@ export function parseSave(input: unknown, c: Content): Save {
     if (m.job) {
       const r = c.reactions.find((r) => r.id === m.job!.reaction);
       if (
-        m.job.remaining > d.durationTicks ||
+        m.job.remaining > assessMineralExtraction(c, m).durationTicks ||
         (d.role === "extractor"
           ? m.job.reaction !== null
           : !r ||
