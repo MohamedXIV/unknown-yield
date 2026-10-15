@@ -439,7 +439,7 @@ describe("automatic industry", () => {
     expect(JSON.stringify(hinted)).not.toContain("reaction.heat-raw");
 
     const saved = s.serialize();
-    expect(saved.schemaVersion).toBe(27);
+    expect(saved.schemaVersion).toBe(28);
     expect(saved.evidence[hinted!.id].state).toBe("hinted");
 
     const restored = make();
@@ -515,7 +515,7 @@ describe("automatic industry", () => {
 
     const restored = new Simulation(historicalFixture);
     expect(restored.load(legacy).ok).toBe(true);
-    expect(restored.serialize().schemaVersion).toBe(27);
+    expect(restored.serialize().schemaVersion).toBe(28);
     const hinted = restored
       .snapshot()
       .knowledgeEntries.find(
@@ -741,7 +741,7 @@ describe("automatic industry", () => {
 
     const restored = new Simulation(historicalFixture);
     expect(restored.load(legacy).ok).toBe(true);
-    expect(restored.serialize().schemaVersion).toBe(27);
+    expect(restored.serialize().schemaVersion).toBe(28);
     expect(restored.serialize().machines[machineId].incident).toBeNull();
   });
 
