@@ -106,6 +106,7 @@ export const fixture = validateContent({
     {
       id: "ferrite",
       nameKey: "material.ferrite.name",
+      mechanics: { hardness: 2, abrasiveness: 1, brittleness: 2 },
       color: "#a88d78",
       known: true,
     },
@@ -124,6 +125,7 @@ export const fixture = validateContent({
     {
       id: "raw",
       nameKey: "material.raw.name",
+      mechanics: { hardness: 3, abrasiveness: 2, brittleness: 1 },
       color: "#c8aa73",
       known: true,
     },
@@ -296,6 +298,13 @@ export const fixture = validateContent({
       id: "extractor",
       nameKey: "machine.extractor.name",
       role: "extractor",
+      // Provisional P1a balance: ferrite load 3 nominal; raw load 7 strained.
+      extractionEnvelope: {
+        nominalLoad: 6,
+        maximumLoad: 10,
+        strainedDurationPerLoadBps: 2500,
+        strainedFuelPerLoad: 1,
+      },
       presentation: {
         version: 1,
         assets: {
