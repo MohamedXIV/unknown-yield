@@ -167,7 +167,10 @@ describe("belt diverter", () => {
       expect(s.command({ type: "switchDivert", beltId: id }).ok).toBe(true);
       const sv = s.serialize();
       // Embodied plates: extractor 18 + depots 30 + 30 + 16 belt cells.
-      expect(held(sv) + sources(sv) + 94).toBe(600 + 12000);
+      expect(held(sv) + sources(sv) + 94).toBe(
+        fixture.site.startStock +
+        fixture.site.deposits.reduce((total, deposit) => total + deposit.units, 0),
+      );
       auditOk(s);
     }
   });
