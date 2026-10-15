@@ -384,8 +384,8 @@ describe("automatic industry", () => {
       expect(save.machines[processor].definitionId).toBe(definitionId);
       expect(save.machines[processor].job?.reaction).toBe(reactionId);
       expect(save.knowledge).not.toContain(reactionId);
-      expect(save.schemaVersion).toBe(27);
-      expect(save.contentVersion).toBe("world-01-v15");
+      expect(save.schemaVersion).toBe(28);
+      expect(save.contentVersion).toBe("world-01-v16");
 
       const restored = make(),
         repeated = make();
