@@ -205,6 +205,11 @@ const schema = z.discriminatedUnion("type", [
     enabled: z.boolean(),
   }),
   z.object({
+    type: z.literal("setOperatingMode"),
+    machineId: z.string(),
+    modeId: z.string(),
+  }),
+  z.object({
     type: z.literal("setOperation"),
     machineId: z.string(),
     operation: z.string(),
@@ -749,6 +754,7 @@ export function applyCommand(
         factoryId: placement.factoryId,
         depositId: placement.depositId,
         operation: def.operations[0] ?? null,
+        operatingModeId: def.operatingModes[0]?.id ?? null,
         enabled: true,
         incident: null,
         incidentInventory: {},
@@ -1050,6 +1056,16 @@ export function applyCommand(
             ? "Automatic operation enabled"
             : "Stopping after current batch",
       );
+    }
+    case "setOperatingMode": {
+      const m = s.machines[cmd.machineId];
+      if (!m) return fail("Unknown machine");
+      const definition = c.machines.find((d) => d.id === m.definitionId)!;
+      if (!definition.operatingModes.some((mode) => mode.id === cmd.modeId))
+        return fail("Unsupported operating mode");
+      if (m.job) return fail("Wait for the current batch to finish");
+      if (apply) m.operatingModeId = cmd.modeId;
+      return ok("Operating mode selected");
     }
     case "setOperation": {
       const m = s.machines[cmd.machineId],
