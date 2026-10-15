@@ -28,6 +28,11 @@ const statusCopy: Record<
     title: "Machine disabled",
     detail: "Its buffers remain physical. Re-enable it when this line should resume.",
   },
+  "material-too-hard": {
+    tone: "warn",
+    title: "Machine cannot penetrate this deposit",
+    detail: "The mineral exceeds the current tool capability. Try a stronger extractor; no material has been removed.",
+  },
   "deposit-exhausted": {
     tone: "warn",
     title: "Deposit exhausted",
