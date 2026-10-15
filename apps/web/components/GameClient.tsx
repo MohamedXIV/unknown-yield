@@ -1670,6 +1670,11 @@ function GameClientInner() {
                       <span>
                         Batch time<b>{machine.durationMs / 1000}s</b>
                       </span>
+                      {machine.role === "extractor" && machine.extractionCompatibility !== "nominal" && (
+                        <span>
+                          Mechanical load<b>{machine.extractionCompatibility === "strained" ? "Strained" : "Beyond capability"}</b>
+                        </span>
+                      )}
                     </div>
                     {selectedFuelClass && (
                       <p className="hint">
