@@ -51,7 +51,7 @@ import {
   cardinalSpan,
   elevatedPlacementError,
 } from "./geometry";
-export const CURRENT_SAVE_SCHEMA_VERSION = 27;
+export const CURRENT_SAVE_SCHEMA_VERSION = 28;
 
 const count = z.number().int().nonnegative().max(1000000000),
   positive = count.positive();
@@ -99,6 +99,7 @@ const machine = z.object({
   factoryId: safeId.nullable(),
   depositId: safeId.nullable(),
   operation: safeId.nullable(),
+  operatingModeId: safeId.nullable().default(null),
   enabled: z.boolean(),
   incident: safeId.nullable().default(null),
   incidentInventory: inventory.default({}),
@@ -214,6 +215,7 @@ const schema = z.object({
     z.literal(25),
     z.literal(26),
     z.literal(27),
+    z.literal(28),
   ]),
   contentVersion: z.string(),
   terminalModules: z
@@ -436,6 +438,12 @@ export function initialState(c: Content): Save {
   return state;
 }
 export function parseSave(input: unknown, c: Content): Save {
+  if (input && typeof input === "object" &&
+      (input as { schemaVersion?: number }).schemaVersion === 28) {
+    const machines = (input as { machines?: Record<string, Record<string, unknown>> }).machines;
+    if (Object.values(machines ?? {}).some((m) => !Object.hasOwn(m, "operatingModeId")))
+      throw new Error("Missing operating mode in current save");
+  }
   const parsed = schema.parse(input);
   if (
     parsed.schemaVersion >= 22 &&
@@ -685,6 +693,15 @@ export function parseSave(input: unknown, c: Content): Save {
   // Schema 26 predates elevated gantries. No raised deck or in-transit cargo
   // existed, so migration is exactly an empty route record.
   if (s.schemaVersion === 26) s.schemaVersion = 27;
+  // Schema 27 had no user-selectable operating mode. Existing machines resume
+  // in the first (steady/default) authored mode, with all material left intact.
+  if (s.schemaVersion === 27) {
+    for (const machine of Object.values(s.machines)) {
+      const definition = c.machines.find((m) => m.id === machine.definitionId);
+      machine.operatingModeId = definition?.operatingModes[0]?.id ?? null;
+    }
+    s.schemaVersion = 28;
+  }
   if (s.contentVersion !== c.version || s.remainder >= c.tickMs)
     throw new Error("Incompatible content or timing");
   if (
@@ -1069,6 +1086,11 @@ export function parseSave(input: unknown, c: Content): Save {
             );
       if (!valid) throw new Error("Impossible machine output");
     }
+    const availableModes = d.operatingModes.map((mode) => mode.id);
+    if (availableModes.length
+      ? !m.operatingModeId || !availableModes.includes(m.operatingModeId)
+      : m.operatingModeId !== null)
+      throw new Error("Invalid machine operating mode");
     if (m.job) {
       const r = c.reactions.find((r) => r.id === m.job!.reaction);
       if (
