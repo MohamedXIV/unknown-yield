@@ -38,6 +38,7 @@ import {
   terminalModuleCarriesImport,
 } from "./imports";
 import { consumeMachineFuel, machineFuelBlock } from "./fuel";
+import { assessMineralExtraction } from "./extraction-envelope";
 export function recipe(c: Content, m: Machine) {
   const definition = c.machines.find((d) => d.id === m.definitionId);
   return c.reactions.find(
@@ -62,11 +63,14 @@ export function status(c: Content, s: Save, m: Machine): MachineStatus {
     (!m.depositId || s.deposits[m.depositId] === 0)
   )
     return "deposit-exhausted";
+  const extraction = assessMineralExtraction(c, m);
+  if (d.role === "extractor" && extraction.compatibility === "impossible")
+    return "material-too-hard";
   if (d.role === "processor" && !r)
     return total(m.input) ? "needs-compatible-input" : "needs-input";
   if (total(m.output) + (r?.outputAmount ?? 1) > d.capacity)
     return "output-full";
-  const fuelBlock = machineFuelBlock(c, s, d);
+  const fuelBlock = machineFuelBlock(c, s, d, extraction.fuelCost);
   if (fuelBlock) return fuelBlock;
   return "ready";
 }
@@ -126,7 +130,8 @@ export function completeAndStart(
       }
     } else if (status(c, s, m) === "ready") {
       const r = recipe(c, m);
-      consumeMachineFuel(c, s, d);
+      const extraction = assessMineralExtraction(c, m);
+      consumeMachineFuel(c, s, d, extraction.fuelCost);
       if (r) {
         change(m.input, r.input, -r.inputAmount);
         const id = experimentEvidenceKey(
@@ -144,7 +149,7 @@ export function completeAndStart(
         const source = atmosphericSourceForRect(c, s, footprint(m, d))!;
         s.atmosphericSources[source.id]--;
       } else s.deposits[m.depositId!]--;
-      m.job = { remaining: d.durationTicks, reaction: r?.id ?? null };
+      m.job = { remaining: extraction.durationTicks, reaction: r?.id ?? null };
     }
   }
 }
