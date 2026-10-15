@@ -1,6 +1,6 @@
 # Data-Driven Industrial Behavior v1 — approved design contract
 
-**Status:** APPROVED DESIGN. P0 foundations PARTIALLY IMPLEMENTED via [PR #298](https://github.com/MohamedXIV/unknown-yield/pull/298) and [PR #299](https://github.com/MohamedXIV/unknown-yield/pull/299) through 2026-10-15; P0 remains OPEN; P1a mechanical extraction via [PR #300](https://github.com/MohamedXIV/unknown-yield/pull/300) is MERGED but P1 is still OPEN; P2–P3 are NOT IMPLEMENTED. This contract describes the intended full system, not a claim that wear, wrecks, new reaction logic, or final art/audio exist. Each phase needs separate acceptance evidence.
+**Status:** APPROVED DESIGN. P0 foundations PARTIALLY IMPLEMENTED via [PR #298](https://github.com/MohamedXIV/unknown-yield/pull/298) and [PR #299](https://github.com/MohamedXIV/unknown-yield/pull/299) through 2026-10-15; P0 remains OPEN; P1a [PR #300](https://github.com/MohamedXIV/unknown-yield/pull/300) and P1b [PR #301](https://github.com/MohamedXIV/unknown-yield/pull/301) are MERGED, but P1 is still OPEN; P2–P3 are NOT IMPLEMENTED. This contract describes the intended full system, not a claim that wear, wrecks, new reaction logic, or final art/audio exist. Each phase needs separate acceptance evidence.
 
 **Project boundaries:** [Content Model](CONTENT_MODEL.md), [Simulation](SIMULATION.md), [Art Pipeline](ART_PIPELINE.md), [World Identity](WORLD_IDENTITY.md), [Phase 16 acceptance](PHASE16_EXIT_REVIEW.md), and [Decisions](DECISIONS.md) remain authoritative for existing behavior. Preserve the established Pure TS sim-core / TinyBase authoring / Zod validation / Phaser-React presentation division, hidden truth vs player knowledge, physical conservation and exact deterministic save/load.
 
@@ -161,10 +161,13 @@ Partially implements [#294](https://github.com/MohamedXIV/unknown-yield/issues/2
 
 **P1a merge checkpoint (2026-10-15):** [PR #300](https://github.com/MohamedXIV/unknown-yield/pull/300) squash-merged as `de514b07e6c87e58ab909d11de397be14625fee3`; [CI #38781799351](https://github.com/MohamedXIV/unknown-yield/actions/runs/38781799351) PASS: 666 tests, 3 skipped, typecheck, lint, build, 2 production-browser cases, no browser runtime errors. The preceding P1a implementation section is current implementation evidence, not just a proposal. P1 remains OPEN for modes and additional live material/deposit cases. Content v15 invalidates v14 saves intentionally.
 
-## P1b — selectable operating modes (implementation candidate)
+## P1b — selectable operating modes (merged)
 
 Two **authored, validated mineral-extractor modes** now drive the pure TS P1a envelope: `steady` retains the previous baseline, while `force` grants +2 nominal and +2 maximum mechanical load, uses 85% of derived batch ticks (ceiling once), and incurs +2 additional physical operating fuel per batch. These are **provisional balance values**, not real pressure units or physical wear. The same trait-driven evaluator is used for start, preview diagnosis, fuel check, snapshot and active-batch save validation; the current batch cannot be reconfigured after its fuel and source ore have been reserved. An otherwise impossible load may become strained/operable under force; an extreme load remains impossible. No P2 wear or incidents invented.
 
 `setOperatingMode(machineId, modeId)` accepts only authored IDs and only when no job is running; both command and dry-run preview have identical validation. The choice lives in the machine's persisted authoritative state and appears as a localized selector in the world inspector, rather than client local storage or a fake UI mode. Save schema v28 records `operatingModeId`; schema 27 automatically resumes with the first authored default mode. Built-in content is now v16 so earlier v15 expeditions are **not silently reinterpreted**, despite unchanged physical inventories. TinyBase stores operatingModes as a bounded JSON array.
 
 P1b is not the P1 exit gate: representative third live mineral example, and later P2 actual stress/wear lifecycle still require further evidence.
+
+
+**P1b acceptance checkpoint (2026-10-15):** [PR #301](https://github.com/MohamedXIV/unknown-yield/pull/301) squash `94bf74e8ad81b7a31ff21a0c973fb426abfd754c` verified by [CI #38789142702](https://github.com/MohamedXIV/unknown-yield/actions/runs/38789142702): **670 passed / 3 skipped**, typecheck, lint, build and two production-browser cases (zero runtime errors). This confirms implemented simulation/UI/save mode selection, not the third-distinct-deposit P1 gate, accumulated stress/wear or user-approved art.
