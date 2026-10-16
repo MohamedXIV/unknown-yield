@@ -35,10 +35,15 @@ describe("content boundary", () => {
     expect(() => validateContent(wrong)).toThrow(/mineral extractor/);
   });
 
-  it("bounds authored hazard damage while preserving service-free specialist packs", () => {
+  it("bounds authored hazard damage and fouling while preserving service-free specialist packs", () => {
     const excessive = structuredClone(fixture);
     excessive.hazardClasses.find((h) => h.id === "pressure-expansion")!.integrityDamage = 10000;
     expect(() => validateContent(excessive)).toThrow();
+    for (const bad of [-1, 10001, 1.5]) {
+      const fouled = structuredClone(fixture);
+      fouled.hazardClasses.find((h) => h.id === "instability")!.foulingWear = bad;
+      expect(() => validateContent(fouled)).toThrow();
+    }
     const noRepair = structuredClone(fixture);
     delete noRepair.machines.find((m) => m.id === "oversealed-furnace")!.reliability!.service;
     expect(() => validateContent(noRepair)).not.toThrow();
@@ -57,7 +62,7 @@ describe("content boundary", () => {
   it("accepts the complete tiny scenario", () => {
     const c = validateContent(fixture);
     expect(c.machines).toHaveLength(15);
-    expect(c.version).toBe("world-01-v24");
+    expect(c.version).toBe("world-01-v25");
     expect(c.storages).toHaveLength(1);
     expect(c.storages[0]).toMatchObject({ id: "depot", capacity: 40 });
     expect(c.site.stagingCapacity).toBe(24);
