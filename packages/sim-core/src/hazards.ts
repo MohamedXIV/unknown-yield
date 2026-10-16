@@ -73,10 +73,11 @@ export function applyReactionHazard(
       }
       // A class may also physically injure the chamber. Keep the existing
       // independent 1..10000 integrity axis and never invent/delete matter.
-      // Machines with no authored reliability profile retain the legacy
-      // lockout-only behavior instead of acquiring unserviceable damage.
+      // Only machines with a physical service rule take lasting damage.
+      // Test-only/specialist packs without repair capability retain their
+      // original lockout-only consequence rather than becoming unrepairable.
       const definition = content.machines.find((d) => d.id === machine.definitionId)!;
-      if (definition.reliability)
+      if (definition.reliability?.service)
         machine.integrity = Math.max(1,
           machine.integrity - classDefinition.integrityDamage);
       machine.incident = reaction.hazard.id;
