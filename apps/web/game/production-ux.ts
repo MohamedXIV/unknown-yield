@@ -28,6 +28,11 @@ const statusCopy: Record<
     title: "Mechanical lockout",
     detail: "The failed tool needs actual replacement parts from nearby storage before it can restart. Finished output is retained.",
   },
+  wrecked: {
+    tone: "bad",
+    title: "Machine wrecked",
+    detail: "Irreparable structural damage. Save the real cargo and construction material through nearby-storage salvage; do not try restarting.",
+  },
   disabled: {
     tone: "calm",
     title: "Machine disabled",

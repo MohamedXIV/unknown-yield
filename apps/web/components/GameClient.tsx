@@ -1775,9 +1775,11 @@ function GameClientInner() {
                     {machine.mechanicalFailure && (
                       <div className="milestone">
                         <h3>{t("ui.machine.failure." + machine.mechanicalFailure.kind)}</h3>
-                        <p>{t("ui.machine.failure.explanation", {
-                          load: t("ui.machine.failure." + machine.mechanicalFailure.observedLoad),
-                        })}</p>
+                        <p>{machine.mechanicalFailure.kind === "wreck"
+                          ? t("ui.machine.failure.wreck-explanation")
+                          : t("ui.machine.failure.explanation", {
+                              load: t("ui.machine.failure." + machine.mechanicalFailure.observedLoad),
+                            })}</p>
                         {machine.salvage && (
                           <>
                             <p>{t("ui.machine.salvage.info", {

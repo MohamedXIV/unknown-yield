@@ -52,7 +52,7 @@ export function recipe(c: Content, m: Machine) {
 export function status(c: Content, s: Save, m: Machine): MachineStatus {
   if (m.job) return "processing";
   if (m.incident) return "incident";
-  if (m.mechanicalFailure) return "mechanical-failure";
+  if (m.mechanicalFailure) return m.mechanicalFailure.kind === "wreck" ? "wrecked" : "mechanical-failure";
   if (!m.enabled) return "disabled";
   const d = c.machines.find((d) => d.id === m.definitionId)!;
   const r = recipe(c, m);

@@ -75,7 +75,7 @@ describe("P2a — persisted material-dependent physical wear", () => {
     delete (legacy.machines[id] as Partial<typeof legacy.machines[string]>).wear;
     const migrated = new Simulation(fixture);
     expect(migrated.load(legacy).ok).toBe(true);
-    expect(migrated.serialize().schemaVersion).toBe(31);
+    expect(migrated.serialize().schemaVersion).toBe(32);
     expect(migrated.serialize().machines[id]!.wear).toBe(0);
     expect(auditLedger(fixture, migrated.serialize()).ok).toBe(true);
   });

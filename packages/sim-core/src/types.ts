@@ -109,6 +109,7 @@ export const MACHINE_STATUSES = [
   "processing",
   "incident",
   "mechanical-failure",
+  "wrecked",
   "disabled",
   "deposit-exhausted",
   "material-too-hard",
@@ -123,7 +124,7 @@ export const MACHINE_STATUSES = [
 ] as const;
 export type MachineStatus = (typeof MACHINE_STATUSES)[number];
 export type MachineMechanicalFailure = {
-  kind: "jam" | "tool-break";
+  kind: "jam" | "tool-break" | "wreck";
   observedLoad: "nominal" | "strained";
   atTick: number;
 };
@@ -556,7 +557,7 @@ export type MachineServiceView = {
   units: number;
   availableUnits: number;
   ready: boolean;
-  reason: "running" | "enabled" | "hazard" | "already-serviced" | "no-local-parts" | null;
+  reason: "running" | "enabled" | "hazard" | "wrecked" | "already-serviced" | "no-local-parts" | null;
 };
 export type MachineSalvageView = {
   cargoUnits: number;
@@ -579,7 +580,7 @@ export type MachineView = Omit<Machine, "job" | "incident"> & {
   durationMs: number;
   fuelCost: number;
   extractionCompatibility: "nominal" | "strained" | "impossible";
-  physicalCondition: "intact" | "worn" | "damaged";
+  physicalCondition: "intact" | "worn" | "damaged" | "wrecked";
   fuelClassId: string | null;
   status: MachineStatus;
   progress: number;

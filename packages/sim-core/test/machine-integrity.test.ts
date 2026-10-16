@@ -98,7 +98,7 @@ describe("P2b1 — independent physical integrity and actual damage", () => {
     delete (legacy.machines[id] as Partial<typeof legacy.machines[string]>).integrity;
     const restored = new Simulation(fixture);
     expect(restored.load(legacy).ok).toBe(true);
-    expect(restored.serialize().schemaVersion).toBe(31);
+    expect(restored.serialize().schemaVersion).toBe(32);
     expect(restored.serialize().machines[id]).toMatchObject({
       wear: 0, integrity: 10000,
     });

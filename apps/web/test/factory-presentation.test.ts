@@ -6,6 +6,7 @@ const statusCounts = (): Record<MachineStatus, number> => ({
   processing: 1,
   incident: 0,
   "mechanical-failure": 0,
+  wrecked: 0,
   disabled: 0,
   "deposit-exhausted": 0,
   "material-too-hard": 0,

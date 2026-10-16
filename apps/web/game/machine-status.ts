@@ -11,6 +11,7 @@ const labels: Record<MachineStatus, string> = {
   processing: "Processing",
   incident: "Incident lockout",
   "mechanical-failure": "Mechanical failure — local service required",
+  wrecked: "Wrecked — local salvage required",
   disabled: "Disabled",
   "deposit-exhausted": "Deposit exhausted",
   "material-too-hard": "Mechanical load exceeds machine capability",
