@@ -519,6 +519,7 @@ export type GameCommand =
   | { type: "dismantle"; id: string }
   | { type: "dismantleMany"; ids: string[] }
   | { type: "recoverMachineIncident"; machineId: string }
+  | { type: "serviceMachine"; machineId: string }
   | { type: "setEnabled"; machineId: string; enabled: boolean }
   | { type: "setOperatingMode"; machineId: string; modeId: string }
   | { type: "setOperation"; machineId: string; operation: string }
@@ -542,7 +543,15 @@ export type HazardEvidenceView = MachineHazardView & {
   inputId: string;
   setupNameKey?: string;
 };
+export type MachineServiceView = {
+  materialId: string | null;
+  units: number;
+  availableUnits: number;
+  ready: boolean;
+  reason: "running" | "enabled" | "hazard" | "already-serviced" | "no-local-parts" | null;
+};
 export type MachineView = Omit<Machine, "job" | "incident"> & {
+  service: MachineServiceView | null;
   job: { remaining: number } | null;
   incident: MachineHazardView | null;
   nameKey: string;

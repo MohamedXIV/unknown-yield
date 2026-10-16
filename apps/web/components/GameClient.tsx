@@ -1682,6 +1682,30 @@ function GameClientInner() {
                         </span>
                       )}
                     </div>
+                    {machine.service && (
+                      <div className="hint">
+                        <p>
+                          {t("ui.machine.service.requires", {
+                            count: machine.service.units,
+                            material: machine.service.materialId
+                              ? materialName(machine.service.materialId)
+                              : t("ui.machine.service.unidentified"),
+                            nearby: machine.service.availableUnits,
+                          })}
+                        </p>
+                        <button
+                          type="button"
+                          disabled={!machine.service.ready}
+                          title={machine.service.reason ?? undefined}
+                          onClick={() => act({
+                            type: "serviceMachine",
+                            machineId: machine.id,
+                          })}
+                        >
+                          {t("ui.machine.service.button")}
+                        </button>
+                      </div>
+                    )}
                     {selectedFuelClass && (
                       <p className="hint">
                         {t("ui.machine.fuel.terminal-held", {

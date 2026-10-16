@@ -94,6 +94,13 @@ export const contentSchema = z.object({
           integrityLossPerWear: z.number().int().min(0).max(1000).default(0),
           damagedBelow: z.number().int().min(1).max(9999).default(1),
           damagedDurationBps: z.number().int().min(10000).max(30000).default(10000),
+          service: z.object({
+            materialId: id,
+            units: positive,
+            range: z.number().int().min(1).max(32),
+            restoreIntegrity: z.number().int().min(1).max(10000),
+            reduceWear: z.number().int().min(0).max(10000),
+          }).strict().optional(),
         }).strict().optional(),
         maxExtractionDepth: count.default(0),
         sourceKind: z.enum(["atmosphere"]).optional(),
@@ -679,6 +686,11 @@ function validateContentInternal(
   }
   const fuelClassIds = new Set(c.fuelClasses.map((entry) => entry.id));
   for (const m of c.machines) {
+    if (m.reliability?.service &&
+        !c.materials.some((material) =>
+          material.id === m.reliability!.service!.materialId &&
+          material.handlingState === "solid"))
+      throw new Error("Machine service requires an authored solid material");
     if (m.operatingModes.length && !m.extractionEnvelope)
       throw new Error("Operating modes require a mineral extraction envelope");
     if (new Set(m.operatingModes.map((mode) => mode.id)).size !== m.operatingModes.length)

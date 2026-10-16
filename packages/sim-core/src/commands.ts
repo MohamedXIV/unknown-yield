@@ -7,6 +7,7 @@ import {
   shipmentQuantityCommand,
 } from "./terminal";
 import { pumpRepairEligible } from "./pump-recovery";
+import { serviceMachine } from "./machine-service";
 import { z } from "zod";
 import type { Content } from "@site/content";
 import { amount, change, total, type Save, type CommandResult } from "./types";
@@ -147,6 +148,7 @@ const schema = z.discriminatedUnion("type", [
     type: z.literal("recoverMachineIncident"),
     machineId: z.string(),
   }),
+  z.object({ type: z.literal("serviceMachine"), machineId: z.string() }),
   z.object({
     type: z.literal("placeStorage"),
     ...point,
@@ -1009,6 +1011,9 @@ export function applyCommand(
             ? "ui.diverter.route-alternate"
             : "ui.diverter.route-primary",
       };
+    }
+    case "serviceMachine": {
+      return serviceMachine(c, s, s.machines[cmd.machineId], apply);
     }
     case "recoverMachineIncident": {
       const machine = s.machines[cmd.machineId];
