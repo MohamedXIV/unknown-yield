@@ -123,6 +123,7 @@ describe("Corporate Orders and Special Directives", () => {
       depositId: null,
       operation: "heat",
       operatingModeId: null,
+      wear: 0,
       enabled: true,
       incident: null,
       incidentInventory: {},

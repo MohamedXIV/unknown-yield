@@ -441,7 +441,7 @@ export function initialState(c: Content): Save {
 }
 export function parseSave(input: unknown, c: Content): Save {
   if (input && typeof input === "object" &&
-      (input as { schemaVersion?: number }).schemaVersion >= 28) {
+      ((input as { schemaVersion?: number }).schemaVersion ?? 0) >= 28) {
     const machines = (input as { machines?: Record<string, Record<string, unknown>> }).machines;
     if (Object.values(machines ?? {}).some((m) => !Object.hasOwn(m, "operatingModeId")))
       throw new Error("Missing operating mode in current save");
