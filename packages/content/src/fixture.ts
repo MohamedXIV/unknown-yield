@@ -1,6 +1,6 @@
 import { validateContent } from "./schema";
 export const fixture = validateContent({
-  version: "world-01-v26",
+  version: "world-01-v27",
   tickMs: 100,
   containmentCapabilities: [
     {
@@ -57,6 +57,9 @@ export const fixture = validateContent({
       nameKey: "hazard.class.contamination.name",
       evidenceKey: "hazard.class.contamination.evidence",
       machineEffect: "lockout",
+      strandedOutputUnits: 1,
+      recoveryRange: 8,
+      requiresContainedRecovery: true,
     },
   ],
   gasLogistics: {
@@ -140,6 +143,13 @@ export const fixture = validateContent({
       nameKey: "material.granules.name",
       color: "#aadea0",
       known: false,
+    },
+    {
+      id: "tainted-residue",
+      nameKey: "material.tainted-residue.name",
+      color: "#b69580",
+      known: false,
+      requiredContainment: ["hazard-isolated"],
     },
     {
       id: "residue",
@@ -557,6 +567,8 @@ export const fixture = validateContent({
         },
       },
       processConditionId: "oversealed",
+      // The shell contains this isolation-rated output until dedicated recovery.
+      outputContainment: ["hazard-isolated"],
       unlock: {
         reactionId: "heat-raw-sealed",
         hintKey: "machine.oversealed-furnace.unlock-hint",
@@ -611,6 +623,15 @@ export const fixture = validateContent({
       width: 3,
       height: 2,
       cost: 30,
+    },
+    {
+      id: "isolation-depot",
+      nameKey: "storage.isolation-depot.name",
+      containmentCapabilities: ["hazard-isolated"],
+      capacity: 24,
+      width: 3,
+      height: 2,
+      cost: 38,
     },
   ],
   reactions: [
@@ -822,6 +843,24 @@ export const fixture = validateContent({
         nameKey: "hazard.phase-shear-lock.name",
         observationKey: "hazard.phase-shear-lock.observation",
         saferHintKey: "hazard.phase-shear-lock.safer-hint",
+      },
+      known: false,
+    },
+    {
+      id: "heat-catalyst-oversealed",
+      operation: "heat",
+      processConditionId: "oversealed",
+      input: "catalyst",
+      inputAmount: 2,
+      output: "tainted-residue",
+      outputAmount: 1,
+      observationKey: "reaction.heat-catalyst-oversealed.observation",
+      hazard: {
+        id: "catalyst-contamination",
+        classId: "contamination",
+        nameKey: "hazard.catalyst-contamination.name",
+        observationKey: "hazard.catalyst-contamination.observation",
+        saferHintKey: "hazard.catalyst-contamination.safer-hint",
       },
       known: false,
     },
