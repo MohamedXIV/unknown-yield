@@ -593,3 +593,8 @@ PR #315 introduces a data-authored severe-load/low-integrity post-batch `wreck` 
 ### P2e solid containment-aware machine salvage (2026-10-16)
 
 PR #317 extends deterministic local failed-machine salvage to **solid** cargo that requires material-specific containment, by validating all recovered materials against the concrete nearby storage's `containmentCapabilities` using the canonical `checkContainment` function. It cannot accept non-solid contents or a locally incompatible storage even if there is space. Transfer is atomic, storage-local, ledger-balanced, and holds every buffered and embodied material without global stock teleport. Public eligibility uses the generic `missing-containment` reason without revealing hidden capabilities. Save/content remain v32/world-01-v22. [CI #38912719705](https://github.com/MohamedXIV/unknown-yield/actions/runs/38912719705) passed 703 tests/3 skipped, typecheck/lint/build and 2 browser tests.
+
+
+### P2f physically routed liquid wreck salvage (2026-10-16)
+
+[PR #319](https://github.com/MohamedXIV/unknown-yield/pull/319) adds a transactional two-destination salvage plan: matching local contained `Tank` receives all units of the sole liquid material, and local `Storage` receives all solids and machine construction material. Neither destination can be remote/undersized/miscontained or stocked with an incompatible identity. Preview is read-only; failing execution leaves all inventories intact. Exact-head CI #38918286733 passed **707 tests/3 skipped**, typecheck/lint/build and 2 production-browser checks. Save/content remain v32/world-01-v22. Gas and active hazardous incident recovery are separate #295 gates.

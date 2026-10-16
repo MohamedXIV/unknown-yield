@@ -419,3 +419,8 @@ P1 #294 is technically complete through PR #303, squash `e8e4489cf93595263916d69
 ## Industrial behavior P2e contained-solid salvage accepted — 2026-10-16
 
 [PR #317](https://github.com/MohamedXIV/unknown-yield/pull/317) merged as `25f629641f83d968f8edb9ac36872634e2a60891` after [exact-head CI #38912719705](https://github.com/MohamedXIV/unknown-yield/actions/runs/38912719705) **703 tests passed/3 skipped, typecheck/lint/build and 2/2 production-browser**. The local wreck salvage planner now checks all protected solids against each candidate storage's actual authored containment capabilities plus available capacity. Physical transfer remains atomic and ledger-conservative with generic non-spoiling UI diagnostics; no resource teleports, no save/content bump (v32/world-01-v22). **Next #295:** purpose-built containment-safe liquids/gases, hazardous incident recovery and broad P2 exit evidence. User art PR #291 remains open and must not merge without visual approval.
+
+
+## Industrial behavior P2f liquid salvage accepted — 2026-10-16
+
+[PR #319](https://github.com/MohamedXIV/unknown-yield/pull/319) merged `429b0761f166d684025ce384bd257581f8cba3e6` after [CI #38918286733](https://github.com/MohamedXIV/unknown-yield/actions/runs/38918286733) **707 tests pass/3 skipped, typecheck/lint/build, 2/2 browser**. Atomic salvage now transfers a single liquid identity from wrecked machine into a nearby physical tank with exact containment/identity/capacity checks, while all solids and embodied structure go to nearby physical storage; no global stock teleport or ledger loss. Save v32/content v22 unchanged. Next #295: similarly conservative pressure-vessel gas handling and incident/hazard recovery. P0 PR #291 still awaits explicit visual sign-off.
