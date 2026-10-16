@@ -335,7 +335,8 @@ export const fixture = validateContent({
         baseWearPerBatch: 5,
         loadWearPerPoint: 2,
         strainedWearPerPoint: 4,
-        wornAt: 110,
+        // Eight undrained batches physically fill the extractor output at 88 wear.
+        wornAt: 80,
       },
       presentation: {
         version: 1,

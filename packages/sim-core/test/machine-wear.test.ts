@@ -48,9 +48,12 @@ describe("P2a — persisted material-dependent physical wear", () => {
   it("persists wear and physical condition through exact save/load replay", () => {
     const sim = new Simulation(fixture);
     const id = place(sim, 18, 26);
-    sim.step(310 * fixture.tickMs); // repeated real extraction batches, no fast-forward reward
+    sim.step(310 * fixture.tickMs); // eight physical batches fill the undrained output
     const before = sim.serialize();
-    expect(before.machines[id]!.wear).toBeGreaterThanOrEqual(110);
+    expect(before.machines[id]!.wear).toBe(88);
+    expect(before.machines[id]!.output.ferrite).toBe(8);
+    sim.step(500 * fixture.tickMs); // blocked output cannot accumulate passive wear
+    expect(sim.serialize().machines[id]!.wear).toBe(88);
     expect(machinePhysicalCondition(fixture, before.machines[id]!)).toBe("worn");
     expect(sim.snapshot().machines.find((m) => m.id === id))
       .toMatchObject({ physicalCondition: "worn" });
