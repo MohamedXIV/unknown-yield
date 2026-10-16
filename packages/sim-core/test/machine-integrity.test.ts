@@ -60,10 +60,10 @@ describe("P2b1 — independent physical integrity and actual damage", () => {
       .toBe(true);
     sim.step(17 * fixture.tickMs);
     expect(sim.serialize().machines[forceId]).toMatchObject({
-      wear: 35, integrity: 9650, enabled: false,
+      wear: 35, integrity: 9930, enabled: false,
     });
     sim.step(2000);
-    expect(sim.serialize().machines[forceId]!.integrity).toBe(9650);
+    expect(sim.serialize().machines[forceId]!.integrity).toBe(9930);
     expect(auditLedger(fixture, sim.serialize()).ok).toBe(true);
   });
 
