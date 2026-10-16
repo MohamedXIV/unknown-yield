@@ -8,14 +8,19 @@ function containedWorld(protectedStore: boolean) {
   // A fourth, independent source avoids changing existing reaction semantics.
   draft.materials.push({
     ...raw, id: "ore-sealed", nameKey: "material.ore-sealed.name",
-    known: false, requiredContainment: ["hazard-isolated"],
+    known: true, requiredContainment: ["hazard-isolated"],
   });
   draft.site.deposits.push({
     id: "ore-sealed-field", material: "ore-sealed",
     x: 28, y: 43, width: 2, height: 2, units: 30,
   });
-  // The new ore stays inside an explicitly sealed extractor's physical buffer.
-  draft.machines.find((m) => m.id === "extractor")!.outputContainment = ["hazard-isolated"];
+  // Semantic content validation requires EVERY mineral extractor to be rated
+  // for the newly authored site's deposit, not only the test's placed model.
+  for (const machine of draft.machines)
+    if (machine.role === "extractor" && machine.sourceKind !== "atmosphere")
+      machine.outputContainment = [...new Set([
+        ...machine.outputContainment, "hazard-isolated",
+      ])];
   draft.storages.find((s) => s.id === "depot")!.containmentCapabilities =
     protectedStore ? ["hazard-isolated"] : [];
   const profile = draft.machines.find((m) => m.id === "extractor")!.reliability!;
