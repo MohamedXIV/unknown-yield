@@ -35,13 +35,13 @@ describe("content boundary", () => {
     expect(() => validateContent(wrong)).toThrow(/mineral extractor/);
   });
 
-  it("bounds authored hazard damage and requires a local service for dangerous equipment", () => {
+  it("bounds authored hazard damage while preserving service-free specialist packs", () => {
     const excessive = structuredClone(fixture);
     excessive.hazardClasses.find((h) => h.id === "pressure-expansion")!.integrityDamage = 10000;
     expect(() => validateContent(excessive)).toThrow();
     const noRepair = structuredClone(fixture);
     delete noRepair.machines.find((m) => m.id === "oversealed-furnace")!.reliability!.service;
-    expect(() => validateContent(noRepair)).toThrow(/Damaging hazard on reliability-profiled/);
+    expect(() => validateContent(noRepair)).not.toThrow();
   });
 
   it("requires positive integral transport windows on crossings only", () => {
