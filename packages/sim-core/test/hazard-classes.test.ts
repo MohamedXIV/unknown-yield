@@ -262,6 +262,113 @@ it("confines a real blowout to repairable neighboring equipment without moving c
   expect(auditLedger(fixture, replay.serialize()).ok).toBe(true);
 });
 
+it("quarantines actual catalyst contamination until a rated nearby physical store is available", () => {
+  const { sim, processorId } = armedHazardLine();
+  // Deliver real catalyst inventory from an authored deposit, rather than
+  // constructing tainted product in the save or faking an incident.
+  const extractor = Object.values(sim.serialize().machines).find(
+    m => m.definitionId === "extractor",
+  )!;
+  expect(sim.command({
+    type: "setEnabled", machineId: extractor.id, enabled: false,
+  }).ok).toBe(true);
+  const supplied = sim.serialize();
+  supplied.deposits["catalyst-outcrop"] -= 2;
+  supplied.machines[processorId]!.input.catalyst = 2;
+  expect(sim.load(supplied).ok).toBe(true);
+  expect(auditLedger(fixture, sim.serialize()).ok).toBe(true);
+  expect(JSON.stringify(sim.snapshot())).not.toContain("catalyst-contamination");
+  expect(JSON.stringify(sim.snapshot())).not.toContain('"requiresContainedRecovery"');
+  for (let n = 0; n < 500 && !sim.serialize().machines[processorId]!.incident; n++)
+    sim.step(fixture.tickMs);
+  const trapped = sim.serialize();
+  expect(trapped.machines[processorId]).toMatchObject({
+    incident: "catalyst-contamination",
+    enabled: false,
+    incidentInventory: { "tainted-residue": 1 },
+    output: {},
+    integrity: 10000,
+  });
+  expect(trapped.hazardEvidence).toContain("catalyst-contamination");
+  expect(trapped.flows.produced["tainted-residue"]).toBe(1);
+  expect(auditLedger(fixture, trapped).ok).toBe(true);
+
+  const bypass = { type: "recoverMachineIncident", machineId: processorId };
+  const recovery = { type: "recoverIncidentToReceiver", machineId: processorId };
+  expect(sim.preview(bypass)).toMatchObject({ ok: false });
+  expect(sim.command(bypass)).toMatchObject({
+    ok: false,
+    message: "Quarantined hazard requires a rated local recovery receiver",
+  });
+  expect(sim.snapshot().machines.find(m => m.id === processorId)?.incidentRecovery)
+    .toMatchObject({ ready: false, reason: "no-local-storage", units: 1 });
+  expect(sim.preview(recovery).ok).toBe(false);
+  expect(sim.command(recovery).ok).toBe(false);
+  expect(sim.serialize()).toEqual(trapped);
+
+  const ordinaryId = build(sim, {
+    type: "placeStorage", definitionId: "depot",
+    x: 35, y: 36, direction: 0,
+  });
+  expect(sim.snapshot().machines.find(m => m.id === processorId)?.incidentRecovery)
+    .toMatchObject({ ready: false, reason: "missing-containment" });
+  const ordinaryOnly = sim.serialize();
+  expect(sim.preview(recovery).ok).toBe(false);
+  expect(sim.command(recovery).ok).toBe(false);
+  expect(sim.serialize()).toEqual(ordinaryOnly);
+  expect(sim.serialize().storages[ordinaryId]!.inventory).toEqual({});
+
+  const isolatedId = build(sim, {
+    type: "placeStorage", definitionId: "isolation-depot",
+    x: 35, y: 40, direction: 0,
+  });
+  expect(sim.snapshot().machines.find(m => m.id === processorId)?.incidentRecovery)
+    .toMatchObject({ ready: true, units: 1, handlingState: "solid" });
+  // A real full isolation depot also refuses the transfer atomically.
+  const full = sim.serialize();
+  full.deposits["ferrite-field"] -= 24;
+  full.storages[isolatedId]!.inventory.ferrite = 24;
+  expect(sim.load(full).ok).toBe(true);
+  expect(auditLedger(fixture, sim.serialize()).ok).toBe(true);
+  expect(sim.preview(recovery).ok).toBe(false);
+  expect(sim.snapshot().machines.find(m => m.id === processorId)?.incidentRecovery)
+    .toMatchObject({ ready: false, reason: "insufficient-capacity" });
+  const fullBefore = sim.serialize();
+  expect(sim.command(recovery).ok).toBe(false);
+  expect(sim.serialize()).toEqual(fullBefore);
+
+  const cleared = sim.serialize();
+  cleared.deposits["ferrite-field"] += 24;
+  delete cleared.storages[isolatedId]!.inventory.ferrite;
+  expect(sim.load(cleared).ok).toBe(true);
+  expect(auditLedger(fixture, sim.serialize()).ok).toBe(true);
+  const before = sim.serialize();
+  expect(sim.preview(recovery)).toMatchObject({ ok: true });
+  expect(sim.serialize()).toEqual(before);
+  expect(sim.command(recovery)).toMatchObject({ ok: true });
+  const done = sim.serialize();
+  expect(done.machines[processorId]).toMatchObject({
+    incident: null, enabled: false, incidentInventory: {}, output: {},
+  });
+  expect(done.storages[isolatedId]!.inventory["tainted-residue"]).toBe(1);
+  expect(done.storages[ordinaryId]!.inventory).toEqual({});
+  expect(done.flows).toEqual(before.flows);
+  expect(done.stock).toEqual(before.stock);
+  expect(auditLedger(fixture, done).ok).toBe(true);
+
+  const replay = new Simulation(fixture);
+  expect(replay.load(JSON.parse(JSON.stringify(done))).ok).toBe(true);
+  expect(replay.serialize()).toEqual(done);
+  expect(sim.command({ type: "setEnabled", machineId: processorId, enabled: true }).ok)
+    .toBe(true);
+  expect(replay.command({ type: "setEnabled", machineId: processorId, enabled: true }).ok)
+    .toBe(true);
+  sim.step(500);
+  replay.step(500);
+  expect(replay.serialize()).toEqual(sim.serialize());
+  expect(auditLedger(fixture, replay.serialize()).ok).toBe(true);
+});
+
 it("resolves class identity from authored data without changing trigger rules", () => {
   const draft = structuredClone(fixture);
   draft.reactions.find(
