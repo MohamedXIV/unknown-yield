@@ -101,7 +101,7 @@ describe("P1a mechanical envelope — real material-dependent mineral extraction
     expect(added.snapshot().machines.find((m) => m.id === result.id))
       .toMatchObject({ extractionCompatibility: "strained", durationTicks: 35 });
     added.step(next.tickMs);
-    expect(added.serialize().deposits["ore-four-field"]).toBe(30);
+    expect(added.serialize().deposits["ore-four-field"]).toBe(29);
     expect(auditLedger(next, added.serialize()).ok).toBe(true);
   });
 

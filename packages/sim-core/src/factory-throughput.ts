@@ -7,6 +7,7 @@ import { beltArms } from "./junctions";
 import type { Content } from "@site/content";
 import { contains, key, next, socket } from "./geometry";
 import { status, type TransportMoveEvent } from "./production";
+import { machinePhysicalCondition } from "./machine-wear";
 import {
   amount,
   change,
@@ -210,6 +211,9 @@ function machineRuntime(content: Content, state: Save, id: string) {
   return {
     id: machine.id,
     status: status(content, state, machine),
+    // Recurrence changes only when actual operational speed changes,
+    // not on each monotonic wear/integrity increment.
+    performanceImpaired: machinePhysicalCondition(content, machine) === "damaged",
     input: sortedInventory(machine.input),
     output: sortedInventory(machine.output),
     job: machine.job

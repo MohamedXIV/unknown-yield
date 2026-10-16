@@ -337,8 +337,10 @@ export const fixture = validateContent({
         strainedWearPerPoint: 4,
         // Eight undrained batches physically fill the extractor output at 88 wear.
         wornAt: 80,
-        integrityLossPerWear: 10,
-        damagedBelow: 7800,
+        integrityLossPerWear: 2,
+        // Sustained physically transported production leads to damage,
+        // rather than the first eight isolated output-buffer batches.
+        damagedBelow: 1500,
         damagedDurationBps: 11500,
       },
       presentation: {
@@ -390,8 +392,8 @@ export const fixture = validateContent({
         loadWearPerPoint: 2,
         strainedWearPerPoint: 3,
         wornAt: 110,
-        integrityLossPerWear: 8,
-        damagedBelow: 7600,
+        integrityLossPerWear: 2,
+        damagedBelow: 1500,
         damagedDurationBps: 11000,
       },
       fuelClassId: "advanced-propellant",
