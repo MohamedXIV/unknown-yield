@@ -420,7 +420,7 @@ it("recovers actual trapped incident cargo directly into adjacent storage, not g
   expect(sim.serialize()).toEqual(waiting);
 
   const storage = sim.command({
-    type: "placeStorage", definitionId: "depot", x: 27, y: 28, direction: 0,
+    type: "placeStorage", definitionId: "depot", x: 34, y: 29, direction: 0,
   });
   expect(storage.ok, storage.message).toBe(true);
   expect(sim.snapshot().machines.find(m => m.id === processorId)?.incidentRecovery)
@@ -450,7 +450,7 @@ it("refuses hazard discharge into a full physical store without moving a unit", 
   for (let n = 0; n < 500 && !sim.serialize().machines[processorId].incident; n++)
     sim.step(fixture.tickMs);
   const store = sim.command({ type: "placeStorage", definitionId: "depot",
-    x: 27, y: 28, direction: 0 });
+    x: 34, y: 29, direction: 0 });
   expect(store.ok, store.message).toBe(true);
   const state = sim.serialize();
   const capacity = fixture.storages.find(s => s.id === "depot")!.capacity;

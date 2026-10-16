@@ -30,6 +30,9 @@ export const contentSchema = z.object({
         evidenceKey: localeKeySchema,
         machineEffect: z.literal("lockout"),
         strandedOutputUnits: count.default(0),
+        // Maximum Manhattan gap from machine footprint to an actual physical
+        // recovery receiver; independent of build-structure placement rules.
+        recoveryRange: z.number().int().min(0).max(16).default(0),
       }),
     )
     .default([]),

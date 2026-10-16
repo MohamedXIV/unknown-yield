@@ -87,7 +87,7 @@ export const enCatalog: LocaleCatalog = {
   "ui.knowledge.insight.branch": "Open branch",
   "ui.knowledge.insight.opportunity": "Company opportunity",
   "ui.machine.incident.recover-local": "Recover directly to nearby containment",
-  "ui.machine.incident.recover-units": "{{units}} trapped units · {{state}} · requires a physically adjacent compatible receiver",
+  "ui.machine.incident.recover-units": "{{units}} trapped units · {{state}} · requires a local compatible receiver within the incident recovery range",
   "ui.machine.incident.receiver.solid": "solid storage",
   "ui.machine.incident.receiver.liquid": "liquid tank",
   "ui.machine.incident.receiver.gas": "pressure vessel",
