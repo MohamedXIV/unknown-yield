@@ -86,7 +86,15 @@ export const enCatalog: LocaleCatalog = {
   "ui.knowledge.insight.property": "Observed property",
   "ui.knowledge.insight.branch": "Open branch",
   "ui.knowledge.insight.opportunity": "Company opportunity",
-  "ui.machine.incident.recover-local": "Recover directly to nearby containment",
+  "ui.machine.incident.recover-local": "Transfer trapped material to nearby containment",
+  "ui.machine.incident.recover-output": "Reclaim trapped material to machine output",
+  "ui.machine.incident.output-quarantined":
+    "Quarantined charge: ordinary output recovery is prohibited. Use a compatible local receiver; cargo remains in this chamber until transfer.",
+  "ui.machine.incident.output-possible":
+    "Direct output recovery is also possible if the machine has room; local receiver transfer keeps the material in separate storage.",
+  "ui.machine.incident.build-storage": "Build {{storage}} nearby",
+  "ui.machine.incident.storage-description":
+    "Physical storage, {{capacity}} units. Containment: {{capabilities}}. Place within the affected machine's recovery reach.",
   "ui.machine.incident.recover-units": "{{units}} trapped units · {{state}} · requires a local compatible receiver within the incident recovery range",
   "ui.machine.incident.receiver.solid": "solid storage",
   "ui.machine.incident.receiver.liquid": "liquid tank",
