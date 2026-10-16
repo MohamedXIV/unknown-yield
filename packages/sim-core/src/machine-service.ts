@@ -1,7 +1,8 @@
 import type { Content } from "@site/content";
 import { companyKnowsMaterial } from "./market";
 import { footprint } from "./geometry";
-import { amount, change, type Machine, type MachineServiceView, type Save } from "./types";
+import { amount, change, total, type Machine, type MachineServiceView,
+  type MachineSalvageView, type Inventory, type Save } from "./types";
 
 type ServiceRule = NonNullable<NonNullable<Content["machines"][number]["reliability"]>["service"]>;
 
@@ -82,4 +83,75 @@ export function serviceMachine(
       machine.mechanicalFailure = null;
   }
   return { ok: true, message: "Machine serviced with local physical parts" };
+}
+
+/** Salvage never converts real cargo or embodied machinery to global stock.
+ * A single nearby storage must fit every physical part before the machine is
+ * removed; the regular dismantle command stays conservative. */
+function salvagePlan(c: Content, s: Save, machine: Machine): {
+  view: MachineSalvageView;
+  destination: Save["storages"][string] | null;
+  recovered: Inventory;
+} {
+  const definition = c.machines.find((d) => d.id === machine.definitionId)!;
+  const range = definition.reliability?.service?.range;
+  const recovered: Inventory = {};
+  for (const inventory of [machine.input, machine.output]) {
+    for (const [materialId, units] of Object.entries(inventory))
+      change(recovered, materialId, units);
+  }
+  change(recovered, c.site.buildMaterial, definition.cost);
+  const cargoUnits = total(machine.input) + total(machine.output);
+  const structuralUnits = definition.cost;
+  const base = { cargoUnits, structuralUnits };
+  if (!machine.mechanicalFailure || machine.enabled || machine.job)
+    return { view: { ...base, ready: false, reason: "not-failed" },
+      destination: null, recovered };
+  if (machine.incident || total(machine.incidentInventory))
+    return { view: { ...base, ready: false, reason: "hazard" },
+      destination: null, recovered };
+  const unsupported = Object.keys(recovered).some((id) => {
+    const material = c.materials.find((m) => m.id === id);
+    return !material || material.handlingState !== "solid" ||
+      material.requiredContainment.length !== 0;
+  });
+  if (unsupported)
+    return { view: { ...base, ready: false, reason: "unsupported-cargo" },
+      destination: null, recovered };
+  const rect = footprint(machine, definition);
+  const nearby = Object.values(s.storages)
+    .filter((storage) => {
+      const sd = c.storages.find((d) => d.id === storage.definitionId)!;
+      return range !== undefined && cellGap(rect, footprint(storage, sd)) <= range;
+    })
+    .sort((a, b) => a.id.localeCompare(b.id));
+  const required = total(recovered);
+  const destination = nearby.find((storage) => {
+    const sd = c.storages.find((d) => d.id === storage.definitionId)!;
+    return sd.capacity - total(storage.inventory) >= required;
+  }) ?? null;
+  const reason = destination ? null : nearby.length === 0
+    ? "no-local-storage" : "insufficient-capacity";
+  return { view: { ...base, ready: reason === null, reason },
+    destination, recovered };
+}
+
+/** Physical deconstruction: ore/input/output and embodied build material go
+ * into the same reachable storage; no silent deletion or global refund. */
+export function machineSalvageView(c: Content, s: Save, machine: Machine): MachineSalvageView | null {
+  return machine.mechanicalFailure ? salvagePlan(c, s, machine).view : null;
+}
+
+export function salvageMachine(c: Content, s: Save, machine: Machine, apply: boolean): {
+  ok: boolean; message: string;
+} {
+  const { view, destination, recovered } = salvagePlan(c, s, machine);
+  if (!view.ready || !destination)
+    return { ok: false, message: "Salvage unavailable: " + (view.reason ?? "no-local-storage") };
+  if (apply) {
+    for (const [materialId, units] of Object.entries(recovered))
+      change(destination.inventory, materialId, units);
+    delete s.machines[machine.id];
+  }
+  return { ok: true, message: "Failed machine and physical cargo salvaged to nearby storage" };
 }

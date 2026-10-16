@@ -7,7 +7,7 @@ import {
   shipmentQuantityCommand,
 } from "./terminal";
 import { pumpRepairEligible } from "./pump-recovery";
-import { serviceMachine } from "./machine-service";
+import { serviceMachine, salvageMachine } from "./machine-service";
 import { z } from "zod";
 import type { Content } from "@site/content";
 import { amount, change, total, type Save, type CommandResult } from "./types";
@@ -149,6 +149,7 @@ const schema = z.discriminatedUnion("type", [
     machineId: z.string(),
   }),
   z.object({ type: z.literal("serviceMachine"), machineId: z.string() }),
+  z.object({ type: z.literal("salvageMachine"), machineId: z.string() }),
   z.object({
     type: z.literal("placeStorage"),
     ...point,
@@ -1016,6 +1017,9 @@ export function applyCommand(
     case "serviceMachine": {
       return serviceMachine(c, s, s.machines[cmd.machineId], apply);
     }
+    case "salvageMachine": {
+      return salvageMachine(c, s, s.machines[cmd.machineId], apply);
+    }
     case "recoverMachineIncident": {
       const machine = s.machines[cmd.machineId];
       if (!machine) return fail("Unknown machine");
@@ -1222,6 +1226,8 @@ export function applyCommand(
           def = c.machines.find((d) => d.id === m.definitionId)!;
         if (m.job)
           return fail("Disable this machine and wait for its batch to finish");
+        if (m.mechanicalFailure)
+          return fail("Use local physical salvage or repair this broken machine before dismantling");
         // Conservative reclaim (Issue #5): buffer contents are real material
         // in a real place. Dismantling must not teleport them across the map,
         // so a buffered machine cannot be reclaimed until its contents leave
