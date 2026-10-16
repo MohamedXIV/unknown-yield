@@ -1,19 +1,11 @@
 import { checkContainment, type Content } from "@site/content";
 import { companyKnowsMaterial } from "./market";
-import { footprint } from "./geometry";
+import { footprint, footprintGap } from "./geometry";
 import { liquidContainment } from "./containment";
 import { amount, change, total, type Machine, type MachineServiceView,
   type MachineSalvageView, type Inventory, type Save } from "./types";
 
 type ServiceRule = NonNullable<NonNullable<Content["machines"][number]["reliability"]>["service"]>;
-
-/** Axis-aligned rectangle separation in whole map cells. Touching counts as local. */
-function cellGap(a: { x: number; y: number; width: number; height: number },
-                 b: { x: number; y: number; width: number; height: number }) {
-  const dx = Math.max(0, a.x - (b.x + b.width), b.x - (a.x + a.width));
-  const dy = Math.max(0, a.y - (b.y + b.height), b.y - (a.y + a.height));
-  return dx + dy;
-}
 
 function sourceStorage(c: Content, s: Save, machine: Machine, rule: ServiceRule) {
   const definition = c.machines.find((entry) => entry.id === machine.definitionId)!;
@@ -21,7 +13,7 @@ function sourceStorage(c: Content, s: Save, machine: Machine, rule: ServiceRule)
   const sources = Object.values(s.storages)
     .filter((storage) => {
       const d = c.storages.find((entry) => entry.id === storage.definitionId)!;
-      return cellGap(rect, footprint(storage, d)) <= rule.range;
+      return footprintGap(rect, footprint(storage, d)) <= rule.range;
     })
     .sort((a, b) => a.id.localeCompare(b.id));
   return {
