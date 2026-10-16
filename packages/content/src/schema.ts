@@ -30,6 +30,9 @@ export const contentSchema = z.object({
         evidenceKey: localeKeySchema,
         machineEffect: z.literal("lockout"),
         strandedOutputUnits: count.default(0),
+        // A quarantined incident may only discharge into a nearby, physically
+        // rated receiver; it may not reclaim material to the machine output.
+        requiresContainedRecovery: z.boolean().default(false),
         // Authored loss of physical integrity on a completed hazardous reaction.
         // This is private content truth, not a random catastrophic roll.
         integrityDamage: z.number().int().min(0).max(9999).default(0),
@@ -638,6 +641,11 @@ function validateContentInternal(
       )!;
       if (hazardClass.strandedOutputUnits > r.outputAmount)
         throw new Error("Hazard consequence exceeds reaction output");
+      if (hazardClass.requiresContainedRecovery &&
+          (hazardClass.strandedOutputUnits === 0 ||
+           hazardClass.recoveryRange === 0 ||
+           !c.materials.find(m => m.id === r.output)!.requiredContainment.length))
+        throw new Error("Quarantine requires stranded protected output and physical recovery range");
       if (hazardIds.has(r.hazard.id)) throw new Error("Duplicate hazard ID");
       hazardIds.add(r.hazard.id);
       if (

@@ -61,6 +61,23 @@ describe("content boundary", () => {
     delete independent.hazardClasses.find(h => h.id === "pressure-expansion")!
       .localShock;
     expect(() => validateContent(independent)).not.toThrow();
+    // Quarantine is a physical receiver contract, not a bypassable label.
+    const missingCargo = structuredClone(fixture);
+    missingCargo.hazardClasses.find(h => h.id === "contamination")!
+      .strandedOutputUnits = 0;
+    expect(() => validateContent(missingCargo)).toThrow(/Quarantine requires/);
+    const missingRange = structuredClone(fixture);
+    missingRange.hazardClasses.find(h => h.id === "contamination")!
+      .recoveryRange = 0;
+    expect(() => validateContent(missingRange)).toThrow(/Quarantine requires/);
+    const unsafeOutput = structuredClone(fixture);
+    unsafeOutput.materials.find(m => m.id === "tainted-residue")!
+      .requiredContainment = [];
+    expect(() => validateContent(unsafeOutput)).toThrow(/Quarantine requires/);
+    const noQuarantine = structuredClone(fixture);
+    noQuarantine.hazardClasses.find(h => h.id === "contamination")!
+      .requiresContainedRecovery = false;
+    expect(() => validateContent(noQuarantine)).not.toThrow();
     const noRepair = structuredClone(fixture);
     delete noRepair.machines.find((m) => m.id === "oversealed-furnace")!.reliability!.service;
     expect(() => validateContent(noRepair)).not.toThrow();
@@ -79,9 +96,12 @@ describe("content boundary", () => {
   it("accepts the complete tiny scenario", () => {
     const c = validateContent(fixture);
     expect(c.machines).toHaveLength(15);
-    expect(c.version).toBe("world-01-v26");
-    expect(c.storages).toHaveLength(1);
+    expect(c.version).toBe("world-01-v27");
+    expect(c.storages).toHaveLength(2);
     expect(c.storages[0]).toMatchObject({ id: "depot", capacity: 40 });
+    expect(c.storages[1]).toMatchObject({
+      id: "isolation-depot", capacity: 24, containmentCapabilities: ["hazard-isolated"],
+    });
     expect(c.site.stagingCapacity).toBe(24);
     expect(c.site.terminalShipmentCapacity).toBe(12);
     expect(c.site.sensingCapabilities.map((entry) => entry.id)).toEqual([
