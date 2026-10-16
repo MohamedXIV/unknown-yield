@@ -756,6 +756,7 @@ export function applyCommand(
         operation: def.operations[0] ?? null,
         operatingModeId: def.operatingModes[0]?.id ?? null,
         wear: 0,
+        integrity: 10000,
         enabled: true,
         incident: null,
         incidentInventory: {},

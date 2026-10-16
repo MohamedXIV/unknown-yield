@@ -1,6 +1,6 @@
 import { validateContent } from "./schema";
 export const fixture = validateContent({
-  version: "world-01-v18",
+  version: "world-01-v19",
   tickMs: 100,
   containmentCapabilities: [
     {
@@ -337,6 +337,9 @@ export const fixture = validateContent({
         strainedWearPerPoint: 4,
         // Eight undrained batches physically fill the extractor output at 88 wear.
         wornAt: 80,
+        integrityLossPerWear: 10,
+        damagedBelow: 7800,
+        damagedDurationBps: 11500,
       },
       presentation: {
         version: 1,
@@ -387,6 +390,9 @@ export const fixture = validateContent({
         loadWearPerPoint: 2,
         strainedWearPerPoint: 3,
         wornAt: 110,
+        integrityLossPerWear: 8,
+        damagedBelow: 7600,
+        damagedDurationBps: 11000,
       },
       fuelClassId: "advanced-propellant",
       unlock: {

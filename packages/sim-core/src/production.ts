@@ -38,8 +38,8 @@ import {
   terminalModuleCarriesImport,
 } from "./imports";
 import { consumeMachineFuel, machineFuelBlock } from "./fuel";
-import { assessMineralExtraction } from "./extraction-envelope";
-import { completedBatchWear } from "./machine-wear";
+
+import { assessMachineOperation, applyCompletedMachineFatigue } from "./machine-wear";
 export function recipe(c: Content, m: Machine) {
   const definition = c.machines.find((d) => d.id === m.definitionId);
   return c.reactions.find(
@@ -64,7 +64,7 @@ export function status(c: Content, s: Save, m: Machine): MachineStatus {
     (!m.depositId || s.deposits[m.depositId] === 0)
   )
     return "deposit-exhausted";
-  const extraction = assessMineralExtraction(c, m);
+  const extraction = assessMachineOperation(c, m);
   if (d.role === "extractor" && extraction.compatibility === "impossible")
     return "material-too-hard";
   if (d.role === "processor" && !r)
@@ -127,12 +127,12 @@ export function completeAndStart(
           ensureMarket(c, s, material);
         }
         if (r?.hazard) applyReactionHazard(c, s, m, r);
-        m.wear = Math.min(10000, m.wear + completedBatchWear(c, m));
+        applyCompletedMachineFatigue(c, m);
         m.job = null;
       }
     } else if (status(c, s, m) === "ready") {
       const r = recipe(c, m);
-      const extraction = assessMineralExtraction(c, m);
+      const extraction = assessMachineOperation(c, m);
       consumeMachineFuel(c, s, d, extraction.fuelCost);
       if (r) {
         change(m.input, r.input, -r.inputAmount);
