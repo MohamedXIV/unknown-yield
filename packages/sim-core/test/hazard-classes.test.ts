@@ -144,10 +144,10 @@ it("resolves class identity from authored data without changing trigger rules", 
 });
 
 
-function armedFerriteHazardLine() {
-  const sim = new Simulation(fixture);
+function armedFerriteHazardLine(content = fixture) {
+  const sim = new Simulation(content);
   const state = sim.serialize();
-  const prerequisite = fixture.reactions.find(
+  const prerequisite = content.reactions.find(
     (reaction) => reaction.id === "heat-raw-sealed",
   )!;
   state.knowledge.push(prerequisite.id);
@@ -163,7 +163,7 @@ function armedFerriteHazardLine() {
     processConditionId: prerequisite.processConditionId ?? null,
     state: "confirmed",
   };
-  initializeKnownMarkets(fixture, state);
+  initializeKnownMarkets(content, state);
   expect(sim.load(state).ok).toBe(true);
 
   const factoryId = build(sim, {
@@ -467,3 +467,63 @@ it("refuses hazard discharge into a full physical store without moving a unit", 
   expect(sim.serialize()).toEqual(waiting);
   expect(auditLedger(fixture, sim.serialize()).ok).toBe(true);
 });
+
+
+function fluidHazardVariant(phase: "liquid" | "gas") {
+  const draft = structuredClone(fixture);
+  draft.materials.find((m) => m.id === "residue")!.handlingState = phase;
+  for (const machine of draft.machines) {
+    machine.outputStates = [...new Set([...machine.outputStates, phase])];
+    machine.inputStates = [...new Set([...machine.inputStates, phase])];
+  }
+  // This is a fully authored phase-specific incident world. The hazard is
+  // still the original real completed reaction, not a forged runtime record.
+  return validateContent(draft);
+}
+
+for (const phase of ["liquid", "gas"] as const)
+  it("routes actual trapped " + phase + " incident output only to real local phase-specific containers", () => {
+    const c = fluidHazardVariant(phase);
+    const { sim, processorId } = armedFerriteHazardLine(c);
+    for (let n = 0; n < 500 && !sim.serialize().machines[processorId].incident; n++)
+      sim.step(c.tickMs);
+    expect(sim.serialize().machines[processorId]).toMatchObject({
+      incident: "slag-jam", enabled: false,
+      incidentInventory: { residue: 1 },
+    });
+    const command = { type: "recoverIncidentToReceiver", machineId: processorId };
+    const absent = sim.snapshot().machines.find(m => m.id === processorId)!.incidentRecovery;
+    expect(absent).toMatchObject({
+      ready: false,
+      reason: phase === "liquid" ? "no-local-tank" : "no-local-vessel",
+      units: 1, handlingState: phase,
+    });
+    const beforePlacement = sim.serialize();
+    expect(sim.preview(command).ok).toBe(false);
+    expect(sim.command(command).ok).toBe(false);
+    expect(sim.serialize()).toEqual(beforePlacement);
+    const receiver = phase === "liquid"
+      ? sim.command({ type: "placeTank", x: 34, y: 29, direction: 0,
+        containmentProfileId: "standard" })
+      : sim.command({ type: "placePressureVessel", x: 34, y: 29, direction: 0 });
+    expect(receiver.ok, receiver.message).toBe(true);
+    expect(sim.snapshot().machines.find(m => m.id === processorId)!.incidentRecovery)
+      .toMatchObject({ ready: true, reason: null, units: 1 });
+    const before = sim.serialize();
+    expect(sim.preview(command).ok).toBe(true);
+    expect(sim.serialize()).toEqual(before);
+    expect(sim.command(command).ok).toBe(true);
+    const after = sim.serialize(), m = after.machines[processorId];
+    expect(m).toMatchObject({ incident: null, incidentInventory: {}, enabled: false });
+    expect(m.output.residue ?? 0).toBe(before.machines[processorId].output.residue ?? 0);
+    const item = phase === "liquid"
+      ? after.tanks[receiver.id!]! : after.pressureVessels[receiver.id!]!;
+    expect(item).toMatchObject({ materialId: "residue", quantity: 1 });
+    expect(after.flows).toEqual(before.flows);
+    expect(after.stock).toEqual(before.stock);
+    expect(auditLedger(c, after).ok).toBe(true);
+    const restored = new Simulation(c);
+    expect(restored.load(after).ok).toBe(true);
+    sim.step(1000); restored.step(1000);
+    expect(restored.serialize()).toEqual(sim.serialize());
+  });
