@@ -639,3 +639,6 @@ Roadmap expansion approved on 2026-10-02: Phases 9–16 capture the major post-f
 - [PHASE17_EXIT_REVIEW.md](PHASE17_EXIT_REVIEW.md) — Phase 17 #223 integrated production-browser UX exit review and deferred visual-polish boundary.
 - [PHASE18_EXIT_REVIEW.md](PHASE18_EXIT_REVIEW.md) — Phase 18 #238 desktop/mobile-emulated engineering exit evidence and deferred human/device review.
 - [PHASE18_UI_MOTION.md](PHASE18_UI_MOTION.md) — UI animation tokens, ownership, reduced-motion overrides and dependency decision.
+
+
+**2026-10-16 — Industrial behavior P1 accepted:** #294 COMPLETE via [PR #303](https://github.com/MohamedXIV/unknown-yield/pull/303), squash `e8e4489cf93595263916d69ef53b44b910504c5b`. Public snapshot now protects authored mechanical traits, machine envelopes and mode coefficients by explicit projection; mode name/identity, equipment data and actual status/duration/fuel remain visible. [CI #38872106838](https://github.com/MohamedXIV/unknown-yield/actions/runs/38872106838) exact-head PASS: 676 tests / 3 skipped, typecheck/lint/build and two production-browser tests. P2 #295 is next, starting with persisted wear/condition and deterministic batch-linked stress, then incident and physical repair/salvage slices. P0 #293/#291 still awaits visual approval; P3 #296 not started.
