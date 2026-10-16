@@ -85,6 +85,12 @@ export const overlaps = (a: Rect, b: Rect) =>
   a.x + a.width > b.x &&
   a.y < b.y + b.height &&
   a.y + a.height > b.y;
+/** Whole-cell Manhattan gap between footprints; touching edges have zero gap. */
+export function footprintGap(a: Rect, b: Rect): number {
+  const dx = Math.max(0, a.x - (b.x + b.width), b.x - (a.x + a.width));
+  const dy = Math.max(0, a.y - (b.y + b.height), b.y - (a.y + a.height));
+  return dx + dy;
+}
 export const footprint = (
   m: Point & { direction: number },
   d: FootprintDef,
