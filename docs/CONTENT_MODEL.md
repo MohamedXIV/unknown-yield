@@ -580,3 +580,8 @@ The acceptable reaction list is **not presentation data**. Player views expose t
 Import rewards create persisted company allocations keyed by authored import-supply ID. They do not embed material quantities in opportunity state and do not bypass terminal logistics.
 
 **P1b implementation checkpoint:** `machines[].operatingModes` is an optional bounded authored array with stable IDs, localized names and integer bonus/coefficient values. It requires a mineral `extractionEnvelope`; the active mode is persisted in machine state and can change only between jobs. The representative extractor has two modes: steady (previous baseline) and high-pressure (faster or stronger at extra fuel cost). The machine snapshot reports current authoritative mode and recomputed batch duration/fuel. Save schema v28 migrates v27 mode identity to the first authored mode, but content v16 intentionally rejects old built-in v15 expeditions. This is *not* accumulated wear, repair, tool maintenance or P1 completion.
+
+
+### P1 public knowledge projection (2026-10-16)
+
+[PR #303](https://github.com/MohamedXIV/unknown-yield/pull/303) closes #294's remaining authored-versus-player boundary. `materials` no longer returns the private `mechanics` object or authored `known` flag; `definitions` now uses a positive public equipment-field projection, mode identity/name only, and knowledge-derived unlock state. Internal content schemas, private coefficients, TinyBase Studio, deterministic execution, observable machine diagnosis and saves remain unchanged. P1 is complete; P2 reliability is separate. Exact-head Actions #38872106838 passed 676 tests / 3 skipped, typecheck, lint, build and 2/2 production-browser cases.

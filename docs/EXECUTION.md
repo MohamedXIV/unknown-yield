@@ -379,3 +379,8 @@ P0 is now **complete**: the design decisions and pure entity classifier/candidat
 No blanket construction delays (#250 NO-GO), auto-routing around foreign obstacles, new blueprint/undo system, premature Rust/per-frame React, or Vercel redeploy. **Repo-specific CI update (2026-10-09):** this public project's user explicitly permits GitHub Actions freely. Run available CI on ready PRs and use `workflow_dispatch` where useful, including to verify the normal `npm run build` on a clean Ubuntu/Node 24 runner after a Codex VM-specific subprocess problem; do not treat a VM workaround as ordinary-build PASS. Avoid pointless duplicate runs, not necessary verification. Human physical-device FPS and subjective polish remain deferred, not technically certified.
 
 **No broad performance rewrite:** Phase 7 recorded 32-factory 10ms budget remains unmet/deferred; preserve Phase 18 camera performance and verify integration without making untested 60 FPS claims.
+
+
+## Industrial behavior P1 exit / P2 entry — 2026-10-16
+
+P1 #294 is technically complete through PR #303, squash `e8e4489cf93595263916d69ef53b44b910504c5b`. Exact-head CI #38872106838 passed 130 test files / 676 tests / 3 skipped, typecheck/lint/build and 2 production-browser cases. Public content projections no longer expose exact authored material mechanics, extractor envelope or mode coefficients; tested actual diagnosis, UI mode identity, physical conservation and save/load remain unchanged. Scope now advances to **P2 #295** in focused PRs: persisted wear/condition, causal failure lifecycle, then explicit physical maintenance/repair/salvage. Preserve PR #291 art approval gate. [Acceptance details](DATA_DRIVEN_INDUSTRIAL_BEHAVIOR_V1.md).
