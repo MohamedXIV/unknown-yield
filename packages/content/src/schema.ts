@@ -33,6 +33,9 @@ export const contentSchema = z.object({
         // Authored loss of physical integrity on a completed hazardous reaction.
         // This is private content truth, not a random catastrophic roll.
         integrityDamage: z.number().int().min(0).max(9999).default(0),
+        // Material deposits/scouring inside an incident-bearing chamber.
+        // Bounded extra wear is observable; never an invented material output.
+        foulingWear: z.number().int().min(0).max(10000).default(0),
         // Maximum Manhattan gap from machine footprint to an actual physical
         // recovery receiver; independent of build-structure placement rules.
         recoveryRange: z.number().int().min(0).max(16).default(0),

@@ -268,6 +268,92 @@ function armedFerriteHazardLine(content = fixture) {
   return { sim, processorId };
 }
 
+it("scours an actual slag-jammed chamber, conserves residue and requires paid local cleaning", () => {
+  const controlPack = structuredClone(fixture);
+  controlPack.hazardClasses.find((h) => h.id === "instability")!.foulingWear = 0;
+  const cleanContent = validateContent(controlPack);
+  const active = armedFerriteHazardLine();
+  const control = armedFerriteHazardLine(cleanContent);
+  for (let tick = 0; tick < 500; tick++) {
+    active.sim.step(fixture.tickMs);
+    control.sim.step(cleanContent.tickMs);
+    if (active.sim.serialize().machines[active.processorId]!.incident &&
+        control.sim.serialize().machines[control.processorId]!.incident) break;
+  }
+  const fouled = active.sim.serialize().machines[active.processorId]!;
+  const clean = control.sim.serialize().machines[control.processorId]!;
+  expect(fouled).toMatchObject({
+    incident: "slag-jam", enabled: false, wear: 300, integrity: 8800,
+    incidentInventory: { residue: 1 },
+  });
+  expect(clean).toMatchObject({
+    incident: "slag-jam", enabled: false, wear: 0, integrity: 10000,
+    incidentInventory: { residue: 1 },
+  });
+  expect(active.sim.snapshot().machines.find(m => m.id === active.processorId))
+    .toMatchObject({ physicalCondition: "damaged", durationTicks: 39 });
+  expect(control.sim.snapshot().machines.find(m => m.id === control.processorId))
+    .toMatchObject({ physicalCondition: "intact", durationTicks: 30 });
+  expect(JSON.stringify(active.sim.snapshot())).not.toContain('"foulingWear"');
+  expect(auditLedger(fixture, active.sim.serialize()).ok).toBe(true);
+  expect(auditLedger(cleanContent, control.sim.serialize()).ok).toBe(true);
+
+  const action = { type: "serviceMachine", machineId: active.processorId };
+  const beforeRecovery = active.sim.serialize();
+  expect(active.sim.preview(action)).toMatchObject({ ok: false });
+  expect(active.sim.command(action)).toMatchObject({ ok: false });
+  expect(active.sim.serialize()).toEqual(beforeRecovery);
+  // Inventory remains physical: first move trapped residue into machine output.
+  const recovery = { type: "recoverMachineIncident", machineId: active.processorId };
+  expect(active.sim.preview(recovery)).toMatchObject({ ok: true });
+  expect(active.sim.serialize()).toEqual(beforeRecovery);
+  expect(active.sim.command(recovery)).toMatchObject({ ok: true });
+  expect(active.sim.serialize().machines[active.processorId]!).toMatchObject({
+    incident: null, enabled: false, input: {},
+    output: { residue: 1 }, incidentInventory: {},
+    wear: 300, integrity: 8800,
+  });
+  expect(active.sim.command(action)).toMatchObject({ ok: false });
+  // Parts exist only at the specifically placed, nearby real depot.
+  const depot = active.sim.command({
+    type: "placeStorage", definitionId: "depot", x: 35, y: 30, direction: 0,
+  });
+  expect(depot.ok, depot.message).toBe(true);
+  const delivered = active.sim.serialize();
+  delivered.deposits["ferrite-field"] -= 2;
+  delivered.storages[depot.id!]!.inventory.ferrite = 2;
+  expect(active.sim.load(delivered).ok).toBe(true);
+  expect(auditLedger(fixture, active.sim.serialize()).ok).toBe(true);
+
+  const beforeService = active.sim.serialize();
+  expect(active.sim.preview(action)).toMatchObject({ ok: true });
+  expect(active.sim.serialize()).toEqual(beforeService);
+  expect(active.sim.command(action)).toMatchObject({ ok: true });
+  const serviced = active.sim.serialize();
+  expect(serviced.storages[depot.id!]!.inventory.ferrite ?? 0).toBe(0);
+  expect(serviced.flows.consumed.ferrite)
+    .toBe((beforeService.flows.consumed.ferrite ?? 0) + 2);
+  expect(serviced.machines[active.processorId]).toMatchObject({
+    incident: null, enabled: false, wear: 0, integrity: 10000,
+    output: { residue: 1 },
+  });
+  expect(active.sim.snapshot().machines.find(m => m.id === active.processorId))
+    .toMatchObject({ physicalCondition: "intact", durationTicks: 30 });
+  expect(auditLedger(fixture, serviced).ok).toBe(true);
+
+  const restored = new Simulation(fixture);
+  expect(restored.load(JSON.parse(JSON.stringify(serviced))).ok).toBe(true);
+  expect(restored.serialize()).toEqual(serviced);
+  expect(active.sim.command({ type: "setEnabled", machineId: active.processorId, enabled: true }).ok)
+    .toBe(true);
+  expect(restored.command({ type: "setEnabled", machineId: active.processorId, enabled: true }).ok)
+    .toBe(true);
+  active.sim.step(300);
+  restored.step(300);
+  expect(restored.serialize()).toEqual(active.sim.serialize());
+  expect(auditLedger(fixture, restored.serialize()).ok).toBe(true);
+});
+
 it("persists a conservative stranded-output consequence without deleting material", () => {
   const { sim, processorId } = armedFerriteHazardLine();
 

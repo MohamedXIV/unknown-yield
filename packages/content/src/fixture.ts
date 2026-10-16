@@ -1,6 +1,6 @@
 import { validateContent } from "./schema";
 export const fixture = validateContent({
-  version: "world-01-v24",
+  version: "world-01-v25",
   tickMs: 100,
   containmentCapabilities: [
     {
@@ -47,6 +47,8 @@ export const fixture = validateContent({
       machineEffect: "lockout",
       strandedOutputUnits: 1,
       recoveryRange: 6,
+      // A real slag jam deposits abrasive residue on the chamber lining.
+      foulingWear: 300,
     },
     {
       id: "contamination",
@@ -544,11 +546,12 @@ export const fixture = validateContent({
         loadWearPerPoint: 0,
         strainedWearPerPoint: 0,
         wornAt: 100,
+        integrityLossPerWear: 4,
         damagedBelow: 9000,
         damagedDurationBps: 13000,
         service: {
           materialId: "ferrite", units: 2, range: 10,
-          restoreIntegrity: 2500, reduceWear: 0,
+          restoreIntegrity: 2500, reduceWear: 350,
         },
       },
       processConditionId: "oversealed",
