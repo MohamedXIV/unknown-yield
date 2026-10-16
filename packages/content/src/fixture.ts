@@ -1,6 +1,6 @@
 import { validateContent } from "./schema";
 export const fixture = validateContent({
-  version: "world-01-v20",
+  version: "world-01-v21",
   tickMs: 100,
   containmentCapabilities: [
     {
@@ -342,6 +342,7 @@ export const fixture = validateContent({
         // rather than the first eight isolated output-buffer batches.
         damagedBelow: 1500,
         damagedDurationBps: 11500,
+        failure: { kind: "jam", integrityAtOrBelow: 600, minimumStressLoad: 5 },
         // Replacement cutter supplied from nearby, physically tracked stock.
         service: {
           materialId: "ferrite", units: 2, range: 5,
@@ -400,6 +401,7 @@ export const fixture = validateContent({
         integrityLossPerWear: 2,
         damagedBelow: 1500,
         damagedDurationBps: 11000,
+        failure: { kind: "tool-break", integrityAtOrBelow: 500, minimumStressLoad: 12 },
         service: {
           materialId: "ferrite", units: 3, range: 5,
           restoreIntegrity: 3000, reduceWear: 150,

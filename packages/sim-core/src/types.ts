@@ -108,6 +108,7 @@ export type Job = { remaining: number; reaction: string | null };
 export const MACHINE_STATUSES = [
   "processing",
   "incident",
+  "mechanical-failure",
   "disabled",
   "deposit-exhausted",
   "material-too-hard",
@@ -121,6 +122,11 @@ export const MACHINE_STATUSES = [
   "ready",
 ] as const;
 export type MachineStatus = (typeof MACHINE_STATUSES)[number];
+export type MachineMechanicalFailure = {
+  kind: "jam" | "tool-break";
+  observedLoad: "nominal" | "strained";
+  atTick: number;
+};
 export type Machine = Point & {
   id: string;
   definitionId: string;
@@ -133,6 +139,7 @@ export type Machine = Point & {
   integrity: number; // 1..10000, independent of wear and operating state.
   enabled: boolean;
   incident: string | null;
+  mechanicalFailure: MachineMechanicalFailure | null;
   incidentInventory: Inventory;
   input: Inventory;
   output: Inventory;

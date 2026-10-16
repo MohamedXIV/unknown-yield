@@ -761,6 +761,7 @@ export function applyCommand(
         integrity: 10000,
         enabled: true,
         incident: null,
+        mechanicalFailure: null,
         incidentInventory: {},
         input: {},
         output: {},
@@ -1044,6 +1045,8 @@ export function applyCommand(
         recovering = cmd.enabled && machine.incident !== null;
       if (recovering && total(machine.incidentInventory) > 0)
         return fail("Physical hazard consequence blocks restart");
+      if (cmd.enabled && machine.mechanicalFailure)
+        return fail("Mechanical failure requires local service before restart");
       const factory = machine.factoryId
         ? s.factories[machine.factoryId]
         : undefined;

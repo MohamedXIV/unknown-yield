@@ -94,6 +94,12 @@ export const contentSchema = z.object({
           integrityLossPerWear: z.number().int().min(0).max(1000).default(0),
           damagedBelow: z.number().int().min(1).max(9999).default(1),
           damagedDurationBps: z.number().int().min(10000).max(30000).default(10000),
+          // P2b2: deterministic, authored failure boundary; no random roll.
+          failure: z.object({
+            kind: z.enum(["jam", "tool-break"]),
+            integrityAtOrBelow: z.number().int().min(1).max(9999),
+            minimumStressLoad: z.number().int().min(0).max(30),
+          }).strict().optional(),
           service: z.object({
             materialId: id,
             units: positive,
@@ -686,6 +692,10 @@ function validateContentInternal(
   }
   const fuelClassIds = new Set(c.fuelClasses.map((entry) => entry.id));
   for (const m of c.machines) {
+    if (m.reliability?.failure &&
+        (!m.reliability.service ||
+         m.reliability.failure.integrityAtOrBelow >= m.reliability.damagedBelow))
+      throw new Error("Mechanical failure requires a recoverable service and a lower threshold than damage");
     if (m.reliability?.service &&
         !c.materials.some((material) =>
           material.id === m.reliability!.service!.materialId &&

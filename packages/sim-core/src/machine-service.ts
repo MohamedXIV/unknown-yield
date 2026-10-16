@@ -74,6 +74,12 @@ export function serviceMachine(
     change(s.flows.consumed, rule.materialId, rule.units);
     machine.integrity = Math.min(10000, machine.integrity + rule.restoreIntegrity);
     machine.wear = Math.max(0, machine.wear - rule.reduceWear);
+    // One service may not restore enough integrity. Keep the physical fault
+    // locked until an actual locally funded repair crosses its threshold.
+    const failure = profile?.failure;
+    if (machine.mechanicalFailure && failure &&
+        machine.integrity > failure.integrityAtOrBelow)
+      machine.mechanicalFailure = null;
   }
   return { ok: true, message: "Machine serviced with local physical parts" };
 }

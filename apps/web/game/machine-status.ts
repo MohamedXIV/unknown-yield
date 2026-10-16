@@ -10,6 +10,7 @@ import type { MachineStatus } from "@site/sim-core";
 const labels: Record<MachineStatus, string> = {
   processing: "Processing",
   incident: "Incident lockout",
+  "mechanical-failure": "Mechanical failure — local service required",
   disabled: "Disabled",
   "deposit-exhausted": "Deposit exhausted",
   "material-too-hard": "Mechanical load exceeds machine capability",
