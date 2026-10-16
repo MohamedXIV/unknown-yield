@@ -184,7 +184,7 @@ describe("P1b authored operating modes — command, save and physics parity", ()
   it("validates persisted mode identity and migrates schema 27 to the default mode", () => {
     const { sim, id } = setup("raw");
     const saved = sim.serialize();
-    expect(saved.schemaVersion).toBe(28);
+    expect(saved.schemaVersion).toBe(29);
     const tampered = structuredClone(saved);
     tampered.machines[id]!.operatingModeId = "not-a-mode";
     expect(new Simulation(fixture).load(tampered).ok).toBe(false);
@@ -196,7 +196,7 @@ describe("P1b authored operating modes — command, save and physics parity", ()
     delete (legacy.machines[id] as Partial<typeof legacy.machines[string]>).operatingModeId;
     const loaded = new Simulation(fixture);
     expect(loaded.load(legacy).ok).toBe(true);
-    expect(loaded.serialize().schemaVersion).toBe(28);
+    expect(loaded.serialize().schemaVersion).toBe(29);
     expect(loaded.snapshot().machines.find((m) => m.id === id)!.operatingModeId).toBe("steady");
     expect(auditLedger(fixture, loaded.serialize()).ok).toBe(true);
   });
