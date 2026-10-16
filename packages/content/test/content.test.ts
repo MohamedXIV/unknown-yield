@@ -44,6 +44,23 @@ describe("content boundary", () => {
       fouled.hazardClasses.find((h) => h.id === "instability")!.foulingWear = bad;
       expect(() => validateContent(fouled)).toThrow();
     }
+    // Author both fields together; invalid reach or damage is rejected.
+    for (const bad of [0, 9, 1.5, -1]) {
+      const invalidRange = structuredClone(fixture);
+      invalidRange.hazardClasses.find(h => h.id === "pressure-expansion")!
+        .localShock!.range = bad;
+      expect(() => validateContent(invalidRange)).toThrow();
+    }
+    for (const bad of [0, 10000, 1.5]) {
+      const invalidDamage = structuredClone(fixture);
+      invalidDamage.hazardClasses.find(h => h.id === "pressure-expansion")!
+        .localShock!.integrityDamage = bad;
+      expect(() => validateContent(invalidDamage)).toThrow();
+    }
+    const independent = structuredClone(fixture);
+    delete independent.hazardClasses.find(h => h.id === "pressure-expansion")!
+      .localShock;
+    expect(() => validateContent(independent)).not.toThrow();
     const noRepair = structuredClone(fixture);
     delete noRepair.machines.find((m) => m.id === "oversealed-furnace")!.reliability!.service;
     expect(() => validateContent(noRepair)).not.toThrow();
