@@ -177,6 +177,91 @@ it("turns a real pressure incident into persisted chamber damage repairable only
   expect(auditLedger(fixture, replay.serialize()).ok).toBe(true);
 });
 
+it("confines a real blowout to repairable neighboring equipment without moving cargo", () => {
+  const { sim, processorId } = armedHazardLine();
+  // The source chamber spans x27..28/y36..37. Nearest rect starts at
+  // x30/y36 (gap 1); lower serviceable rect at x30/y40 has gap 3.
+  const nearId = build(sim, {
+    type: "placeMachine", definitionId: "oversealed-furnace",
+    x: 30, y: 36, direction: 0,
+  });
+  const farId = build(sim, {
+    type: "placeMachine", definitionId: "oversealed-furnace",
+    x: 30, y: 40, direction: 0,
+  });
+  const noServiceId = build(sim, {
+    type: "placeMachine", definitionId: "furnace",
+    x: 27, y: 40, direction: 0,
+  });
+  for (const id of [nearId, farId, noServiceId])
+    expect(sim.command({ type: "setEnabled", machineId: id, enabled: false }).ok)
+      .toBe(true);
+  const untouched = sim.serialize();
+  const nearBefore = untouched.machines[nearId]!;
+  const farBefore = untouched.machines[farId]!;
+  const plainBefore = untouched.machines[noServiceId]!;
+
+  for (let n = 0; n < 500 && !sim.serialize().machines[processorId]!.incident; n++)
+    sim.step(fixture.tickMs);
+  const shocked = sim.serialize();
+  expect(shocked.machines[processorId]).toMatchObject({
+    incident: "chamber-blowout", integrity: 8000, enabled: false,
+  });
+  expect(shocked.machines[nearId]).toMatchObject({
+    integrity: 8800, wear: 0, incident: null, enabled: false,
+    input: nearBefore.input, output: nearBefore.output,
+  });
+  expect(shocked.machines[farId]).toMatchObject({
+    integrity: farBefore.integrity, wear: farBefore.wear,
+    incident: null, enabled: false,
+  });
+  expect(shocked.machines[noServiceId]).toMatchObject({
+    integrity: plainBefore.integrity, wear: plainBefore.wear,
+    incident: null, enabled: false,
+  });
+  expect(sim.snapshot().machines.find(m => m.id === nearId))
+    .toMatchObject({ physicalCondition: "damaged", durationTicks: 39 });
+  expect(sim.snapshot().machines.find(m => m.id === farId))
+    .toMatchObject({ physicalCondition: "intact", durationTicks: 30 });
+  expect(JSON.stringify(sim.snapshot())).not.toContain('"localShock"');
+  expect(auditLedger(fixture, shocked).ok).toBe(true);
+
+  // Collateral harm does not fabricate an incident or clear the *source*
+  // lockout. The neighbor may independently buy its own physical repair.
+  const repair = { type: "serviceMachine", machineId: nearId };
+  expect(sim.preview(repair)).toMatchObject({ ok: false });
+  expect(sim.command(repair)).toMatchObject({ ok: false });
+  expect(sim.serialize()).toEqual(shocked);
+  const depotId = build(sim, {
+    type: "placeStorage", definitionId: "depot", x: 35, y: 36, direction: 0,
+  });
+  const allocated = sim.serialize();
+  allocated.deposits["ferrite-field"] -= 2;
+  allocated.storages[depotId]!.inventory.ferrite = 2;
+  expect(sim.load(allocated).ok).toBe(true);
+  expect(auditLedger(fixture, sim.serialize()).ok).toBe(true);
+  const beforeRepair = sim.serialize();
+  expect(sim.preview(repair)).toMatchObject({ ok: true });
+  expect(sim.serialize()).toEqual(beforeRepair);
+  expect(sim.command(repair)).toMatchObject({ ok: true });
+  const repaired = sim.serialize();
+  expect(repaired.machines[nearId]!.integrity).toBe(10000);
+  expect(repaired.machines[nearId]!.enabled).toBe(false);
+  expect(repaired.machines[processorId]!.incident).toBe("chamber-blowout");
+  expect(repaired.flows.consumed.ferrite)
+    .toBe((beforeRepair.flows.consumed.ferrite ?? 0) + 2);
+  expect(repaired.storages[depotId]!.inventory.ferrite ?? 0).toBe(0);
+  expect(auditLedger(fixture, repaired).ok).toBe(true);
+
+  const replay = new Simulation(fixture);
+  expect(replay.load(JSON.parse(JSON.stringify(repaired))).ok).toBe(true);
+  expect(replay.serialize()).toEqual(repaired);
+  sim.step(500);
+  replay.step(500);
+  expect(replay.serialize()).toEqual(sim.serialize());
+  expect(auditLedger(fixture, replay.serialize()).ok).toBe(true);
+});
+
 it("resolves class identity from authored data without changing trigger rules", () => {
   const draft = structuredClone(fixture);
   draft.reactions.find(

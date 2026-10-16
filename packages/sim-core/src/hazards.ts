@@ -1,5 +1,6 @@
 import type { Content } from "@site/content";
 import { change, type Machine, type Save } from "./types";
+import { footprint, footprintGap } from "./geometry";
 
 export type HazardReaction = Content["reactions"][number];
 export type HazardInstance = NonNullable<HazardReaction["hazard"]>;
@@ -86,6 +87,21 @@ export function applyReactionHazard(
         machine.integrity = Math.max(1,
           machine.integrity - classDefinition.integrityDamage -
           fouling * profile.integrityLossPerWear);
+      }
+      // A bounded authored blast can injure *other* machinery nearby.
+      // Only spatial footprints determine reach: no secondary hazards fire,
+      // and none of the target's buffers, jobs or inventories are changed.
+      // Without a locally funded service profile the target remains intact.
+      if (classDefinition.localShock) {
+        const { range, integrityDamage } = classDefinition.localShock;
+        const source = footprint(machine, definition);
+        for (const target of Object.values(state.machines)) {
+          if (target.id === machine.id) continue;
+          const other = content.machines.find(d => d.id === target.definitionId)!;
+          if (!other.reliability?.service) continue;
+          if (footprintGap(source, footprint(target, other)) > range) continue;
+          target.integrity = Math.max(1, target.integrity - integrityDamage);
+        }
       }
       machine.incident = reaction.hazard.id;
       machine.enabled = false;

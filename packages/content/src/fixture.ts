@@ -1,6 +1,6 @@
 import { validateContent } from "./schema";
 export const fixture = validateContent({
-  version: "world-01-v25",
+  version: "world-01-v26",
   tickMs: 100,
   containmentCapabilities: [
     {
@@ -33,6 +33,8 @@ export const fixture = validateContent({
       evidenceKey: "hazard.class.pressure-expansion.evidence",
       machineEffect: "lockout",
       integrityDamage: 2000,
+      // Shockwave reaches nearby machine shells without moving their cargo.
+      localShock: { range: 2, integrityDamage: 1200 },
     },
     {
       id: "corrosion",
