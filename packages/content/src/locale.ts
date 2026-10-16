@@ -531,6 +531,7 @@ export const enCatalog: LocaleCatalog = {
   "machine.relief-furnace.unlock-hint":
     "observed Vitrified slag jam evidence from excessive confinement",
   "storage.depot.name": "Depot",
+  "storage.isolation-depot.name": "Isolation depot",
   "reaction.press-ferrite.observation":
     "Ferrite compacts into structural plates for local construction.",
   "reaction.heat-ferrite.observation":
@@ -569,7 +570,15 @@ export const enCatalog: LocaleCatalog = {
     "The charge changed phase unevenly under excessive confinement and solidified across the chamber path.",
   "hazard.class.contamination.name": "Contamination",
   "hazard.class.contamination.evidence":
-    "Unwanted material crossed a process boundary and remained physically mixed with the affected line.",
+    "Reactive catalyst coated the chamber with an unstable contaminant; the product must remain isolated until transferred into rated containment.",
+  "material.tainted-residue.name": "Contaminated residue",
+  "reaction.heat-catalyst-oversealed.observation":
+    "Oversealed heating of catalytic stone leaves a tainted residue that is unsafe for ordinary storage.",
+  "hazard.catalyst-contamination.name": "Catalyst cross-contamination",
+  "hazard.catalyst-contamination.observation":
+    "The product is isolated inside the locked chamber; ordinary output recovery would spread the contaminated residue.",
+  "hazard.catalyst-contamination.safer-hint":
+    "Use an isolation-rated local depot for recovery, then compare a less confined process.",
   "hazard.chamber-blowout.name": "Chamber blowout",
   "hazard.chamber-blowout.observation":
     "The oversealed chamber vented violently and forced an automatic lockout. Processed material remains physically accounted for in the line; acknowledge the incident before restarting.",
