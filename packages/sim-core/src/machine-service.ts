@@ -145,7 +145,7 @@ function salvagePlan(c: Content, s: Save, machine: Machine): {
   const nearby = Object.values(s.storages)
     .filter((storage) => {
       const sd = c.storages.find((d) => d.id === storage.definitionId)!;
-      return range !== undefined && cellGap(rect, footprint(storage, sd)) <= range;
+      return range !== undefined && footprintGap(rect, footprint(storage, sd)) <= range;
     })
     .sort((a, b) => a.id.localeCompare(b.id));
   // Select only an actually capable local storage. Safe containment must
@@ -167,7 +167,7 @@ function salvagePlan(c: Content, s: Save, machine: Machine): {
   let liquidTank: Save["tanks"][string] | null = null;
   if (liquidUnits) {
     const tanks = Object.values(s.tanks)
-      .filter((tank) => cellGap(rect, footprint(tank, c.liquidLogistics!.tank)) <= range!)
+      .filter((tank) => footprintGap(rect, footprint(tank, c.liquidLogistics!.tank)) <= range!)
       .sort((a, b) => a.id.localeCompare(b.id));
     if (!tanks.length) return blocked("no-local-tank");
     const contained = tanks.filter((tank) =>
@@ -185,7 +185,7 @@ function salvagePlan(c: Content, s: Save, machine: Machine): {
   if (gasUnits) {
     const vessels = Object.values(s.pressureVessels)
       .filter((vessel) =>
-        cellGap(rect, footprint(vessel, c.gasLogistics!.vessel)) <= range!)
+        footprintGap(rect, footprint(vessel, c.gasLogistics!.vessel)) <= range!)
       .sort((a, b) => a.id.localeCompare(b.id));
     if (!vessels.length) return blocked("no-local-vessel");
     const contained = vessels.filter(() =>
