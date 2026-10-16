@@ -527,6 +527,7 @@ export type GameCommand =
   | { type: "dismantleMany"; ids: string[] }
   | { type: "recoverMachineIncident"; machineId: string }
   | { type: "serviceMachine"; machineId: string }
+  | { type: "salvageMachine"; machineId: string }
   | { type: "setEnabled"; machineId: string; enabled: boolean }
   | { type: "setOperatingMode"; machineId: string; modeId: string }
   | { type: "setOperation"; machineId: string; operation: string }
@@ -557,8 +558,16 @@ export type MachineServiceView = {
   ready: boolean;
   reason: "running" | "enabled" | "hazard" | "already-serviced" | "no-local-parts" | null;
 };
+export type MachineSalvageView = {
+  cargoUnits: number;
+  structuralUnits: number;
+  ready: boolean;
+  reason: "not-failed" | "hazard" | "unsupported-cargo" | "no-local-storage" |
+    "insufficient-capacity" | null;
+};
 export type MachineView = Omit<Machine, "job" | "incident"> & {
   service: MachineServiceView | null;
+  salvage: MachineSalvageView | null;
   job: { remaining: number } | null;
   incident: MachineHazardView | null;
   nameKey: string;

@@ -1778,6 +1778,24 @@ function GameClientInner() {
                         <p>{t("ui.machine.failure.explanation", {
                           load: t("ui.machine.failure." + machine.mechanicalFailure.observedLoad),
                         })}</p>
+                        {machine.salvage && (
+                          <>
+                            <p>{t("ui.machine.salvage.info", {
+                              cargo: machine.salvage.cargoUnits,
+                              structure: machine.salvage.structuralUnits,
+                            })}</p>
+                            {machine.salvage.reason && (
+                              <p>{t("ui.machine.salvage.reason." + machine.salvage.reason)}</p>
+                            )}
+                            <button
+                              type="button"
+                              disabled={!machine.salvage.ready}
+                              onClick={() => act({ type: "salvageMachine", machineId: machine.id })}
+                            >
+                              {t("ui.machine.salvage.button")}
+                            </button>
+                          </>
+                        )}
                       </div>
                     )}
                     {machine.incident && (
