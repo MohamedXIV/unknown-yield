@@ -35,10 +35,14 @@ function sourceStorage(c: Content, s: Save, machine: Machine, rule: ServiceRule)
 
 function reason(machine: Machine, available: boolean): MachineServiceView["reason"] {
   if (machine.job) return "running";
-  if (machine.incident) return "hazard";
+  // Stranded material must be moved through a real recovery path first.
+  // A contained, empty lockout can instead be cleared by locally funded
+  // service; the old command could not recover zero-stranded hazards at all.
+  if (machine.incident && total(machine.incidentInventory) > 0) return "hazard";
   if (machine.mechanicalFailure?.kind === "wreck") return "wrecked";
   if (machine.enabled) return "enabled";
-  if (machine.integrity === 10000 && machine.wear === 0) return "already-serviced";
+  if (!machine.incident && machine.integrity === 10000 && machine.wear === 0)
+    return "already-serviced";
   if (!available) return "no-local-parts";
   return null;
 }
@@ -77,6 +81,10 @@ export function serviceMachine(
     change(s.flows.consumed, rule.materialId, rule.units);
     machine.integrity = Math.min(10000, machine.integrity + rule.restoreIntegrity);
     machine.wear = Math.max(0, machine.wear - rule.reduceWear);
+    // Physically paid service may clear an empty hazardous lockout. The
+    // stopped machine remains disabled until the player restarts it.
+    if (machine.incident && total(machine.incidentInventory) === 0)
+      machine.incident = null;
     // One service may not restore enough integrity. Keep the physical fault
     // locked until an actual locally funded repair crosses its threshold.
     const failure = profile?.failure;
