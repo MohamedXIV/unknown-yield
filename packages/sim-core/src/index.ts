@@ -64,6 +64,7 @@ export type {
   LinePlacementKind,
   PlayerSnapshot,
   MachineView,
+  MachineServiceView,
   MachineStatus,
   MachineDefinitionView,
   StorageView,

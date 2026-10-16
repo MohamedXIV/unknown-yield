@@ -31,6 +31,7 @@ import {
   pumpRecoveryDiagnostic,
 } from "./liquids";
 import { pumpRepairEligible, publicPumpIncident } from "./pump-recovery";
+import { machineServiceView } from "./machine-service";
 import { publicTransportDiagnostic } from "./containment";
 import { terminalModuleViews } from "./terminal";
 import { footprint } from "./geometry";
@@ -385,6 +386,7 @@ export class Simulation {
           fuelCost: extraction.fuelCost,
           extractionCompatibility: extraction.compatibility,
           physicalCondition: machinePhysicalCondition(c, m),
+          service: machineServiceView(c, s, m),
           // Operating mode identity comes from persisted authoritative state.
           fuelClassId: d.fuelClassId ?? null,
           status: status(c, s, m),
