@@ -615,3 +615,8 @@ The `salvageMachine` command in [PR #313](https://github.com/MohamedXIV/unknown-
 ### P2d authoring — mechanical wreck (2026-10-16)
 
 Optional private `machine.reliability.wreck` contains `integrityAtOrBelow` and `minimumStressLoad` under existing validated Studio reliability JSON; it must be distinct from recoverable failure, inside the damage band and actually attainable by the extraction envelope. Observed runtime `mechanicalFailure.kind=wreck` remains visible, the exact authoring coefficients remain private. `wrecked` is both an actual operating status and a derived physical condition. Save v32, fixture world-01-v22. Verified CI #38910994612 (700 tests pass, 3 skipped, typecheck/lint/build, 2 browser). The existing salvage operation conserves all ordinary-solid contents and structure but rejects unsupported containment cargo.
+
+
+### P2e containment-rated salvage destination (2026-10-16)
+
+[PR #317](https://github.com/MohamedXIV/unknown-yield/pull/317) reuses existing authored `storage.containmentCapabilities` and per-material `requiredContainment`; no new schema or catalogue fields are required. For actual physical salvage, the entire recovered ordinary/protected **solid** inventory must pass `checkContainment` for the same local storage that has enough capacity for all cargo and structure. Only a generic diagnosis is public. A test-specific fourth deposited ore uses correct authored extractor containment and keeps all existing reactions unmodified. CI #38912719705 passed 703 tests/3 skipped with typecheck/lint/build and two production-browser. Non-solid recovery is still intentionally unsupported.

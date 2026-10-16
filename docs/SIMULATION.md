@@ -588,3 +588,8 @@ PR #313 adds a deterministic `salvageMachine` command for disabled mechanical-fa
 ### P2d: causal wreck vs repairable jam (2026-10-16)
 
 PR #315 introduces a data-authored severe-load/low-integrity post-batch `wreck` outcome that supersedes repairable jam/tool-break under extreme conditions. Completed real output remains in machine output, and all saved inventories are physically conserved. `MachineStatus= wrecked`, `physicalCondition=wrecked`; local service and restart are ineligible, while local physical salvage reuses the existing source/destination capacity rules. Factory flow certification invalidates. Schema v32 migrates v31; content world-01-v22. Exact-head CI #38910994612: 700 pass/3 skip, typecheck/lint/build and 2/2 production browser. Specialized containment recovery still belongs to #295.
+
+
+### P2e solid containment-aware machine salvage (2026-10-16)
+
+PR #317 extends deterministic local failed-machine salvage to **solid** cargo that requires material-specific containment, by validating all recovered materials against the concrete nearby storage's `containmentCapabilities` using the canonical `checkContainment` function. It cannot accept non-solid contents or a locally incompatible storage even if there is space. Transfer is atomic, storage-local, ledger-balanced, and holds every buffered and embodied material without global stock teleport. Public eligibility uses the generic `missing-containment` reason without revealing hidden capabilities. Save/content remain v32/world-01-v22. [CI #38912719705](https://github.com/MohamedXIV/unknown-yield/actions/runs/38912719705) passed 703 tests/3 skipped, typecheck/lint/build and 2 browser tests.

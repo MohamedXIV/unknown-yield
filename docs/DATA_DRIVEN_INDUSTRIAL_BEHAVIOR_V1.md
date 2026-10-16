@@ -260,3 +260,15 @@ The evidence/unlock-gated **Deep Extractor** receives its first mechanical envel
 - UI shows the irreparable wreck explanation, actual salvage eligibility, machine condition and a safe presentation fallback; **not** final user-approved state-specific art. Authored numeric thresholds remain hidden from the public snapshot. Save schema **v32**, migration v31→v32, built-in content **world-01-v22**; deliberate pre-release content version break.
 
 **Still open in #295:** specialized containment-aware salvage, fluids and gases, richer contained hazard/overheat consequences and end-to-end subjective playtest acceptance. Art PR #291 remains unmerged pending in-game visual approval; P3 #296 remains unstarted.
+
+
+## P2e — containment-rated physical solid salvage (merged 2026-10-16)
+
+[PR #317](https://github.com/MohamedXIV/unknown-yield/pull/317) squash `25f629641f83d968f8edb9ac36872634e2a60891`. [Exact-head CI #38912719705](https://github.com/MohamedXIV/unknown-yield/actions/runs/38912719705) **PASS: 137 test files, 703 passed / 3 skipped**, typecheck, lint, production build and **2/2 production-browser acceptance**.
+
+- `salvageMachine` now permits **solid materials with authored required containment** only when the **actual single selected nearby storage** has every `containmentCapability` required by every cargo and embodied build material. The authoritative `checkContainment` evaluator already used by transport is the sole compatibility rule; no special-case material IDs or weakening of the normal material validation. A physically unrated store is skipped, even when nearer or earlier by ID. A compatible store still must individually fit the full recovered inventory.
+- Eligibility cleanly distinguishes no local storage, missing material containment, insufficient physical storage capacity, non-solid unsupported cargo, and hazard exclusion. The public view returns **no secret required capability ID**. Preview and failed commits leave state byte-identical; a successful action moves the real stored material without changing global build stock or transformation flows. Existing atomic local salvage, save/replay and Material Ledger checks remain intact.
+- Domain tests use an **independent fourth solid ore** and a genuinely authored deposit with matching mineral-extractor interface capabilities, rather than mutating existing materials and contradicting reaction validation. Covered unprotected refusal, rated-store success, rated-store choice over earlier incompatible source, local content semantics, persisted replay and conservation.
+- No schema or fixture-content changes: **save v32 / world-01-v22**. P0 final art PR #291 remains unapproved.
+
+**Still open in P2 #295:** fluids/gases need dedicated physically compatible tank/vessel recovery rather than a generic dry storage transfer; concurrent hazardous trapped cargo and richer overheat/incident outcomes need separate design and acceptance. Do not claim complete containment or full P2 exit on this solid-only slice.
