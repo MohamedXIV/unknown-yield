@@ -378,3 +378,15 @@ The evidence/unlock-gated **Deep Extractor** receives its first mechanical envel
 - **No version churn:** Built-in world **v27**, saved schema **v32**, no new content, hidden logic or UI surface. This is a real end-to-end *automated simulation acceptance*, **not** manual human browsing, accessibility or ordinary-camera pacing validation. Independent extractor art PR #291 remains unapproved.
 
 **Remaining:** #295/#292 OPEN for actual hands-on gameplay and presentation approval. P3 #296 has its own acceptance criteria and does not inherit P2's unresolved human gate.
+
+
+## P2o — public, truthful incident recovery affordance (merged 2026-10-17)
+
+[PR #337](https://github.com/MohamedXIV/unknown-yield/pull/337) squash `4f60bb6ed6c02e932efa80621928d6600c051436`; [CI #38980967908](https://github.com/MohamedXIV/unknown-yield/actions/runs/38980967908) PASS: **140 test files, 723 pass/3 skipped, typecheck/lint/build, 2/2 production-browser**. Initial CI #38980575022 isolated an accidental renamed legacy slag-jam button, corrected before merge.
+
+- The authoritative machine-incident recovery view now publishes an *incident-scoped* `outputRecoveryAllowed` decision. This Boolean is derived from the authored class `requiresContainedRecovery` only for an existing trapped incident. The player-facing snapshot does **not** expose private authored hazard coefficients, future recipes or matching outputs ahead of observation. The command bus remains the final authority on permission and material transfer.
+- Recovery advice at the world inspector is synthesized from known/public trapped material requirements and actual content storage definitions: solid-phase matching `requiredContainment` and receiver capacity, not a fixed `catalyst-contamination` or `isolation-depot` condition. The currently applicable recovery diagnostics stay authoritative; the player is offered a build-tool shortcut for the first genuinely compatible authored solid receiver when required, while a direct machine-output recovery action is **omitted** if quarantine disallows it. A normal slag jam still offers direct output reclaim with its pre-existing wording.
+- All valid, additional storage definitions are now discoverable and selectable in the existing hierarchical Storage construction submenu, with their real physical costs, names and rated capabilities. This fixes a UI reachability blocker: P2m's Isolation Depot was valid in pure simulation but had been absent from actual gameplay construction navigation. Runtime commands and placement constraints are unchanged.
+- Tests include a genuine catalyst contamination in the pure simulator projected into the public world inspector, no spoiler before evidence, plain-then-rated storage options, build palette and command parity, and existing non-quarantined recovery. No new source consumption, material destruction, content version change or save migration: **world-01-v27 / schema v32**.
+
+**Remaining:** #295/#292 OPEN for actual human usability at gameplay zoom, full browser click-through pacing and independent graphics/audio judgment. P3 #296 separate; art PR #291 untouched and not approved.
