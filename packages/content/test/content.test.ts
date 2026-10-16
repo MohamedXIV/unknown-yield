@@ -35,6 +35,15 @@ describe("content boundary", () => {
     expect(() => validateContent(wrong)).toThrow(/mineral extractor/);
   });
 
+  it("bounds authored hazard damage and requires a local service for dangerous equipment", () => {
+    const excessive = structuredClone(fixture);
+    excessive.hazardClasses.find((h) => h.id === "pressure-expansion")!.integrityDamage = 10000;
+    expect(() => validateContent(excessive)).toThrow();
+    const noRepair = structuredClone(fixture);
+    delete noRepair.machines.find((m) => m.id === "oversealed-furnace")!.reliability!.service;
+    expect(() => validateContent(noRepair)).toThrow(/Damaging hazard requires/);
+  });
+
   it("requires positive integral transport windows on crossings only", () => {
     for (const windowSteps of [undefined, 0, -1, 1.5]) {
       const c = structuredClone(fixture);
@@ -48,7 +57,7 @@ describe("content boundary", () => {
   it("accepts the complete tiny scenario", () => {
     const c = validateContent(fixture);
     expect(c.machines).toHaveLength(15);
-    expect(c.version).toBe("world-01-v23");
+    expect(c.version).toBe("world-01-v24");
     expect(c.storages).toHaveLength(1);
     expect(c.storages[0]).toMatchObject({ id: "depot", capacity: 40 });
     expect(c.site.stagingCapacity).toBe(24);
