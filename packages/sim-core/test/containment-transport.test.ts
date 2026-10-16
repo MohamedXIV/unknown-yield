@@ -139,6 +139,8 @@ describe("containment admission", () => {
       m.inputContainment = ["corrosion-resistant"];
       m.outputContainment = ["corrosion-resistant"];
     }
+    draft.machines.find(m => m.id === "oversealed-furnace")!
+      .outputContainment.push("hazard-isolated");
     draft.machines.find(
       (machine) => machine.id === "phase-quencher",
     )!.outputContainment = [
