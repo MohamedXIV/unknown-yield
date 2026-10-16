@@ -595,3 +595,8 @@ PR #305 (squash `f2e329201db2e511db12b508475c40834cf40e72`) adds optional bounde
 ### P2b1 integrity and private reliability (2026-10-16)
 
 [PR #307](https://github.com/MohamedXIV/unknown-yield/pull/307) adds three optional validated reliability coefficients (`integrityLossPerWear`, `damagedBelow`, `damagedDurationBps`) in the same TinyBase reliability JSON round trip. `PlayerSnapshot.machines` contains measured `integrity` and `physicalCondition`; `definitions` still excludes authored reliability. Wear and integrity remain separate, physically damage-influenced throughput derives from the shared sim evaluator. Save schema v30, fixture world-01-v19. CI #38896256712 passed 684 tests/3 skipped, typecheck, lint, build and 2 browser. Mechanical failure/repair/salvage remain unimplemented P2b2/P2c.
+
+
+### P2c1 local physical maintenance (2026-10-16)
+
+[PR #309](https://github.com/MohamedXIV/unknown-yield/pull/309) adds optional authored service parts/amount/range/recovery rules under machine reliability (Zod-validated and TinyBase Studio JSON-round-tripped). `serviceMachine` consumes a **solid material held in a single nearby physical storage** and records the exact quantity as ledger `flows.consumed`; no remote storage, global stock or physical cargo teleport is used. Preview and actual command enforce the same guards. The player snapshot reveals real currently serviceable material/amount/availability with unknown material identity sanitized but never leaks authored coefficient formulas. Fixture content `world-01-v20`; save v30 unchanged. CI #38898046036 passed 688 tests/3 skipped, typecheck/lint/build plus two production-browser tests. P2 mechanical failures and salvage still pending.
