@@ -1272,6 +1272,7 @@ export function createWorld(
           representativeArt = resolveMachinePresentation(
             m,
             snapshot.definitions.find((d) => d.id === m.definitionId),
+            m.physicalCondition,
           ).assetId;
         if (representativeArt)
           this.artImage(
@@ -1793,6 +1794,7 @@ export function createWorld(
         const presentation = resolveMachinePresentation(
           m,
           snapshot.definitions.find((d) => d.id === m.definitionId),
+          m.physicalCondition,
         );
         g.fillStyle(presentation.indicatorColor)
           .fillCircle((m.x + m.width) * X - 8, m.y * Y - 1, 3);

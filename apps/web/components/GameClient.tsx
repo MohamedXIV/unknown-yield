@@ -1673,6 +1673,9 @@ function GameClientInner() {
                       <span>
                         {t("ui.machine.wear.label")}<b>{Math.floor(machine.wear / 100)}% · {t("ui.machine.condition." + machine.physicalCondition)}</b>
                       </span>
+                      <span>
+                        {t("ui.machine.integrity.label")}<b>{Math.floor(machine.integrity / 100)}%</b>
+                      </span>
                       {machine.role === "extractor" && machine.extractionCompatibility !== "nominal" && (
                         <span>
                           Mechanical load<b>{machine.extractionCompatibility === "strained" ? "Strained" : "Beyond capability"}</b>

@@ -86,6 +86,8 @@ export const enCatalog: LocaleCatalog = {
   "ui.knowledge.insight.property": "Observed property",
   "ui.knowledge.insight.branch": "Open branch",
   "ui.knowledge.insight.opportunity": "Company opportunity",
+  "ui.machine.integrity.label": "Integrity",
+  "ui.machine.condition.damaged": "Damaged",
   "ui.machine.wear.label": "Wear",
   "ui.machine.condition.intact": "Intact",
   "ui.machine.condition.worn": "Worn",

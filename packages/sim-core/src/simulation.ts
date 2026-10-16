@@ -8,9 +8,9 @@ import {
   solidDiagnostics,
 } from "./production";
 import { auditLedger } from "./ledger";
-import { assessMineralExtraction } from "./extraction-envelope";
+
 import { publicMachineDefinition, publicMaterial } from "./public-content";
-import { machinePhysicalCondition } from "./machine-wear";
+import { machinePhysicalCondition, assessMachineOperation } from "./machine-wear";
 import { machineUnlocked } from "./progression";
 import { hazardDefinition } from "./hazards";
 import {
@@ -358,7 +358,7 @@ export class Simulation {
       machines: Object.values(s.machines).map((m) => {
         const d = c.machines.find((d) => d.id === m.definitionId)!;
         const r = footprint(m, d);
-        const extraction = assessMineralExtraction(c, m);
+        const extraction = assessMachineOperation(c, m);
         const incident = m.incident
           ? hazardDefinition(c, m.incident)
           : undefined;

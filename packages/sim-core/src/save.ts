@@ -24,7 +24,7 @@ import {
   exchangeDefinition,
 } from "./market";
 import { machineUnlocked } from "./progression";
-import { assessMineralExtraction } from "./extraction-envelope";
+import { assessMachineOperation } from "./machine-wear";
 import { hazardDefinition } from "./hazards";
 import { milestoneSatisfied, refreshMilestones } from "./milestones";
 import { assistanceDefinition } from "./assistance";
@@ -51,7 +51,7 @@ import {
   cardinalSpan,
   elevatedPlacementError,
 } from "./geometry";
-export const CURRENT_SAVE_SCHEMA_VERSION = 29;
+export const CURRENT_SAVE_SCHEMA_VERSION = 30;
 
 const count = z.number().int().nonnegative().max(1000000000),
   positive = count.positive();
@@ -101,6 +101,7 @@ const machine = z.object({
   operation: safeId.nullable(),
   operatingModeId: safeId.nullable().default(null),
   wear: z.number().int().min(0).max(10000).default(0),
+  integrity: z.number().int().min(1).max(10000).default(10000),
   enabled: z.boolean(),
   incident: safeId.nullable().default(null),
   incidentInventory: inventory.default({}),
@@ -218,6 +219,7 @@ const schema = z.object({
     z.literal(27),
     z.literal(28),
     z.literal(29),
+    z.literal(30),
   ]),
   contentVersion: z.string(),
   terminalModules: z
@@ -447,10 +449,16 @@ export function parseSave(input: unknown, c: Content): Save {
       throw new Error("Missing operating mode in current save");
   }
   if (input && typeof input === "object" &&
-      (input as { schemaVersion?: number }).schemaVersion === 29) {
+      ((input as { schemaVersion?: number }).schemaVersion ?? 0) >= 29) {
     const machines = (input as { machines?: Record<string, Record<string, unknown>> }).machines;
     if (Object.values(machines ?? {}).some((m) => !Object.hasOwn(m, "wear")))
       throw new Error("Missing physical wear in current save");
+  }
+  if (input && typeof input === "object" &&
+      (input as { schemaVersion?: number }).schemaVersion === 30) {
+    const machines = (input as { machines?: Record<string, Record<string, unknown>> }).machines;
+    if (Object.values(machines ?? {}).some((m) => !Object.hasOwn(m, "integrity")))
+      throw new Error("Missing machine integrity in current save");
   }
   const parsed = schema.parse(input);
   if (
@@ -712,6 +720,8 @@ export function parseSave(input: unknown, c: Content): Save {
   }
   // Schema 28 predates physical wear; existing equipment starts intact.
   if (s.schemaVersion === 28) s.schemaVersion = 29;
+  // Schema 29 persisted wear but not an independent integrity reading.
+  if (s.schemaVersion === 29) s.schemaVersion = 30;
   if (s.contentVersion !== c.version || s.remainder >= c.tickMs)
     throw new Error("Incompatible content or timing");
   if (
@@ -1104,7 +1114,7 @@ export function parseSave(input: unknown, c: Content): Save {
     if (m.job) {
       const r = c.reactions.find((r) => r.id === m.job!.reaction);
       if (
-        m.job.remaining > assessMineralExtraction(c, m).durationTicks ||
+        m.job.remaining > assessMachineOperation(c, m).durationTicks ||
         (d.role === "extractor"
           ? m.job.reaction !== null
           : !r ||
