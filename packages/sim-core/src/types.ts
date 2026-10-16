@@ -563,7 +563,38 @@ export type AtmosphericSourceView = Omit<
   material: string | null;
   remaining: number;
 };
-export type MachineDefinitionView = Omit<MachineDefinition, "unlock"> & {
+/** Player-facing mechanical metadata is deliberately not the authored truth. */
+export type MaterialView = Pick<
+  Content["materials"][number],
+  "id" | "nameKey" | "color" | "handlingState" | "requiredContainment"
+>;
+export type MachineOperatingModeView = Pick<
+  MachineDefinition["operatingModes"][number],
+  "id" | "nameKey"
+>;
+export type MachineDefinitionView = Pick<
+  MachineDefinition,
+  | "id"
+  | "nameKey"
+  | "role"
+  | "presentation"
+  | "maxExtractionDepth"
+  | "sourceKind"
+  | "processConditionId"
+  | "fuelClassId"
+  | "inputContainment"
+  | "outputContainment"
+  | "inputStates"
+  | "outputStates"
+  | "operations"
+  | "capacity"
+  | "fuel"
+  | "durationTicks"
+  | "width"
+  | "height"
+  | "cost"
+> & {
+  operatingModes: MachineOperatingModeView[];
   unlock: { unlocked: boolean; hintKey: string } | null;
 };
 export type FuelClassView = Content["fuelClasses"][number] & {
@@ -629,7 +660,7 @@ export type PlayerSnapshot = {
   storageDefinitions: StorageDefinition[];
   junctionDefinitions: Content["junctions"];
   operations: Content["operations"];
-  materials: Content["materials"];
+  materials: MaterialView[];
   machines: MachineView[];
   factories: FactoryView[];
   belts: Belt[];

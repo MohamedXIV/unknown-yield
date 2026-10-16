@@ -9,6 +9,7 @@ import {
 } from "./production";
 import { auditLedger } from "./ledger";
 import { assessMineralExtraction } from "./extraction-envelope";
+import { publicMachineDefinition, publicMaterial } from "./public-content";
 import { machineUnlocked } from "./progression";
 import { hazardDefinition } from "./hazards";
 import {
@@ -303,18 +304,9 @@ export class Simulation {
             remaining: s.atmosphericSources[source.id],
           }),
         ),
-      definitions: c.machines.map((definition) => {
-        const { unlock, ...view } = definition;
-        return {
-          ...view,
-          unlock: unlock
-            ? {
-                unlocked: machineUnlocked(s, definition),
-                hintKey: unlock.hintKey,
-              }
-            : null,
-        };
-      }),
+      definitions: c.machines.map((definition) =>
+        publicMachineDefinition(definition, machineUnlocked(s, definition)),
+      ),
       fuelClasses: fuelClassViews(c, s),
       storageDefinitions: c.storages,
       containmentCapabilities: c.containmentCapabilities,
@@ -327,7 +319,7 @@ export class Simulation {
       ),
       junctionDefinitions: c.junctions,
       operations: c.operations,
-      materials: c.materials.filter((m) => known.has(m.id)),
+      materials: c.materials.filter((m) => known.has(m.id)).map(publicMaterial),
       factories: Object.values(s.factories).map((factory) =>
         factoryView(c, s, factory, this.factoryThroughput.view(factory.id)),
       ),
