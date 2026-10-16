@@ -598,3 +598,8 @@ PR #317 extends deterministic local failed-machine salvage to **solid** cargo th
 ### P2f physically routed liquid wreck salvage (2026-10-16)
 
 [PR #319](https://github.com/MohamedXIV/unknown-yield/pull/319) adds a transactional two-destination salvage plan: matching local contained `Tank` receives all units of the sole liquid material, and local `Storage` receives all solids and machine construction material. Neither destination can be remote/undersized/miscontained or stocked with an incompatible identity. Preview is read-only; failing execution leaves all inventories intact. Exact-head CI #38918286733 passed **707 tests/3 skipped**, typecheck/lint/build and 2 production-browser checks. Save/content remain v32/world-01-v22. Gas and active hazardous incident recovery are separate #295 gates.
+
+
+### P2g physically routed gas wreck salvage (2026-10-16)
+
+[PR #321](https://github.com/MohamedXIV/unknown-yield/pull/321) completes basic three-state **inactive failed-machine cargo relocation**, not active hazardous incident recovery. The atomic local planner requires an actual solid Storage for all solids/embodied structure, a real compatible Tank for any sole liquid identity, and a real nearby Pressure Vessel for any sole gas identity. Each destination is checked against authored containment, stable material identity and real capacity before any transfer. No global stock flows change; machine vanishes only after moving all physical cargo. Save v32 / content v22 unchanged. [CI #38919851366](https://github.com/MohamedXIV/unknown-yield/actions/runs/38919851366): 711 passed / 3 skipped, typecheck/lint/build, 2 browser checks.

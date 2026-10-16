@@ -424,3 +424,8 @@ P1 #294 is technically complete through PR #303, squash `e8e4489cf93595263916d69
 ## Industrial behavior P2f liquid salvage accepted — 2026-10-16
 
 [PR #319](https://github.com/MohamedXIV/unknown-yield/pull/319) merged `429b0761f166d684025ce384bd257581f8cba3e6` after [CI #38918286733](https://github.com/MohamedXIV/unknown-yield/actions/runs/38918286733) **707 tests pass/3 skipped, typecheck/lint/build, 2/2 browser**. Atomic salvage now transfers a single liquid identity from wrecked machine into a nearby physical tank with exact containment/identity/capacity checks, while all solids and embodied structure go to nearby physical storage; no global stock teleport or ledger loss. Save v32/content v22 unchanged. Next #295: similarly conservative pressure-vessel gas handling and incident/hazard recovery. P0 PR #291 still awaits explicit visual sign-off.
+
+
+## Industrial behavior P2g gas salvage accepted — 2026-10-16
+
+[PR #321](https://github.com/MohamedXIV/unknown-yield/pull/321) merged `9c0d0e91e5682ce91b457caf154195c0d449784c` after [CI #38919851366](https://github.com/MohamedXIV/unknown-yield/actions/runs/38919851366) **711 tests/3 skipped, typecheck/lint/build, 2/2 browser**. Atomic machine salvage now transfers gas to local containment-rated Pressure Vessel, liquid to local Tank, and solids plus embodied machine structure to local Storage. All recipients are verified before any transfer, and preview/rejection is mutation-free. Save v32/world-01-v22 unchanged. **Next #295:** active contained hazard and byproduct recovery plus wider integrated acceptance; do not close P2 prematurely. Art PR #291 remains unmerged until explicit human review.

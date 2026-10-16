@@ -625,3 +625,8 @@ Optional private `machine.reliability.wreck` contains `integrityAtOrBelow` and `
 ### P2f liquid salvage (2026-10-16)
 
 The domain `salvageMachine` planner now routes a single liquid identity to a nearby capable actual liquid tank using existing `liquidContainment` and `checkContainment` authoring. Solids and embodied structure still require one actual local contained solid storage. Public salvage view adds actual `liquidUnits` and bounded reason codes; it does not expose private containment requirements. Save schema v32/world content v22 remain unchanged. CI #38918286733: 707 passed/3 skipped, typecheck/lint/build/2 browser.
+
+
+### P2g gas pressure-vessel wreck salvage (2026-10-16)
+
+The authoritative salvage planner routes the sole gas material from machine buffers to an actual local `PressureVessel` with authored `gasLogistics.vessel.containmentCapabilities`, identity and capacity checks, while solid inventory and structural units still need one actual rated Storage and any liquid requires its separate physical Tank. `MachineSalvageView.gasUnits` and generic eligibility blockers are player-visible; no private content fields are disclosed. The full transaction is atomic and save/ledger-conservative. Schema v32/world-01-v22 unchanged; [exact-head CI #38919851366](https://github.com/MohamedXIV/unknown-yield/actions/runs/38919851366) passes 711 tests/3 skipped, typecheck/lint/build and 2 browser.
