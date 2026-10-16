@@ -9,6 +9,7 @@ import {
 import { pumpRepairEligible } from "./pump-recovery";
 import { serviceMachine, salvageMachine } from "./machine-service";
 import { recoverIncidentToReceiver } from "./machine-incident-recovery";
+import { hazardDefinition } from "./hazards";
 import { z } from "zod";
 import type { Content } from "@site/content";
 import { amount, change, total, type Save, type CommandResult } from "./types";
@@ -1030,6 +1031,10 @@ export function applyCommand(
       if (!machine) return fail("Unknown machine");
       if (!machine.incident || total(machine.incidentInventory) === 0)
         return fail("No trapped hazard material to recover");
+      // A contained contamination cannot be discharged onto the regular
+      // output belt: it must first enter an actual rated local receiver.
+      if (hazardDefinition(c, machine.incident)?.classDefinition.requiresContainedRecovery)
+        return fail("Quarantined hazard requires a rated local recovery receiver");
       const definition = c.machines.find(
         (entry) => entry.id === machine.definitionId,
       )!;
