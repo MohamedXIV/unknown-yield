@@ -564,7 +564,7 @@ export type MachineSalvageView = {
   structuralUnits: number;
   ready: boolean;
   reason: "not-failed" | "hazard" | "unsupported-cargo" | "no-local-storage" |
-    "insufficient-capacity" | null;
+    "missing-containment" | "insufficient-capacity" | null;
 };
 export type MachineView = Omit<Machine, "job" | "incident"> & {
   service: MachineServiceView | null;

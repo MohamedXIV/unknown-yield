@@ -100,6 +100,7 @@ export const enCatalog: LocaleCatalog = {
   "ui.machine.salvage.reason.hazard": "Resolve the hazardous incident first",
   "ui.machine.salvage.reason.unsupported-cargo": "Use proper containment transport for nonordinary materials first",
   "ui.machine.salvage.reason.no-local-storage": "Place a storage close to this machine",
+  "ui.machine.salvage.reason.missing-containment": "Nearby storage is not rated to contain this solid cargo",
   "ui.machine.salvage.reason.insufficient-capacity": "Nearby storage lacks capacity",
   "ui.machine.service.button": "Service equipment",
   "ui.machine.service.requires": "Local parts: {{count}} × {{material}} (nearby: {{nearby}})",

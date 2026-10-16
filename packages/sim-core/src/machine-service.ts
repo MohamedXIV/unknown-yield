@@ -1,4 +1,4 @@
-import type { Content } from "@site/content";
+import { checkContainment, type Content } from "@site/content";
 import { companyKnowsMaterial } from "./market";
 import { footprint } from "./geometry";
 import { amount, change, total, type Machine, type MachineServiceView,
@@ -113,8 +113,9 @@ function salvagePlan(c: Content, s: Save, machine: Machine): {
       destination: null, recovered };
   const unsupported = Object.keys(recovered).some((id) => {
     const material = c.materials.find((m) => m.id === id);
-    return !material || material.handlingState !== "solid" ||
-      material.requiredContainment.length !== 0;
+    // A physically solid material can be salvaged if its destination
+    // actually provides every required containment capability.
+    return !material || material.handlingState !== "solid";
   });
   if (unsupported)
     return { view: { ...base, ready: false, reason: "unsupported-cargo" },
@@ -126,13 +127,21 @@ function salvagePlan(c: Content, s: Save, machine: Machine): {
       return range !== undefined && cellGap(rect, footprint(storage, sd)) <= range;
     })
     .sort((a, b) => a.id.localeCompare(b.id));
+  // Select only an actually capable local storage. Safe containment must
+  // be true for EVERY material, including the recovered build structure.
+  const capable = nearby.filter((storage) => {
+    const sd = c.storages.find((d) => d.id === storage.definitionId)!;
+    return Object.keys(recovered).every((id) =>
+      checkContainment(c, id, ["solid"], sd.containmentCapabilities).ok);
+  });
   const required = total(recovered);
-  const destination = nearby.find((storage) => {
+  const destination = capable.find((storage) => {
     const sd = c.storages.find((d) => d.id === storage.definitionId)!;
     return sd.capacity - total(storage.inventory) >= required;
   }) ?? null;
   const reason = destination ? null : nearby.length === 0
-    ? "no-local-storage" : "insufficient-capacity";
+    ? "no-local-storage" : capable.length === 0
+      ? "missing-containment" : "insufficient-capacity";
   return { view: { ...base, ready: reason === null, reason },
     destination, recovered };
 }
