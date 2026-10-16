@@ -669,8 +669,8 @@ function validateContentInternal(
       throw new Error("Missing process condition capability");
     if (r.hazard &&
         c.hazardClasses.some((h) => h.id === r.hazard!.classId && h.integrityDamage > 0) &&
-        capable.some((m) => !m.reliability?.service))
-      throw new Error("Damaging hazard requires a physically funded machine service procedure");
+        capable.some((m) => m.reliability && !m.reliability.service))
+      throw new Error("Damaging hazard on reliability-profiled equipment requires a physically funded machine service procedure");
     if (
       capable.some((m) => m.capacity < Math.max(r.inputAmount, r.outputAmount))
     )
