@@ -97,8 +97,11 @@ describe("content boundary", () => {
     const c = validateContent(fixture);
     expect(c.machines).toHaveLength(15);
     expect(c.version).toBe("world-01-v27");
-    expect(c.storages).toHaveLength(1);
+    expect(c.storages).toHaveLength(2);
     expect(c.storages[0]).toMatchObject({ id: "depot", capacity: 40 });
+    expect(c.storages[1]).toMatchObject({
+      id: "isolation-depot", capacity: 24, containmentCapabilities: ["hazard-isolated"],
+    });
     expect(c.site.stagingCapacity).toBe(24);
     expect(c.site.terminalShipmentCapacity).toBe(12);
     expect(c.site.sensingCapabilities.map((entry) => entry.id)).toEqual([
