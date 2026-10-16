@@ -697,13 +697,14 @@ function validateContentInternal(
   }
   const fuelClassIds = new Set(c.fuelClasses.map((entry) => entry.id));
   for (const m of c.machines) {
-    if (m.reliability?.wreck) {
-      const profile = m.reliability;
+    const wreck = m.reliability?.wreck;
+    if (wreck) {
+      const profile = m.reliability!;
       if (!profile.failure || !profile.service ||
-          profile.wreck.integrityAtOrBelow <= profile.failure.integrityAtOrBelow ||
-          profile.wreck.integrityAtOrBelow >= profile.damagedBelow ||
-          profile.wreck.minimumStressLoad <= profile.failure.minimumStressLoad ||
-          profile.wreck.minimumStressLoad > (m.extractionEnvelope?.maximumLoad ?? 0))
+          wreck.integrityAtOrBelow <= profile.failure.integrityAtOrBelow ||
+          wreck.integrityAtOrBelow >= profile.damagedBelow ||
+          wreck.minimumStressLoad <= profile.failure.minimumStressLoad ||
+          wreck.minimumStressLoad > (m.extractionEnvelope?.maximumLoad ?? 0))
         throw new Error("Wreck needs higher stress than recoverable failure, earlier integrity threshold and physical salvage access");
     }
     if (m.reliability?.failure &&
