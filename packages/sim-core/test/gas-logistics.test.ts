@@ -190,6 +190,9 @@ describe("conservative gas expedition state", () => {
     for (const m of draft.machines) {
       m.inputStates = ["solid", "liquid", "gas"];
       m.outputStates = ["solid", "liquid", "gas"];
+      // This expedition deliberately makes ferrite non-solid. No physical
+      // solid service process can remain in such a test-only content variant.
+      if (m.reliability) delete m.reliability.service;
     }
     const content = validateContent(draft),
       sim = new Simulation(content);

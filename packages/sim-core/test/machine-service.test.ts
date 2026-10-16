@@ -50,7 +50,7 @@ describe("P2c1 — conservation-safe, nearby machine service", () => {
     expect(sim.serialize()).toEqual(before);
     expect(sim.command(command).ok).toBe(true);
     const after = sim.serialize();
-    expect(after.storages[depotId]!.inventory.ferrite).toBe(0);
+    expect((after.storages[depotId]!.inventory.ferrite ?? 0)).toBe(0);
     expect(after.flows.consumed.ferrite).toBe((before.flows.consumed.ferrite ?? 0) + 2);
     expect(after.machines[machineId]).toMatchObject({
       enabled: false, integrity: 10000, wear: 50,
@@ -81,7 +81,7 @@ describe("P2c1 — conservation-safe, nearby machine service", () => {
     const finished = sim.serialize();
     expect(finished.machines[machineId]!.job).toBeNull();
     expect(sim.command(action).ok).toBe(true); // P2a wear > 0, stop and replace cutter
-    expect(sim.serialize().storages[depotId]!.inventory.ferrite).toBe(0);
+    expect((sim.serialize().storages[depotId]!.inventory.ferrite ?? 0)).toBe(0);
     expect(auditLedger(fixture, sim.serialize()).ok).toBe(true);
   });
 
