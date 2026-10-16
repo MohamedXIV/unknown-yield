@@ -605,3 +605,8 @@ PR #305 (squash `f2e329201db2e511db12b508475c40834cf40e72`) adds optional bounde
 ### P2b2 failure authoring and saved observation (2026-10-16)
 
 [PR #311](https://github.com/MohamedXIV/unknown-yield/pull/311) adds optional private `machine.reliability.failure` rules (`kind`, `integrityAtOrBelow`, `minimumStressLoad`) inside the existing TinyBase Studio reliability JSON boundary. Only actual post-batch load and persisted wear/integrity determine faults. Ordinary machine definitions never expose the failure coefficients; `PlayerSnapshot.machines[].mechanicalFailure` exposes only fault kind, observed load class, and occurrence tick. Existing local-service authoring is mandatory for a machine with such a fault rule. Content world-01-v21, save v31; exact-head CI #38900850114 passes 692 tests, typecheck, lint, build and 2 browser checks. Wreck and physical salvage still not shipped.
+
+
+### P2c2 local salvage (2026-10-16)
+
+The `salvageMachine` command in [PR #313](https://github.com/MohamedXIV/unknown-yield/pull/313) derives its range from authored local `service.range` and requires a real storage able to hold the entire failed machine's ordinary solid buffers and embodied construction material. The runtime/public `machine.salvage` view exposes only observable total cargo/structural units and readiness/reason, not the private service/failure coefficients. Commit transfers all units physically then removes the failed machine; regular dismantle blocks failed machinery. No save/content bump; schema v31 and content v21. CI #38902153863 passed 696 tests/3 skipped plus production gates. Separate containment-aware salvage and wreck consequences remain P2.
