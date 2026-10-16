@@ -92,7 +92,7 @@ describe("P2f — physically compatible liquid and solid salvage destinations", 
     expect(auditLedger(c, before).ok).toBe(true);
   });
 
-  it("refuses gas masquerading as liquid and retains every physical unit", () => {
+  it("routes gas to pressure-vessel eligibility instead of a liquid tank", () => {
     const { c, sim, machineId } = rig();
     const state = sim.serialize();
     // A real emitted raw unit is still present, but authoring now defines it
@@ -104,7 +104,7 @@ describe("P2f — physically compatible liquid and solid salvage destinations", 
     expect(gas.load(state).ok).toBe(true);
     const before = gas.serialize();
     expect(gas.snapshot().machines.find(m => m.id === machineId)!.salvage)
-      .toMatchObject({ ready: false, reason: "unsupported-cargo" });
+      .toMatchObject({ ready: false, reason: "no-local-vessel", gasUnits: 1 });
     expect(gas.command({ type: "salvageMachine", machineId }).ok).toBe(false);
     expect(gas.serialize()).toEqual(before);
   });
