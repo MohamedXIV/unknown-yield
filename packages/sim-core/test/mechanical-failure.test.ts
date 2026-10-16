@@ -120,7 +120,7 @@ describe("P2b2 deterministic mechanical failure and physical recovery", () => {
     delete (legacy.machines[machineId] as Partial<typeof legacy.machines[string]>).mechanicalFailure;
     const migrated = new Simulation(c);
     expect(migrated.load(legacy).ok).toBe(true);
-    expect(migrated.serialize().schemaVersion).toBe(31);
+    expect(migrated.serialize().schemaVersion).toBe(32);
     expect(migrated.serialize().machines[machineId]!.mechanicalFailure).toBeNull();
   });
 
