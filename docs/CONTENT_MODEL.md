@@ -590,3 +590,8 @@ Import rewards create persisted company allocations keyed by authored import-sup
 ### P2a machine wear authoring (2026-10-16)
 
 PR #305 (squash `f2e329201db2e511db12b508475c40834cf40e72`) adds optional bounded private `machine.reliability` profiles and `machine.operatingModes[].wearBps` with a TinyBase `reliabilityJson` editor. The player snapshot exposes measured `MachineView.wear` and derived `physicalCondition` but not authored coefficients. Fixture `world-01-v18`, schema v29; v28→v29 migration zero-initializes wear. No change to recipe-authoritative knowledge, conservation or the existing simulation/content boundary. P2 damage/repair remains unfinished; see [Industrial Behavior v1](DATA_DRIVEN_INDUSTRIAL_BEHAVIOR_V1.md).
+
+
+### P2b1 integrity and private reliability (2026-10-16)
+
+[PR #307](https://github.com/MohamedXIV/unknown-yield/pull/307) adds three optional validated reliability coefficients (`integrityLossPerWear`, `damagedBelow`, `damagedDurationBps`) in the same TinyBase reliability JSON round trip. `PlayerSnapshot.machines` contains measured `integrity` and `physicalCondition`; `definitions` still excludes authored reliability. Wear and integrity remain separate, physically damage-influenced throughput derives from the shared sim evaluator. Save schema v30, fixture world-01-v19. CI #38896256712 passed 684 tests/3 skipped, typecheck, lint, build and 2 browser. Mechanical failure/repair/salvage remain unimplemented P2b2/P2c.
