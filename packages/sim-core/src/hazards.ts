@@ -71,6 +71,10 @@ export function applyReactionHazard(
         change(machine.output, reaction.output, -stranded);
         change(machine.incidentInventory, reaction.output, stranded);
       }
+      // A class may also physically injure the chamber. Keep the existing
+      // independent 1..10000 integrity axis and never invent/delete matter.
+      machine.integrity = Math.max(1,
+        machine.integrity - classDefinition.integrityDamage);
       machine.incident = reaction.hazard.id;
       machine.enabled = false;
       return;
