@@ -61,6 +61,23 @@ describe("content boundary", () => {
     delete independent.hazardClasses.find(h => h.id === "pressure-expansion")!
       .localShock;
     expect(() => validateContent(independent)).not.toThrow();
+    // Quarantine is a physical receiver contract, not a bypassable label.
+    const missingCargo = structuredClone(fixture);
+    missingCargo.hazardClasses.find(h => h.id === "contamination")!
+      .strandedOutputUnits = 0;
+    expect(() => validateContent(missingCargo)).toThrow(/Quarantine requires/);
+    const missingRange = structuredClone(fixture);
+    missingRange.hazardClasses.find(h => h.id === "contamination")!
+      .recoveryRange = 0;
+    expect(() => validateContent(missingRange)).toThrow(/Quarantine requires/);
+    const unsafeOutput = structuredClone(fixture);
+    unsafeOutput.materials.find(m => m.id === "tainted-residue")!
+      .requiredContainment = [];
+    expect(() => validateContent(unsafeOutput)).toThrow(/Quarantine requires/);
+    const noQuarantine = structuredClone(fixture);
+    noQuarantine.hazardClasses.find(h => h.id === "contamination")!
+      .requiresContainedRecovery = false;
+    expect(() => validateContent(noQuarantine)).not.toThrow();
     const noRepair = structuredClone(fixture);
     delete noRepair.machines.find((m) => m.id === "oversealed-furnace")!.reliability!.service;
     expect(() => validateContent(noRepair)).not.toThrow();
