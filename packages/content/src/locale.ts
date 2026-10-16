@@ -87,7 +87,7 @@ export const enCatalog: LocaleCatalog = {
   "ui.knowledge.insight.branch": "Open branch",
   "ui.knowledge.insight.opportunity": "Company opportunity",
   "ui.machine.incident.recover-local": "Transfer trapped material to nearby containment",
-  "ui.machine.incident.recover-output": "Reclaim trapped material to machine output",
+  "ui.machine.incident.recover-output": "Reclaim trapped material to output",
   "ui.machine.incident.output-quarantined":
     "Quarantined charge: ordinary output recovery is prohibited. Use a compatible local receiver; cargo remains in this chamber until transfer.",
   "ui.machine.incident.output-possible":
