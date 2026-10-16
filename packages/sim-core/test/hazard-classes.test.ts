@@ -404,3 +404,66 @@ it("unlocks an evidence-driven relief furnace that deterministically prevents th
   expect(sim.serialize().hazardEvidence).toEqual(["slag-jam"]);
   expect(auditLedger(fixture, sim.serialize()).ok).toBe(true);
 });
+
+
+it("recovers actual trapped incident cargo directly into adjacent storage, not global stock", () => {
+  const { sim, processorId } = armedFerriteHazardLine();
+  for (let n = 0; n < 500 && !sim.serialize().machines[processorId].incident; n++)
+    sim.step(fixture.tickMs);
+  expect(sim.serialize().machines[processorId].incidentInventory).toEqual({ residue: 1 });
+  const command = { type: "recoverIncidentToReceiver", machineId: processorId };
+  const waiting = sim.serialize();
+  expect(sim.snapshot().machines.find(m => m.id === processorId)?.incidentRecovery)
+    .toMatchObject({ ready: false, reason: "no-local-storage", units: 1 });
+  expect(sim.preview(command).ok).toBe(false);
+  expect(sim.command(command).ok).toBe(false);
+  expect(sim.serialize()).toEqual(waiting);
+
+  const storage = sim.command({
+    type: "placeStorage", definitionId: "depot", x: 34, y: 29, direction: 0,
+  });
+  expect(storage.ok, storage.message).toBe(true);
+  expect(sim.snapshot().machines.find(m => m.id === processorId)?.incidentRecovery)
+    .toMatchObject({ ready: true, reason: null, units: 1, handlingState: "solid" });
+  const before = sim.serialize();
+  expect(sim.preview(command).ok).toBe(true);
+  expect(sim.serialize()).toEqual(before);
+  expect(sim.command(command).ok).toBe(true);
+  const done = sim.serialize();
+  expect(done.machines[processorId]).toMatchObject({
+    enabled: false, incident: null, incidentInventory: {},
+  });
+  expect(done.machines[processorId].output.residue ?? 0).toBe(before.machines[processorId].output.residue ?? 0);
+  expect(done.storages[storage.id!]!.inventory.residue).toBe(1);
+  expect(done.flows).toEqual(before.flows);
+  expect(done.stock).toEqual(before.stock);
+  expect(auditLedger(fixture, done).ok).toBe(true);
+  const restored = new Simulation(fixture);
+  expect(restored.load(done).ok).toBe(true);
+  sim.step(1200);
+  restored.step(1200);
+  expect(restored.serialize()).toEqual(sim.serialize());
+});
+
+it("refuses hazard discharge into a full physical store without moving a unit", () => {
+  const { sim, processorId } = armedFerriteHazardLine();
+  for (let n = 0; n < 500 && !sim.serialize().machines[processorId].incident; n++)
+    sim.step(fixture.tickMs);
+  const store = sim.command({ type: "placeStorage", definitionId: "depot",
+    x: 34, y: 29, direction: 0 });
+  expect(store.ok, store.message).toBe(true);
+  const state = sim.serialize();
+  const capacity = fixture.storages.find(s => s.id === "depot")!.capacity;
+  state.deposits["ferrite-field"] -= capacity;
+  state.storages[store.id!]!.inventory.ferrite = capacity;
+  expect(sim.load(state).ok).toBe(true);
+  const waiting = sim.serialize(), command = {
+    type: "recoverIncidentToReceiver", machineId: processorId,
+  };
+  expect(sim.snapshot().machines.find(m => m.id === processorId)?.incidentRecovery)
+    .toMatchObject({ ready: false, reason: "insufficient-capacity" });
+  expect(sim.preview(command).ok).toBe(false);
+  expect(sim.command(command).ok).toBe(false);
+  expect(sim.serialize()).toEqual(waiting);
+  expect(auditLedger(fixture, sim.serialize()).ok).toBe(true);
+});

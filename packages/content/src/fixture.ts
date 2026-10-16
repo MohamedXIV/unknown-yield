@@ -1,6 +1,6 @@
 import { validateContent } from "./schema";
 export const fixture = validateContent({
-  version: "world-01-v22",
+  version: "world-01-v23",
   tickMs: 100,
   containmentCapabilities: [
     {
@@ -45,6 +45,7 @@ export const fixture = validateContent({
       evidenceKey: "hazard.class.instability.evidence",
       machineEffect: "lockout",
       strandedOutputUnits: 1,
+      recoveryRange: 6,
     },
     {
       id: "contamination",
