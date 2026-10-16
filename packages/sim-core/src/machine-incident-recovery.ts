@@ -18,15 +18,20 @@ function recoveryPlan(c: Content, s: Save, machine: Machine): {
   materialId: string | null;
 } {
   const entries = Object.entries(machine.incidentInventory).filter(([, n]) => n > 0);
+  // An accident is already discovered; publish only the recovery *permission*,
+  // never the private hazard-class coefficients or recipe definitions.
+  const outputRecoveryAllowed = machine.incident
+    ? hazardDefinition(c, machine.incident)?.classDefinition.requiresContainedRecovery !== true
+    : false;
   if (!machine.incident || machine.job || machine.enabled || entries.length !== 1) {
     return { view: { units: total(machine.incidentInventory),
-      handlingState: null, ready: false, reason: "unsupported-cargo" },
+      handlingState: null, outputRecoveryAllowed, ready: false, reason: "unsupported-cargo" },
       receiver: null, materialId: null };
   }
   const [materialId, units] = entries[0]!;
   const material = c.materials.find(m => m.id === materialId);
   const phase = material?.handlingState ?? null;
-  const base = { units, handlingState: phase };
+  const base = { units, handlingState: phase, outputRecoveryAllowed };
   const fail = (reason: NonNullable<MachineIncidentRecoveryView["reason"]>) => ({
     view: { ...base, ready: false, reason }, receiver: null, materialId,
   });
