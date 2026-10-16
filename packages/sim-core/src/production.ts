@@ -39,6 +39,7 @@ import {
 } from "./imports";
 import { consumeMachineFuel, machineFuelBlock } from "./fuel";
 import { assessMineralExtraction } from "./extraction-envelope";
+import { completedBatchWear } from "./machine-wear";
 export function recipe(c: Content, m: Machine) {
   const definition = c.machines.find((d) => d.id === m.definitionId);
   return c.reactions.find(
@@ -126,6 +127,7 @@ export function completeAndStart(
           ensureMarket(c, s, material);
         }
         if (r?.hazard) applyReactionHazard(c, s, m, r);
+        m.wear = Math.min(10000, m.wear + completedBatchWear(c, m));
         m.job = null;
       }
     } else if (status(c, s, m) === "ready") {

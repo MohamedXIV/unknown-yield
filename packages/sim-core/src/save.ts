@@ -51,7 +51,7 @@ import {
   cardinalSpan,
   elevatedPlacementError,
 } from "./geometry";
-export const CURRENT_SAVE_SCHEMA_VERSION = 28;
+export const CURRENT_SAVE_SCHEMA_VERSION = 29;
 
 const count = z.number().int().nonnegative().max(1000000000),
   positive = count.positive();
@@ -100,6 +100,7 @@ const machine = z.object({
   depositId: safeId.nullable(),
   operation: safeId.nullable(),
   operatingModeId: safeId.nullable().default(null),
+  wear: z.number().int().min(0).max(10000).default(0),
   enabled: z.boolean(),
   incident: safeId.nullable().default(null),
   incidentInventory: inventory.default({}),
@@ -216,6 +217,7 @@ const schema = z.object({
     z.literal(26),
     z.literal(27),
     z.literal(28),
+    z.literal(29),
   ]),
   contentVersion: z.string(),
   terminalModules: z
@@ -439,10 +441,16 @@ export function initialState(c: Content): Save {
 }
 export function parseSave(input: unknown, c: Content): Save {
   if (input && typeof input === "object" &&
-      (input as { schemaVersion?: number }).schemaVersion === 28) {
+      ((input as { schemaVersion?: number }).schemaVersion ?? 0) >= 28) {
     const machines = (input as { machines?: Record<string, Record<string, unknown>> }).machines;
     if (Object.values(machines ?? {}).some((m) => !Object.hasOwn(m, "operatingModeId")))
       throw new Error("Missing operating mode in current save");
+  }
+  if (input && typeof input === "object" &&
+      (input as { schemaVersion?: number }).schemaVersion === 29) {
+    const machines = (input as { machines?: Record<string, Record<string, unknown>> }).machines;
+    if (Object.values(machines ?? {}).some((m) => !Object.hasOwn(m, "wear")))
+      throw new Error("Missing physical wear in current save");
   }
   const parsed = schema.parse(input);
   if (
@@ -702,6 +710,8 @@ export function parseSave(input: unknown, c: Content): Save {
     }
     s.schemaVersion = 28;
   }
+  // Schema 28 predates physical wear; existing equipment starts intact.
+  if (s.schemaVersion === 28) s.schemaVersion = 29;
   if (s.contentVersion !== c.version || s.remainder >= c.tickMs)
     throw new Error("Incompatible content or timing");
   if (

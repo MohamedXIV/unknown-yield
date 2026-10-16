@@ -129,6 +129,7 @@ export type Machine = Point & {
   depositId: string | null;
   operation: string | null;
   operatingModeId: string | null;
+  wear: number; // 0..10000 accumulated physical use; not an operating status.
   enabled: boolean;
   incident: string | null;
   incidentInventory: Inventory;
@@ -552,6 +553,7 @@ export type MachineView = Omit<Machine, "job" | "incident"> & {
   durationMs: number;
   fuelCost: number;
   extractionCompatibility: "nominal" | "strained" | "impossible";
+  physicalCondition: "intact" | "worn";
   fuelClassId: string | null;
   status: MachineStatus;
   progress: number;

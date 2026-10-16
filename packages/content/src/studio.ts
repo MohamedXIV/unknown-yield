@@ -64,6 +64,7 @@ const empty = (value: string | undefined) => value ?? "";
 const machineRow = (machine: Content["machines"][number]) => ({
   presentationJson: JSON.stringify(machine.presentation ?? null),
   extractionEnvelopeJson: JSON.stringify(machine.extractionEnvelope ?? null),
+  reliabilityJson: JSON.stringify(machine.reliability ?? null),
   operatingModesJson: JSON.stringify(machine.operatingModes),
   nameKey: machine.nameKey,
   role: machine.role,
@@ -447,6 +448,9 @@ function candidateFromStore(store: Store, base: Content): unknown {
       ...(optionalJsonObject(row, "extractionEnvelopeJson", label) === undefined
         ? {}
         : { extractionEnvelope: optionalJsonObject(row, "extractionEnvelopeJson", label) }),
+      ...(optionalJsonObject(row, "reliabilityJson", label) === undefined
+        ? {}
+        : { reliability: optionalJsonObject(row, "reliabilityJson", label) }),
       ...(optionalPresentation(row, label) === undefined
         ? {}
         : { presentation: optionalPresentation(row, label) }),
