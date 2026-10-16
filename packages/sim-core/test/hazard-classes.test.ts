@@ -123,6 +123,60 @@ it("reproduces the same authored hazard class from the same authoritative state"
   expect(right.sim.serialize()).toEqual(left.sim.serialize());
 });
 
+it("turns a real pressure incident into persisted chamber damage repairable only with local parts", () => {
+  const { sim, processorId } = armedHazardLine();
+  expect(JSON.stringify(sim.snapshot())).not.toContain('"integrityDamage"');
+  for (let n = 0; n < 500 && !sim.serialize().machines[processorId]!.incident; n++)
+    sim.step(fixture.tickMs);
+  const injured = sim.serialize();
+  expect(injured.machines[processorId]).toMatchObject({
+    incident: "chamber-blowout", enabled: false, integrity: 8000,
+    incidentInventory: {},
+  });
+  expect(sim.snapshot().machines.find((m) => m.id === processorId)).toMatchObject({
+    physicalCondition: "damaged", durationTicks: 39,
+  });
+  expect(auditLedger(fixture, injured).ok).toBe(true);
+  const service = { type: "serviceMachine", machineId: processorId };
+  expect(sim.preview(service)).toMatchObject({ ok: false });
+  expect(sim.command(service)).toMatchObject({ ok: false });
+  expect(sim.serialize()).toEqual(injured);
+
+  // A real storage receives two replacement parts from a tracked deposit.
+  const depot = sim.command({ type: "placeStorage", definitionId: "depot",
+    x: 35, y: 36, direction: 0 });
+  expect(depot.ok, depot.message).toBe(true);
+  const delivered = sim.serialize();
+  delivered.deposits["ferrite-field"] -= 2;
+  delivered.storages[depot.id!]!.inventory.ferrite = 2;
+  expect(sim.load(delivered).ok).toBe(true);
+  expect(auditLedger(fixture, sim.serialize()).ok).toBe(true);
+  const beforeRepair = sim.serialize();
+  expect(sim.preview(service)).toMatchObject({ ok: true });
+  expect(sim.serialize()).toEqual(beforeRepair);
+  expect(sim.command(service)).toMatchObject({ ok: true });
+  const repaired = sim.serialize();
+  expect(repaired.machines[processorId]).toMatchObject({
+    incident: null, enabled: false, integrity: 10000,
+  });
+  expect(repaired.storages[depot.id!]!.inventory.ferrite ?? 0).toBe(0);
+  expect(repaired.flows.consumed.ferrite).toBe((beforeRepair.flows.consumed.ferrite ?? 0) + 2);
+  expect(sim.snapshot().machines.find((m) => m.id === processorId)).toMatchObject({
+    physicalCondition: "intact", durationTicks: 30,
+  });
+  expect(auditLedger(fixture, repaired).ok).toBe(true);
+  const replay = new Simulation(fixture);
+  expect(replay.load(JSON.parse(JSON.stringify(repaired))).ok).toBe(true);
+  expect(sim.command({ type: "setEnabled", machineId: processorId, enabled: true }).ok)
+    .toBe(true);
+  expect(replay.command({ type: "setEnabled", machineId: processorId, enabled: true }).ok)
+    .toBe(true);
+  sim.step(500);
+  replay.step(500);
+  expect(replay.serialize()).toEqual(sim.serialize());
+  expect(auditLedger(fixture, replay.serialize()).ok).toBe(true);
+});
+
 it("resolves class identity from authored data without changing trigger rules", () => {
   const draft = structuredClone(fixture);
   draft.reactions.find(
