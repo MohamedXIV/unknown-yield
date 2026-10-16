@@ -307,3 +307,14 @@ The evidence/unlock-gated **Deep Extractor** receives its first mechanical envel
 - Integration tests generate real authored `slag-jam`, confirm refused recovery without a local receiver, full-capacity denial, actual transfer to a nearby external Storage, no partial state mutation, unchanged fuel/flows/stock, exact Material Ledger and save/load/replay. **Direct integration testing added here covers solid trapped cargo**. Liquid/gas destination logic uses existing containment evaluators but needs dedicated real-hazard phase test worlds before claiming full acceptance of those variants.
 
 **P2 #295 stays OPEN:** dedicated liquid/gas hazard cargo tests; genuinely distinct overheat/contamination consequences and multi-identity cleanup; actual playtest acceptance, art and sound gates. PR #291 art still awaiting explicit gameplay-zoom approval, not merged. P3 #296 not started.
+
+
+## P2i — real liquid and gas incident recovery acceptance (merged 2026-10-16)
+
+[PR #325](https://github.com/MohamedXIV/unknown-yield/pull/325) merged `bcd7997e8726a4431a09c08251952f48eb977338` after [exact-head CI #38928668944](https://github.com/MohamedXIV/unknown-yield/actions/runs/38928668944) **PASS: 139 deterministic files, 715 passed / 3 skipped**, typecheck, lint, production build and **2/2 production-browser**.
+
+- Closes the prior P2h **liquid and gas active-hazard test gap**, without inventing runtime incidents or relaxing authoring. New parameterized real `slag-jam` incidents produce liquid and gas `residue` in independently validated phase-specific content variants. The full existing extractor → belts → processor → authored hazard trigger runs before evaluating recovery; neither incident inventory nor cause is seeded by forging save data.
+- Both phases prove an unavailable actual local receiver rejects **without mutation**; a physically reachable correctly typed Liquid Tank or Pressure Vessel then accepts exactly one stranded output unit via the authoritative `recoverIncidentToReceiver`. The incident clears, equipment stays disabled, machine output/stock/flows stay consistent, Material Ledger audits pass and saved games replay identically.
+- This test-only PR adds **no production mechanics**, save fields or content edits: active save v32, authored built-in world v23 unchanged. With P2h + P2i, all three material phases have a real-hazard physical recovery test path; this does **not** establish complete mixed-identity material recovery or rich thermal/contamination consequences.
+
+**#295 P2 remains OPEN** for physically distinct extended industrial consequences, multi-identity incident reclamation if designed, real full-loop human playtest/economy/pacing and final visual/audio assessment. Art PR #291 is still not approved/merged.
