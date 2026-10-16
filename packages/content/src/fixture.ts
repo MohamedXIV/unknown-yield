@@ -1,6 +1,6 @@
 import { validateContent } from "./schema";
 export const fixture = validateContent({
-  version: "world-01-v23",
+  version: "world-01-v24",
   tickMs: 100,
   containmentCapabilities: [
     {
@@ -32,6 +32,7 @@ export const fixture = validateContent({
       nameKey: "hazard.class.pressure-expansion.name",
       evidenceKey: "hazard.class.pressure-expansion.evidence",
       machineEffect: "lockout",
+      integrityDamage: 2000,
     },
     {
       id: "corrosion",
@@ -536,6 +537,20 @@ export const fixture = validateContent({
       id: "oversealed-furnace",
       nameKey: "machine.oversealed-furnace.name",
       role: "processor",
+      // A pressure blowout damages the vessel and requires local repair parts.
+      // No passive processor fatigue is authored for this first hazard slice.
+      reliability: {
+        baseWearPerBatch: 0,
+        loadWearPerPoint: 0,
+        strainedWearPerPoint: 0,
+        wornAt: 100,
+        damagedBelow: 9000,
+        damagedDurationBps: 13000,
+        service: {
+          materialId: "ferrite", units: 2, range: 10,
+          restoreIntegrity: 2500, reduceWear: 0,
+        },
+      },
       processConditionId: "oversealed",
       unlock: {
         reactionId: "heat-raw-sealed",
