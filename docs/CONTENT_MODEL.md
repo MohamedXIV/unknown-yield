@@ -610,3 +610,8 @@ PR #305 (squash `f2e329201db2e511db12b508475c40834cf40e72`) adds optional bounde
 ### P2c2 local salvage (2026-10-16)
 
 The `salvageMachine` command in [PR #313](https://github.com/MohamedXIV/unknown-yield/pull/313) derives its range from authored local `service.range` and requires a real storage able to hold the entire failed machine's ordinary solid buffers and embodied construction material. The runtime/public `machine.salvage` view exposes only observable total cargo/structural units and readiness/reason, not the private service/failure coefficients. Commit transfers all units physically then removes the failed machine; regular dismantle blocks failed machinery. No save/content bump; schema v31 and content v21. CI #38902153863 passed 696 tests/3 skipped plus production gates. Separate containment-aware salvage and wreck consequences remain P2.
+
+
+### P2d authoring — mechanical wreck (2026-10-16)
+
+Optional private `machine.reliability.wreck` contains `integrityAtOrBelow` and `minimumStressLoad` under existing validated Studio reliability JSON; it must be distinct from recoverable failure, inside the damage band and actually attainable by the extraction envelope. Observed runtime `mechanicalFailure.kind=wreck` remains visible, the exact authoring coefficients remain private. `wrecked` is both an actual operating status and a derived physical condition. Save v32, fixture world-01-v22. Verified CI #38910994612 (700 tests pass, 3 skipped, typecheck/lint/build, 2 browser). The existing salvage operation conserves all ordinary-solid contents and structure but rejects unsupported containment cargo.
