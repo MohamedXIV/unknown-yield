@@ -1,5 +1,5 @@
 import { checkContainment, type Content } from "@site/content";
-import { footprint } from "./geometry";
+import { footprint, footprintGap } from "./geometry";
 import { liquidContainment } from "./containment";
 import { hazardDefinition } from "./hazards";
 import { change, total, type Machine, type MachineIncidentRecoveryView,
@@ -10,15 +10,7 @@ type Receiver =
   | { kind: "liquid"; entity: Save["tanks"][string] }
   | { kind: "gas"; entity: Save["pressureVessels"][string] };
 
-/** Range is explicitly authored on the hazard class, rather than secretly
- * assuming a warehouse can be built within factory walls. */
-function reachable(a: { x: number; y: number; width: number; height: number },
-                   b: { x: number; y: number; width: number; height: number },
-                   radius: number) {
-  const dx = Math.max(0, a.x - (b.x + b.width), b.x - (a.x + a.width));
-  const dy = Math.max(0, a.y - (b.y + b.height), b.y - (a.y + a.height));
-  return dx + dy <= radius;
-}
+/** Local incident recovery uses the same physical footprint gap as machine service. */
 
 function recoveryPlan(c: Content, s: Save, machine: Machine): {
   view: MachineIncidentRecoveryView;
@@ -44,8 +36,8 @@ function recoveryPlan(c: Content, s: Save, machine: Machine): {
   const range = hazardDefinition(c, machine.incident!)?.classDefinition.recoveryRange ?? 0;
   if (phase === "solid") {
     const candidates = Object.values(s.storages)
-      .filter(e => reachable(position,
-        footprint(e, c.storages.find(d => d.id === e.definitionId)!), range))
+      .filter(e => footprintGap(position,
+        footprint(e, c.storages.find(d => d.id === e.definitionId)!)) <= range)
       .sort((a,b) => a.id.localeCompare(b.id));
     if (!candidates.length) return fail("no-local-storage");
     const contained = candidates.filter(e => checkContainment(c, materialId,
@@ -60,7 +52,7 @@ function recoveryPlan(c: Content, s: Save, machine: Machine): {
   if (phase === "liquid") {
     if (!c.liquidLogistics) return fail("unsupported-cargo");
     const candidates = Object.values(s.tanks)
-      .filter(e => reachable(position, footprint(e, c.liquidLogistics!.tank), range))
+      .filter(e => footprintGap(position, footprint(e, c.liquidLogistics!.tank)) <= range)
       .sort((a,b) => a.id.localeCompare(b.id));
     if (!candidates.length) return fail("no-local-tank");
     const contained = candidates.filter(e => checkContainment(c, materialId,
@@ -75,7 +67,7 @@ function recoveryPlan(c: Content, s: Save, machine: Machine): {
   }
   if (!c.gasLogistics) return fail("unsupported-cargo");
   const candidates = Object.values(s.pressureVessels)
-    .filter(e => reachable(position, footprint(e, c.gasLogistics!.vessel), range))
+    .filter(e => footprintGap(position, footprint(e, c.gasLogistics!.vessel)) <= range)
     .sort((a,b) => a.id.localeCompare(b.id));
   if (!candidates.length) return fail("no-local-vessel");
   if (!checkContainment(c, materialId, ["gas"],
