@@ -1818,6 +1818,26 @@ function GameClientInner() {
                           <>
                             <strong>TRAPPED MATERIAL</strong>
                             {buffer(machine.incidentInventory)}
+                            {machine.incidentRecovery && (
+                              <div className="hint">
+                                <p>{t("ui.machine.incident.recover-units", {
+                                  units: machine.incidentRecovery.units,
+                                  state: t("ui.machine.incident.receiver." +
+                                    (machine.incidentRecovery.handlingState ?? "unavailable")),
+                                })}</p>
+                                {machine.incidentRecovery.reason && (
+                                  <p>{t("ui.machine.salvage.reason." +
+                                    machine.incidentRecovery.reason)}</p>
+                                )}
+                                <button
+                                  type="button"
+                                  disabled={!machine.incidentRecovery.ready}
+                                  onClick={() => act({
+                                    type: "recoverIncidentToReceiver", machineId: machine.id,
+                                  })}
+                                >{t("ui.machine.incident.recover-local")}</button>
+                              </div>
+                            )}
                             <button
                               className="primary"
                               onClick={() =>

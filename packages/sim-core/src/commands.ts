@@ -8,6 +8,7 @@ import {
 } from "./terminal";
 import { pumpRepairEligible } from "./pump-recovery";
 import { serviceMachine, salvageMachine } from "./machine-service";
+import { recoverIncidentToReceiver } from "./machine-incident-recovery";
 import { z } from "zod";
 import type { Content } from "@site/content";
 import { amount, change, total, type Save, type CommandResult } from "./types";
@@ -148,6 +149,7 @@ const schema = z.discriminatedUnion("type", [
     type: z.literal("recoverMachineIncident"),
     machineId: z.string(),
   }),
+  z.object({ type: z.literal("recoverIncidentToReceiver"), machineId: z.string() }),
   z.object({ type: z.literal("serviceMachine"), machineId: z.string() }),
   z.object({ type: z.literal("salvageMachine"), machineId: z.string() }),
   z.object({
@@ -1019,6 +1021,9 @@ export function applyCommand(
     }
     case "salvageMachine": {
       return salvageMachine(c, s, s.machines[cmd.machineId], apply);
+    }
+    case "recoverIncidentToReceiver": {
+      return recoverIncidentToReceiver(c, s, s.machines[cmd.machineId], apply);
     }
     case "recoverMachineIncident": {
       const machine = s.machines[cmd.machineId];

@@ -527,6 +527,7 @@ export type GameCommand =
   | { type: "dismantle"; id: string }
   | { type: "dismantleMany"; ids: string[] }
   | { type: "recoverMachineIncident"; machineId: string }
+  | { type: "recoverIncidentToReceiver"; machineId: string }
   | { type: "serviceMachine"; machineId: string }
   | { type: "salvageMachine"; machineId: string }
   | { type: "setEnabled"; machineId: string; enabled: boolean }
@@ -538,6 +539,16 @@ export type GameCommand =
   | { type: "requestImport"; supplyId: string }
   | { type: "sense"; capabilityId: string; x: number; y: number }
   | { type: "assistance"; packageId?: string };
+export type MachineIncidentRecoveryView = {
+  units: number;
+  handlingState: "solid" | "liquid" | "gas" | null;
+  ready: boolean;
+  reason: "unsupported-cargo" | "no-local-storage" |
+    "missing-containment" | "insufficient-capacity" |
+    "no-local-tank" | "liquid-containment" | "liquid-identity" |
+    "liquid-capacity" | "no-local-vessel" | "gas-containment" |
+    "gas-identity" | "gas-capacity" | null;
+};
 export type MachineHazardView = {
   classId: string;
   classNameKey: string;
@@ -575,6 +586,7 @@ export type MachineView = Omit<Machine, "job" | "incident"> & {
   salvage: MachineSalvageView | null;
   job: { remaining: number } | null;
   incident: MachineHazardView | null;
+  incidentRecovery: MachineIncidentRecoveryView | null;
   nameKey: string;
   role: "extractor" | "processor";
   width: number;
