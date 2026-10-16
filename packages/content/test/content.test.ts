@@ -41,7 +41,7 @@ describe("content boundary", () => {
     expect(() => validateContent(excessive)).toThrow();
     const noRepair = structuredClone(fixture);
     delete noRepair.machines.find((m) => m.id === "oversealed-furnace")!.reliability!.service;
-    expect(() => validateContent(noRepair)).toThrow(/Damaging hazard requires/);
+    expect(() => validateContent(noRepair)).toThrow(/Damaging hazard on reliability-profiled/);
   });
 
   it("requires positive integral transport windows on crossings only", () => {
