@@ -542,6 +542,9 @@ export type GameCommand =
 export type MachineIncidentRecoveryView = {
   units: number;
   handlingState: "solid" | "liquid" | "gas" | null;
+  // Public only after an actual trapped incident: prevents the UI offering
+  // direct output recovery where authored containment requires a receiver.
+  outputRecoveryAllowed: boolean;
   ready: boolean;
   reason: "unsupported-cargo" | "no-local-storage" |
     "missing-containment" | "insufficient-capacity" |
