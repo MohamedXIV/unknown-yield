@@ -34,7 +34,7 @@ describe("Phase 16 supported save compatibility", () => {
         message: "Site restored",
       });
       expect(restored.serialize()).toEqual(current);
-      expect(restored.serialize().schemaVersion).toBe(30);
+      expect(restored.serialize().schemaVersion).toBe(31);
       expect(auditLedger(fixture, restored.serialize()).ok).toBe(true);
     });
 
@@ -57,7 +57,7 @@ describe("Phase 16 supported save compatibility", () => {
     const result = sim.load(legacy);
     expect(result.ok).toBe(false);
     expect(result.message).toContain("Legacy schema cannot contain elevated routes");
-    expect(result.message).toContain("requires schema 30");
+    expect(result.message).toContain("requires schema 31");
     expect(sim.serialize()).toEqual(before);
   });
 

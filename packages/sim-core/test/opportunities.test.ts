@@ -127,6 +127,7 @@ describe("Corporate Orders and Special Directives", () => {
       integrity: 10000,
       enabled: true,
       incident: null,
+      mechanicalFailure: null,
       incidentInventory: {},
       input: {},
       output: {},
@@ -289,7 +290,7 @@ describe("Corporate Orders and Special Directives", () => {
 
     const restored = new Simulation(content);
     expect(restored.load(JSON.parse(JSON.stringify(partial))).ok).toBe(true);
-    expect(restored.serialize().schemaVersion).toBe(30);
+    expect(restored.serialize().schemaVersion).toBe(31);
     expect(restored.serialize().opportunities).toEqual(partial.opportunities);
 
     const legacy = JSON.parse(
@@ -299,7 +300,7 @@ describe("Corporate Orders and Special Directives", () => {
     delete legacy.opportunities;
     const migrated = new Simulation(historicalFixture);
     expect(migrated.load(legacy).ok).toBe(true);
-    expect(migrated.serialize().schemaVersion).toBe(30);
+    expect(migrated.serialize().schemaVersion).toBe(31);
     expect(migrated.serialize().opportunities).toEqual({});
   });
 });

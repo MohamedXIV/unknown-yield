@@ -23,6 +23,11 @@ const statusCopy: Record<
     title: "Physical incident",
     detail: "Inspect the incident evidence and recover the trapped material before restarting.",
   },
+  "mechanical-failure": {
+    tone: "bad",
+    title: "Mechanical lockout",
+    detail: "The failed tool needs actual replacement parts from nearby storage before it can restart. Finished output is retained.",
+  },
   disabled: {
     tone: "calm",
     title: "Machine disabled",

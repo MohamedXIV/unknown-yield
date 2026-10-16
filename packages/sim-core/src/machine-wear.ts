@@ -1,5 +1,5 @@
 import type { Content } from "@site/content";
-import type { Machine } from "./types";
+import type { Machine, Save } from "./types";
 import { assessMineralExtraction, type ExtractionAssessment } from "./extraction-envelope";
 
 /**
@@ -63,4 +63,22 @@ export function applyCompletedMachineFatigue(c: Content, machine: Machine): void
   if (definition.reliability)
     machine.integrity = Math.max(1,
       machine.integrity - delta * definition.reliability.integrityLossPerWear);
+}
+
+/** Deterministic authored post-batch mechanical consequence.
+ * Never runs during idle/blocked ticks or on a failed extraction attempt. */
+export function applyMechanicalFailure(c: Content, s: Save, machine: Machine): void {
+  const profile = c.machines.find((d) => d.id === machine.definitionId)!.reliability;
+  const rule = profile?.failure;
+  if (!rule || machine.mechanicalFailure || machine.incident ||
+      machine.integrity > rule.integrityAtOrBelow) return;
+  const load = assessMineralExtraction(c, machine);
+  if (load.compatibility === "impossible" || load.stressLoad < rule.minimumStressLoad)
+    return;
+  machine.mechanicalFailure = {
+    kind: rule.kind,
+    observedLoad: load.compatibility,
+    atTick: s.tick,
+  };
+  machine.enabled = false;
 }

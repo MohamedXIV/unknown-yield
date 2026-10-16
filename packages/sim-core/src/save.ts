@@ -51,7 +51,7 @@ import {
   cardinalSpan,
   elevatedPlacementError,
 } from "./geometry";
-export const CURRENT_SAVE_SCHEMA_VERSION = 30;
+export const CURRENT_SAVE_SCHEMA_VERSION = 31;
 
 const count = z.number().int().nonnegative().max(1000000000),
   positive = count.positive();
@@ -104,6 +104,11 @@ const machine = z.object({
   integrity: z.number().int().min(1).max(10000).default(10000),
   enabled: z.boolean(),
   incident: safeId.nullable().default(null),
+  mechanicalFailure: z.object({
+    kind: z.enum(["jam", "tool-break"]),
+    observedLoad: z.enum(["nominal", "strained"]),
+    atTick: count,
+  }).strict().nullable().default(null),
   incidentInventory: inventory.default({}),
   input: inventory,
   output: inventory,
@@ -220,6 +225,7 @@ const schema = z.object({
     z.literal(28),
     z.literal(29),
     z.literal(30),
+    z.literal(31),
   ]),
   contentVersion: z.string(),
   terminalModules: z
@@ -455,10 +461,16 @@ export function parseSave(input: unknown, c: Content): Save {
       throw new Error("Missing physical wear in current save");
   }
   if (input && typeof input === "object" &&
-      (input as { schemaVersion?: number }).schemaVersion === 30) {
+      ((input as { schemaVersion?: number }).schemaVersion ?? 0) >= 30) {
     const machines = (input as { machines?: Record<string, Record<string, unknown>> }).machines;
     if (Object.values(machines ?? {}).some((m) => !Object.hasOwn(m, "integrity")))
       throw new Error("Missing machine integrity in current save");
+  }
+  if (input && typeof input === "object" &&
+      (input as { schemaVersion?: number }).schemaVersion === 31) {
+    const machines = (input as { machines?: Record<string, Record<string, unknown>> }).machines;
+    if (Object.values(machines ?? {}).some((m) => !Object.hasOwn(m, "mechanicalFailure")))
+      throw new Error("Missing mechanical failure state in current save");
   }
   const parsed = schema.parse(input);
   if (
@@ -722,6 +734,8 @@ export function parseSave(input: unknown, c: Content): Save {
   if (s.schemaVersion === 28) s.schemaVersion = 29;
   // Schema 29 persisted wear but not an independent integrity reading.
   if (s.schemaVersion === 29) s.schemaVersion = 30;
+  // Schema 30 predates mechanical faults: all previous machines were fault-free.
+  if (s.schemaVersion === 30) s.schemaVersion = 31;
   if (s.contentVersion !== c.version || s.remainder >= c.tickMs)
     throw new Error("Incompatible content or timing");
   if (
@@ -1045,6 +1059,17 @@ export function parseSave(input: unknown, c: Content): Save {
     const d = c.machines.find((d) => d.id === m.definitionId)!;
     if (!machineUnlocked(s, d))
       throw new Error("Machine locked by unconfirmed knowledge");
+    if (m.mechanicalFailure) {
+      const authored = d.reliability?.failure;
+      if (
+        !authored ||
+        authored.kind !== m.mechanicalFailure.kind ||
+        m.integrity > authored.integrityAtOrBelow ||
+        m.mechanicalFailure.atTick > s.tick ||
+        m.job !== null || m.enabled || m.incident
+      )
+        throw new Error("Invalid mechanical failure state");
+    }
     if (m.incident) {
       const hazard = hazardDefinition(c, m.incident);
       if (

@@ -1772,6 +1772,14 @@ function GameClientInner() {
                         </select>
                       </label>
                     )}
+                    {machine.mechanicalFailure && (
+                      <div className="milestone">
+                        <h3>{t("ui.machine.failure." + machine.mechanicalFailure.kind)}</h3>
+                        <p>{t("ui.machine.failure.explanation", {
+                          load: t("ui.machine.failure." + machine.mechanicalFailure.observedLoad),
+                        })}</p>
+                      </div>
+                    )}
                     {machine.incident && (
                       <div className="milestone">
                         <small>
@@ -1806,10 +1814,11 @@ function GameClientInner() {
                     <button
                       className="primary"
                       disabled={
-                        !!machine.incident &&
+                        !!machine.mechanicalFailure ||
+                        (!!machine.incident &&
                         Object.values(machine.incidentInventory).some(
                           (quantity) => quantity > 0,
-                        )
+                        ))
                       }
                       onClick={() =>
                         act({
@@ -1819,7 +1828,9 @@ function GameClientInner() {
                         })
                       }
                     >
-                      {machine.incident &&
+                      {machine.mechanicalFailure
+                        ? t("ui.machine.failure.recovery")
+                        : machine.incident &&
                       Object.values(machine.incidentInventory).some(
                         (quantity) => quantity > 0,
                       )

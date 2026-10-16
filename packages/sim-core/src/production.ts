@@ -39,7 +39,7 @@ import {
 } from "./imports";
 import { consumeMachineFuel, machineFuelBlock } from "./fuel";
 
-import { assessMachineOperation, applyCompletedMachineFatigue } from "./machine-wear";
+import { assessMachineOperation, applyCompletedMachineFatigue, applyMechanicalFailure } from "./machine-wear";
 export function recipe(c: Content, m: Machine) {
   const definition = c.machines.find((d) => d.id === m.definitionId);
   return c.reactions.find(
@@ -52,6 +52,7 @@ export function recipe(c: Content, m: Machine) {
 export function status(c: Content, s: Save, m: Machine): MachineStatus {
   if (m.job) return "processing";
   if (m.incident) return "incident";
+  if (m.mechanicalFailure) return "mechanical-failure";
   if (!m.enabled) return "disabled";
   const d = c.machines.find((d) => d.id === m.definitionId)!;
   const r = recipe(c, m);
@@ -129,6 +130,9 @@ export function completeAndStart(
         if (r?.hazard) applyReactionHazard(c, s, m, r);
         applyCompletedMachineFatigue(c, m);
         m.job = null;
+        // Completed material remains in the tracked output buffer even
+        // when the tool fails. This is a deterministic post-batch lockout.
+        if (!m.incident) applyMechanicalFailure(c, s, m);
       }
     } else if (status(c, s, m) === "ready") {
       const r = recipe(c, m);

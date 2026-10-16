@@ -37,7 +37,7 @@ export function resolveMachinePresentation(
   condition: MachinePhysicalCondition = "intact",
 ): MachinePresentation {
   const operation: MachineOperationPresentation =
-    machine.status === "incident" || machine.incident
+    machine.status === "incident" || machine.status === "mechanical-failure" || machine.incident
       ? "incident"
       : machine.status === "processing"
         ? "working"
