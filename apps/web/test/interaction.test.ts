@@ -10,6 +10,7 @@ import {
   TOOL_GROUPS,
   TOOL_HOTKEYS,
   armBuildGroupHold,
+  additionalStorageTools,
   buildContextShortcutForTool,
   buildContextToolForShortcut,
   buildGroupForShortcut,
@@ -24,6 +25,29 @@ import {
 } from "../game/interaction";
 import { Simulation } from "@site/sim-core";
 import { fixture } from "@site/content";
+it("exposes all authored extra storage and constructs the isolation depot with a real command", () => {
+  const snapshot = new Simulation(fixture).snapshot();
+  expect(additionalStorageTools(snapshot)).toContain("isolation-depot");
+  expect(additionalStorageTools(snapshot)).not.toContain("depot");
+  const command = buildCommand(
+    { ...DEFAULT_MODE, tool: "isolation-depot" },
+    snapshot, { x: 10, y: 10 }, null,
+  );
+  expect(command).toEqual({
+    type: "placeStorage", definitionId: "isolation-depot",
+    x: 10, y: 10, direction: 0,
+  });
+  const sim = new Simulation(fixture);
+  expect(sim.command(command!)).toMatchObject({ ok: true });
+  const store = Object.values(sim.serialize().storages)[0]!;
+  expect(store.definitionId).toBe("isolation-depot");
+  expect(fixture.storages.find(d => d.id === store.definitionId)?.containmentCapabilities)
+    .toEqual(["hazard-isolated"]);
+  expect(additionalStorageTools({
+    ...snapshot, storageDefinitions: snapshot.storageDefinitions.filter(d => d.id === "depot"),
+  })).toEqual([]);
+});
+
 it("draws orthogonal paths including turns and reversed drags", () => {
   const p = beltPath({ x: 5, y: 5 }, { x: 2, y: 7 });
   expect(p).toHaveLength(6);

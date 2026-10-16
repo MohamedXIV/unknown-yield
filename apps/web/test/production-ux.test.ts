@@ -1,7 +1,8 @@
 import { fixture } from "@site/content";
-import { Simulation } from "@site/sim-core";
+import { Simulation, experimentEvidenceKey, initializeKnownMarkets } from "@site/sim-core";
 import { describe, expect, it } from "vitest";
 import {
+  incidentRecoveryAdvice,
   knowledgeOverview,
   knowledgeVisible,
   selectionOverview,
@@ -78,6 +79,65 @@ describe("production context UX", () => {
       eyebrow: "OBLIGATION OPEN",
       title: "12 fuel owed",
     });
+  });
+
+  it("guides a genuine contamination incident to the rated storage, never a hidden recipe", () => {
+    const sim = new Simulation(fixture);
+    const prerequisite = fixture.reactions.find(r => r.id === "heat-raw-sealed")!;
+    const unlocked = sim.serialize();
+    unlocked.knowledge.push(prerequisite.id);
+    unlocked.evidence[experimentEvidenceKey(
+      prerequisite.operation, prerequisite.input,
+      prerequisite.processConditionId ?? null,
+    )] = {
+      operationId: prerequisite.operation,
+      inputId: prerequisite.input,
+      processConditionId: prerequisite.processConditionId ?? null,
+      state: "confirmed",
+    };
+    initializeKnownMarkets(fixture, unlocked);
+    expect(sim.load(unlocked).ok).toBe(true);
+    expect(sim.command({ type: "placeFactory",
+      x: 24, y: 33, width: 10, height: 10 }).ok).toBe(true);
+    const processor = sim.command({ type: "placeMachine",
+      definitionId: "oversealed-furnace", x: 27, y: 36, direction: 0 });
+    expect(processor.ok, processor.message).toBe(true);
+    const before = sim.snapshot().machines.find(m => m.id === processor.id)!;
+    expect(incidentRecoveryAdvice(sim.snapshot(), before)).toBeNull();
+    expect(JSON.stringify(sim.snapshot())).not.toContain("catalyst-contamination");
+
+    const seeded = sim.serialize();
+    seeded.deposits["catalyst-outcrop"] -= 2;
+    seeded.machines[processor.id!]!.input.catalyst = 2;
+    expect(sim.load(seeded).ok).toBe(true);
+    for (let tick = 0; tick < 100 && !sim.serialize().machines[processor.id!]!.incident; tick++)
+      sim.step(fixture.tickMs);
+    const machine = sim.snapshot().machines.find(m => m.id === processor.id)!;
+    expect(machine.incident?.classId).toBe("contamination");
+    expect(incidentRecoveryAdvice(sim.snapshot(), machine)).toMatchObject({
+      outputRecoveryAllowed: false, receiverReady: false,
+      storageDefinition: { id: "isolation-depot", nameKey: "storage.isolation-depot.name" },
+      messageKey: "ui.machine.incident.output-quarantined",
+    });
+    expect(selectionOverview(sim.snapshot(), machine.id)).toMatchObject({
+      title: "Isolated material awaits recovery",
+      tone: "bad",
+    });
+    const ordinary = sim.command({ type: "placeStorage",
+      definitionId: "depot", x: 35, y: 36, direction: 0 });
+    expect(ordinary.ok, ordinary.message).toBe(true);
+    expect(sim.snapshot().machines.find(m => m.id === processor.id)?.incidentRecovery)
+      .toMatchObject({ reason: "missing-containment" });
+    expect(incidentRecoveryAdvice(sim.snapshot(),
+      sim.snapshot().machines.find(m => m.id === processor.id)!))
+      .toMatchObject({ storageDefinition: { id: "isolation-depot" } });
+
+    const rated = sim.command({ type: "placeStorage",
+      definitionId: "isolation-depot", x: 35, y: 40, direction: 0 });
+    expect(rated.ok, rated.message).toBe(true);
+    expect(incidentRecoveryAdvice(sim.snapshot(),
+      sim.snapshot().machines.find(m => m.id === processor.id)!))
+      .toMatchObject({ storageDefinition: null, receiverReady: true, outputRecoveryAllowed: false });
   });
 
   it("turns semantic machine status into a readable diagnosis", () => {

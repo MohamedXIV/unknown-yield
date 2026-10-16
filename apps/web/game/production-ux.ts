@@ -1,4 +1,4 @@
-import type { MachineStatus, PlayerSnapshot } from "@site/sim-core";
+import type { MachineStatus, MachineView, PlayerSnapshot } from "@site/sim-core";
 
 export type KnowledgeFilter = "all" | "open" | "hazards" | "confirmed";
 
@@ -198,6 +198,38 @@ export function terminalOverview(snapshot: PlayerSnapshot): ContextOverview & {
   };
 }
 
+/**
+ * A player already has a *real* trapped incident when this advice exists.
+ * Select receiver types only from public, known material containment and
+ * validated storage definitions; never inspect hidden reaction recipes.
+ */
+export function incidentRecoveryAdvice(snapshot: PlayerSnapshot, machine: MachineView) {
+  const recovery = machine.incidentRecovery;
+  if (!machine.incident || !recovery || recovery.units <= 0) return null;
+
+  const trappedId = Object.entries(machine.incidentInventory)
+    .find(([, units]) => units > 0)?.[0];
+  const knownMaterial = snapshot.materials.find((m) => m.id === trappedId);
+  const possibleStorage = recovery.handlingState === "solid" && knownMaterial
+    ? snapshot.storageDefinitions.find((definition) =>
+        definition.capacity >= recovery.units &&
+        knownMaterial.requiredContainment.every((capability) =>
+          definition.containmentCapabilities.includes(capability)))
+    : undefined;
+  const storageReason = recovery.reason === "no-local-storage" ||
+    recovery.reason === "missing-containment" ||
+    recovery.reason === "insufficient-capacity";
+
+  return {
+    outputRecoveryAllowed: recovery.outputRecoveryAllowed,
+    receiverReady: recovery.ready,
+    storageDefinition: storageReason ? (possibleStorage ?? null) : null,
+    messageKey: !recovery.outputRecoveryAllowed
+      ? "ui.machine.incident.output-quarantined"
+      : "ui.machine.incident.output-possible",
+  };
+}
+
 export function selectionOverview(
   snapshot: PlayerSnapshot,
   selectedId: string | null,
@@ -212,6 +244,16 @@ export function selectionOverview(
 
   const machine = snapshot.machines.find((entry) => entry.id === selectedId);
   if (machine) {
+    const advice = incidentRecoveryAdvice(snapshot, machine);
+    if (advice && !advice.receiverReady && !advice.outputRecoveryAllowed)
+      return {
+        tone: "bad" as const,
+        eyebrow: "CONTAINED MACHINE INCIDENT",
+        title: "Isolated material awaits recovery",
+        detail: advice.storageDefinition
+          ? "The trapped charge cannot return to normal output. Build a compatible storage nearby, then transfer it from this machine."
+          : "The charge stays physically sealed. Inspect the required receiver and containment rating below; ordinary output reclaim is blocked.",
+      };
     const copy = statusCopy[machine.status];
     if (machine.extractionCompatibility === "strained" &&
         (machine.status === "processing" || machine.status === "ready")) {

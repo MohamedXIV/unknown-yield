@@ -186,6 +186,15 @@ export const BUILD_PALETTE: readonly BuildPaletteEntry[] = [
   { kind: "tool", tool: "demolish" },
 ];
 
+/** Content-defined storage has the same real build-command path as depot.
+ * Show new rated stores in Storage rather than hiding them in loaded packs. */
+export function additionalStorageTools(snapshot: PlayerSnapshot): string[] {
+  return snapshot.storageDefinitions
+    .filter((definition) =>
+      !TOOL_GROUPS.some((group) => group.tools.includes(definition.id)))
+    .map((definition) => definition.id);
+}
+
 export function toolGroupFor(tool: Tool): ToolGroup | null {
   return TOOL_GROUPS.find((group) => group.tools.includes(tool)) ?? null;
 }
