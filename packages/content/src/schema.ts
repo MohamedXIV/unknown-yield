@@ -100,6 +100,11 @@ export const contentSchema = z.object({
             integrityAtOrBelow: z.number().int().min(1).max(9999),
             minimumStressLoad: z.number().int().min(0).max(30),
           }).strict().optional(),
+          // Extreme real loads can destroy rather than merely jam the tool.
+          wreck: z.object({
+            integrityAtOrBelow: z.number().int().min(1).max(9999),
+            minimumStressLoad: z.number().int().min(0).max(30),
+          }).strict().optional(),
           service: z.object({
             materialId: id,
             units: positive,
@@ -692,6 +697,15 @@ function validateContentInternal(
   }
   const fuelClassIds = new Set(c.fuelClasses.map((entry) => entry.id));
   for (const m of c.machines) {
+    if (m.reliability?.wreck) {
+      const profile = m.reliability;
+      if (!profile.failure || !profile.service ||
+          profile.wreck.integrityAtOrBelow <= profile.failure.integrityAtOrBelow ||
+          profile.wreck.integrityAtOrBelow >= profile.damagedBelow ||
+          profile.wreck.minimumStressLoad <= profile.failure.minimumStressLoad ||
+          profile.wreck.minimumStressLoad > (m.extractionEnvelope?.maximumLoad ?? 0))
+        throw new Error("Wreck needs higher stress than recoverable failure, earlier integrity threshold and physical salvage access");
+    }
     if (m.reliability?.failure &&
         (!m.reliability.service ||
          m.reliability.failure.integrityAtOrBelow >= m.reliability.damagedBelow))

@@ -51,7 +51,7 @@ import {
   cardinalSpan,
   elevatedPlacementError,
 } from "./geometry";
-export const CURRENT_SAVE_SCHEMA_VERSION = 31;
+export const CURRENT_SAVE_SCHEMA_VERSION = 32;
 
 const count = z.number().int().nonnegative().max(1000000000),
   positive = count.positive();
@@ -105,7 +105,7 @@ const machine = z.object({
   enabled: z.boolean(),
   incident: safeId.nullable().default(null),
   mechanicalFailure: z.object({
-    kind: z.enum(["jam", "tool-break"]),
+    kind: z.enum(["jam", "tool-break", "wreck"]),
     observedLoad: z.enum(["nominal", "strained"]),
     atTick: count,
   }).strict().nullable().default(null),
@@ -226,6 +226,7 @@ const schema = z.object({
     z.literal(29),
     z.literal(30),
     z.literal(31),
+    z.literal(32),
   ]),
   contentVersion: z.string(),
   terminalModules: z
@@ -467,7 +468,7 @@ export function parseSave(input: unknown, c: Content): Save {
       throw new Error("Missing machine integrity in current save");
   }
   if (input && typeof input === "object" &&
-      (input as { schemaVersion?: number }).schemaVersion === 31) {
+      ((input as { schemaVersion?: number }).schemaVersion ?? 0) >= 31) {
     const machines = (input as { machines?: Record<string, Record<string, unknown>> }).machines;
     if (Object.values(machines ?? {}).some((m) => !Object.hasOwn(m, "mechanicalFailure")))
       throw new Error("Missing mechanical failure state in current save");
@@ -736,6 +737,8 @@ export function parseSave(input: unknown, c: Content): Save {
   if (s.schemaVersion === 29) s.schemaVersion = 30;
   // Schema 30 predates mechanical faults: all previous machines were fault-free.
   if (s.schemaVersion === 30) s.schemaVersion = 31;
+  // Schema 32 allows a separately observable, irreversible wreck outcome.
+  if (s.schemaVersion === 31) s.schemaVersion = 32;
   if (s.contentVersion !== c.version || s.remainder >= c.tickMs)
     throw new Error("Incompatible content or timing");
   if (
@@ -1060,12 +1063,14 @@ export function parseSave(input: unknown, c: Content): Save {
     if (!machineUnlocked(s, d))
       throw new Error("Machine locked by unconfirmed knowledge");
     if (m.mechanicalFailure) {
-      const authored = d.reliability?.failure;
+      const failure = m.mechanicalFailure;
+      const authored = failure.kind === "wreck"
+        ? d.reliability?.wreck : d.reliability?.failure;
       if (
         !authored ||
-        authored.kind !== m.mechanicalFailure.kind ||
+        ("kind" in authored && authored.kind !== failure.kind) ||
         m.integrity > authored.integrityAtOrBelow ||
-        m.mechanicalFailure.atTick > s.tick ||
+        failure.atTick > s.tick ||
         m.job !== null || m.enabled || m.incident
       )
         throw new Error("Invalid mechanical failure state");

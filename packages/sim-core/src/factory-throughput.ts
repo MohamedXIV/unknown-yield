@@ -37,6 +37,7 @@ type Tracker = {
 const blockedStatuses = new Set([
   "incident",
   "mechanical-failure",
+  "wrecked",
   "disabled",
   "deposit-exhausted",
   "output-full",

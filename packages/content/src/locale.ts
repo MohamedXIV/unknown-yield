@@ -86,6 +86,8 @@ export const enCatalog: LocaleCatalog = {
   "ui.knowledge.insight.property": "Observed property",
   "ui.knowledge.insight.branch": "Open branch",
   "ui.knowledge.insight.opportunity": "Company opportunity",
+  "ui.machine.failure.wreck": "Machine wrecked",
+  "ui.machine.failure.wreck-explanation": "Structural failure under sustained high load. The machine cannot be serviced or restarted; reclaim its physically stored contents through local salvage.",
   "ui.machine.failure.jam": "Mechanical jam",
   "ui.machine.failure.tool-break": "Broken cutter",
   "ui.machine.failure.explanation": "Mechanical lockout after sustained {{load}} load. Completed output remains physically stored. Replace worn parts locally before restarting.",

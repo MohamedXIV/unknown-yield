@@ -35,6 +35,7 @@ function sourceStorage(c: Content, s: Save, machine: Machine, rule: ServiceRule)
 function reason(machine: Machine, available: boolean): MachineServiceView["reason"] {
   if (machine.job) return "running";
   if (machine.incident) return "hazard";
+  if (machine.mechanicalFailure?.kind === "wreck") return "wrecked";
   if (machine.enabled) return "enabled";
   if (machine.integrity === 10000 && machine.wear === 0) return "already-serviced";
   if (!available) return "no-local-parts";

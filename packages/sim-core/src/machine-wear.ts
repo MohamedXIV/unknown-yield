@@ -29,8 +29,9 @@ export function completedBatchWear(c: Content, machine: Machine): number {
 export function machinePhysicalCondition(
   c: Content,
   machine: Machine,
-): "intact" | "worn" | "damaged" {
+): "intact" | "worn" | "damaged" | "wrecked" {
   const profile = c.machines.find((entry) => entry.id === machine.definitionId)!.reliability;
+  if (machine.mechanicalFailure?.kind === "wreck") return "wrecked";
   if (!profile) return "intact";
   if (machine.integrity <= profile.damagedBelow) return "damaged";
   return machine.wear >= profile.wornAt ? "worn" : "intact";
@@ -69,14 +70,20 @@ export function applyCompletedMachineFatigue(c: Content, machine: Machine): void
  * Never runs during idle/blocked ticks or on a failed extraction attempt. */
 export function applyMechanicalFailure(c: Content, s: Save, machine: Machine): void {
   const profile = c.machines.find((d) => d.id === machine.definitionId)!.reliability;
-  const rule = profile?.failure;
-  if (!rule || machine.mechanicalFailure || machine.incident ||
-      machine.integrity > rule.integrityAtOrBelow) return;
+  if (!profile || machine.mechanicalFailure || machine.incident) return;
   const load = assessMineralExtraction(c, machine);
-  if (load.compatibility === "impossible" || load.stressLoad < rule.minimumStressLoad)
-    return;
+  if (load.compatibility === "impossible") return;
+  // The severe-load branch comes FIRST: a catastrophic result must never
+  // be swallowed by the less severe jam/tool-break boundary.
+  const wreck = profile.wreck;
+  const fault = profile.failure;
+  const wreckNow = !!wreck && machine.integrity <= wreck.integrityAtOrBelow &&
+    load.stressLoad >= wreck.minimumStressLoad;
+  const ordinary = !!fault && machine.integrity <= fault.integrityAtOrBelow &&
+    load.stressLoad >= fault.minimumStressLoad;
+  if (!wreckNow && !ordinary) return;
   machine.mechanicalFailure = {
-    kind: rule.kind,
+    kind: wreckNow ? "wreck" : fault!.kind,
     observedLoad: load.compatibility,
     atTick: s.tick,
   };
