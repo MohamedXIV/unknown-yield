@@ -36,6 +36,12 @@ export const contentSchema = z.object({
         // Material deposits/scouring inside an incident-bearing chamber.
         // Bounded extra wear is observable; never an invented material output.
         foulingWear: z.number().int().min(0).max(10000).default(0),
+        // Blast shock injures other physically nearby, serviceable equipment,
+        // using whole-cell footprint distance. Paired fields avoid partial rules.
+        localShock: z.object({
+          range: z.number().int().min(1).max(8),
+          integrityDamage: z.number().int().min(1).max(9999),
+        }).optional(),
         // Maximum Manhattan gap from machine footprint to an actual physical
         // recovery receiver; independent of build-structure placement rules.
         recoveryRange: z.number().int().min(0).max(16).default(0),
