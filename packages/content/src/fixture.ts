@@ -1,6 +1,6 @@
 import { validateContent } from "./schema";
 export const fixture = validateContent({
-  version: "world-01-v17",
+  version: "world-01-v18",
   tickMs: 100,
   containmentCapabilities: [
     {
@@ -311,6 +311,7 @@ export const fixture = validateContent({
           maximumLoadBonus: 0,
           durationBps: 10000,
           extraFuel: 0,
+          wearBps: 10000,
         },
         {
           id: "force",
@@ -319,6 +320,7 @@ export const fixture = validateContent({
           maximumLoadBonus: 2,
           durationBps: 8500,
           extraFuel: 2,
+          wearBps: 18000,
         },
       ],
       // Provisional P1a balance: ferrite load 3 nominal; raw load 7 strained.
@@ -327,6 +329,13 @@ export const fixture = validateContent({
         maximumLoad: 10,
         strainedDurationPerLoadBps: 2500,
         strainedFuelPerLoad: 1,
+      },
+      // Provisional P2a wear: completion-only, visible and deterministic.
+      reliability: {
+        baseWearPerBatch: 5,
+        loadWearPerPoint: 2,
+        strainedWearPerPoint: 4,
+        wornAt: 110,
       },
       presentation: {
         version: 1,
@@ -371,6 +380,12 @@ export const fixture = validateContent({
         // Keep late-game imported fuel budget viable: mode stress is a
         // separate input to P2 wear, not prematurely extra special fuel.
         strainedFuelPerLoad: 0,
+      },
+      reliability: {
+        baseWearPerBatch: 4,
+        loadWearPerPoint: 2,
+        strainedWearPerPoint: 3,
+        wornAt: 110,
       },
       fuelClassId: "advanced-propellant",
       unlock: {

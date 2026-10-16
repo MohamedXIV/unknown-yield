@@ -755,6 +755,7 @@ export function applyCommand(
         depositId: placement.depositId,
         operation: def.operations[0] ?? null,
         operatingModeId: def.operatingModes[0]?.id ?? null,
+        wear: 0,
         enabled: true,
         incident: null,
         incidentInventory: {},

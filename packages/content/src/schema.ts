@@ -77,12 +77,20 @@ export const contentSchema = z.object({
           maximumLoadBonus: z.number().int().min(0).max(10),
           durationBps: z.number().int().min(1000).max(20000),
           extraFuel: count,
+          // P2a: private authored reliability scaling, never a public mode coefficient.
+          wearBps: z.number().int().min(1000).max(50000).default(10000),
         }).strict()).max(4).default([]),
         extractionEnvelope: z.object({
           nominalLoad: z.number().int().min(0).max(30),
           maximumLoad: z.number().int().min(0).max(30),
           strainedDurationPerLoadBps: z.number().int().min(0).max(10000),
           strainedFuelPerLoad: z.number().int().min(0).max(10),
+        }).strict().optional(),
+        reliability: z.object({
+          baseWearPerBatch: count,
+          loadWearPerPoint: count,
+          strainedWearPerPoint: count,
+          wornAt: z.number().int().min(1).max(10000),
         }).strict().optional(),
         maxExtractionDepth: count.default(0),
         sourceKind: z.enum(["atmosphere"]).optional(),

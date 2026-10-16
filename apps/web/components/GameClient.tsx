@@ -1670,6 +1670,9 @@ function GameClientInner() {
                       <span>
                         Batch time<b>{machine.durationMs / 1000}s</b>
                       </span>
+                      <span>
+                        {t("ui.machine.wear.label")}<b>{Math.floor(machine.wear / 100)}% · {t("ui.machine.condition." + machine.physicalCondition)}</b>
+                      </span>
                       {machine.role === "extractor" && machine.extractionCompatibility !== "nominal" && (
                         <span>
                           Mechanical load<b>{machine.extractionCompatibility === "strained" ? "Strained" : "Beyond capability"}</b>

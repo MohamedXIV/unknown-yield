@@ -10,6 +10,7 @@ import {
 import { auditLedger } from "./ledger";
 import { assessMineralExtraction } from "./extraction-envelope";
 import { publicMachineDefinition, publicMaterial } from "./public-content";
+import { machinePhysicalCondition } from "./machine-wear";
 import { machineUnlocked } from "./progression";
 import { hazardDefinition } from "./hazards";
 import {
@@ -383,6 +384,7 @@ export class Simulation {
           durationMs: extraction.durationTicks * c.tickMs,
           fuelCost: extraction.fuelCost,
           extractionCompatibility: extraction.compatibility,
+          physicalCondition: machinePhysicalCondition(c, m),
           // Operating mode identity comes from persisted authoritative state.
           fuelClassId: d.fuelClassId ?? null,
           status: status(c, s, m),
