@@ -272,3 +272,14 @@ The evidence/unlock-gated **Deep Extractor** receives its first mechanical envel
 - No schema or fixture-content changes: **save v32 / world-01-v22**. P0 final art PR #291 remains unapproved.
 
 **Still open in P2 #295:** fluids/gases need dedicated physically compatible tank/vessel recovery rather than a generic dry storage transfer; concurrent hazardous trapped cargo and richer overheat/incident outcomes need separate design and acceptance. Do not claim complete containment or full P2 exit on this solid-only slice.
+
+
+## P2f — physically conserved local liquid wreck salvage (merged 2026-10-16)
+
+[PR #319](https://github.com/MohamedXIV/unknown-yield/pull/319) merged `429b0761f166d684025ce384bd257581f8cba3e6`. [Exact-head CI #38918286733](https://github.com/MohamedXIV/unknown-yield/actions/runs/38918286733) **PASS: 138 test files, 707 passed / 3 skipped**, typecheck/lint/build and **2/2 production-browser acceptance**.
+
+- The existing `salvageMachine` now plans **two physical destinations atomically** for a wreck with liquid inventory. All ordinary/protected solids plus all embodied construction material must fit **one local storage** meeting each material's solid containment capability; the entire liquid cargo, restricted to **one physical material identity**, must fit **one separately selected local tank** with matching identity (or empty tank), available capacity and the exact content-authored liquid containment profile/capability requirements. Both destinations must be within the machine's authored service radius. Candidate selection is stable-ID deterministic.
+- Preview and failed execution mutate nothing. Only after all destination checks pass does the command add all actual solid and liquid units to their respective physical inventory records and remove the machine. No `stock` refund, recipe-flow adjustment, magical mixture conversion or loss in the Material Ledger. The player view exposes observable `liquidUnits` and generic blocked reasons (`no-local-tank`, containment, identity, capacity) without private capability IDs. Mixed liquid identities and gas remain expressly unsupported.
+- Tests construct a distinct liquid-phase production test world without invalidating Ferrite's solid repair part, prove real high-stress extraction into buffered liquid, local tank/storage salvage, capacity/remote denial and exact physical replay. No new persisted fields or authored definitions, so save **v32** and built-in content **world-01-v22** remain unchanged.
+
+**Remaining #295:** gas requires a real pressure-rated vessel transaction, plus specialist recovery for active contained incidents and integrated P2 gameplay acceptance. Art PR #291 remains unmerged without player visual sign-off.

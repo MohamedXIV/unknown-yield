@@ -620,3 +620,8 @@ Optional private `machine.reliability.wreck` contains `integrityAtOrBelow` and `
 ### P2e containment-rated salvage destination (2026-10-16)
 
 [PR #317](https://github.com/MohamedXIV/unknown-yield/pull/317) reuses existing authored `storage.containmentCapabilities` and per-material `requiredContainment`; no new schema or catalogue fields are required. For actual physical salvage, the entire recovered ordinary/protected **solid** inventory must pass `checkContainment` for the same local storage that has enough capacity for all cargo and structure. Only a generic diagnosis is public. A test-specific fourth deposited ore uses correct authored extractor containment and keeps all existing reactions unmodified. CI #38912719705 passed 703 tests/3 skipped with typecheck/lint/build and two production-browser. Non-solid recovery is still intentionally unsupported.
+
+
+### P2f liquid salvage (2026-10-16)
+
+The domain `salvageMachine` planner now routes a single liquid identity to a nearby capable actual liquid tank using existing `liquidContainment` and `checkContainment` authoring. Solids and embodied structure still require one actual local contained solid storage. Public salvage view adds actual `liquidUnits` and bounded reason codes; it does not expose private containment requirements. Save schema v32/world content v22 remain unchanged. CI #38918286733: 707 passed/3 skipped, typecheck/lint/build/2 browser.
