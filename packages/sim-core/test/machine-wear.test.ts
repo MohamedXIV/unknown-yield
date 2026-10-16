@@ -49,11 +49,11 @@ describe("P2a — persisted material-dependent physical wear", () => {
     const sim = new Simulation(fixture);
     const id = place(sim, 18, 26);
     sim.step(310 * fixture.tickMs); // eight physical batches fill the undrained output
-    const before = sim.serialize();
-    expect(before.machines[id]!.wear).toBe(88);
-    expect(before.machines[id]!.output.ferrite).toBe(8);
+    expect(sim.serialize().machines[id]!.wear).toBe(88);
+    expect(sim.serialize().machines[id]!.output.ferrite).toBe(8);
     sim.step(500 * fixture.tickMs); // blocked output cannot accumulate passive wear
     expect(sim.serialize().machines[id]!.wear).toBe(88);
+    const before = sim.serialize(); // replay from the same tick, after backpressure
     expect(machinePhysicalCondition(fixture, before.machines[id]!)).toBe("worn");
     expect(sim.snapshot().machines.find((m) => m.id === id))
       .toMatchObject({ physicalCondition: "worn" });
