@@ -585,3 +585,8 @@ Import rewards create persisted company allocations keyed by authored import-sup
 ### P1 public knowledge projection (2026-10-16)
 
 [PR #303](https://github.com/MohamedXIV/unknown-yield/pull/303) closes #294's remaining authored-versus-player boundary. `materials` no longer returns the private `mechanics` object or authored `known` flag; `definitions` now uses a positive public equipment-field projection, mode identity/name only, and knowledge-derived unlock state. Internal content schemas, private coefficients, TinyBase Studio, deterministic execution, observable machine diagnosis and saves remain unchanged. P1 is complete; P2 reliability is separate. Exact-head Actions #38872106838 passed 676 tests / 3 skipped, typecheck, lint, build and 2/2 production-browser cases.
+
+
+### P2a machine wear authoring (2026-10-16)
+
+PR #305 (squash `f2e329201db2e511db12b508475c40834cf40e72`) adds optional bounded private `machine.reliability` profiles and `machine.operatingModes[].wearBps` with a TinyBase `reliabilityJson` editor. The player snapshot exposes measured `MachineView.wear` and derived `physicalCondition` but not authored coefficients. Fixture `world-01-v18`, schema v29; v28→v29 migration zero-initializes wear. No change to recipe-authoritative knowledge, conservation or the existing simulation/content boundary. P2 damage/repair remains unfinished; see [Industrial Behavior v1](DATA_DRIVEN_INDUSTRIAL_BEHAVIOR_V1.md).
