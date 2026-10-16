@@ -18,6 +18,8 @@ describe("content boundary", () => {
     expect(() => validateContent(b)).toThrow();
     const c = structuredClone(fixture);
     delete c.machines.find((m) => m.id === "extractor")!.extractionEnvelope;
+    // Drop optional wreck authoring so this test isolates the missing envelope.
+    delete c.machines.find((m) => m.id === "extractor")!.reliability!.wreck;
     expect(() => validateContent(c)).toThrow(/Operating modes require/);
   });
   it("rejects malformed mechanics and invalid extractor envelopes", () => {

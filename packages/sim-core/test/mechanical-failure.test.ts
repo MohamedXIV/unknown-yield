@@ -5,6 +5,8 @@ import { describe, expect, it } from "vitest";
 function contentPack(kind: "jam" | "tool-break" = "jam") {
   const content = structuredClone(fixture);
   const reliability = content.machines.find((m) => m.id === "extractor")!.reliability!;
+  // Old fault/salvage cases explicitly test recoverable, not catastrophic failure.
+  delete reliability.wreck;
   reliability.integrityLossPerWear = 100;
   reliability.damagedBelow = 9500;
   reliability.failure = {

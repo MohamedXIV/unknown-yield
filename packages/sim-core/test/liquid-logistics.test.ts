@@ -186,6 +186,7 @@ describe("conservative liquid expedition state", () => {
       if (m.reliability) {
         delete m.reliability.service;
         delete m.reliability.failure;
+        delete m.reliability.wreck;
       }
     }
     const content = validateContent(draft),

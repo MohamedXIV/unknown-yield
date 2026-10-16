@@ -116,7 +116,8 @@ describe("P2d — deterministic, physically conserved machine wreck", () => {
     const legacy = structuredClone(seed);
     legacy.schemaVersion = 31;
     legacy.machines[machineId]!.integrity = 10000;
-    delete (legacy.machines[machineId] as Partial<typeof legacy.machines[string]>).mechanicalFailure;
+    // v31 already required the nullable fault field. Only kind "wreck" is new.
+    legacy.machines[machineId]!.mechanicalFailure = null;
     const migrated = new Simulation(c);
     expect(migrated.load(legacy).ok).toBe(true);
     expect(migrated.serialize().schemaVersion).toBe(32);
