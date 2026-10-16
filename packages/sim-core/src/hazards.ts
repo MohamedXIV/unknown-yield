@@ -77,9 +77,16 @@ export function applyReactionHazard(
       // Test-only/specialist packs without repair capability retain their
       // original lockout-only consequence rather than becoming unrepairable.
       const definition = content.machines.find((d) => d.id === machine.definitionId)!;
-      if (definition.reliability?.service)
+      if (definition.reliability?.service) {
+        const profile = definition.reliability;
+        // Fouling is cumulative wear on the same authoritative axes as
+        // extraction fatigue. Real physical service is required to clean it.
+        const fouling = classDefinition.foulingWear;
+        machine.wear = Math.min(10000, machine.wear + fouling);
         machine.integrity = Math.max(1,
-          machine.integrity - classDefinition.integrityDamage);
+          machine.integrity - classDefinition.integrityDamage -
+          fouling * profile.integrityLossPerWear);
+      }
       machine.incident = reaction.hazard.id;
       machine.enabled = false;
       return;
