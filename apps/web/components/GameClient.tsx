@@ -42,6 +42,7 @@ import {
   knowledgeVisible,
   selectionOverview,
   terminalOverview,
+  incidentRecoveryAdvice,
   type KnowledgeFilter,
 } from "../game/production-ux";
 import {
@@ -523,6 +524,9 @@ function GameClientInner() {
   const selectedDefinition = machine
     ? snapshot.definitions.find((d) => d.id === machine.definitionId)
     : undefined;
+  const incidentAdvice = machine
+    ? incidentRecoveryAdvice(snapshot, machine)
+    : null;
   const selectedFuelClass = machine?.fuelClassId
     ? snapshot.fuelClasses.find((entry) => entry.id === machine.fuelClassId)
     : undefined;
@@ -630,6 +634,12 @@ function GameClientInner() {
     const unlock = unlockFor(tool);
     if (unlock && !unlock.unlocked)
       return "Locked · Requires " + t(unlock.hintKey) + ".";
+    const storageDefinition = snapshot.storageDefinitions.find((d) => d.id === tool);
+    if (storageDefinition)
+      return t("ui.machine.incident.storage-description", {
+        capacity: storageDefinition.capacity,
+        capabilities: capabilityNames(storageDefinition.containmentCapabilities),
+      });
     if (
       tool !== "furnace" &&
       tool !== "sealed-furnace" &&
@@ -713,6 +723,9 @@ function GameClientInner() {
   // New imported machines are content, not a fixed compile-time toolbar list.
   // Keep original group shortcuts stable and expose extensions in Processing.
   const packMachineTools = snapshot.definitions
+    .filter((definition) => !TOOL_GROUPS.some((group) => group.tools.includes(definition.id)))
+    .map((definition) => definition.id);
+  const packStorageTools = snapshot.storageDefinitions
     .filter((definition) => !TOOL_GROUPS.some((group) => group.tools.includes(definition.id)))
     .map((definition) => definition.id);
   const groupFor = (id: ToolGroupId) =>
@@ -1829,6 +1842,20 @@ function GameClientInner() {
                                   <p>{t("ui.machine.salvage.reason." +
                                     machine.incidentRecovery.reason)}</p>
                                 )}
+                                {incidentAdvice && (
+                                  <p>{t(incidentAdvice.messageKey)}</p>
+                                )}
+                                {incidentAdvice?.storageDefinition && (
+                                  <button
+                                    type="button"
+                                    className="secondary"
+                                    onClick={() => setTool(incidentAdvice.storageDefinition!.id)}
+                                  >
+                                    {t("ui.machine.incident.build-storage", {
+                                      storage: t(incidentAdvice.storageDefinition.nameKey),
+                                    })}
+                                  </button>
+                                )}
                                 <button
                                   type="button"
                                   disabled={!machine.incidentRecovery.ready}
@@ -1838,17 +1865,19 @@ function GameClientInner() {
                                 >{t("ui.machine.incident.recover-local")}</button>
                               </div>
                             )}
-                            <button
-                              className="primary"
-                              onClick={() =>
-                                act({
-                                  type: "recoverMachineIncident",
-                                  machineId: machine.id,
-                                })
-                              }
-                            >
-                              Reclaim trapped material to output
-                            </button>
+                            {incidentAdvice?.outputRecoveryAllowed && (
+                              <button
+                                className="primary"
+                                onClick={() =>
+                                  act({
+                                    type: "recoverMachineIncident",
+                                    machineId: machine.id,
+                                  })
+                                }
+                              >
+                                {t("ui.machine.incident.recover-output")}
+                              </button>
+                            )}
                           </>
                         )}
                       </div>
@@ -3644,7 +3673,8 @@ function GameClientInner() {
             const primary = groupPrimary(group.id);
             const open = openToolGroup === group.id;
             const groupActive = group.tools.includes(mode.tool) ||
-              (group.id === "processing" && packMachineTools.includes(mode.tool));
+              (group.id === "processing" && packMachineTools.includes(mode.tool)) ||
+              (group.id === "storage" && packStorageTools.includes(mode.tool));
             return (
               <div className="build-group" key={group.id}>
                 {open && (
@@ -3673,6 +3703,18 @@ function GameClientInner() {
                         </button>
                       );
                     })}
+                    {group.id === "storage" && packStorageTools.map((tool) => (
+                      <button
+                        key={tool}
+                        role="menuitem"
+                        className={mode.tool === tool ? "active" : ""}
+                        aria-label={toolName(tool)}
+                        title={toolDescription(tool)}
+                        onClick={() => chooseGroupTool(tool)}
+                      >
+                        {toolTile(tool, null)}
+                      </button>
+                    ))}
                     {group.id === "processing" && packMachineTools.map((tool) => (
                       <button
                         key={tool}
