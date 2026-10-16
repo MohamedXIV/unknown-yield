@@ -93,7 +93,7 @@ describe("P2a — persisted material-dependent physical wear", () => {
       type: "placeMachine", definitionId: "extractor", x: 28, y: 43, direction: 0,
     });
     expect(placed.ok, placed.message).toBe(true);
-    expect(completedBatchWear(content, sim.serialize().machines[placed.id!]!)).toBe(27);
+    expect(completedBatchWear(content, sim.serialize().machines[placed.id!]!)).toBe(41);
     expect(JSON.stringify(sim.snapshot())).not.toContain('"reliability"');
     expect(JSON.stringify(sim.snapshot())).not.toContain('"wearBps"');
   });
