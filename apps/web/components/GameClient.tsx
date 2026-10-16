@@ -24,6 +24,7 @@ import {
   BUILD_PALETTE,
   DEFAULT_MODE,
   armBuildGroupHold,
+  additionalStorageTools,
   buildContextShortcutForTool,
   effectiveBuildGroupPrimary,
   rememberBuildGroupTool,
@@ -725,9 +726,7 @@ function GameClientInner() {
   const packMachineTools = snapshot.definitions
     .filter((definition) => !TOOL_GROUPS.some((group) => group.tools.includes(definition.id)))
     .map((definition) => definition.id);
-  const packStorageTools = snapshot.storageDefinitions
-    .filter((definition) => !TOOL_GROUPS.some((group) => group.tools.includes(definition.id)))
-    .map((definition) => definition.id);
+  const packStorageTools = additionalStorageTools(snapshot);
   const groupFor = (id: ToolGroupId) =>
     TOOL_GROUPS.find((group) => group.id === id)!;
   const groupPrimary = (id: ToolGroupId) =>
@@ -883,7 +882,9 @@ function GameClientInner() {
           ? "compressor"
           : tool === "sinterer"
             ? "furnace"
-            : tool;
+            : snapshot.storageDefinitions.some((d) => d.id === tool)
+              ? "depot"
+              : tool;
   const toolTile = (tool: Tool, shortcut: string | null) => (
     <>
       {shortcut && <small>{shortcut}</small>}
