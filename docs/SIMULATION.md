@@ -583,3 +583,8 @@ PR #311 adds a deterministic, content-authored post-batch integrity/load gate se
 ### P2c2 physical salvage (2026-10-16)
 
 PR #313 adds a deterministic `salvageMachine` command for disabled mechanical-failure equipment. It atomically transfers tracked input/output cargo and all embodied machine construction units to one nearby storage (capacity and distance checked against the actual map). No site-global stock refund and no silent deletion; the ordinary `dismantle` path cannot bypass broken-machine salvage. Unsupported fluid/gas/containment or hazard cargo is rejected until purpose-built handling exists. Existing machine, storage and ledger records represent the full transaction, so save schema remains v31 and content world-01-v21. [Exact-head CI #38902153863](https://github.com/MohamedXIV/unknown-yield/actions/runs/38902153863) passed 696 tests/3 skipped, typecheck/lint/build and 2/2 browser. Wreck/hazardous salvage remains unfinished.
+
+
+### P2d: causal wreck vs repairable jam (2026-10-16)
+
+PR #315 introduces a data-authored severe-load/low-integrity post-batch `wreck` outcome that supersedes repairable jam/tool-break under extreme conditions. Completed real output remains in machine output, and all saved inventories are physically conserved. `MachineStatus= wrecked`, `physicalCondition=wrecked`; local service and restart are ineligible, while local physical salvage reuses the existing source/destination capacity rules. Factory flow certification invalidates. Schema v32 migrates v31; content world-01-v22. Exact-head CI #38910994612: 700 pass/3 skip, typecheck/lint/build and 2/2 production browser. Specialized containment recovery still belongs to #295.
