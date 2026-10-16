@@ -5,8 +5,16 @@ import { describe, expect, it } from "vitest";
 function containedWorld(protectedStore: boolean) {
   const draft = structuredClone(fixture);
   const raw = draft.materials.find((m) => m.id === "raw")!;
-  raw.requiredContainment = ["hazard-isolated"];
-  // The test machine is explicitly rated to keep this physical ore in its buffer.
+  // A fourth, independent source avoids changing existing reaction semantics.
+  draft.materials.push({
+    ...raw, id: "ore-sealed", nameKey: "material.ore-sealed.name",
+    known: false, requiredContainment: ["hazard-isolated"],
+  });
+  draft.site.deposits.push({
+    id: "ore-sealed-field", material: "ore-sealed",
+    x: 28, y: 43, width: 2, height: 2, units: 30,
+  });
+  // The new ore stays inside an explicitly sealed extractor's physical buffer.
   draft.machines.find((m) => m.id === "extractor")!.outputContainment = ["hazard-isolated"];
   draft.storages.find((s) => s.id === "depot")!.containmentCapabilities =
     protectedStore ? ["hazard-isolated"] : [];
@@ -20,14 +28,14 @@ function containedWorld(protectedStore: boolean) {
 function prepared(protectedStore: boolean) {
   const c = containedWorld(protectedStore), sim = new Simulation(c);
   const m = sim.command({ type: "placeMachine", definitionId: "extractor",
-    x: 18, y: 36, direction: 0 });
+    x: 28, y: 43, direction: 0 });
   expect(m.ok, m.message).toBe(true);
   const s = sim.command({ type: "placeStorage", definitionId: "depot",
-    x: 22, y: 36, direction: 0 });
+    x: 32, y: 43, direction: 0 });
   expect(s.ok, s.message).toBe(true);
   sim.step(26 * c.tickMs);
   expect(sim.snapshot().machines.find(row => row.id === m.id)).toMatchObject({
-    status: "wrecked", output: { raw: 1 },
+    status: "wrecked", output: { "ore-sealed": 1 },
   });
   return { c, sim, machineId: m.id!, storageId: s.id! };
 }
@@ -56,7 +64,7 @@ describe("P2e: contained solid salvage honors actual local storage capabilities"
     expect(sim.command(cmd).ok).toBe(true);
     const after = sim.serialize();
     expect(after.machines[machineId]).toBeUndefined();
-    expect(after.storages[storageId]!.inventory).toMatchObject({ raw: 1, plates: 18 });
+    expect(after.storages[storageId]!.inventory).toMatchObject({ "ore-sealed": 1, plates: 18 });
     expect(after.stock).toEqual(before.stock);
     expect(after.flows).toEqual(before.flows);
     expect(auditLedger(c, after).ok).toBe(true);
@@ -76,17 +84,17 @@ describe("P2e: contained solid salvage honors actual local storage capabilities"
     });
     const c = validateSimulationContent(content), sim = new Simulation(c);
     const m = sim.command({ type: "placeMachine", definitionId: "extractor",
-      x: 18, y: 36, direction: 0 });
+      x: 28, y: 43, direction: 0 });
     const unprotected = sim.command({ type: "placeStorage", definitionId: "depot",
-      x: 22, y: 36, direction: 0 });
+      x: 32, y: 43, direction: 0 });
     const protectedStorage = sim.command({ type: "placeStorage",
-      definitionId: "sealed-depot", x: 22, y: 40, direction: 0 });
+      definitionId: "sealed-depot", x: 32, y: 47, direction: 0 });
     expect(m.ok && unprotected.ok && protectedStorage.ok).toBe(true);
     sim.step(26 * c.tickMs);
     expect(sim.command({ type: "salvageMachine", machineId: m.id! }).ok).toBe(true);
     expect(sim.serialize().storages[unprotected.id!]!.inventory).toEqual({});
     expect(sim.serialize().storages[protectedStorage.id!]!.inventory)
-      .toMatchObject({ raw: 1, plates: 18 });
+      .toMatchObject({ "ore-sealed": 1, plates: 18 });
     expect(auditLedger(c, sim.serialize()).ok).toBe(true);
   });
 });
