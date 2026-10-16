@@ -290,6 +290,8 @@ it("quarantines actual catalyst contamination until a rated nearby physical stor
     integrity: 10000,
   });
   expect(trapped.hazardEvidence).toContain("catalyst-contamination");
+  expect(sim.snapshot().machines.find(m => m.id === processorId)?.incidentRecovery)
+    .toMatchObject({ outputRecoveryAllowed: false });
   expect(trapped.flows.produced["tainted-residue"]).toBe(1);
   expect(auditLedger(fixture, trapped).ok).toBe(true);
 
@@ -558,6 +560,8 @@ it("persists a conservative stranded-output consequence without deleting materia
 
   const state = sim.serialize();
   expect(state.hazardEvidence).toEqual(["slag-jam"]);
+  expect(sim.snapshot().machines.find(m => m.id === processorId)?.incidentRecovery)
+    .toMatchObject({ outputRecoveryAllowed: true });
   expect(state.machines[processorId]).toMatchObject({
     incident: "slag-jam",
     enabled: false,
