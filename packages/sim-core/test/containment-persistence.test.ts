@@ -33,6 +33,10 @@ describe("protected save boundaries", () => {
     ];
     for (const machine of draft.machines)
       machine.outputContainment = ["corrosion-resistant"];
+    // Preserve the independent authored isolation obligation of the
+    // contaminated catalyst route while varying corrosion coverage.
+    draft.machines.find(m => m.id === "oversealed-furnace")!
+      .outputContainment.push("hazard-isolated");
     draft.machines.find(
       (machine) => machine.id === "phase-quencher",
     )!.outputContainment = [
