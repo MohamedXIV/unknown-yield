@@ -97,18 +97,23 @@ function salvagePlan(c: Content, s: Save, machine: Machine): {
   liquidTank: Save["tanks"][string] | null;
   liquidMaterialId: string | null;
   liquidUnits: number;
+  gasVessel: Save["pressureVessels"][string] | null;
+  gasMaterialId: string | null;
+  gasUnits: number;
 } {
   const definition = c.machines.find((d) => d.id === machine.definitionId)!;
   const range = definition.reliability?.service?.range;
   const recovered: Inventory = {};
   const liquids: Inventory = {};
+  const gases: Inventory = {};
   let unsupportedCargo = false;
   for (const inventory of [machine.input, machine.output]) {
     for (const [materialId, units] of Object.entries(inventory)) {
       const material = c.materials.find((m) => m.id === materialId);
       if (material?.handlingState === "solid") change(recovered, materialId, units);
       else if (material?.handlingState === "liquid") change(liquids, materialId, units);
-      else unsupportedCargo = true; // Gas needs a distinct pressure-vessel operation.
+      else if (material?.handlingState === "gas") change(gases, materialId, units);
+      else unsupportedCargo = true;
     }
   }
   // Structure always goes to a physical solid storage, not a fluid tank.
@@ -116,20 +121,25 @@ function salvagePlan(c: Content, s: Save, machine: Machine): {
   const liquidEntries = Object.entries(liquids).filter(([, units]) => units > 0);
   const liquidMaterialId = liquidEntries.length === 1 ? liquidEntries[0]![0] : null;
   const liquidUnits = total(liquids);
+  const gasEntries = Object.entries(gases).filter(([, units]) => units > 0);
+  const gasMaterialId = gasEntries.length === 1 ? gasEntries[0]![0] : null;
+  const gasUnits = total(gases);
   const cargoUnits = total(machine.input) + total(machine.output);
   const structuralUnits = definition.cost;
-  const base = { cargoUnits, structuralUnits, liquidUnits };
+  const base = { cargoUnits, structuralUnits, liquidUnits, gasUnits };
   const blocked = (reason: NonNullable<MachineSalvageView["reason"]>) => ({
     view: { ...base, ready: false, reason }, destination: null,
     recovered, liquidTank: null, liquidMaterialId, liquidUnits,
+    gasVessel: null, gasMaterialId, gasUnits,
   });
   if (!machine.mechanicalFailure || machine.enabled || machine.job)
     return blocked("not-failed");
   if (machine.incident || total(machine.incidentInventory))
     return blocked("hazard");
-  // Exactly one liquid identity can be held in a physical tank; mixtures
-  // cannot be forced into a single-identity vessel by this command.
-  if (unsupportedCargo || liquidEntries.length > 1 || (liquidUnits && !c.liquidLogistics))
+  // Each real vessel can contain only a single material identity. No
+  // mixing incompatible liquids or gases into one physical destination.
+  if (unsupportedCargo || liquidEntries.length > 1 || gasEntries.length > 1 ||
+      (liquidUnits && !c.liquidLogistics) || (gasUnits && !c.gasLogistics))
     return blocked("unsupported-cargo");
   const rect = footprint(machine, definition);
   const nearby = Object.values(s.storages)
@@ -154,27 +164,47 @@ function salvagePlan(c: Content, s: Save, machine: Machine): {
     ? "no-local-storage" : capable.length === 0
       ? "missing-containment" : "insufficient-capacity";
   if (reason) return blocked(reason);
-  if (!liquidUnits) return {
-    view: { ...base, ready: true, reason: null },
-    destination, recovered, liquidTank: null, liquidMaterialId: null, liquidUnits: 0,
-  };
-  const tanks = Object.values(s.tanks)
-    .filter((tank) => cellGap(rect, footprint(tank, c.liquidLogistics!.tank)) <= range!)
-    .sort((a, b) => a.id.localeCompare(b.id));
-  if (!tanks.length) return blocked("no-local-tank");
-  const contained = tanks.filter((tank) =>
-    checkContainment(c, liquidMaterialId!, ["liquid"],
-      liquidContainment(c, "tank", tank.containmentProfileId)).ok);
-  if (!contained.length) return blocked("liquid-containment");
-  const matching = contained.filter((tank) =>
-    tank.materialId === null || tank.materialId === liquidMaterialId);
-  if (!matching.length) return blocked("liquid-identity");
-  const liquidTank = matching.find((tank) =>
-    tank.quantity + liquidUnits <= c.liquidLogistics!.tank.capacity) ?? null;
-  if (!liquidTank) return blocked("liquid-capacity");
+  let liquidTank: Save["tanks"][string] | null = null;
+  if (liquidUnits) {
+    const tanks = Object.values(s.tanks)
+      .filter((tank) => cellGap(rect, footprint(tank, c.liquidLogistics!.tank)) <= range!)
+      .sort((a, b) => a.id.localeCompare(b.id));
+    if (!tanks.length) return blocked("no-local-tank");
+    const contained = tanks.filter((tank) =>
+      checkContainment(c, liquidMaterialId!, ["liquid"],
+        liquidContainment(c, "tank", tank.containmentProfileId)).ok);
+    if (!contained.length) return blocked("liquid-containment");
+    const matching = contained.filter((tank) =>
+      tank.materialId === null || tank.materialId === liquidMaterialId);
+    if (!matching.length) return blocked("liquid-identity");
+    liquidTank = matching.find((tank) =>
+      tank.quantity + liquidUnits <= c.liquidLogistics!.tank.capacity) ?? null;
+    if (!liquidTank) return blocked("liquid-capacity");
+  }
+  let gasVessel: Save["pressureVessels"][string] | null = null;
+  if (gasUnits) {
+    const vessels = Object.values(s.pressureVessels)
+      .filter((vessel) =>
+        cellGap(rect, footprint(vessel, c.gasLogistics!.vessel)) <= range!)
+      .sort((a, b) => a.id.localeCompare(b.id));
+    if (!vessels.length) return blocked("no-local-vessel");
+    const contained = vessels.filter(() =>
+      checkContainment(c, gasMaterialId!, ["gas"],
+        c.gasLogistics!.vessel.containmentCapabilities).ok);
+    if (!contained.length) return blocked("gas-containment");
+    const matching = contained.filter((vessel) =>
+      vessel.materialId === null || vessel.materialId === gasMaterialId);
+    if (!matching.length) return blocked("gas-identity");
+    gasVessel = matching.find((vessel) =>
+      vessel.quantity + gasUnits <= c.gasLogistics!.vessel.capacity) ?? null;
+    if (!gasVessel) return blocked("gas-capacity");
+  }
+  // Commit can only proceed after every required material has a valid,
+  // physically local recipient. No partial tank/vessel/storage transfers.
   return {
     view: { ...base, ready: true, reason: null },
     destination, recovered, liquidTank, liquidMaterialId, liquidUnits,
+    gasVessel, gasMaterialId, gasUnits,
   };
 }
 
@@ -187,8 +217,8 @@ export function machineSalvageView(c: Content, s: Save, machine: Machine): Machi
 export function salvageMachine(c: Content, s: Save, machine: Machine, apply: boolean): {
   ok: boolean; message: string;
 } {
-  const { view, destination, recovered, liquidTank, liquidMaterialId, liquidUnits } =
-    salvagePlan(c, s, machine);
+  const { view, destination, recovered, liquidTank, liquidMaterialId, liquidUnits,
+    gasVessel, gasMaterialId, gasUnits } = salvagePlan(c, s, machine);
   if (!view.ready || !destination)
     return { ok: false, message: "Salvage unavailable: " + (view.reason ?? "no-local-storage") };
   if (apply) {
@@ -198,7 +228,11 @@ export function salvageMachine(c: Content, s: Save, machine: Machine, apply: boo
       liquidTank.materialId = liquidMaterialId;
       liquidTank.quantity += liquidUnits;
     }
+    if (gasVessel) {
+      gasVessel.materialId = gasMaterialId;
+      gasVessel.quantity += gasUnits;
+    }
     delete s.machines[machine.id];
   }
-  return { ok: true, message: "Failed machine salvaged into physical local storage and compatible tanks" };
+  return { ok: true, message: "Failed machine salvaged to local physical storage and compatible fluid vessels" };
 }

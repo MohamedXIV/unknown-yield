@@ -1785,6 +1785,7 @@ function GameClientInner() {
                             <p>{t("ui.machine.salvage.info", {
                               cargo: machine.salvage.cargoUnits,
                               liquid: machine.salvage.liquidUnits,
+                              gas: machine.salvage.gasUnits,
                               structure: machine.salvage.structuralUnits,
                             })}</p>
                             {machine.salvage.reason && (

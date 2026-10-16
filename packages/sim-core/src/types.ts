@@ -563,10 +563,12 @@ export type MachineSalvageView = {
   cargoUnits: number;
   structuralUnits: number;
   liquidUnits: number;
+  gasUnits: number;
   ready: boolean;
   reason: "not-failed" | "hazard" | "unsupported-cargo" | "no-local-storage" |
     "missing-containment" | "insufficient-capacity" | "no-local-tank" |
-    "liquid-containment" | "liquid-identity" | "liquid-capacity" | null;
+    "liquid-containment" | "liquid-identity" | "liquid-capacity" |
+    "no-local-vessel" | "gas-containment" | "gas-identity" | "gas-capacity" | null;
 };
 export type MachineView = Omit<Machine, "job" | "incident"> & {
   service: MachineServiceView | null;
