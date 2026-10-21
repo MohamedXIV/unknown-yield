@@ -977,6 +977,31 @@ browserIt(
         });
       };
 
+      // Retain screenshot evidence only in review-specific CI runs.
+      const reviewDirectory = process.env.UNKNOWN_YIELD_EVIDENCE_DIR;
+      const captureUiReview = async (name: string) => {
+        if (!reviewDirectory) return;
+        await sleep(180); // let the Phaser/DOM render settle
+        const response = await call("Page.captureScreenshot", {
+          format: "png",
+          captureBeyondViewport: false,
+        });
+        const data = Buffer.from(
+          (response as unknown as { data: string }).data,
+          "base64",
+        );
+        mkdirSync(reviewDirectory, { recursive: true });
+        writeFileSync(join(reviewDirectory, name), data);
+        console.log(
+          "UI_REVIEW_SCREENSHOT " +
+            JSON.stringify({
+              name,
+              bytes: data.length,
+              sha256: createHash("sha256").update(data).digest("hex"),
+            }),
+        );
+      };
+
       // Subscribe before first navigation to capture real game exceptions.
       await call("Page.enable");
       await call("Runtime.enable");
@@ -990,6 +1015,8 @@ browserIt(
         `document.querySelector('[data-onboarding-beat="camera-build"]')
           ?.textContent?.includes("Read the site before you automate it.") === true`,
       );
+
+      await captureUiReview("ui-01-desktop-field-brief.png");
 
       const initialState = await evaluate<{
         canvas: boolean;
@@ -1034,6 +1061,8 @@ browserIt(
         document.querySelector('button[aria-label="Close field brief"]')?.click();
         return true;
       })()`);
+
+      await captureUiReview("ui-02-desktop-hud.png");
 
       await pressKey("5", "Digit5", 53);
       await waitForExpression(
@@ -1184,6 +1213,7 @@ browserIt(
       expect(initialNotebook).not.toContain("Magnetic ceramic");
       expect(initialNotebook).not.toContain("Catalyst powder");
       expect(initialNotebook).toContain("EVIDENCE STATUS");
+      await captureUiReview("ui-03-desktop-notebook.png");
       await evaluate(`(() => {
         [...document.querySelectorAll('nav[aria-label="Notebook filters"] button')]
           .find((button) => button.textContent === "Open")
@@ -1207,6 +1237,7 @@ browserIt(
           !!document.querySelector("#terminal-shipment") &&
           !!document.querySelector("#terminal-company")`,
       );
+      await captureUiReview("ui-04-desktop-terminal.png");
       await evaluate(`(() => {
         document.querySelector('button[aria-label="Company terminal"]')?.click();
         return true;
@@ -1288,6 +1319,7 @@ browserIt(
         `[...document.querySelectorAll("button")]
           .some((button) => button.textContent?.includes("Save world"))`,
       );
+      await captureUiReview("ui-05-desktop-expedition-menu.png");
       await evaluate(`(() => {
         [...document.querySelectorAll("button")]
           .find((button) => button.textContent?.includes("Save world"))
@@ -3791,6 +3823,8 @@ browserIt(
             .touchAction`,
         ),
       ).toBe("none");
+
+      await captureUiReview("ui-06-mobile-hud.png");
 
       const touchPanBefore = await evaluate<{
         scrollX: number;
