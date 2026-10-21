@@ -1918,3 +1918,341 @@ kbd {
     transition: none;
   }
 }
+
+
+/* Unknown Yield visual reskin v0.1 — reviewable CSS-only pass.
+   Preserve all existing positioning, gameplay interactions and responsive rules.
+   The development Studio intentionally keeps its separate existing appearance.
+   This palette is a trial, not approved final art or an implemented main menu. */
+.game {
+  --panel: rgb(22 30 31 / 96%);
+  --line: rgb(185 175 147 / 34%);
+  --text: #eee9d9;
+  --muted: #b8bcb2;
+  --gold: #d7b780;
+  --green: #a9c5b6;
+  --uy-metal: #222e30;
+  --uy-ink: #111b1d;
+  --uy-cream: #f2e8ce;
+  --uy-warning: #e2ac60;
+  --uy-danger: #e2937b;
+  color: var(--text);
+}
+
+/* A family of light, practical instrument housings, not six dashboard cards. */
+.game .site-mark,
+.game .resources,
+.game .hud-actions,
+.game .context-panel,
+.game .field-guide,
+.game .guide-toggle,
+.game .build-bar,
+.game .build-submenu,
+.game .build-hint {
+  background: linear-gradient(156deg, rgb(40 51 51 / 97%), rgb(17 27 29 / 96%));
+  border-color: var(--line);
+  border-radius: 3px;
+  box-shadow: 0 10px 28px rgb(4 10 13 / 45%), inset 0 1px rgb(239 228 194 / 9%);
+}
+
+/* Top-of-screen: institutional mark, real stock, real allocation, game controls. */
+.game .site-mark {
+  border-top: 2px solid #994a42;
+  color: var(--uy-cream);
+  letter-spacing: 1.35px;
+}
+.game .site-mark small {
+  color: #c7b995;
+  font-size: 9px;
+  letter-spacing: 0.85px;
+}
+.game .brand-symbol {
+  width: 30px;
+  height: 34px;
+  color: var(--uy-cream);
+  background: #823f38;
+  border: 1px solid #c68c6d;
+  border-radius: 2px;
+  font: bold 23px/1 Georgia, serif;
+  box-shadow: inset 0 0 0 2px rgb(21 26 26 / 45%);
+}
+.game .resources {
+  gap: 17px;
+}
+.game .resources > span {
+  color: var(--gold);
+}
+.game .resources > span:first-child {
+  color: var(--green);
+}
+.game .resources > span + span {
+  border-left: 1px solid var(--line);
+  padding-left: 15px;
+}
+.game .resources b {
+  color: var(--uy-cream);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.game .resources small {
+  color: #c5c4b4;
+  font-size: 9px;
+}
+.game .resources .low,
+.game .resources .low b {
+  color: var(--uy-danger);
+}
+.game .hud-actions button {
+  color: #d1d9d1;
+  border: 1px solid transparent;
+  border-radius: 2px;
+}
+.game .hud-actions button:hover:not(:disabled) {
+  background: rgb(165 158 125 / 16%);
+  border-color: rgb(201 181 126 / 48%);
+  color: var(--uy-cream);
+}
+.game .hud-actions i {
+  background: var(--uy-warning);
+  color: var(--uy-ink);
+  border-radius: 2px;
+}
+
+/* Compact official brief / alert; urgent safety status outranks state branding. */
+.game .field-guide {
+  border-left: 3px solid #a25446;
+}
+.game .field-guide:not(.beat-recovery) small {
+  color: var(--gold);
+}
+.game .field-guide h2 {
+  color: var(--uy-cream);
+  font-weight: 600;
+}
+.game .field-guide li,
+.game .field-guide .guide-body,
+.game .field-guide p {
+  color: #d0d3c7;
+}
+.game .field-guide li.done {
+  color: #a9c5b6;
+}
+.game .field-guide.beat-recovery {
+  background: linear-gradient(156deg, #3d2c2a, #241d1e);
+  border-color: #ad695c;
+}
+.game .field-guide.beat-recovery small {
+  color: #f2ad88;
+}
+.game .toast {
+  background: #253a36f5;
+  color: #d4e5da;
+  border: 1px solid #82a99a;
+  border-left: 3px solid var(--green);
+  border-radius: 3px;
+}
+.game .toast.error {
+  background: #382624f5;
+  color: #f7d0c0;
+  border-color: #c9806c;
+}
+.game .paused-label {
+  color: var(--uy-cream);
+  border-color: var(--gold);
+  background: #142022e8;
+}
+.game .world-zoom-controls button {
+  background: #1c2b2de8;
+  border-color: var(--line);
+  color: var(--uy-cream);
+  border-radius: 3px;
+}
+.game .world-zoom-controls button:hover,
+.game .world-zoom-controls button:focus-visible {
+  background: #3b4946;
+  border-color: var(--gold);
+}
+
+/* Existing menu, factory inspector, company console and notebook keep their
+   content hierarchy. Dress the same interface as one industrial institution. */
+.game .context-panel {
+  border-top: 2px solid #ab855b;
+}
+.game .context-header {
+  color: #ddc89f;
+  background: rgb(6 13 16 / 26%);
+  border-bottom-color: var(--line);
+  letter-spacing: 1.15px;
+  font-size: 10px;
+}
+.game .context-header button {
+  color: var(--uy-cream);
+}
+.game .context-body {
+  scrollbar-color: #8a8c78 transparent;
+}
+.game .context-body h2 {
+  color: var(--uy-cream);
+  font-weight: 600;
+  font-size: 20px;
+}
+.game .context-body h3,
+.game .eyebrow {
+  color: #d7c6a2;
+}
+.game .context-overview {
+  background: #162224d9;
+  border: 1px solid var(--line);
+  border-left: 3px solid #7e9993;
+  border-radius: 2px;
+}
+.game .context-overview > small {
+  color: #c1c5b9;
+  font-size: 9px;
+}
+.game .context-overview > strong {
+  color: var(--uy-cream);
+}
+.game .context-overview > p {
+  color: #c6ccc3;
+  font-size: 11px;
+}
+.game .context-overview.tone-good {
+  border-left-color: var(--green);
+}
+.game .context-overview.tone-warn {
+  border-left-color: var(--uy-warning);
+  background: #2b2a21de;
+}
+.game .context-overview.tone-bad {
+  border-left-color: var(--uy-danger);
+  background: #322424de;
+}
+.game .context-tabs button {
+  background: #182528;
+  border-color: var(--line);
+  border-radius: 2px;
+  color: #c4c7b9;
+  font-size: 9px;
+}
+.game .context-tabs button:hover,
+.game .context-tabs button.active,
+.game .context-tabs button[aria-pressed="true"] {
+  background: #414339;
+  border-color: var(--gold);
+  color: var(--uy-cream);
+}
+.game .inventory,
+.game .policy,
+.game .observation {
+  background: rgb(12 24 26 / 54%);
+  border-color: var(--line);
+}
+.game .inventory b,
+.game .facts b {
+  color: var(--uy-cream);
+  font-variant-numeric: tabular-nums;
+}
+.game .muted,
+.game .hint,
+.game .context-body h3 small {
+  color: #bfc7ba;
+}
+.game .status-line {
+  color: var(--uy-warning);
+}
+.game .status-line.running {
+  color: var(--green);
+}
+.game .progress-track {
+  background: #43514a;
+}
+.game .progress-track i {
+  background: var(--green);
+}
+.game .primary {
+  background: var(--gold);
+  color: #182022;
+  border-radius: 2px;
+}
+.game .secondary {
+  background: #2b3b3c;
+  color: var(--uy-cream);
+  border: 1px solid #82918a;
+  border-radius: 2px;
+}
+.game .danger {
+  background: #452b2b;
+  color: #ffc9b7;
+  border: 1px solid #b17766;
+  border-radius: 2px;
+}
+.game button:focus-visible,
+.game select:focus-visible,
+.game input:focus-visible,
+.game textarea:focus-visible {
+  outline-color: var(--gold);
+}
+.game select,
+.game input,
+.game textarea {
+  background: #17282a;
+  border-color: #7e8e87;
+  color: var(--uy-cream);
+}
+
+/* Bottom build tools retain their full layout, affordances and touch geometry. */
+.game .build-bar,
+.game .build-submenu {
+  border-top: 2px solid #8d7651;
+}
+.game .build-bar button,
+.game .build-submenu button {
+  color: #d1d6ca;
+  border-radius: 2px;
+}
+.game .build-bar button:hover:not(:disabled),
+.game .build-submenu button:hover:not(:disabled),
+.game .build-group > button:hover:not(:disabled) {
+  background: rgb(185 170 129 / 16%);
+}
+.game .build-bar button.active {
+  background: rgb(199 173 116 / 20%);
+  border-color: #bbab7b;
+  box-shadow: inset 0 -3px var(--gold);
+  color: var(--uy-cream);
+}
+.game .build-bar button > small,
+.game .group-marker {
+  color: #b8bcae;
+}
+.game .build-bar em,
+.game .build-hint > span {
+  color: #cbd0c1;
+}
+.game .build-hint strong,
+.game .bottom-caption {
+  color: #e0c99b;
+}
+.game .bottom-caption span:first-child {
+  color: #b9c2b5;
+}
+.game .build-hint kbd,
+.game kbd {
+  color: var(--uy-cream);
+  border-color: var(--line);
+  border-radius: 2px;
+}
+
+/* Touch/compact layouts keep existing dimensions; avoid accidental crowding. */
+@media (max-width: 650px) {
+  .game .resources {
+    gap: 7px;
+  }
+  .game .resources > span + span {
+    padding-left: 8px;
+  }
+  .game .hud-actions button {
+    border-color: transparent;
+  }
+}
