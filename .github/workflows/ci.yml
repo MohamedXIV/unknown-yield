@@ -42,3 +42,13 @@ jobs:
         run: npx vitest run apps/web/test/phase10-browser-acceptance.test.ts --reporter=verbose
         env:
           UNKNOWN_YIELD_BROWSER_ACCEPTANCE: production
+          # Review screenshots are opt-in for this reskin PR only.
+          UNKNOWN_YIELD_EVIDENCE_DIR: ${{ github.event.pull_request.number == 339 && '/tmp/unknown-yield-ui-review' || '' }}
+      - name: Upload actual game UI review screenshots
+        if: always() && github.event_name == 'pull_request' && github.event.pull_request.number == 339
+        uses: actions/upload-artifact@v4
+        with:
+          name: unknown-yield-ui-reskin-339-screenshots
+          path: /tmp/unknown-yield-ui-review/ui-*.png
+          if-no-files-found: warn
+          retention-days: 30
