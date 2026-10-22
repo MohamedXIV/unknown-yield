@@ -194,7 +194,9 @@ Do not add 3D runtime dependencies to support the asset-generation pipeline.
 
 3D blockouts/renders are source/reference assets used to create consistent 2D output.
 
-**Approved visual/fiction direction:** follow [docs/WORLD_IDENTITY.md](docs/WORLD_IDENTITY.md): physical-world Dieselpunk industrial retrofuturism, separately styled pulp/mid-century state propaganda, readable world-first menus/HUD, and truthful engineering feedback beneath satirical official copy. Do not default to glossy/rounded Atompunk, generic junkyard grit, a SaaS dashboard shell, or provisional `Varkov-45` example lore as canon. Never rename stable simulation IDs for surface-level worldbuilding.
+**Approved visual/fiction direction:** follow [docs/WORLD_IDENTITY.md](docs/WORLD_IDENTITY.md): physical-world Dieselpunk industrial retrofuturism, separately styled pulp/mid-century state propaganda, readable world-first menus/HUD, and truthful engineering feedback beneath satirical official copy.
+
+**UI/UX visual handoff:** before styling game HUD, menus, inspectors, terminal or notebook, read [docs/USER_SUPPLIED_UI_VISUAL_REFERENCES_V0_2.md](docs/USER_SUPPLIED_UI_VISUAL_REFERENCES_V0_2.md), which indexes the four distinct original user-supplied visual concepts (originals in ChatGPT Library), separates artistic cues from invented stats and records the required incremental *reskin first, preserve behavior* approach. The CSS-only PR #339 is not final user visual approval. Do not default to glossy/rounded Atompunk, generic junkyard grit, a SaaS dashboard shell, or provisional `Varkov-45` example lore as canon. Never rename stable simulation IDs for surface-level worldbuilding.
 
 ## 12. Development workflow
 
