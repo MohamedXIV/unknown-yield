@@ -364,7 +364,6 @@
    menus must remain visible and touch hit areas must not change. */
 .game.game .build-bar,
 .game.game .build-submenu {
-  position: relative;
   border: 0;
   border-radius: 0;
   clip-path: none;
