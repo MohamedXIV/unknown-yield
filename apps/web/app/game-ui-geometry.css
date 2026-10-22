@@ -345,3 +345,34 @@
   .game.game .build-bar em { font-size: 8px; }
   .game.game .field-guide h2 { font-size: 18px; }
 }
+
+
+/* Phone-sized gameplay panels are modal reading surfaces, not transparent
+   sidebar cards left under the build tray and camera controls. On narrow
+   screens the previously functional panel close button returns everything;
+   no tools or command logic are removed. */
+@media (max-width: 650px) {
+  .game.game:has(.context-panel) .build-zone,
+  .game.game:has(.context-panel) .world-zoom-controls,
+  .game.game:has(.context-panel) .field-guide,
+  .game.game:has(.context-panel) .guide-toggle {
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .game.game .context-panel {
+    left: 12px;
+    right: 12px;
+    top: 70px;
+    width: auto;
+    max-height: calc(100dvh - 84px);
+    z-index: 20;
+  }
+  .game.game .context-panel .context-body {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .game.game .context-header {
+    padding-right: 17px;
+  }
+}
