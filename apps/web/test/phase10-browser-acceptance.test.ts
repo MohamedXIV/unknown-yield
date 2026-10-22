@@ -1249,6 +1249,14 @@ browserIt(
       expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--terminal .context-body")).backgroundImage`)).toContain("archival-paper.svg");
       expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--terminal")).clipPath`)).toContain("polygon(");
       expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--terminal .context-header > span")).fontFamily`)).toContain("Bebas Neue");
+      const terminalInk = await evaluate<{ labels: string; values: string }>(`(() => ({
+        labels: getComputedStyle(document.querySelector(".context-panel--terminal .facts span")).color,
+        values: getComputedStyle(document.querySelector(".context-panel--terminal .facts b")).color,
+      }))()`);
+      expect(terminalInk).toEqual({
+        labels: "rgb(105, 69, 46)",
+        values: "rgb(48, 39, 31)",
+      });
       await captureUiReview("ui-04-desktop-terminal.png");
       await evaluate(`(() => {
         document.querySelector('button[aria-label="Company terminal"]')?.click();
