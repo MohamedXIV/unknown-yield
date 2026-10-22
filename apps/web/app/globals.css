@@ -2256,3 +2256,424 @@ kbd {
     border-color: transparent;
   }
 }
+
+
+/* Unknown Yield v0.2 material-language pass — compared against the supplied
+   original visual concepts. Work entirely inside the existing game layout.
+   Never infer worker/power/recipe values from reference artwork.
+   CSS surfaces have distinct purposes rather than one reused SaaS panel. */
+.game {
+  --uy-slate: #162124;
+  --uy-red: #903f33;
+  --uy-rust: #b26e4f;
+  --uy-paper: #e7d8b6;
+  --uy-ink-on-paper: #312a20;
+  --uy-rule: #8b7558;
+  --uy-mono: "Lucida Console", Consolas, "Courier New", monospace;
+  --uy-industrial: "Arial Narrow", "Liberation Sans Narrow", "Segoe UI", sans-serif;
+}
+.game .hud-top {
+  gap: 12px;
+}
+.game .site-mark,
+.game .resources,
+.game .hud-actions,
+.game .field-guide,
+.game .build-bar,
+.game .build-submenu,
+.game .build-hint,
+.game .context-panel--selection,
+.game .context-panel--configuration {
+  background-image: linear-gradient(155deg, rgb(30 40 42 / 57%), rgb(8 17 19 / 23%)),
+    url("/ui/pressed-metal.svg");
+  background-size: auto, 128px 128px;
+  border: 1px solid #9a897063;
+  box-shadow:
+    0 2px 0 #080e0f,
+    0 12px 25px rgb(0 0 0 / 43%),
+    inset 0 0 0 2px #060b0b8c,
+    inset 0 1px #e5d3a73b;
+}
+.game .site-mark {
+  position: relative;
+  padding: 9px 16px 9px 10px;
+  border-top: 2px solid #be825c;
+  font-family: var(--uy-industrial);
+  letter-spacing: 1.1px;
+  text-shadow: 0 1px #070b0d;
+}
+.game .site-mark:after {
+  content: "";
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  width: 3px;
+  height: calc(100% - 12px);
+  background: linear-gradient(#ba654b, #5b2c28);
+}
+.game .brand-symbol {
+  position: relative;
+  flex-shrink: 0;
+  width: 34px;
+  height: 38px;
+  font: 25px/1 Georgia, serif;
+  background: linear-gradient(145deg, #ab5540, #612c27);
+  border: 1px solid #bc9980;
+  outline: 1px solid #090e0f;
+  outline-offset: -4px;
+  color: #f8e7be;
+  box-shadow: inset 0 1px #ffc69555, 2px 2px #070e0f;
+}
+.game .site-mark small {
+  color: #d1bfa1;
+  font-family: var(--uy-mono);
+  letter-spacing: 0.55px;
+}
+.game .resources {
+  padding: 9px 13px;
+  border-top: 2px solid #9d8765;
+}
+.game .resources > span {
+  display: grid;
+  grid-template-columns: 20px minmax(30px, max-content);
+  grid-template-rows: auto auto;
+  gap: 0 8px;
+  align-items: center;
+}
+.game .resources svg {
+  grid-row: 1 / span 2;
+}
+.game .resources b {
+  font: 600 17px/1.2 var(--uy-mono);
+  color: #f5ebd5;
+}
+.game .resources small {
+  grid-column: 2;
+  color: #cec2a8;
+  letter-spacing: 0.7px;
+  font: 9px/1.25 var(--uy-mono);
+}
+.game .resources > span + span {
+  border-left: 1px solid #9c896b70;
+  padding-left: 13px;
+}
+.game .hud-actions {
+  border-top: 2px solid #9d8765;
+  padding: 6px;
+}
+.game .hud-actions button {
+  border: 1px solid #97806133;
+  background: rgb(0 0 0 / 9%);
+}
+.game .hud-actions button:hover:not(:disabled),
+.game .hud-actions button:focus-visible {
+  background: #654636;
+  border-color: #d9ad77;
+}
+.game .hud-actions button[aria-label="Game menu"] {
+  color: #ffceae;
+  border-color: #984c42b9;
+}
+.game .hud-actions i {
+  background: #b15b45;
+  color: #fff2df;
+  font-weight: 700;
+}
+.game .field-guide {
+  border-left: 3px solid #ac6248;
+  padding: 14px 16px;
+}
+.game .field-guide h2 {
+  font-family: var(--uy-industrial);
+  font-weight: 600;
+  letter-spacing: 0.1px;
+}
+.game .field-guide > small {
+  font-family: var(--uy-mono);
+  color: #e0ba83;
+}
+.game .toast {
+  border-left: 4px solid #a5cabb;
+  box-shadow: 0 8px 28px #050a0dbd, inset 0 0 0 1px #ffffff0f;
+}
+.game .toast.error {
+  border-left-color: #ef9273;
+}
+/* Inspector: precision-instrument steel. Thin recessed rules, not dashboard
+   cards. Its existing live status and controls remain the entire truth. */
+.game .context-panel--selection {
+  border-top: 3px solid #b77554;
+  border-left: 2px solid #9b8b6a;
+}
+.game .context-panel--selection .context-header {
+  background: linear-gradient(90deg, #332a27, #132023);
+  border-bottom: 1px solid #ae8355;
+  color: #f0d5a6;
+}
+.game .context-panel--selection .context-overview {
+  background: #0e191be6;
+  border-color: #85796782;
+  border-left-width: 4px;
+}
+.game .context-panel--selection .context-body h3 {
+  border-bottom: 1px solid #a68e6a63;
+  padding-bottom: 7px;
+}
+.game .context-panel--selection .facts {
+  background: #101b1cb0;
+  padding: 11px;
+  border: 1px solid #93826672;
+}
+.game .context-panel--selection .inventory {
+  border-color: #96856c75;
+  box-shadow: inset 0 0 0 1px #0009;
+}
+.game .context-panel--selection .status-line {
+  font-weight: 600;
+}
+/* The Company Terminal belongs to the state's freight and filing office:
+   printed crimson enamel heading, warm form stock, dark actionable entries. */
+.game .context-panel--terminal {
+  background: #181e1d;
+  border: 2px solid #978166;
+  border-top: 3px solid #c0845a;
+  box-shadow: 0 16px 45px #080b0dd9, inset 0 0 0 2px #111a1b;
+}
+.game .context-panel--terminal .context-header,
+.game .context-panel--menu .context-header {
+  min-height: 47px;
+  background:
+    repeating-linear-gradient(115deg, transparent 0 28px, #ffebc108 28px 29px),
+    linear-gradient(120deg, #9f4536, #522722);
+  color: #fbe5bd;
+  border-bottom: 2px solid #c29d6c;
+  font: 700 11px/1.35 var(--uy-industrial);
+  letter-spacing: 1.3px;
+}
+.game .context-panel--terminal .context-body {
+  background-image: url("/ui/archival-paper.svg");
+  color: var(--uy-ink-on-paper);
+  scrollbar-color: #836c50 #e7d8b6;
+}
+.game .context-panel--terminal .context-body h2,
+.game .context-panel--terminal .context-body h3,
+.game .context-panel--terminal .eyebrow,
+.game .context-panel--terminal .operation-label {
+  color: #4d3427;
+}
+.game .context-panel--terminal .context-body h3 {
+  padding-bottom: 7px;
+  border-bottom: 1px solid #80654c6b;
+  font: 700 12px/1.5 var(--uy-industrial);
+  letter-spacing: 0.4px;
+}
+.game .context-panel--terminal .context-overview {
+  border-color: #9e886e;
+  border-left-color: #b15b45;
+  background: #172326;
+  color: #f7edda;
+}
+.game .context-panel--terminal .context-overview > strong {
+  color: #fff2d8;
+}
+.game .context-panel--terminal .context-overview > p,
+.game .context-panel--terminal .context-overview > small {
+  color: #dbceb2;
+}
+.game .context-panel--terminal .context-tabs {
+  margin-top: -6px;
+}
+.game .context-panel--terminal .context-tabs button {
+  border-color: #826b52;
+  background: #cfbc98;
+  color: #382b21;
+  font: 600 11px/1.4 var(--uy-industrial);
+}
+.game .context-panel--terminal .context-tabs button:hover,
+.game .context-panel--terminal .context-tabs button:focus-visible {
+  background: #a3664a;
+  color: #fff7e9;
+}
+.game .context-panel--terminal .observation,
+.game .context-panel--terminal .opportunity,
+.game .context-panel--terminal .inventory,
+.game .context-panel--terminal .policy {
+  background: #162224;
+  color: #e5decf;
+  border: 1px solid #a18a69;
+  box-shadow: 2px 2px #937d5d4d;
+  padding: 10px;
+  margin: 9px 0;
+}
+.game .context-panel--terminal .observation h3,
+.game .context-panel--terminal .observation p,
+.game .context-panel--terminal .policy small,
+.game .context-panel--terminal .observation > span,
+.game .context-panel--terminal .opportunity,
+.game .context-panel--terminal .inventory {
+  color: #e7dfc7;
+}
+.game .context-panel--terminal .context-body .hint,
+.game .context-panel--terminal .muted,
+.game .context-panel--terminal .context-body > p,
+.game .context-panel--terminal .context-body h3 small {
+  color: #554737;
+}
+.game .context-panel--terminal .observation > small {
+  color: #e7b57d;
+}
+.game .context-panel--terminal .observation p {
+  line-height: 1.55;
+}
+.game .context-panel--terminal .milestone {
+  background: #f2e1bd;
+  color: #663b2c;
+  border-color: #a78c68;
+}
+.game .context-panel--terminal .primary {
+  background: #994838;
+  border: 1px solid #dcab83;
+  color: #fff4dc;
+}
+/* The Field Notebook: ink on actual paper, not another charcoal app. The
+   evidence count and hidden-knowledge rules remain wholly unchanged. */
+.game .context-panel--knowledge {
+  background: #ead9b5;
+  color: #342b22;
+  border: 2px solid #b59768;
+  border-left: 6px solid #644534;
+  box-shadow: 0 16px 42px #020609c9, inset 0 0 0 2px #f7e8c9;
+}
+.game .context-panel--knowledge .context-header {
+  background: linear-gradient(100deg, #79503d, #a47b54);
+  color: #fff0d2;
+  border-bottom: 2px solid #593e2b;
+  font: 700 11px/1.3 var(--uy-industrial);
+}
+.game .context-panel--knowledge .context-body {
+  background-image: url("/ui/archival-paper.svg");
+  color: #31291e;
+  scrollbar-color: #917854 #dfd0ac;
+}
+.game .context-panel--knowledge .context-body h2,
+.game .context-panel--knowledge .context-body h3,
+.game .context-panel--knowledge .eyebrow {
+  color: #513a28;
+}
+.game .context-panel--knowledge .context-body h3 {
+  border-bottom: 1px solid #92765775;
+  padding-bottom: 7px;
+  font: 700 12px/1.5 var(--uy-industrial);
+}
+.game .context-panel--knowledge .context-overview {
+  background: #20302e;
+  color: #f0e4c8;
+  border: 1px solid #8e7455;
+  border-left: 4px solid #b79562;
+}
+.game .context-panel--knowledge .context-overview > strong {
+  color: #f9e9cd;
+}
+.game .context-panel--knowledge .context-overview > p,
+.game .context-panel--knowledge .context-overview > small {
+  color: #d8d6ba;
+}
+.game .context-panel--knowledge .context-tabs button {
+  background: #d2bc93;
+  border-color: #987d59;
+  color: #392b1b;
+  font: 600 11px var(--uy-industrial);
+}
+.game .context-panel--knowledge .context-tabs button.active,
+.game .context-panel--knowledge .context-tabs button[aria-pressed="true"] {
+  background: #8d4b35;
+  border-color: #5b2b23;
+  color: #fff0d2;
+}
+.game .context-panel--knowledge .observation {
+  border: 1px solid #ac916a;
+  border-left: 3px solid #a7664c;
+  background: #f0e2c4b3;
+  padding: 10px;
+  margin: 9px 0;
+}
+.game .context-panel--knowledge .observation > small {
+  color: #7b3b2b;
+}
+.game .context-panel--knowledge .observation h3 {
+  color: #463020;
+  border: 0;
+  padding: 0;
+}
+.game .context-panel--knowledge .observation p,
+.game .context-panel--knowledge .observation > span,
+.game .context-panel--knowledge .hint,
+.game .context-panel--knowledge .muted,
+.game .context-panel--knowledge .context-body > p {
+  color: #56432f;
+}
+.game .context-panel--knowledge .inventory,
+.game .context-panel--knowledge .policy {
+  background: #f5e8cbbd;
+  border-color: #b09979;
+  color: #453526;
+}
+.game .context-panel--knowledge .inventory b {
+  color: #5a372c;
+}
+/* The expedition menu and game configuration remain the SAME functional
+   side-panel controls; the menu gains a restrained official letterhead. */
+.game .context-panel--menu {
+  border: 2px solid #a78b62;
+  background: #162022 url("/ui/pressed-metal.svg") repeat;
+  background-size: 128px 128px;
+}
+.game .context-panel--menu .context-body h2 {
+  font: 700 19px/1.25 var(--uy-industrial);
+  letter-spacing: 0.2px;
+}
+.game .context-panel--menu .controls-list {
+  border: 1px solid #a38b696e;
+  padding: 10px;
+}
+.game .context-panel--menu .primary {
+  background: #a95441;
+  color: #fff5df;
+  border: 1px solid #d1aa80;
+}
+.game .build-bar {
+  border-top: 2px solid #b48b55;
+}
+.game .build-bar button {
+  border: 1px solid #9c855633;
+  background: linear-gradient(155deg, #a39a6e0e, transparent 65%);
+}
+.game .build-bar button.active,
+.game .build-submenu button[aria-pressed="true"] {
+  box-shadow: inset 0 -3px #e1b878, inset 0 0 0 1px #debc794f;
+  background: #a55e383b;
+  color: #fff3d5;
+}
+.game .build-group > button.group-primary {
+  border-right: 2px solid #ab815571;
+}
+.game .build-bar button > span {
+  font-family: var(--uy-industrial);
+  font-size: 11px;
+}
+.game .build-hint {
+  border-left: 3px solid #b78351;
+}
+@media (max-width: 650px) {
+  .game .hud-top { gap: 5px; }
+  .game .resources { padding: 8px; }
+  .game .resources > span { grid-template-columns: 16px minmax(22px, max-content); gap: 0 4px; }
+  .game .resources b { font-size: 13px; }
+  .game .resources small { font-size: 8px; }
+  .game .resources > span + span { padding-left: 5px; }
+  .game .hud-actions { padding: 4px; }
+  .game .hud-actions button { border-color: transparent; }
+  .game .context-panel--terminal .context-body,
+  .game .context-panel--knowledge .context-body { padding: 14px; }
+  .game .build-bar button > span { font-size: 9px; }
+}
