@@ -977,6 +977,31 @@ browserIt(
         });
       };
 
+      // Retain screenshot evidence only in review-specific CI runs.
+      const reviewDirectory = process.env.UNKNOWN_YIELD_EVIDENCE_DIR;
+      const captureUiReview = async (name: string) => {
+        if (!reviewDirectory) return;
+        await sleep(180); // let the Phaser/DOM render settle
+        const response = await call("Page.captureScreenshot", {
+          format: "png",
+          captureBeyondViewport: false,
+        });
+        const data = Buffer.from(
+          (response as unknown as { data: string }).data,
+          "base64",
+        );
+        mkdirSync(reviewDirectory, { recursive: true });
+        writeFileSync(join(reviewDirectory, name), data);
+        console.log(
+          "UI_REVIEW_SCREENSHOT " +
+            JSON.stringify({
+              name,
+              bytes: data.length,
+              sha256: createHash("sha256").update(data).digest("hex"),
+            }),
+        );
+      };
+
       // Subscribe before first navigation to capture real game exceptions.
       await call("Page.enable");
       await call("Runtime.enable");
@@ -990,6 +1015,9 @@ browserIt(
         `document.querySelector('[data-onboarding-beat="camera-build"]')
           ?.textContent?.includes("Read the site before you automate it.") === true`,
       );
+
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".brand-symbol")).backgroundImage`)).toContain("directorate-seal.svg");
+      await captureUiReview("ui-01-desktop-field-brief.png");
 
       const initialState = await evaluate<{
         canvas: boolean;
@@ -1034,6 +1062,14 @@ browserIt(
         document.querySelector('button[aria-label="Close field brief"]')?.click();
         return true;
       })()`);
+
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".site-mark")).clipPath`)).toContain("polygon(");
+      // Cartridge controls keep their full hit rectangles inside the shaped mounting plate.
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".build-bar")).clipPath`)).toBe("none");
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".build-bar"), "::before").clipPath`)).toContain("polygon(");
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".site-mark > div")).fontFamily`)).toContain("Bebas Neue");
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".resources b")).fontFamily`)).toContain("IBM Plex Mono");
+      await captureUiReview("ui-02-desktop-hud.png");
 
       await pressKey("5", "Digit5", 53);
       await waitForExpression(
@@ -1184,6 +1220,14 @@ browserIt(
       expect(initialNotebook).not.toContain("Magnetic ceramic");
       expect(initialNotebook).not.toContain("Catalyst powder");
       expect(initialNotebook).toContain("EVIDENCE STATUS");
+      expect(await evaluate<string>(`document.querySelector(".context-panel")?.getAttribute("data-panel-kind") ?? ""`)).toBe("knowledge");
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--knowledge .context-body")).backgroundImage`)).toContain("archival-paper.svg");
+      // The clickable panel is NEVER cropped; only the decorative metal shell is chamfered.
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--knowledge")).clipPath`)).toBe("none");
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--knowledge"), "::before").clipPath`)).toContain("polygon(");
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--knowledge"), "::after").clipPath`)).toContain("polygon(");
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--knowledge .context-header > span")).fontFamily`)).toContain("Georgia");
+      await captureUiReview("ui-03-desktop-notebook.png");
       await evaluate(`(() => {
         [...document.querySelectorAll('nav[aria-label="Notebook filters"] button')]
           .find((button) => button.textContent === "Open")
@@ -1207,6 +1251,22 @@ browserIt(
           !!document.querySelector("#terminal-shipment") &&
           !!document.querySelector("#terminal-company")`,
       );
+      expect(await evaluate<string>(`document.querySelector(".context-panel")?.getAttribute("data-panel-kind") ?? ""`)).toBe("terminal");
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--terminal .context-body")).backgroundImage`)).toContain("archival-paper.svg");
+      // The clickable panel is NEVER cropped; only the decorative metal shell is chamfered.
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--terminal")).clipPath`)).toBe("none");
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--terminal"), "::before").clipPath`)).toContain("polygon(");
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--terminal"), "::after").clipPath`)).toContain("polygon(");
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--terminal .context-header > span")).fontFamily`)).toContain("Bebas Neue");
+      const terminalInk = await evaluate<{ labels: string; values: string }>(`(() => ({
+        labels: getComputedStyle(document.querySelector(".context-panel--terminal .facts span")).color,
+        values: getComputedStyle(document.querySelector(".context-panel--terminal .facts b")).color,
+      }))()`);
+      expect(terminalInk).toEqual({
+        labels: "rgb(105, 69, 46)",
+        values: "rgb(48, 39, 31)",
+      });
+      await captureUiReview("ui-04-desktop-terminal.png");
       await evaluate(`(() => {
         document.querySelector('button[aria-label="Company terminal"]')?.click();
         return true;
@@ -1288,6 +1348,9 @@ browserIt(
         `[...document.querySelectorAll("button")]
           .some((button) => button.textContent?.includes("Save world"))`,
       );
+      expect(await evaluate<string>(`document.querySelector(".context-panel")?.getAttribute("data-panel-kind") ?? ""`)).toBe("menu");
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--menu .context-body"), "::before").backgroundImage`)).toContain("industrial-proclamation.svg");
+      await captureUiReview("ui-05-desktop-expedition-menu.png");
       await evaluate(`(() => {
         [...document.querySelectorAll("button")]
           .find((button) => button.textContent?.includes("Save world"))
@@ -1618,6 +1681,13 @@ browserIt(
       await waitForExpression(
         `document.querySelector(".context-panel h2")?.textContent === "Depot"`,
       );
+      expect(await evaluate<string>(`document.querySelector(".context-panel")?.getAttribute("data-panel-kind") ?? ""`)).toBe("selection");
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--selection .context-body")).backgroundImage`)).toContain("engineering-schematic.svg");
+      // The clickable panel is NEVER cropped; only the decorative metal shell is chamfered.
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--selection")).clipPath`)).toBe("none");
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--selection"), "::before").clipPath`)).toContain("polygon(");
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--selection"), "::after").clipPath`)).toContain("polygon(");
+      await captureUiReview("ui-07-desktop-depot-inspector.png");
       const loadedDepotText = await evaluate<string>(
         `document.querySelector(".context-panel")?.textContent?.replace(/\\s+/g, " ") ?? ""`,
       );
@@ -2563,6 +2633,7 @@ browserIt(
       await clickCell(52, 40);
       await waitForExpression(`document.querySelector('.context-panel') !== null`);
       await openSelectedFactory();
+      await captureUiReview("ui-08-desktop-factory-inspector.png");
       await evaluate<boolean>(`(() => { document.querySelector('.context-panel button[aria-label="Close panel"]')?.click(); return true; })()`);
       await waitForExpression(`document.querySelector('.context-panel') === null`);
       await evaluate<boolean>(`(() => { [...document.querySelectorAll('nav[aria-label="Build tools"] button')].find((button) => button.getAttribute("aria-label") === "Dismantle")?.click(); return true; })()`);
@@ -2657,22 +2728,6 @@ browserIt(
       expect(Math.hypot(cameraAfterTouchPan.scrollX - cameraBeforeTouchPan.scrollX, cameraAfterTouchPan.scrollY - cameraBeforeTouchPan.scrollY)).toBeGreaterThan(0);
       expect(await evaluate<boolean>(`document.querySelector('[data-testid="dismantle-review"]') === null`)).toBe(true);
 
-      const center = canvasCenter;
-      const cameraBeforePinch = await evaluate<{ zoom: number }>(`window.__UNKNOWN_YIELD_CAMERA__()`);
-      await sendTouch("touchStart", [
-        { x: center.x - 35, y: center.y, id: 2 },
-        { x: center.x + 35, y: center.y, id: 3 },
-      ]);
-      await sendTouch("touchMove", [
-        { x: center.x - 65, y: center.y, id: 2 },
-        { x: center.x + 65, y: center.y, id: 3 },
-      ]);
-      await sendTouch("touchEnd", []);
-      await evaluate<void>(`new Promise((resolve) => setTimeout(resolve, 350))`);
-      const cameraAfterPinch = await evaluate<{ zoom: number }>(`window.__UNKNOWN_YIELD_CAMERA__()`);
-      expect(Math.abs(cameraAfterPinch.zoom - cameraBeforePinch.zoom)).toBeGreaterThan(0.001);
-      expect(await evaluate<boolean>(`document.querySelector('[data-testid="dismantle-review"]') === null`)).toBe(true);
-
       const tapSelector = async (selector: string) => {
         const point = await evaluate<{ x: number; y: number }>(`(() => {
           const selector = ${JSON.stringify(selector)};
@@ -2750,6 +2805,74 @@ browserIt(
       const p5AfterTouchConfirm = await evaluate<Save>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
       expect(p5AfterTouchConfirm.belts["36,30"]).toBeUndefined();
       expect(p5AfterTouchConfirm.belts["37,30"]).toBeUndefined();
+
+      // Zoom acceptance runs AFTER the armed dismantle-touch path. Native
+      // multi-pointer emulation can leave Chromium/Phaser input bookkeeping
+      // in a transient state during the *next* synthetic touchCancel.
+      // Preserve both real tests without cross-contaminating their order.
+      // The genuine area-touch cancellation and commit are verified first.
+      const center = canvasCenter;
+      const cameraBeforePinch = await evaluate<{ zoom: number }>(`window.__UNKNOWN_YIELD_CAMERA__()`);
+      const pinchPreflight = await evaluate<{
+        center: string;
+        left: string;
+        right: string;
+        overlay: string | null;
+        canvasTouchAction: string;
+        uiFont: string;
+      }>(`(() => {
+        const c = document.querySelector("canvas");
+        const r = c.getBoundingClientRect();
+        const cx = r.left + r.width / 2;
+        const cy = r.top + r.height / 2;
+        const classify = (x, y) => {
+          const e = document.elementFromPoint(x, y);
+          return (e?.tagName || "NULL") + "." + (e?.className?.baseVal ?? e?.className ?? "");
+        };
+        return {
+          center: classify(cx, cy),
+          left: classify(cx - 35, cy),
+          right: classify(cx + 35, cy),
+          overlay: document.querySelector(".context-panel")?.getAttribute("data-panel-kind") ?? null,
+          canvasTouchAction: getComputedStyle(c).touchAction,
+          uiFont: getComputedStyle(document.querySelector(".game")).fontFamily,
+        };
+      })()`);
+      console.log("UI_PINCH_PREFLIGHT " + JSON.stringify({ cameraBeforePinch, ...pinchPreflight }));
+      await captureUiReview("ui-11-mobile-pinch-preflight.png");
+      // Each pair must be observed in separate real browser frames.
+      // An instantaneous two-pointer jump can coalesce into no pointermove
+      // from the Phaser input manager even though a human pinch works.
+      // Keep asserting a real zoom change; do not bypass the gesture.
+      // A real pinch begins with a primary contact; the second finger joins
+      // later. Chromium's simultaneous two-point touchStart can synthesize a
+      // stray one-finger pointer-up under an armed area tool.
+      await sendTouch("touchStart", [
+        { x: center.x - 35, y: center.y, id: 2 },
+      ]);
+      await sleep(60);
+      await sendTouch("touchStart", [
+        { x: center.x - 35, y: center.y, id: 2 },
+        { x: center.x + 35, y: center.y, id: 3 },
+      ]);
+      await sleep(60);
+      for (const radius of [45, 55, 65]) {
+        await sendTouch("touchMove", [
+          { x: center.x - radius, y: center.y, id: 2 },
+          { x: center.x + radius, y: center.y, id: 3 },
+        ]);
+        await sleep(50);
+      }
+      await sendTouch("touchEnd", []);
+      await evaluate<void>(`new Promise((resolve) => setTimeout(resolve, 350))`);
+      const cameraAfterPinch = await evaluate<{ zoom: number }>(`window.__UNKNOWN_YIELD_CAMERA__()`);
+      console.log("UI_PINCH_RESULT " + JSON.stringify({ cameraBeforePinch, cameraAfterPinch }));
+      console.log("UI_PINCH_REVIEW " + JSON.stringify(await evaluate<string>(
+        `document.querySelector('[data-testid="dismantle-review"]')?.textContent ?? ""`,
+      )));
+      expect(Math.abs(cameraAfterPinch.zoom - cameraBeforePinch.zoom)).toBeGreaterThan(0.001);
+      expect(await evaluate<boolean>(`document.querySelector('[data-testid="dismantle-review"]') === null`)).toBe(true);
+
       await call("Emulation.setTouchEmulationEnabled", { enabled: false });
       await call("Emulation.setDeviceMetricsOverride", {
         width: 1440,
@@ -3791,6 +3914,35 @@ browserIt(
             .touchAction`,
         ),
       ).toBe("none");
+
+      await captureUiReview("ui-06-mobile-hud.png");
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Knowledge notebook"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(`document.querySelector(".context-panel")?.getAttribute("data-panel-kind") === "knowledge"`);
+      const focusedMobilePanel = await evaluate<{ dock: string; zoom: string; width: number }>(`(() => ({
+        dock: getComputedStyle(document.querySelector(".build-zone")).visibility,
+        zoom: getComputedStyle(document.querySelector(".world-zoom-controls")).visibility,
+        width: document.querySelector(".context-panel").getBoundingClientRect().width,
+      }))()`);
+      expect(focusedMobilePanel.dock).toBe("hidden");
+      expect(focusedMobilePanel.zoom).toBe("hidden");
+      expect(focusedMobilePanel.width).toBeGreaterThan(350);
+      await captureUiReview("ui-09-mobile-notebook.png");
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Close panel"]')?.click();
+        document.querySelector('button[aria-label="Company terminal"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(`document.querySelector(".context-panel")?.getAttribute("data-panel-kind") === "terminal"`);
+      await captureUiReview("ui-10-mobile-terminal.png");
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Close panel"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(`document.querySelector(".context-panel") === null`);
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".build-zone")).visibility`)).toBe("visible");
 
       const touchPanBefore = await evaluate<{
         scrollX: number;

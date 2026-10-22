@@ -1,0 +1,465 @@
+@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap");
+
+/* V0.4 / CHAMFERED GAME INTERFACE
+   The image references use fabricated instrument silhouettes, not rectangular
+   browser panels with distressed textures. This pass replaces that geometry,
+   along with the entire game-only type hierarchy, without moving gameplay
+   controls or changing the public snapshot. Original references:
+   docs/USER_SUPPLIED_UI_VISUAL_REFERENCES_V0_2.md
+
+   Double-scoped .game.game selectors intentionally outrank earlier game-only
+   skin rules regardless of stylesheet chunk ordering in the static export.
+   Google Fonts load on demand over HTTPS; system-font fallbacks remain legible
+   when offline. No proprietary font files or network calls in simulation. */
+
+.game.game {
+  --ui-display: "Bebas Neue", Impact, "Arial Narrow", sans-serif;
+  --ui-operation: "Barlow Condensed", "Arial Narrow", "Liberation Sans Narrow", sans-serif;
+  --ui-measure: "IBM Plex Mono", Consolas, "Courier New", monospace;
+  --ui-ledger: Georgia, "Times New Roman", serif;
+  --ui-cut: 12px;
+  font-family: var(--ui-operation);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: .05px;
+}
+
+/* V0.5 / FORMED PLATE CONSTRUCTION
+   NEVER clip the panel root: clipping the element flattened the metal rim,
+   amputated its shadow and made the corner look like a cropped web card.
+   The two purely decorative pseudo-elements are an *outer fabricated plate*
+   and an inset chrome/bezel seam. Actual React controls remain unclipped.
+   Root padding keeps the header, paper and scrollable body clear of the cuts. */
+.game.game .context-panel {
+  --ui-cut: 20px;
+  --ui-rim: 9px;
+  --ui-plate: #ad956e;
+  clip-path: none;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  padding: var(--ui-rim);
+  overflow: visible;
+  isolation: isolate;
+  filter: drop-shadow(0 2px 0 #070d0e)
+    drop-shadow(0 14px 20px rgb(0 0 0 / 72%));
+}
+.game.game .context-panel::before,
+.game.game .context-panel::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+.game.game .context-panel::before {
+  inset: 0;
+  z-index: -1;
+  clip-path: polygon(
+    var(--ui-cut) 0,
+    calc(100% - var(--ui-cut)) 0,
+    100% var(--ui-cut),
+    100% calc(100% - var(--ui-cut)),
+    calc(100% - var(--ui-cut)) 100%,
+    var(--ui-cut) 100%,
+    0 calc(100% - var(--ui-cut)),
+    0 var(--ui-cut)
+  );
+  background:
+    linear-gradient(90deg, #f0dfba69 0, transparent 10%, transparent 88%, #0c1516a8 100%),
+    repeating-linear-gradient(95deg, #0000 0 18px, #10171821 18px 19px),
+    linear-gradient(153deg, #f0d9a5, var(--ui-plate) 19%, #6b614f 43%, #292f2e 55%, #b99664 81%, #554737);
+}
+.game.game .context-panel::after {
+  /* This is a bezel seam laid ON TOP of the body, not a border on a clipped
+     container. The full outer steel plate remains visible behind its corners. */
+  inset: calc(var(--ui-rim) - 2px);
+  z-index: 7;
+  padding: 3px;
+  clip-path: polygon(
+    calc(var(--ui-cut) - var(--ui-rim)) 0,
+    calc(100% - var(--ui-cut) + var(--ui-rim)) 0,
+    100% calc(var(--ui-cut) - var(--ui-rim)),
+    100% calc(100% - var(--ui-cut) + var(--ui-rim)),
+    calc(100% - var(--ui-cut) + var(--ui-rim)) 100%,
+    calc(var(--ui-cut) - var(--ui-rim)) 100%,
+    0 calc(100% - var(--ui-cut) + var(--ui-rim)),
+    0 calc(var(--ui-cut) - var(--ui-rim))
+  );
+  background: linear-gradient(145deg, #fff0c9, #877053 32%, #252c2c 63%, #d4b17e);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+.game.game .context-panel--selection { --ui-cut: 20px; --ui-rim: 9px; --ui-plate: #969077; }
+.game.game .context-panel--terminal { --ui-cut: 24px; --ui-rim: 10px; --ui-plate: #bc9261; }
+.game.game .context-panel--knowledge { --ui-cut: 21px; --ui-rim: 10px; --ui-plate: #927556; }
+.game.game .context-panel--menu { --ui-cut: 23px; --ui-rim: 9px; --ui-plate: #a87552; }
+.game.game .context-panel--configuration { --ui-cut: 16px; --ui-rim: 8px; --ui-plate: #a39173; }
+
+/* The pre-existing hardware has real mounting points on the new plate lip.
+   Keep them clear of the close control, the paper and the scrollbar. */
+.game.game .context-screw { right: 2px; width: 9px; height: 9px; }
+.game.game .context-screw::before { top: 3px; width: 6px; }
+.game.game .context-screw--upper { top: 63px; }
+.game.game .context-screw--lower { bottom: 22px; }
+
+/* Inset reading surfaces fill the centre; they do not determine the outer
+   contour. Panel-specific steel, archival stock and printing remain intact. */
+.game.game .context-body {
+  min-height: 0;
+  background-color: #0f1a1b;
+  border-bottom: 2px solid #1e2928;
+}
+.game.game .context-panel--knowledge .context-body,
+.game.game .context-panel--terminal .context-body {
+  background-color: #e8d8b7;
+  border-bottom-color: #856b4c;
+}
+.game.game .context-panel--terminal .context-header { padding-left: 62px; }
+.game.game .context-panel--menu .context-header { padding-left: 59px; }
+
+.game.game .context-header {
+  padding: 8px 18px;
+  min-height: 59px;
+  flex-shrink: 0;
+  gap: 5px;
+  border: 0;
+  border-bottom: 3px solid #a88562;
+}
+.game.game .context-header > span:first-child {
+  min-width: 0;
+  font: 400 28px/1 var(--ui-display);
+  letter-spacing: 1px;
+  overflow-wrap: anywhere;
+  text-shadow: 1px 2px 0 #0e1516;
+}
+.game.game .context-header-stamp {
+  font: 600 8px/1.15 var(--ui-measure);
+  letter-spacing: -.25px;
+  max-width: 40%;
+}
+.game.game .context-header button {
+  height: 29px;
+  width: 29px;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  font: 22px/1 var(--ui-operation);
+  border: 1px solid #c7a078;
+  background: linear-gradient(#482e2b, #141c1e);
+  color: #f5debc;
+  clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px);
+}
+.game.game .context-body {
+  font: 500 14px/1.45 var(--ui-operation);
+  letter-spacing: .1px;
+}
+.game.game .context-body h2 {
+  font: 400 29px/1.08 var(--ui-display);
+  letter-spacing: .55px;
+}
+.game.game .context-body h3 {
+  font: 700 15px/1.2 var(--ui-operation);
+  letter-spacing: .45px;
+}
+.game.game .context-body p,
+.game.game .context-body .hint,
+.game.game .context-body .muted,
+.game.game .observation p {
+  font-size: 13px;
+  line-height: 1.47;
+}
+.game.game .context-body .eyebrow,
+.game.game .context-overview > small,
+.game.game .observation > small,
+.game.game .context-header small {
+  font: 600 10px/1.4 var(--ui-measure);
+  letter-spacing: .2px;
+}
+.game.game .context-overview > strong {
+  font: 700 18px/1.13 var(--ui-operation);
+  letter-spacing: .1px;
+}
+.game.game .context-overview > p { font-size: 13px; }
+.game.game .facts b,
+.game.game .inventory b,
+.game.game .policy input,
+.game.game .resources b,
+.game.game .operation-label b,
+.game.game .progress-track,
+.game.game .status-line,
+.game.game .context-body output {
+  font-family: var(--ui-measure);
+  font-variant-numeric: tabular-nums;
+}
+.game.game .context-body button,
+.game.game .context-tabs button {
+  font-family: var(--ui-operation);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: .1px;
+}
+
+/* Shaped command buttons and paper tabs are really clipped, rather than
+   "rounded rectangle" components with new gradients. */
+.game.game .context-body .primary,
+.game.game .context-body .secondary,
+.game.game .context-body .danger,
+.game.game .context-body .opportunity button,
+.game.game .context-body .observation button,
+.game.game .context-tabs button,
+.game.game .build-bar button,
+.game.game .build-submenu button {
+  border-radius: 0;
+  clip-path: polygon(7px 0, calc(100% - 7px) 0, 100% 7px, 100% calc(100% - 7px), calc(100% - 7px) 100%, 7px 100%, 0 calc(100% - 7px), 0 7px);
+}
+.game.game .context-tabs { gap: 3px; }
+.game.game .context-tabs button {
+  padding: 8px 11px;
+  background: linear-gradient(#3e4240, #181f22);
+  border: 1px solid #a38a61;
+  color: #f0dec0;
+}
+.game.game .context-tabs button.active,
+.game.game .context-tabs button[aria-pressed="true"] {
+  color: #fff2cf;
+  background: linear-gradient(#985b42, #592e29);
+  border-color: #edbe85;
+}
+
+/* Three physical duties, three readable alphabets, not the same card pattern. */
+.game.game .context-panel--selection .context-header > span:first-child {
+  font-size: 27px;
+}
+.game.game .context-panel--selection .context-body h2 {
+  font: 400 29px/1.1 var(--ui-display);
+}
+.game.game .context-panel--selection .context-overview > strong {
+  font: 700 18px/1.15 var(--ui-operation);
+}
+.game.game .context-panel--selection .inventory {
+  clip-path: polygon(9px 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%, 0 9px);
+  border-radius: 0;
+  border: 1px solid #8f7757;
+  background: #0b1718d9;
+}
+.game.game .context-panel--selection .context-body h3 {
+  font: 700 15px/1.15 var(--ui-operation);
+  letter-spacing: 1px;
+}
+.game.game .context-panel--selection .context-body h3:before {
+  width: 6px;
+  height: 6px;
+}
+.game.game .context-panel--terminal .context-header > span:first-child {
+  font-size: 28px;
+}
+.game.game .context-panel--terminal .context-body h3 {
+  font: 700 16px/1.2 var(--ui-operation);
+  letter-spacing: .5px;
+}
+.game.game .context-panel--terminal .context-tabs button {
+  font: 700 13px/1.15 var(--ui-operation);
+  color: #352a20;
+  background: #cabb9b;
+}
+.game.game .context-panel--terminal .observation {
+  border-radius: 0;
+  background: #efe0bf;
+  clip-path: polygon(9px 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%, 0 9px);
+}
+.game.game .context-panel--knowledge .context-header > span:first-child {
+  font: 700 18px/1.1 var(--ui-ledger);
+  letter-spacing: -.25px;
+}
+.game.game .context-panel--knowledge .context-body h2,
+.game.game .context-panel--knowledge .observation h3 {
+  font-family: var(--ui-ledger);
+}
+.game.game .context-panel--knowledge .context-body h3 {
+  font-family: var(--ui-ledger);
+  font-weight: 700;
+}
+.game.game .context-panel--knowledge .context-tabs button {
+  font: 700 12px/1.2 var(--ui-ledger);
+  color: #382719;
+  background: #dec7a2;
+  border-color: #95704e;
+}
+.game.game .context-panel--knowledge .context-body {
+  font-family: var(--ui-ledger);
+  font-size: 13px;
+}
+.game.game .context-panel--knowledge .observation p {
+  font-family: var(--ui-ledger);
+  font-size: 13px;
+}
+.game.game .context-panel--knowledge .context-overview {
+  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+}
+.game.game .context-panel--menu .context-header > span:first-child {
+  font: 400 29px/1 var(--ui-display);
+}
+.game.game .context-panel--menu .context-body::before {
+  font: 400 22px/1 var(--ui-display);
+  letter-spacing: 1.2px;
+}
+
+
+/* Paper-form contrast: the Terminal facts strip must NOT inherit the default
+   global light-on-charcoal metric colors while sitting on warm paper. */
+.game.game .context-panel--terminal .facts {
+  background: repeating-linear-gradient(0deg, #a7875b0a 0 1px, transparent 1px 26px);
+  border-block: 2px solid #9c7852;
+  padding: 11px 7px;
+  gap: 16px;
+}
+.game.game .context-panel--terminal .facts span {
+  color: #69452e;
+  font: 700 12px/1.2 var(--ui-operation);
+  flex: 1;
+}
+.game.game .context-panel--terminal .facts b {
+  color: #30271f;
+  font: 600 18px/1.25 var(--ui-measure);
+  margin-top: 5px;
+}
+
+/* World-first top command surfaces and building cartridges share the
+   manufactured frame vocabulary, but never become a floating dashboard. */
+.game.game .site-mark,
+.game.game .resources,
+.game.game .hud-actions,
+.game.game .field-guide,
+.game.game .guide-toggle,
+.game.game .build-hint,
+.game.game .toast {
+  border-radius: 0;
+  clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px);
+}
+.game.game .site-mark > div {
+  font: 400 22px/1 var(--ui-display);
+  letter-spacing: .8px;
+}
+.game.game .site-mark > div small {
+  font: 500 9px/1.4 var(--ui-measure);
+  letter-spacing: .15px;
+}
+.game.game .resources b { font: 600 17px/1.05 var(--ui-measure); }
+.game.game .resources small { font: 700 11px/1 var(--ui-operation); letter-spacing: .5px; }
+.game.game .hud-actions button {
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+  border-radius: 0;
+}
+.game.game .field-guide h2 { font: 700 22px/1.05 var(--ui-operation); }
+.game.game .field-guide > small { font: 600 9px/1.25 var(--ui-measure); }
+.game.game .field-guide p { font: 500 13px/1.42 var(--ui-operation); }
+.game.game .field-guide .guide-body { font: 500 13px/1.42 var(--ui-operation); }
+/* The command tray also needs a real shell: its visible face is inset
+   inside a continuous steel mounting lip. Do not clip its root: pop-out group
+   menus must remain visible and touch hit areas must not change. */
+.game.game .build-bar,
+.game.game .build-submenu {
+  border: 0;
+  border-radius: 0;
+  clip-path: none;
+  background: none;
+  box-shadow: none;
+  isolation: isolate;
+  overflow: visible;
+  filter: drop-shadow(0 8px 13px rgb(0 0 0 / 70%));
+}
+.game.game .build-bar::before,
+.game.game .build-submenu::before,
+.game.game .build-bar::after,
+.game.game .build-submenu::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  z-index: -1;
+}
+.game.game .build-bar::before,
+.game.game .build-submenu::before {
+  inset: -5px;
+  clip-path: polygon(17px 0, calc(100% - 17px) 0, 100% 17px, 100% calc(100% - 17px), calc(100% - 17px) 100%, 17px 100%, 0 calc(100% - 17px), 0 17px);
+  background: linear-gradient(145deg, #e0c390, #947c5c 17%, #353e3b 55%, #bb9363 84%, #41352d);
+}
+.game.game .build-bar::after,
+.game.game .build-submenu::after {
+  inset: -1px;
+  clip-path: polygon(13px 0, calc(100% - 13px) 0, 100% 13px, 100% calc(100% - 13px), calc(100% - 13px) 100%, 13px 100%, 0 calc(100% - 13px), 0 13px);
+  background:
+    linear-gradient(165deg, #2c3736f4, #121c1eeb 80%),
+    url("/ui/pressed-metal.svg") repeat;
+  background-size: auto, 128px 128px;
+  box-shadow: inset 0 0 0 2px #b99e744a, inset 0 0 0 5px #080d0e;
+}
+.game.game .build-bar button > span { font: 700 13px/1 var(--ui-operation); }
+.game.game .build-bar em,
+.game.game .group-marker { font: 500 10px/1 var(--ui-measure); }
+.game.game .build-hint strong { font: 700 16px/1 var(--ui-operation); }
+.game.game .build-hint > span { font: 500 13px/1.2 var(--ui-operation); }
+.game.game .status-line { font-size: 11px; }
+
+/* Keep handheld interaction and reading usable. The frame chamfers become
+   shallow but retain their silhouette and NEVER change tap-target dimensions. */
+@media (max-width: 650px) {
+  .game.game .context-panel { --ui-cut: 13px; --ui-rim: 7px; }
+  .game.game .context-panel--knowledge { --ui-cut: 15px; --ui-rim: 7px; }
+  .game.game .context-panel--terminal,
+  .game.game .context-panel--menu { --ui-cut: 15px; --ui-rim: 7px; }
+  .game.game .context-panel--configuration { --ui-cut: 12px; --ui-rim: 6px; }
+  .game.game .context-screw { width: 8px; height: 8px; }
+  .game.game .context-screw--upper { top: 49px; }
+  .game.game .context-screw--lower { bottom: 17px; }
+  .game.game .context-panel--terminal .context-header,
+  .game.game .context-panel--menu .context-header { padding-left: 51px; }
+  .game.game .context-header { min-height: 45px; padding: 7px 13px; }
+  .game.game .context-header > span:first-child { font-size: 22px; }
+  .game.game .context-panel--terminal .context-header > span:first-child { font-size: 22px; }
+  .game.game .context-panel--knowledge .context-header > span:first-child { font-size: 16px; }
+  .game.game .context-header button { width: 27px; height: 27px; }
+  .game.game .context-body { font-size: 13px; }
+  .game.game .site-mark { display: none; }
+  .game.game .resources b { font-size: 13px; }
+  .game.game .resources small { font-size: 9px; }
+  .game.game .hud-actions button { width: 29px; height: 30px; }
+  .game.game .build-bar button > span { font-size: 11px; }
+  .game.game .build-bar em { font-size: 8px; }
+  .game.game .field-guide h2 { font-size: 18px; }
+}
+
+
+/* Phone-sized gameplay panels are modal reading surfaces, not transparent
+   sidebar cards left under the build tray and camera controls. On narrow
+   screens the previously functional panel close button returns everything;
+   no tools or command logic are removed. */
+@media (max-width: 650px) {
+  .game.game:has(.context-panel) .build-zone,
+  .game.game:has(.context-panel) .world-zoom-controls,
+  .game.game:has(.context-panel) .field-guide,
+  .game.game:has(.context-panel) .guide-toggle {
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .game.game .context-panel {
+    left: 12px;
+    right: 12px;
+    top: 70px;
+    width: auto;
+    max-height: calc(100dvh - 84px);
+    z-index: 20;
+  }
+  .game.game .context-panel .context-body {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .game.game .context-header {
+    padding-right: 17px;
+  }
+}
