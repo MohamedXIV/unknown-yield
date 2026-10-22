@@ -6,6 +6,8 @@
 >
 > **Rule in one sentence:** **One fictional institution and industrial material culture; multiple task-specific degrees of theater; exactly one authoritative industrial reality.**
 
+**2026-10-22 user image follow-up:** see [four original user-supplied UI visual concepts](USER_SUPPLIED_UI_VISUAL_REFERENCES_V0_2.md) for the actual compositions, Inspector distinctions and graphical richness which the first CSS-only reskin did not yet reproduce. Original PNGs live in ChatGPT Library; their reference index is committed to GitHub. Keep palette/typography/layout implementation approvals separate from these exploratory images.
+
 ## 0. Scope and decisions: do not accidentally canonize exploration
 
 | Status | Statement |
