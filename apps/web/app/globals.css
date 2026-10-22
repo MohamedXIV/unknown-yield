@@ -2677,3 +2677,546 @@ kbd {
   .game .context-panel--knowledge .context-body { padding: 14px; }
   .game .build-bar button > span { font-size: 9px; }
 }
+
+
+/* UNKNOWN YIELD / AUTHORED INSTRUMENTS V0.3
+   First *illustrated* gameplay UI pass, not a monolithic reskin token sheet.
+   The actual saved/public simulation data and working controls remain untouched.
+   Art uses original project-authored vector stamp, schematic and announcement. */
+
+/* The entire top assembly reads as a small cluster of real instruments,
+   not a navbar and a pair of generic dashboard metric cards. */
+.game .hud-top::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: -6px;
+  right: -6px;
+  top: -6px;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #9d8562 12%, #ac7953 52%, #a78052 88%, transparent);
+  box-shadow: 0 2px 0 #090e10;
+}
+.game .site-mark {
+  min-height: 58px;
+  padding: 6px 18px 6px 7px;
+  border-top: 3px solid #bc704a;
+  border-bottom: 2px solid #070e10;
+  border-left: 2px solid #977957;
+  background: linear-gradient(90deg, #522b27f7 0 21%, #1c2828fb 23% 100%), url("/ui/pressed-metal.svg");
+  box-shadow: 0 12px 24px #0508099e, inset 0 0 0 2px #d6a57925;
+}
+.game .site-mark > div {
+  font: 700 19px/1 "Impact", "Arial Narrow", "Liberation Sans Narrow", sans-serif;
+  letter-spacing: 1.3px;
+  color: #f3dfb9;
+}
+.game .site-mark > div small {
+  font: 8px/1.6 "Lucida Console", Consolas, monospace;
+  color: #d8bea0;
+  letter-spacing: .45px;
+}
+.game .brand-symbol {
+  width: 48px;
+  height: 48px;
+  background: url("/ui/directorate-seal.svg") center / contain no-repeat;
+  border: 0;
+  outline: 0;
+  box-shadow: none;
+  filter: drop-shadow(1px 2px 1px #050a0b);
+}
+.game .site-mark::after {
+  width: 4px;
+  background: repeating-linear-gradient(0deg, #dcac67 0 3px, #74362b 3px 7px);
+}
+.game .resources {
+  position: relative;
+  min-height: 58px;
+  padding: 7px 15px 7px 12px;
+  background: linear-gradient(90deg, #283637, #101d1e 60%), url("/ui/pressed-metal.svg");
+  border-block: 2px solid #5f6661;
+}
+.game .resources::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: 10px;
+  width: 26px;
+  height: 3px;
+  background: #e6a864;
+}
+.game .resources > span {
+  padding-block: 1px;
+}
+.game .resources b {
+  font-size: 18px;
+  letter-spacing: .2px;
+  color: #f5e7cc;
+  text-shadow: 0 1px 1px #060808;
+}
+.game .resources small {
+  font-family: var(--uy-industrial);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .8px;
+  color: #b9baa9;
+}
+.game .hud-actions {
+  min-height: 55px;
+  border-top: 2px solid #986d4e;
+  border-bottom: 2px solid #101718;
+  background: #151f21 url("/ui/pressed-metal.svg") repeat;
+}
+.game .hud-actions button {
+  border-color: #6d6d5f60;
+  box-shadow: inset 1px 1px #ffffff0b, inset -1px -1px #000a;
+}
+.game .hud-actions button[aria-label="Game menu"] {
+  background: #762f29;
+  color: #f6dbb0;
+  border-color: #b67855;
+}
+
+/* All context panels have an authored physical frame, even when their inner
+   paper or steel material is different. Hardware cannot capture any input. */
+.game .context-panel {
+  border-radius: 0;
+  overflow: visible;
+  box-shadow:
+    0 0 0 2px #090f10,
+    0 0 0 4px #806b50,
+    0 0 0 5px #181918,
+    0 15px 40px #000d;
+}
+.game .context-hardware {
+  position: absolute;
+  pointer-events: none;
+  inset: 0;
+  z-index: 8;
+}
+.game .context-screw {
+  position: absolute;
+  right: 5px;
+  width: 11px;
+  height: 11px;
+  background: radial-gradient(circle at 38% 30%, #e0bf85 0 18%, #867252 28%, #282d2b 75%);
+  border: 1px solid #1a1c1d;
+  border-radius: 50%;
+  box-shadow: 0 1px #ecdbb35e, inset 0 1px 2px #110e0ed9;
+}
+.game .context-screw:before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 1px;
+  height: 1px;
+  width: 7px;
+  transform: rotate(-35deg);
+  background: #201d17;
+}
+.game .context-screw--upper { top: 50px; }
+.game .context-screw--lower { bottom: 7px; }
+.game .context-header {
+  position: relative;
+  min-height: 54px;
+  gap: 7px;
+  padding: 8px 15px;
+  border-bottom-width: 3px;
+  border-radius: 0;
+}
+.game .context-header > span:first-child {
+  font: 700 18px/1.05 "Impact", "Arial Narrow", "Liberation Sans Narrow", sans-serif;
+  letter-spacing: 1.15px;
+  text-shadow: 0 1px 1px #020405;
+}
+.game .context-header-stamp {
+  align-self: end;
+  flex: 1;
+  text-align: right;
+  margin-right: 12px;
+  font: 700 7px/1.35 var(--uy-mono);
+  letter-spacing: .4px;
+  opacity: .86;
+}
+.game .context-header button {
+  align-self: start;
+  flex: 0 0 auto;
+  padding: 0 5px;
+  margin: -4px -3px 0 0;
+  color: #f7dcba;
+  background: #1b2223;
+  border: 1px solid #c5a071;
+  box-shadow: 1px 1px #060d0f;
+}
+
+/* Factory plate: a technical line engraving adds visual origin. The schematic
+   represents an illustration, NOT an actual selected machine topology. */
+.game .context-panel--selection {
+  border: 2px solid #887458;
+  background: #151e20 url("/ui/pressed-metal.svg") repeat;
+}
+.game .context-panel--selection .context-header {
+  background: linear-gradient(95deg, #3b2521, #20292a 45%, #101819);
+}
+.game .context-panel--selection .context-header::before {
+  content: "";
+  position: absolute;
+  height: 3px;
+  left: 14px;
+  right: 42px;
+  bottom: 0;
+  background: repeating-linear-gradient(90deg, #af7b4c 0 22px, #342921 22px 27px);
+}
+.game .context-panel--selection .context-body {
+  background:
+    linear-gradient(180deg, #07131735, #101a1cf5 140px),
+    url("/ui/engineering-schematic.svg") top right / 155px auto no-repeat;
+}
+.game .context-panel--selection .context-overview {
+  margin-top: 3px;
+  border: 1px solid #ad8762;
+  border-left: 5px solid #a77a4d;
+  box-shadow: inset 0 0 0 2px #030c0d, 2px 2px #070b0c;
+}
+.game .context-panel--selection .context-overview > small,
+.game .context-panel--selection .eyebrow {
+  text-transform: uppercase;
+  font: 700 9px/1.3 var(--uy-industrial);
+  letter-spacing: 1.5px;
+  color: #d5b47a;
+}
+.game .context-panel--selection .context-overview > strong {
+  font: 700 15px/1.35 var(--uy-industrial);
+  letter-spacing: .2px;
+}
+.game .context-panel--selection .context-body h2 {
+  color: #f5dfb4;
+  font: 700 22px/1.15 var(--uy-industrial);
+  letter-spacing: .4px;
+  border-bottom: 2px solid #a38960;
+  padding-bottom: 7px;
+}
+.game .context-panel--selection .context-body h3 {
+  text-transform: uppercase;
+  font: 700 11px/1.35 var(--uy-industrial);
+  letter-spacing: 1px;
+}
+.game .context-panel--selection .context-body h3:before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  background: #ae7651;
+  transform: rotate(45deg);
+  margin-right: 7px;
+}
+.game .context-panel--selection .inventory,
+.game .context-panel--selection .policy,
+.game .context-panel--selection .observation {
+  border-radius: 0;
+  box-shadow: inset 0 0 0 1px #ae907124;
+}
+.game .context-panel--selection .primary,
+.game .context-panel--selection .secondary,
+.game .context-panel--selection .danger {
+  text-transform: none;
+  letter-spacing: .1px;
+  font-weight: 600;
+  border-radius: 0;
+}
+
+/* Terminal: dark government printing machine outside, cream freight sheets
+   inside; instrument data and cargo rows remain live and interactive. */
+.game .context-panel--terminal {
+  border: 3px solid #564332;
+  box-shadow: 0 0 0 2px #d6b787, 0 0 0 4px #28211d, 0 20px 55px #000d;
+}
+.game .context-panel--terminal .context-header {
+  min-height: 66px;
+  padding-left: 59px;
+  background: linear-gradient(110deg, #8f302c, #55251e 83%);
+  border-bottom: 4px double #e8cc9d;
+}
+.game .context-panel--terminal .context-header::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 6px;
+  width: 47px;
+  height: 47px;
+  background: url("/ui/directorate-seal.svg") center/contain no-repeat;
+  filter: drop-shadow(1px 1px #220909);
+}
+.game .context-panel--terminal .context-header > span:first-child {
+  font-size: 21px;
+  color: #fae2b8;
+  line-height: 1.05;
+}
+.game .context-panel--terminal .context-header-stamp { color: #f4cfa7; }
+.game .context-panel--terminal .context-body {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 26px, #7b67440e 26px 27px),
+    url("/ui/archival-paper.svg");
+  border-left: 7px solid #b3976f;
+  box-shadow: inset 3px 0 #6c4e33, inset 6px 0 #e1d1ad;
+}
+.game .context-panel--terminal .context-body::before {
+  content: "OFFICIAL COPY / FIELD FREIGHT & ALLOCATION";
+  display: block;
+  color: #86533b;
+  font: 700 9px/1.3 var(--uy-mono);
+  letter-spacing: .7px;
+  text-align: center;
+  border: 1px solid #b29877;
+  border-inline: 0;
+  padding: 7px 1px;
+  margin: -6px 0 12px;
+}
+.game .context-panel--terminal .context-body h3 {
+  position: relative;
+  padding-left: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  border-bottom: 2px solid #76553b;
+}
+.game .context-panel--terminal .context-body h3:before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 2px;
+  width: 4px;
+  height: 13px;
+  background: #9a4230;
+}
+.game .context-panel--terminal .context-tabs button {
+  font-size: 10px;
+  border-radius: 0;
+  border-bottom: 3px solid #7a6247;
+  box-shadow: inset 0 1px #ffefcf, 1px 1px #57453173;
+}
+.game .context-panel--terminal .observation,
+.game .context-panel--terminal .opportunity,
+.game .context-panel--terminal .policy {
+  background: #f0e3c8;
+  color: #3f3025;
+  border: 1px solid #a79170;
+  border-left: 4px solid #95533c;
+  box-shadow: 1px 1px #c3b08c;
+}
+.game .context-panel--terminal .observation h3,
+.game .context-panel--terminal .observation p,
+.game .context-panel--terminal .observation > span,
+.game .context-panel--terminal .observation small,
+.game .context-panel--terminal .policy,
+.game .context-panel--terminal .policy small,
+.game .context-panel--terminal .opportunity {
+  color: #392d23;
+}
+.game .context-panel--terminal .observation h3 {
+  border-bottom: 1px solid #b5a389;
+  padding-left: 0;
+}
+.game .context-panel--terminal .observation h3:before { content: none; }
+.game .context-panel--terminal .primary {
+  background: #a34c37;
+  border: 2px solid #692e28;
+  outline: 1px solid #e1c69f;
+  outline-offset: -4px;
+  text-transform: uppercase;
+  letter-spacing: .45px;
+  font: 700 12px/1.3 var(--uy-industrial);
+}
+.game .context-panel--terminal .secondary {
+  background: #e3d1ad;
+  color: #3e3023;
+  border-color: #856e52;
+}
+
+/* Field notebook: bound folio with an ink gutter, perforations, chapter slips
+   and restrained crimson evidence stamps. Even on mobile it is a readable
+   list of actual known findings, not a fake illustrated recipe encyclopedia. */
+.game .context-panel--knowledge {
+  border: 3px solid #574332;
+  border-left-width: 12px;
+  box-shadow: 0 0 0 2px #a78860, 0 0 0 5px #2c201b, 0 18px 40px #000c;
+}
+.game .context-panel--knowledge .context-header {
+  background: #5d4535;
+  border-bottom: 3px double #cab18a;
+}
+.game .context-panel--knowledge .context-header > span:first-child {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 700;
+  letter-spacing: -.5px;
+  font-size: 17px;
+  color: #f8eac9;
+}
+.game .context-panel--knowledge .context-body {
+  position: relative;
+  background:
+    radial-gradient(ellipse at 10% 18%, #f9eeca60, transparent 52%),
+    linear-gradient(90deg, #a7916b 0 1px, #f0dfbc 2px 18px, #a9776b 19px 20px, transparent 21px),
+    repeating-linear-gradient(0deg, #a3896820 0 1px, transparent 1px 28px),
+    url("/ui/archival-paper.svg");
+  background-blend-mode: multiply, normal, normal, normal;
+}
+.game .context-panel--knowledge .context-body::before {
+  content: "EXPEDITION / FIELD RECORDS";
+  display: block;
+  border: 1px solid #a1835d;
+  color: #865941;
+  font: 700 10px/1.5 Georgia, serif;
+  text-align: center;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+  padding: 5px 8px;
+  box-shadow: inset 0 0 0 2px #f5e6c4, 0 1px #644b3536;
+}
+.game .context-panel--knowledge .context-body h2 {
+  font: 700 19px/1.2 Georgia, serif;
+  letter-spacing: -.2px;
+  color: #422f21;
+}
+.game .context-panel--knowledge .context-tabs button {
+  border: 1px solid #936844;
+  border-radius: 0;
+  padding: 8px 10px;
+  box-shadow: inset 0 1px #f9eccc, 1px 2px #5a43212b;
+  font: 700 11px/1.1 Georgia, serif;
+}
+.game .context-panel--knowledge .context-tabs button.active {
+  box-shadow: inset 0 -3px #4e281d;
+}
+.game .context-panel--knowledge .observation {
+  position: relative;
+  background: #eee0c0;
+  border: 0;
+  border-left: 2px solid #9e654b;
+  border-bottom: 1px solid #aa977b;
+  box-shadow: none;
+  margin: 9px 0;
+  padding-left: 12px;
+}
+.game .context-panel--knowledge .observation h3 {
+  font: 700 16px/1.25 Georgia, serif;
+  color: #443126;
+}
+.game .context-panel--knowledge .observation > small {
+  font: 700 9px/1.3 var(--uy-mono);
+  letter-spacing: .15px;
+  color: #9c4c38;
+}
+.game .context-panel--knowledge .observation p {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.game .context-panel--knowledge .context-overview {
+  background: #ead9b4;
+  border: 1px solid #9d7758;
+  box-shadow: inset 0 0 0 3px #efe0bf;
+}
+.game .context-panel--knowledge .context-overview > small { color: #925139; }
+.game .context-panel--knowledge .context-overview > strong { color: #3e2c23; }
+.game .context-panel--knowledge .context-overview > p { color: #5e4534; }
+.game .context-panel--knowledge .context-overview.tone-bad {
+  border-left: 5px solid #a54d3a;
+}
+.game .context-panel--knowledge .context-overview.tone-warn {
+  border-left: 5px solid #a9844b;
+}
+
+/* A propaganda panel on the EXISTING in-game expedition controls, NOT a
+   fabricated stand-alone splash screen or external menu route. */
+.game .context-panel--menu .context-header {
+  min-height: 65px;
+  padding-left: 56px;
+  background: linear-gradient(95deg, #a34333, #3a211d 78%);
+  border-bottom: 3px double #e1be87;
+}
+.game .context-panel--menu .context-header::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 7px;
+  width: 43px;
+  height: 43px;
+  background: url("/ui/directorate-seal.svg") center/contain no-repeat;
+}
+.game .context-panel--menu .context-body::before {
+  content: "GLORY THROUGH PRODUCTION";
+  display: grid;
+  place-items: end center;
+  height: 115px;
+  margin: -2px -3px 15px;
+  padding: 8px 7px;
+  background:
+    linear-gradient(0deg, #201515 0 0) bottom / 100% 35% no-repeat,
+    url("/ui/industrial-proclamation.svg") center 44% / cover no-repeat;
+  color: #f2d9ac;
+  border: 3px solid #a3774d;
+  outline: 2px solid #282021;
+  outline-offset: -6px;
+  font: 700 15px/1 "Impact", "Arial Narrow", sans-serif;
+  letter-spacing: 1.4px;
+  text-shadow: 0 1px 2px #000;
+}
+.game .context-panel--menu .context-body h2 {
+  font: 700 21px/1.2 "Impact", "Arial Narrow", sans-serif;
+  letter-spacing: .9px;
+}
+
+/* Command rail: retention of accessible bottom tool placements, but now
+   individual switch cartridges are visibly mounted in one heavy tray. */
+.game .build-bar {
+  position: relative;
+  border: 3px ridge #8b7658;
+  border-top: 4px solid #bf9361;
+  border-bottom: 4px solid #4f4231;
+  background: #1e2728 url("/ui/pressed-metal.svg") repeat;
+  box-shadow: 0 0 0 2px #0b1113, 0 15px 30px #000b, inset 0 0 0 2px #493e31;
+}
+.game .build-bar button {
+  background: linear-gradient(155deg, #3e4340 0%, #151f20 88%);
+  border: 1px solid #806d538c;
+  box-shadow: inset 1px 1px #ead2a518, inset -2px -2px #070c0d;
+}
+.game .build-bar button.active {
+  background: linear-gradient(#774f34, #49342b);
+  color: #ffedc8;
+  border-color: #ddb17a;
+  box-shadow: inset 0 -3px #f6c982, inset 1px 1px #eed4aa52;
+}
+.game .build-bar button > small {
+  color: #d4ad7f;
+}
+.game .build-submenu {
+  background: #222e2e url("/ui/pressed-metal.svg") repeat;
+  border: 3px double #a68c68;
+}
+.game .build-hint {
+  border-top: 2px solid #b58554;
+  border-left: 3px solid #ad6946;
+}
+
+/* A hand-sized viewport must retain usable tool geometry and operation truth.
+   Hide ornament before stealing viewport from the actual Phaser world. */
+@media (max-width: 900px) {
+  .game .context-header-stamp { display: none; }
+}
+@media (max-width: 650px) {
+  .game .hud-top::before { display: none; }
+  .game .resources,
+  .game .hud-actions { min-height: 45px; }
+  .game .context-panel--terminal .context-header,
+  .game .context-panel--menu .context-header { padding-left: 48px; min-height: 54px; }
+  .game .context-panel--terminal .context-header::before,
+  .game .context-panel--menu .context-header::before { width: 36px; height: 36px; top: 7px; left: 6px; }
+  .game .context-header > span:first-child { font-size: 16px; }
+  .game .context-panel--menu .context-body::before { height: 75px; font-size: 12px; }
+  .game .context-panel--knowledge .context-body h2 { font-size: 17px; }
+  .game .build-bar { border-width: 2px; }
+  .game .build-bar button { box-shadow: inset 0 1px #eacb9e14; }
+}
