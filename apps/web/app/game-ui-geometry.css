@@ -264,6 +264,26 @@
   letter-spacing: 1.2px;
 }
 
+
+/* Paper-form contrast: the Terminal facts strip must NOT inherit the default
+   global light-on-charcoal metric colors while sitting on warm paper. */
+.game.game .context-panel--terminal .facts {
+  background: repeating-linear-gradient(0deg, #a7875b0a 0 1px, transparent 1px 26px);
+  border-block: 2px solid #9c7852;
+  padding: 11px 7px;
+  gap: 16px;
+}
+.game.game .context-panel--terminal .facts span {
+  color: #69452e;
+  font: 700 12px/1.2 var(--ui-operation);
+  flex: 1;
+}
+.game.game .context-panel--terminal .facts b {
+  color: #30271f;
+  font: 600 18px/1.25 var(--ui-measure);
+  margin-top: 5px;
+}
+
 /* World-first top command surfaces and building cartridges share the
    manufactured frame vocabulary, but never become a floating dashboard. */
 .game.game .site-mark,
