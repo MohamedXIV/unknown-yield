@@ -2710,6 +2710,33 @@ browserIt(
 
       const center = canvasCenter;
       const cameraBeforePinch = await evaluate<{ zoom: number }>(`window.__UNKNOWN_YIELD_CAMERA__()`);
+      const pinchPreflight = await evaluate<{
+        center: string;
+        left: string;
+        right: string;
+        overlay: string | null;
+        canvasTouchAction: string;
+        uiFont: string;
+      }>(`(() => {
+        const c = document.querySelector("canvas");
+        const r = c.getBoundingClientRect();
+        const cx = r.left + r.width / 2;
+        const cy = r.top + r.height / 2;
+        const classify = (x, y) => {
+          const e = document.elementFromPoint(x, y);
+          return (e?.tagName || "NULL") + "." + (e?.className?.baseVal ?? e?.className ?? "");
+        };
+        return {
+          center: classify(cx, cy),
+          left: classify(cx - 35, cy),
+          right: classify(cx + 35, cy),
+          overlay: document.querySelector(".context-panel")?.getAttribute("data-panel-kind") ?? null,
+          canvasTouchAction: getComputedStyle(c).touchAction,
+          uiFont: getComputedStyle(document.querySelector(".game")).fontFamily,
+        };
+      })()`);
+      console.log("UI_PINCH_PREFLIGHT " + JSON.stringify({ cameraBeforePinch, ...pinchPreflight }));
+      await captureUiReview("ui-11-mobile-pinch-preflight.png");
       await sendTouch("touchStart", [
         { x: center.x - 35, y: center.y, id: 2 },
         { x: center.x + 35, y: center.y, id: 3 },
@@ -2721,6 +2748,7 @@ browserIt(
       await sendTouch("touchEnd", []);
       await evaluate<void>(`new Promise((resolve) => setTimeout(resolve, 350))`);
       const cameraAfterPinch = await evaluate<{ zoom: number }>(`window.__UNKNOWN_YIELD_CAMERA__()`);
+      console.log("UI_PINCH_RESULT " + JSON.stringify({ cameraBeforePinch, cameraAfterPinch }));
       expect(Math.abs(cameraAfterPinch.zoom - cameraBeforePinch.zoom)).toBeGreaterThan(0.001);
       expect(await evaluate<boolean>(`document.querySelector('[data-testid="dismantle-review"]') === null`)).toBe(true);
 
