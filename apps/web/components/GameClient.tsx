@@ -960,7 +960,7 @@ function GameClientInner() {
       /> : <div className="world-host" role="status">Validating selected content pack…</div>}
       <header className="hud-top">
         <div className="site-mark">
-          <span className="brand-symbol">Y</span>
+          <span className="brand-symbol" role="img" aria-label="Unknown Yield industrial seal" />
           <div>
             UNKNOWN YIELD<small>THE PALE REACH · SITE 01</small>
           </div>
@@ -1085,6 +1085,10 @@ function GameClientInner() {
       {paused && <div className="paused-label">PAUSED</div>}
       {panel && (
         <aside className={"context-panel context-panel--" + panel} data-panel-kind={panel}>
+          <div className="context-hardware" aria-hidden="true">
+            <span className="context-screw context-screw--upper" />
+            <span className="context-screw context-screw--lower" />
+          </div>
           <div className="context-header">
             <span>
               {panel === "knowledge"
@@ -1096,6 +1100,17 @@ function GameClientInner() {
                     : panel === "menu"
                       ? "EXPEDITION MENU"
                       : "INSPECT"}
+            </span>
+            <span className="context-header-stamp" aria-hidden="true">
+              {panel === "knowledge"
+                ? "FIELD LAB / RECORDED EVIDENCE"
+                : panel === "terminal"
+                  ? "FREIGHT & ALLOCATION"
+                  : panel === "selection"
+                    ? "SITE SERVICE DOSSIER"
+                    : panel === "configuration"
+                      ? "OPERATOR CONTROLS"
+                      : "FIELD OPERATIONS"}
             </span>
             <button aria-label="Close panel" onClick={close}>
               ×
