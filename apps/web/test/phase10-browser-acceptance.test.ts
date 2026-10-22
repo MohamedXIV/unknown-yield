@@ -1063,6 +1063,9 @@ browserIt(
         return true;
       })()`);
 
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".site-mark")).clipPath`)).toContain("polygon(");
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".site-mark > div")).fontFamily`)).toContain("Bebas Neue");
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".resources b")).fontFamily`)).toContain("IBM Plex Mono");
       await captureUiReview("ui-02-desktop-hud.png");
 
       await pressKey("5", "Digit5", 53);
@@ -1216,6 +1219,8 @@ browserIt(
       expect(initialNotebook).toContain("EVIDENCE STATUS");
       expect(await evaluate<string>(`document.querySelector(".context-panel")?.getAttribute("data-panel-kind") ?? ""`)).toBe("knowledge");
       expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--knowledge .context-body")).backgroundImage`)).toContain("archival-paper.svg");
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--knowledge")).clipPath`)).toContain("polygon(");
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--knowledge .context-header > span")).fontFamily`)).toContain("Georgia");
       await captureUiReview("ui-03-desktop-notebook.png");
       await evaluate(`(() => {
         [...document.querySelectorAll('nav[aria-label="Notebook filters"] button')]
@@ -1242,6 +1247,8 @@ browserIt(
       );
       expect(await evaluate<string>(`document.querySelector(".context-panel")?.getAttribute("data-panel-kind") ?? ""`)).toBe("terminal");
       expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--terminal .context-body")).backgroundImage`)).toContain("archival-paper.svg");
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--terminal")).clipPath`)).toContain("polygon(");
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--terminal .context-header > span")).fontFamily`)).toContain("Bebas Neue");
       await captureUiReview("ui-04-desktop-terminal.png");
       await evaluate(`(() => {
         document.querySelector('button[aria-label="Company terminal"]')?.click();
@@ -1659,6 +1666,7 @@ browserIt(
       );
       expect(await evaluate<string>(`document.querySelector(".context-panel")?.getAttribute("data-panel-kind") ?? ""`)).toBe("selection");
       expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--selection .context-body")).backgroundImage`)).toContain("engineering-schematic.svg");
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--selection")).clipPath`)).toContain("polygon(");
       await captureUiReview("ui-07-desktop-depot-inspector.png");
       const loadedDepotText = await evaluate<string>(
         `document.querySelector(".context-panel")?.textContent?.replace(/\\s+/g, " ") ?? ""`,
@@ -3836,6 +3844,24 @@ browserIt(
       ).toBe("none");
 
       await captureUiReview("ui-06-mobile-hud.png");
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Knowledge notebook"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(`document.querySelector(".context-panel")?.getAttribute("data-panel-kind") === "knowledge"`);
+      await captureUiReview("ui-09-mobile-notebook.png");
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Close panel"]')?.click();
+        document.querySelector('button[aria-label="Company terminal"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(`document.querySelector(".context-panel")?.getAttribute("data-panel-kind") === "terminal"`);
+      await captureUiReview("ui-10-mobile-terminal.png");
+      await evaluate(`(() => {
+        document.querySelector('button[aria-label="Close panel"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(`document.querySelector(".context-panel") === null`);
 
       const touchPanBefore = await evaluate<{
         scrollX: number;
