@@ -1064,6 +1064,9 @@ browserIt(
       })()`);
 
       expect(await evaluate<string>(`getComputedStyle(document.querySelector(".site-mark")).clipPath`)).toContain("polygon(");
+      // Cartridge controls keep their full hit rectangles inside the shaped mounting plate.
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".build-bar")).clipPath`)).toBe("none");
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".build-bar"), "::before").clipPath`)).toContain("polygon(");
       expect(await evaluate<string>(`getComputedStyle(document.querySelector(".site-mark > div")).fontFamily`)).toContain("Bebas Neue");
       expect(await evaluate<string>(`getComputedStyle(document.querySelector(".resources b")).fontFamily`)).toContain("IBM Plex Mono");
       await captureUiReview("ui-02-desktop-hud.png");
@@ -1219,7 +1222,10 @@ browserIt(
       expect(initialNotebook).toContain("EVIDENCE STATUS");
       expect(await evaluate<string>(`document.querySelector(".context-panel")?.getAttribute("data-panel-kind") ?? ""`)).toBe("knowledge");
       expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--knowledge .context-body")).backgroundImage`)).toContain("archival-paper.svg");
-      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--knowledge")).clipPath`)).toContain("polygon(");
+      // The clickable panel is NEVER cropped; only the decorative metal shell is chamfered.
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--knowledge")).clipPath`)).toBe("none");
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--knowledge"), "::before").clipPath`)).toContain("polygon(");
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--knowledge"), "::after").clipPath`)).toContain("polygon(");
       expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--knowledge .context-header > span")).fontFamily`)).toContain("Georgia");
       await captureUiReview("ui-03-desktop-notebook.png");
       await evaluate(`(() => {
@@ -1247,7 +1253,10 @@ browserIt(
       );
       expect(await evaluate<string>(`document.querySelector(".context-panel")?.getAttribute("data-panel-kind") ?? ""`)).toBe("terminal");
       expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--terminal .context-body")).backgroundImage`)).toContain("archival-paper.svg");
-      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--terminal")).clipPath`)).toContain("polygon(");
+      // The clickable panel is NEVER cropped; only the decorative metal shell is chamfered.
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--terminal")).clipPath`)).toBe("none");
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--terminal"), "::before").clipPath`)).toContain("polygon(");
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--terminal"), "::after").clipPath`)).toContain("polygon(");
       expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--terminal .context-header > span")).fontFamily`)).toContain("Bebas Neue");
       const terminalInk = await evaluate<{ labels: string; values: string }>(`(() => ({
         labels: getComputedStyle(document.querySelector(".context-panel--terminal .facts span")).color,
@@ -1674,7 +1683,10 @@ browserIt(
       );
       expect(await evaluate<string>(`document.querySelector(".context-panel")?.getAttribute("data-panel-kind") ?? ""`)).toBe("selection");
       expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--selection .context-body")).backgroundImage`)).toContain("engineering-schematic.svg");
-      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--selection")).clipPath`)).toContain("polygon(");
+      // The clickable panel is NEVER cropped; only the decorative metal shell is chamfered.
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--selection")).clipPath`)).toBe("none");
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--selection"), "::before").clipPath`)).toContain("polygon(");
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--selection"), "::after").clipPath`)).toContain("polygon(");
       await captureUiReview("ui-07-desktop-depot-inspector.png");
       const loadedDepotText = await evaluate<string>(
         `document.querySelector(".context-panel")?.textContent?.replace(/\\s+/g, " ") ?? ""`,
