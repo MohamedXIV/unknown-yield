@@ -1016,6 +1016,7 @@ browserIt(
           ?.textContent?.includes("Read the site before you automate it.") === true`,
       );
 
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".brand-symbol")).backgroundImage`)).toContain("directorate-seal.svg");
       await captureUiReview("ui-01-desktop-field-brief.png");
 
       const initialState = await evaluate<{
@@ -1214,6 +1215,7 @@ browserIt(
       expect(initialNotebook).not.toContain("Catalyst powder");
       expect(initialNotebook).toContain("EVIDENCE STATUS");
       expect(await evaluate<string>(`document.querySelector(".context-panel")?.getAttribute("data-panel-kind") ?? ""`)).toBe("knowledge");
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--knowledge .context-body")).backgroundImage`)).toContain("archival-paper.svg");
       await captureUiReview("ui-03-desktop-notebook.png");
       await evaluate(`(() => {
         [...document.querySelectorAll('nav[aria-label="Notebook filters"] button')]
@@ -1239,6 +1241,7 @@ browserIt(
           !!document.querySelector("#terminal-company")`,
       );
       expect(await evaluate<string>(`document.querySelector(".context-panel")?.getAttribute("data-panel-kind") ?? ""`)).toBe("terminal");
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--terminal .context-body")).backgroundImage`)).toContain("archival-paper.svg");
       await captureUiReview("ui-04-desktop-terminal.png");
       await evaluate(`(() => {
         document.querySelector('button[aria-label="Company terminal"]')?.click();
@@ -1322,6 +1325,7 @@ browserIt(
           .some((button) => button.textContent?.includes("Save world"))`,
       );
       expect(await evaluate<string>(`document.querySelector(".context-panel")?.getAttribute("data-panel-kind") ?? ""`)).toBe("menu");
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--menu .context-body"), "::before").backgroundImage`)).toContain("industrial-proclamation.svg");
       await captureUiReview("ui-05-desktop-expedition-menu.png");
       await evaluate(`(() => {
         [...document.querySelectorAll("button")]
@@ -1654,6 +1658,7 @@ browserIt(
         `document.querySelector(".context-panel h2")?.textContent === "Depot"`,
       );
       expect(await evaluate<string>(`document.querySelector(".context-panel")?.getAttribute("data-panel-kind") ?? ""`)).toBe("selection");
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--selection .context-body")).backgroundImage`)).toContain("engineering-schematic.svg");
       await captureUiReview("ui-07-desktop-depot-inspector.png");
       const loadedDepotText = await evaluate<string>(
         `document.querySelector(".context-panel")?.textContent?.replace(/\\s+/g, " ") ?? ""`,
