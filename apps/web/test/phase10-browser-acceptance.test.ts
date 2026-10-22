@@ -2737,14 +2737,22 @@ browserIt(
       })()`);
       console.log("UI_PINCH_PREFLIGHT " + JSON.stringify({ cameraBeforePinch, ...pinchPreflight }));
       await captureUiReview("ui-11-mobile-pinch-preflight.png");
+      // Each pair must be observed in separate real browser frames.
+      // An instantaneous two-pointer jump can coalesce into no pointermove
+      // from the Phaser input manager even though a human pinch works.
+      // Keep asserting a real zoom change; do not bypass the gesture.
       await sendTouch("touchStart", [
         { x: center.x - 35, y: center.y, id: 2 },
         { x: center.x + 35, y: center.y, id: 3 },
       ]);
-      await sendTouch("touchMove", [
-        { x: center.x - 65, y: center.y, id: 2 },
-        { x: center.x + 65, y: center.y, id: 3 },
-      ]);
+      await sleep(50);
+      for (const radius of [45, 55, 65]) {
+        await sendTouch("touchMove", [
+          { x: center.x - radius, y: center.y, id: 2 },
+          { x: center.x + radius, y: center.y, id: 3 },
+        ]);
+        await sleep(50);
+      }
       await sendTouch("touchEnd", []);
       await evaluate<void>(`new Promise((resolve) => setTimeout(resolve, 350))`);
       const cameraAfterPinch = await evaluate<{ zoom: number }>(`window.__UNKNOWN_YIELD_CAMERA__()`);
