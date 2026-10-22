@@ -1213,6 +1213,7 @@ browserIt(
       expect(initialNotebook).not.toContain("Magnetic ceramic");
       expect(initialNotebook).not.toContain("Catalyst powder");
       expect(initialNotebook).toContain("EVIDENCE STATUS");
+      expect(await evaluate<string>(`document.querySelector(".context-panel")?.getAttribute("data-panel-kind") ?? ""`)).toBe("knowledge");
       await captureUiReview("ui-03-desktop-notebook.png");
       await evaluate(`(() => {
         [...document.querySelectorAll('nav[aria-label="Notebook filters"] button')]
@@ -1237,6 +1238,7 @@ browserIt(
           !!document.querySelector("#terminal-shipment") &&
           !!document.querySelector("#terminal-company")`,
       );
+      expect(await evaluate<string>(`document.querySelector(".context-panel")?.getAttribute("data-panel-kind") ?? ""`)).toBe("terminal");
       await captureUiReview("ui-04-desktop-terminal.png");
       await evaluate(`(() => {
         document.querySelector('button[aria-label="Company terminal"]')?.click();
@@ -1319,6 +1321,7 @@ browserIt(
         `[...document.querySelectorAll("button")]
           .some((button) => button.textContent?.includes("Save world"))`,
       );
+      expect(await evaluate<string>(`document.querySelector(".context-panel")?.getAttribute("data-panel-kind") ?? ""`)).toBe("menu");
       await captureUiReview("ui-05-desktop-expedition-menu.png");
       await evaluate(`(() => {
         [...document.querySelectorAll("button")]
@@ -1650,6 +1653,8 @@ browserIt(
       await waitForExpression(
         `document.querySelector(".context-panel h2")?.textContent === "Depot"`,
       );
+      expect(await evaluate<string>(`document.querySelector(".context-panel")?.getAttribute("data-panel-kind") ?? ""`)).toBe("selection");
+      await captureUiReview("ui-07-desktop-depot-inspector.png");
       const loadedDepotText = await evaluate<string>(
         `document.querySelector(".context-panel")?.textContent?.replace(/\\s+/g, " ") ?? ""`,
       );
@@ -2595,6 +2600,7 @@ browserIt(
       await clickCell(52, 40);
       await waitForExpression(`document.querySelector('.context-panel') !== null`);
       await openSelectedFactory();
+      await captureUiReview("ui-08-desktop-factory-inspector.png");
       await evaluate<boolean>(`(() => { document.querySelector('.context-panel button[aria-label="Close panel"]')?.click(); return true; })()`);
       await waitForExpression(`document.querySelector('.context-panel') === null`);
       await evaluate<boolean>(`(() => { [...document.querySelectorAll('nav[aria-label="Build tools"] button')].find((button) => button.getAttribute("aria-label") === "Dismantle")?.click(); return true; })()`);
