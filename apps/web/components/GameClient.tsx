@@ -1084,7 +1084,7 @@ function GameClientInner() {
       )}
       {paused && <div className="paused-label">PAUSED</div>}
       {panel && (
-        <aside className="context-panel">
+        <aside className={"context-panel context-panel--" + panel} data-panel-kind={panel}>
           <div className="context-header">
             <span>
               {panel === "knowledge"
