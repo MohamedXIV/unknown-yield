@@ -2708,68 +2708,6 @@ browserIt(
       expect(Math.hypot(cameraAfterTouchPan.scrollX - cameraBeforeTouchPan.scrollX, cameraAfterTouchPan.scrollY - cameraBeforeTouchPan.scrollY)).toBeGreaterThan(0);
       expect(await evaluate<boolean>(`document.querySelector('[data-testid="dismantle-review"]') === null`)).toBe(true);
 
-      const center = canvasCenter;
-      const cameraBeforePinch = await evaluate<{ zoom: number }>(`window.__UNKNOWN_YIELD_CAMERA__()`);
-      const pinchPreflight = await evaluate<{
-        center: string;
-        left: string;
-        right: string;
-        overlay: string | null;
-        canvasTouchAction: string;
-        uiFont: string;
-      }>(`(() => {
-        const c = document.querySelector("canvas");
-        const r = c.getBoundingClientRect();
-        const cx = r.left + r.width / 2;
-        const cy = r.top + r.height / 2;
-        const classify = (x, y) => {
-          const e = document.elementFromPoint(x, y);
-          return (e?.tagName || "NULL") + "." + (e?.className?.baseVal ?? e?.className ?? "");
-        };
-        return {
-          center: classify(cx, cy),
-          left: classify(cx - 35, cy),
-          right: classify(cx + 35, cy),
-          overlay: document.querySelector(".context-panel")?.getAttribute("data-panel-kind") ?? null,
-          canvasTouchAction: getComputedStyle(c).touchAction,
-          uiFont: getComputedStyle(document.querySelector(".game")).fontFamily,
-        };
-      })()`);
-      console.log("UI_PINCH_PREFLIGHT " + JSON.stringify({ cameraBeforePinch, ...pinchPreflight }));
-      await captureUiReview("ui-11-mobile-pinch-preflight.png");
-      // Each pair must be observed in separate real browser frames.
-      // An instantaneous two-pointer jump can coalesce into no pointermove
-      // from the Phaser input manager even though a human pinch works.
-      // Keep asserting a real zoom change; do not bypass the gesture.
-      // A real pinch begins with a primary contact; the second finger joins
-      // later. Chromium's simultaneous two-point touchStart can synthesize a
-      // stray one-finger pointer-up under an armed area tool.
-      await sendTouch("touchStart", [
-        { x: center.x - 35, y: center.y, id: 2 },
-      ]);
-      await sleep(60);
-      await sendTouch("touchStart", [
-        { x: center.x - 35, y: center.y, id: 2 },
-        { x: center.x + 35, y: center.y, id: 3 },
-      ]);
-      await sleep(60);
-      for (const radius of [45, 55, 65]) {
-        await sendTouch("touchMove", [
-          { x: center.x - radius, y: center.y, id: 2 },
-          { x: center.x + radius, y: center.y, id: 3 },
-        ]);
-        await sleep(50);
-      }
-      await sendTouch("touchEnd", []);
-      await evaluate<void>(`new Promise((resolve) => setTimeout(resolve, 350))`);
-      const cameraAfterPinch = await evaluate<{ zoom: number }>(`window.__UNKNOWN_YIELD_CAMERA__()`);
-      console.log("UI_PINCH_RESULT " + JSON.stringify({ cameraBeforePinch, cameraAfterPinch }));
-      console.log("UI_PINCH_REVIEW " + JSON.stringify(await evaluate<string>(
-        `document.querySelector('[data-testid="dismantle-review"]')?.textContent ?? ""`,
-      )));
-      expect(Math.abs(cameraAfterPinch.zoom - cameraBeforePinch.zoom)).toBeGreaterThan(0.001);
-      expect(await evaluate<boolean>(`document.querySelector('[data-testid="dismantle-review"]') === null`)).toBe(true);
-
       const tapSelector = async (selector: string) => {
         const point = await evaluate<{ x: number; y: number }>(`(() => {
           const selector = ${JSON.stringify(selector)};
@@ -2847,6 +2785,74 @@ browserIt(
       const p5AfterTouchConfirm = await evaluate<Save>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
       expect(p5AfterTouchConfirm.belts["36,30"]).toBeUndefined();
       expect(p5AfterTouchConfirm.belts["37,30"]).toBeUndefined();
+
+      // Zoom acceptance runs AFTER the armed dismantle-touch path. Native
+      // multi-pointer emulation can leave Chromium/Phaser input bookkeeping
+      // in a transient state during the *next* synthetic touchCancel.
+      // Preserve both real tests without cross-contaminating their order.
+      // The genuine area-touch cancellation and commit are verified first.
+      const center = canvasCenter;
+      const cameraBeforePinch = await evaluate<{ zoom: number }>(`window.__UNKNOWN_YIELD_CAMERA__()`);
+      const pinchPreflight = await evaluate<{
+        center: string;
+        left: string;
+        right: string;
+        overlay: string | null;
+        canvasTouchAction: string;
+        uiFont: string;
+      }>(`(() => {
+        const c = document.querySelector("canvas");
+        const r = c.getBoundingClientRect();
+        const cx = r.left + r.width / 2;
+        const cy = r.top + r.height / 2;
+        const classify = (x, y) => {
+          const e = document.elementFromPoint(x, y);
+          return (e?.tagName || "NULL") + "." + (e?.className?.baseVal ?? e?.className ?? "");
+        };
+        return {
+          center: classify(cx, cy),
+          left: classify(cx - 35, cy),
+          right: classify(cx + 35, cy),
+          overlay: document.querySelector(".context-panel")?.getAttribute("data-panel-kind") ?? null,
+          canvasTouchAction: getComputedStyle(c).touchAction,
+          uiFont: getComputedStyle(document.querySelector(".game")).fontFamily,
+        };
+      })()`);
+      console.log("UI_PINCH_PREFLIGHT " + JSON.stringify({ cameraBeforePinch, ...pinchPreflight }));
+      await captureUiReview("ui-11-mobile-pinch-preflight.png");
+      // Each pair must be observed in separate real browser frames.
+      // An instantaneous two-pointer jump can coalesce into no pointermove
+      // from the Phaser input manager even though a human pinch works.
+      // Keep asserting a real zoom change; do not bypass the gesture.
+      // A real pinch begins with a primary contact; the second finger joins
+      // later. Chromium's simultaneous two-point touchStart can synthesize a
+      // stray one-finger pointer-up under an armed area tool.
+      await sendTouch("touchStart", [
+        { x: center.x - 35, y: center.y, id: 2 },
+      ]);
+      await sleep(60);
+      await sendTouch("touchStart", [
+        { x: center.x - 35, y: center.y, id: 2 },
+        { x: center.x + 35, y: center.y, id: 3 },
+      ]);
+      await sleep(60);
+      for (const radius of [45, 55, 65]) {
+        await sendTouch("touchMove", [
+          { x: center.x - radius, y: center.y, id: 2 },
+          { x: center.x + radius, y: center.y, id: 3 },
+        ]);
+        await sleep(50);
+      }
+      await sendTouch("touchEnd", []);
+      await evaluate<void>(`new Promise((resolve) => setTimeout(resolve, 350))`);
+      const cameraAfterPinch = await evaluate<{ zoom: number }>(`window.__UNKNOWN_YIELD_CAMERA__()`);
+      console.log("UI_PINCH_RESULT " + JSON.stringify({ cameraBeforePinch, cameraAfterPinch }));
+      console.log("UI_PINCH_REVIEW " + JSON.stringify(await evaluate<string>(
+        `document.querySelector('[data-testid="dismantle-review"]')?.textContent ?? ""`,
+      )));
+      expect(Math.abs(cameraAfterPinch.zoom - cameraBeforePinch.zoom)).toBeGreaterThan(0.001);
+      expect(await evaluate<boolean>(`document.querySelector('[data-testid="dismantle-review"]') === null`)).toBe(true);
+
       await call("Emulation.setTouchEmulationEnabled", { enabled: false });
       await call("Emulation.setDeviceMetricsOverride", {
         width: 1440,
