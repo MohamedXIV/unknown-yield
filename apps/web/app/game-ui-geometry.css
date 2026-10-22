@@ -7,10 +7,12 @@
    controls or changing the public snapshot. Original references:
    docs/USER_SUPPLIED_UI_VISUAL_REFERENCES_V0_2.md
 
+   Double-scoped .game.game selectors intentionally outrank earlier game-only
+   skin rules regardless of stylesheet chunk ordering in the static export.
    Google Fonts load on demand over HTTPS; system-font fallbacks remain legible
    when offline. No proprietary font files or network calls in simulation. */
 
-.game {
+.game.game {
   --ui-display: "Bebas Neue", Impact, "Arial Narrow", sans-serif;
   --ui-operation: "Barlow Condensed", "Arial Narrow", "Liberation Sans Narrow", sans-serif;
   --ui-measure: "IBM Plex Mono", Consolas, "Courier New", monospace;
@@ -25,7 +27,7 @@
 /* The whole physical silhouette changes. Use distinct chamfers, not
    border-radius; keep real button hit rectangles and selection semantics.
    Border is a masked inset metallic ring, including the diagonal corners. */
-.game .context-panel {
+.game.game .context-panel {
   --ui-cut: 17px;
   --ui-plate: #9d8c70;
   clip-path: polygon(
@@ -44,7 +46,7 @@
   background-color: #121b1c;
   box-shadow: none; /* previous browser rectangle shadow would defeat the cut */
 }
-.game .context-panel::after {
+.game.game .context-panel::after {
   content: "";
   pointer-events: none;
   position: absolute;
@@ -67,13 +69,13 @@
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   mask-composite: exclude;
 }
-.game .context-panel--selection { --ui-cut: 13px; --ui-plate: #8c826e; }
-.game .context-panel--terminal { --ui-cut: 20px; --ui-plate: #b88c59; }
-.game .context-panel--knowledge { --ui-cut: 23px; --ui-plate: #8b6845; }
-.game .context-panel--menu { --ui-cut: 20px; --ui-plate: #a66f4a; }
-.game .context-panel--configuration { --ui-cut: 13px; --ui-plate: #9b886b; }
+.game.game .context-panel--selection { --ui-cut: 13px; --ui-plate: #8c826e; }
+.game.game .context-panel--terminal { --ui-cut: 20px; --ui-plate: #b88c59; }
+.game.game .context-panel--knowledge { --ui-cut: 23px; --ui-plate: #8b6845; }
+.game.game .context-panel--menu { --ui-cut: 20px; --ui-plate: #a66f4a; }
+.game.game .context-panel--configuration { --ui-cut: 13px; --ui-plate: #9b886b; }
 
-.game .context-header {
+.game.game .context-header {
   padding: 8px 18px;
   min-height: 59px;
   flex-shrink: 0;
@@ -81,19 +83,19 @@
   border: 0;
   border-bottom: 3px solid #a88562;
 }
-.game .context-header > span:first-child {
+.game.game .context-header > span:first-child {
   min-width: 0;
   font: 400 28px/1 var(--ui-display);
   letter-spacing: 1px;
   overflow-wrap: anywhere;
   text-shadow: 1px 2px 0 #0e1516;
 }
-.game .context-header-stamp {
+.game.game .context-header-stamp {
   font: 600 8px/1.15 var(--ui-measure);
   letter-spacing: -.25px;
   max-width: 40%;
 }
-.game .context-header button {
+.game.game .context-header button {
   height: 29px;
   width: 29px;
   margin: 0;
@@ -107,50 +109,50 @@
   color: #f5debc;
   clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px);
 }
-.game .context-body {
+.game.game .context-body {
   font: 500 14px/1.45 var(--ui-operation);
   letter-spacing: .1px;
 }
-.game .context-body h2 {
+.game.game .context-body h2 {
   font: 400 29px/1.08 var(--ui-display);
   letter-spacing: .55px;
 }
-.game .context-body h3 {
+.game.game .context-body h3 {
   font: 700 15px/1.2 var(--ui-operation);
   letter-spacing: .45px;
 }
-.game .context-body p,
-.game .context-body .hint,
-.game .context-body .muted,
-.game .observation p {
+.game.game .context-body p,
+.game.game .context-body .hint,
+.game.game .context-body .muted,
+.game.game .observation p {
   font-size: 13px;
   line-height: 1.47;
 }
-.game .context-body .eyebrow,
-.game .context-overview > small,
-.game .observation > small,
-.game .context-header small {
+.game.game .context-body .eyebrow,
+.game.game .context-overview > small,
+.game.game .observation > small,
+.game.game .context-header small {
   font: 600 10px/1.4 var(--ui-measure);
   letter-spacing: .2px;
 }
-.game .context-overview > strong {
+.game.game .context-overview > strong {
   font: 700 18px/1.13 var(--ui-operation);
   letter-spacing: .1px;
 }
-.game .context-overview > p { font-size: 13px; }
-.game .facts b,
-.game .inventory b,
-.game .policy input,
-.game .resources b,
-.game .operation-label b,
-.game .progress-track,
-.game .status-line,
-.game .context-body output {
+.game.game .context-overview > p { font-size: 13px; }
+.game.game .facts b,
+.game.game .inventory b,
+.game.game .policy input,
+.game.game .resources b,
+.game.game .operation-label b,
+.game.game .progress-track,
+.game.game .status-line,
+.game.game .context-body output {
   font-family: var(--ui-measure);
   font-variant-numeric: tabular-nums;
 }
-.game .context-body button,
-.game .context-tabs button {
+.game.game .context-body button,
+.game.game .context-tabs button {
   font-family: var(--ui-operation);
   font-weight: 700;
   font-size: 13px;
@@ -159,167 +161,167 @@
 
 /* Shaped command buttons and paper tabs are really clipped, rather than
    "rounded rectangle" components with new gradients. */
-.game .context-body .primary,
-.game .context-body .secondary,
-.game .context-body .danger,
-.game .context-body .opportunity button,
-.game .context-body .observation button,
-.game .context-tabs button,
-.game .build-bar button,
-.game .build-submenu button {
+.game.game .context-body .primary,
+.game.game .context-body .secondary,
+.game.game .context-body .danger,
+.game.game .context-body .opportunity button,
+.game.game .context-body .observation button,
+.game.game .context-tabs button,
+.game.game .build-bar button,
+.game.game .build-submenu button {
   border-radius: 0;
   clip-path: polygon(7px 0, calc(100% - 7px) 0, 100% 7px, 100% calc(100% - 7px), calc(100% - 7px) 100%, 7px 100%, 0 calc(100% - 7px), 0 7px);
 }
-.game .context-tabs { gap: 3px; }
-.game .context-tabs button {
+.game.game .context-tabs { gap: 3px; }
+.game.game .context-tabs button {
   padding: 8px 11px;
   background: linear-gradient(#3e4240, #181f22);
   border: 1px solid #a38a61;
   color: #f0dec0;
 }
-.game .context-tabs button.active,
-.game .context-tabs button[aria-pressed="true"] {
+.game.game .context-tabs button.active,
+.game.game .context-tabs button[aria-pressed="true"] {
   color: #fff2cf;
   background: linear-gradient(#985b42, #592e29);
   border-color: #edbe85;
 }
 
 /* Three physical duties, three readable alphabets, not the same card pattern. */
-.game .context-panel--selection .context-header > span:first-child {
+.game.game .context-panel--selection .context-header > span:first-child {
   font-size: 27px;
 }
-.game .context-panel--selection .context-body h2 {
+.game.game .context-panel--selection .context-body h2 {
   font: 400 29px/1.1 var(--ui-display);
 }
-.game .context-panel--selection .context-overview > strong {
+.game.game .context-panel--selection .context-overview > strong {
   font: 700 18px/1.15 var(--ui-operation);
 }
-.game .context-panel--selection .inventory {
+.game.game .context-panel--selection .inventory {
   clip-path: polygon(9px 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%, 0 9px);
   border-radius: 0;
   border: 1px solid #8f7757;
   background: #0b1718d9;
 }
-.game .context-panel--selection .context-body h3 {
+.game.game .context-panel--selection .context-body h3 {
   font: 700 15px/1.15 var(--ui-operation);
   letter-spacing: 1px;
 }
-.game .context-panel--selection .context-body h3:before {
+.game.game .context-panel--selection .context-body h3:before {
   width: 6px;
   height: 6px;
 }
-.game .context-panel--terminal .context-header > span:first-child {
+.game.game .context-panel--terminal .context-header > span:first-child {
   font-size: 28px;
 }
-.game .context-panel--terminal .context-body h3 {
+.game.game .context-panel--terminal .context-body h3 {
   font: 700 16px/1.2 var(--ui-operation);
   letter-spacing: .5px;
 }
-.game .context-panel--terminal .context-tabs button {
+.game.game .context-panel--terminal .context-tabs button {
   font: 700 13px/1.15 var(--ui-operation);
   color: #352a20;
   background: #cabb9b;
 }
-.game .context-panel--terminal .observation {
+.game.game .context-panel--terminal .observation {
   border-radius: 0;
   background: #efe0bf;
   clip-path: polygon(9px 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%, 0 9px);
 }
-.game .context-panel--knowledge .context-header > span:first-child {
+.game.game .context-panel--knowledge .context-header > span:first-child {
   font: 700 18px/1.1 var(--ui-ledger);
   letter-spacing: -.25px;
 }
-.game .context-panel--knowledge .context-body h2,
-.game .context-panel--knowledge .observation h3 {
+.game.game .context-panel--knowledge .context-body h2,
+.game.game .context-panel--knowledge .observation h3 {
   font-family: var(--ui-ledger);
 }
-.game .context-panel--knowledge .context-body h3 {
+.game.game .context-panel--knowledge .context-body h3 {
   font-family: var(--ui-ledger);
   font-weight: 700;
 }
-.game .context-panel--knowledge .context-tabs button {
+.game.game .context-panel--knowledge .context-tabs button {
   font: 700 12px/1.2 var(--ui-ledger);
   color: #382719;
   background: #dec7a2;
   border-color: #95704e;
 }
-.game .context-panel--knowledge .context-body {
+.game.game .context-panel--knowledge .context-body {
   font-family: var(--ui-ledger);
   font-size: 13px;
 }
-.game .context-panel--knowledge .observation p {
+.game.game .context-panel--knowledge .observation p {
   font-family: var(--ui-ledger);
   font-size: 13px;
 }
-.game .context-panel--knowledge .context-overview {
+.game.game .context-panel--knowledge .context-overview {
   clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
 }
-.game .context-panel--menu .context-header > span:first-child {
+.game.game .context-panel--menu .context-header > span:first-child {
   font: 400 29px/1 var(--ui-display);
 }
-.game .context-panel--menu .context-body::before {
+.game.game .context-panel--menu .context-body::before {
   font: 400 22px/1 var(--ui-display);
   letter-spacing: 1.2px;
 }
 
 /* World-first top command surfaces and building cartridges share the
    manufactured frame vocabulary, but never become a floating dashboard. */
-.game .site-mark,
-.game .resources,
-.game .hud-actions,
-.game .field-guide,
-.game .guide-toggle,
-.game .build-hint,
-.game .toast {
+.game.game .site-mark,
+.game.game .resources,
+.game.game .hud-actions,
+.game.game .field-guide,
+.game.game .guide-toggle,
+.game.game .build-hint,
+.game.game .toast {
   border-radius: 0;
   clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px);
 }
-.game .site-mark > div {
+.game.game .site-mark > div {
   font: 400 22px/1 var(--ui-display);
   letter-spacing: .8px;
 }
-.game .site-mark > div small {
+.game.game .site-mark > div small {
   font: 500 9px/1.4 var(--ui-measure);
   letter-spacing: .15px;
 }
-.game .resources b { font: 600 17px/1.05 var(--ui-measure); }
-.game .resources small { font: 700 11px/1 var(--ui-operation); letter-spacing: .5px; }
-.game .hud-actions button {
+.game.game .resources b { font: 600 17px/1.05 var(--ui-measure); }
+.game.game .resources small { font: 700 11px/1 var(--ui-operation); letter-spacing: .5px; }
+.game.game .hud-actions button {
   clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
   border-radius: 0;
 }
-.game .field-guide h2 { font: 700 22px/1.05 var(--ui-operation); }
-.game .field-guide > small { font: 600 9px/1.25 var(--ui-measure); }
-.game .field-guide p { font: 500 13px/1.42 var(--ui-operation); }
-.game .field-guide .guide-body { font: 500 13px/1.42 var(--ui-operation); }
-.game .build-bar,
-.game .build-submenu {
+.game.game .field-guide h2 { font: 700 22px/1.05 var(--ui-operation); }
+.game.game .field-guide > small { font: 600 9px/1.25 var(--ui-measure); }
+.game.game .field-guide p { font: 500 13px/1.42 var(--ui-operation); }
+.game.game .field-guide .guide-body { font: 500 13px/1.42 var(--ui-operation); }
+.game.game .build-bar,
+.game.game .build-submenu {
   border-radius: 0;
   clip-path: polygon(15px 0, calc(100% - 15px) 0, 100% 15px, 100% calc(100% - 15px), calc(100% - 15px) 100%, 15px 100%, 0 calc(100% - 15px), 0 15px);
 }
-.game .build-bar button > span { font: 700 13px/1 var(--ui-operation); }
-.game .build-bar em,
-.game .group-marker { font: 500 10px/1 var(--ui-measure); }
-.game .build-hint strong { font: 700 16px/1 var(--ui-operation); }
-.game .build-hint > span { font: 500 13px/1.2 var(--ui-operation); }
-.game .status-line { font-size: 11px; }
+.game.game .build-bar button > span { font: 700 13px/1 var(--ui-operation); }
+.game.game .build-bar em,
+.game.game .group-marker { font: 500 10px/1 var(--ui-measure); }
+.game.game .build-hint strong { font: 700 16px/1 var(--ui-operation); }
+.game.game .build-hint > span { font: 500 13px/1.2 var(--ui-operation); }
+.game.game .status-line { font-size: 11px; }
 
 /* Keep handheld interaction and reading usable. The frame chamfers become
    shallow but retain their silhouette and NEVER change tap-target dimensions. */
 @media (max-width: 650px) {
-  .game .context-panel { --ui-cut: 11px; }
-  .game .context-panel--knowledge { --ui-cut: 14px; }
-  .game .context-header { min-height: 45px; padding: 7px 13px; }
-  .game .context-header > span:first-child { font-size: 22px; }
-  .game .context-panel--terminal .context-header > span:first-child { font-size: 22px; }
-  .game .context-panel--knowledge .context-header > span:first-child { font-size: 16px; }
-  .game .context-header button { width: 27px; height: 27px; }
-  .game .context-body { font-size: 13px; }
-  .game .site-mark { display: none; }
-  .game .resources b { font-size: 13px; }
-  .game .resources small { font-size: 9px; }
-  .game .hud-actions button { width: 29px; height: 30px; }
-  .game .build-bar button > span { font-size: 11px; }
-  .game .build-bar em { font-size: 8px; }
-  .game .field-guide h2 { font-size: 18px; }
+  .game.game .context-panel { --ui-cut: 11px; }
+  .game.game .context-panel--knowledge { --ui-cut: 14px; }
+  .game.game .context-header { min-height: 45px; padding: 7px 13px; }
+  .game.game .context-header > span:first-child { font-size: 22px; }
+  .game.game .context-panel--terminal .context-header > span:first-child { font-size: 22px; }
+  .game.game .context-panel--knowledge .context-header > span:first-child { font-size: 16px; }
+  .game.game .context-header button { width: 27px; height: 27px; }
+  .game.game .context-body { font-size: 13px; }
+  .game.game .site-mark { display: none; }
+  .game.game .resources b { font-size: 13px; }
+  .game.game .resources small { font-size: 9px; }
+  .game.game .hud-actions button { width: 29px; height: 30px; }
+  .game.game .build-bar button > span { font-size: 11px; }
+  .game.game .build-bar em { font-size: 8px; }
+  .game.game .field-guide h2 { font-size: 18px; }
 }
