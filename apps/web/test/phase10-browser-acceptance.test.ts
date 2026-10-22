@@ -3909,6 +3909,14 @@ browserIt(
         return true;
       })()`);
       await waitForExpression(`document.querySelector(".context-panel")?.getAttribute("data-panel-kind") === "knowledge"`);
+      const focusedMobilePanel = await evaluate<{ dock: string; zoom: string; width: number }>(`(() => ({
+        dock: getComputedStyle(document.querySelector(".build-zone")).visibility,
+        zoom: getComputedStyle(document.querySelector(".world-zoom-controls")).visibility,
+        width: document.querySelector(".context-panel").getBoundingClientRect().width,
+      }))()`);
+      expect(focusedMobilePanel.dock).toBe("hidden");
+      expect(focusedMobilePanel.zoom).toBe("hidden");
+      expect(focusedMobilePanel.width).toBeGreaterThan(350);
       await captureUiReview("ui-09-mobile-notebook.png");
       await evaluate(`(() => {
         document.querySelector('button[aria-label="Close panel"]')?.click();
@@ -3922,6 +3930,7 @@ browserIt(
         return true;
       })()`);
       await waitForExpression(`document.querySelector(".context-panel") === null`);
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".build-zone")).visibility`)).toBe("visible");
 
       const touchPanBefore = await evaluate<{
         scrollX: number;
