@@ -2741,11 +2741,18 @@ browserIt(
       // An instantaneous two-pointer jump can coalesce into no pointermove
       // from the Phaser input manager even though a human pinch works.
       // Keep asserting a real zoom change; do not bypass the gesture.
+      // A real pinch begins with a primary contact; the second finger joins
+      // later. Chromium's simultaneous two-point touchStart can synthesize a
+      // stray one-finger pointer-up under an armed area tool.
+      await sendTouch("touchStart", [
+        { x: center.x - 35, y: center.y, id: 2 },
+      ]);
+      await sleep(60);
       await sendTouch("touchStart", [
         { x: center.x - 35, y: center.y, id: 2 },
         { x: center.x + 35, y: center.y, id: 3 },
       ]);
-      await sleep(50);
+      await sleep(60);
       for (const radius of [45, 55, 65]) {
         await sendTouch("touchMove", [
           { x: center.x - radius, y: center.y, id: 2 },
@@ -2757,6 +2764,9 @@ browserIt(
       await evaluate<void>(`new Promise((resolve) => setTimeout(resolve, 350))`);
       const cameraAfterPinch = await evaluate<{ zoom: number }>(`window.__UNKNOWN_YIELD_CAMERA__()`);
       console.log("UI_PINCH_RESULT " + JSON.stringify({ cameraBeforePinch, cameraAfterPinch }));
+      console.log("UI_PINCH_REVIEW " + JSON.stringify(await evaluate<string>(
+        `document.querySelector('[data-testid="dismantle-review"]')?.textContent ?? ""`,
+      )));
       expect(Math.abs(cameraAfterPinch.zoom - cameraBeforePinch.zoom)).toBeGreaterThan(0.001);
       expect(await evaluate<boolean>(`document.querySelector('[data-testid="dismantle-review"]') === null`)).toBe(true);
 
