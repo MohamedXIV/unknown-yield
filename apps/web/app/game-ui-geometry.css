@@ -463,3 +463,274 @@
     padding-right: 17px;
   }
 }
+
+
+/* V0.6 / CONTAINED CLIPBOARD
+   A sheet is not the panel. The actual scene is outer fabricated metal
+   > recessed mounting bed > physically contained paper/instrument face
+   > scrollable operational content. Deliberately keep the real panel ROOT
+   unclipped so the frame casts a proper shadow and all controls stay live.
+   Original asset: public/ui/clipboard-retainer.svg. */
+.game.game .context-panel {
+  --ui-rim: 14px;
+  --ui-cut: 25px;
+  --board-bed-cut: 12px;
+  --board-bed-rim: #8a7658;
+  --board-face: #111b1d;
+  padding: var(--ui-rim);
+}
+.game.game .context-panel--selection {
+  --ui-plate: #8b8c79;
+  --board-bed-rim: #a68c67;
+  --board-face: #101c1e;
+}
+.game.game .context-panel--terminal {
+  --ui-rim: 16px;
+  --ui-cut: 29px;
+  --ui-plate: #a78660;
+  --board-bed-rim: #bb9264;
+  --board-face: #1a2323;
+}
+.game.game .context-panel--knowledge {
+  --ui-rim: 16px;
+  --ui-cut: 28px;
+  --ui-plate: #806849;
+  --board-bed-rim: #ab906a;
+  --board-face: #29241e;
+}
+.game.game .context-panel--menu { --ui-rim: 13px; --ui-cut: 24px; }
+.game.game .context-panel--configuration { --ui-rim: 12px; --ui-cut: 20px; }
+
+/* Steel tray that mounts both header and document, never a floating overlay.
+   The chamfer belongs to the decorative tray background, not to clickable
+   or scrollable DOM content. */
+.game.game .context-board-bed {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  padding: 8px 6px 8px;
+  isolation: isolate;
+}
+.game.game .context-board-bed::before,
+.game.game .context-board-bed::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+.game.game .context-board-bed::before {
+  inset: 0;
+  z-index: -2;
+  clip-path: polygon(
+    var(--board-bed-cut) 0,
+    calc(100% - var(--board-bed-cut)) 0,
+    100% var(--board-bed-cut),
+    100% calc(100% - var(--board-bed-cut)),
+    calc(100% - var(--board-bed-cut)) 100%,
+    var(--board-bed-cut) 100%,
+    0 calc(100% - var(--board-bed-cut)),
+    0 var(--board-bed-cut)
+  );
+  background:
+    linear-gradient(154deg, #efdbb568, transparent 20%, transparent 78%, #050a0b86),
+    repeating-linear-gradient(96deg, transparent 0 23px, #d7c09b09 23px 24px),
+    linear-gradient(110deg, #5a5949, #222f30 19%, var(--board-face) 59%, #5b4b37 94%);
+  box-shadow: inset 0 0 0 1px #f6d4a05e;
+}
+.game.game .context-board-bed::after {
+  inset: 4px;
+  z-index: 5;
+  padding: 2px;
+  clip-path: polygon(
+    8px 0, calc(100% - 8px) 0,
+    100% 8px, 100% calc(100% - 8px),
+    calc(100% - 8px) 100%, 8px 100%,
+    0 calc(100% - 8px), 0 8px
+  );
+  background: linear-gradient(145deg, #f0d8a3, var(--board-bed-rim) 27%, #2b3431 72%, #ceae7b);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+/* The nameplate is seated on top of the tray, physically separated from the
+   lower paper bed by a narrow visible metal bridge. */
+.game.game .context-board-bed .context-header {
+  position: relative;
+  z-index: 2;
+  flex: 0 0 auto;
+  margin: 2px 4px 0;
+  padding-block: 9px;
+  border: 2px solid #ae8d5f;
+  border-bottom: 3px solid #493e31;
+  background: linear-gradient(120deg, #41312c, #131e20 80%);
+  box-shadow:
+    0 2px 0 #090f10,
+    0 0 0 2px #080f10ab,
+    inset 0 1px #ecd1a057,
+    inset 0 -3px #02080b8a;
+}
+.game.game .context-board-bed .context-header button {
+  position: relative;
+  z-index: 3;
+}
+
+/* The paper/instrument sheet is *smaller than* the metal tray on every side.
+   Both top and bottom edges stay within the bezel even when the scrollable
+   contents are much taller than the panel. */
+.game.game .context-board-bed .context-body {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  margin: 8px 6px 7px;
+  padding: 15px 13px 17px;
+  border: 2px solid #8c7b5c;
+  border-radius: 1px;
+  background-color: #102022;
+  box-shadow:
+    0 4px 0 #080e10,
+    0 0 0 3px #0b1516,
+    inset 0 0 0 3px #45534c52,
+    inset 0 8px 16px #02070877;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+.game.game .context-board-bed .context-body:focus-visible {
+  outline: 2px solid #e8c486;
+  outline-offset: -4px;
+}
+
+/* Dark steel inspection slate rather than a floating digital card. */
+.game.game .context-panel--selection .context-board-bed .context-header {
+  background: linear-gradient(112deg, #50372a, #172629 66%, #101b1d);
+}
+.game.game .context-panel--selection .context-board-bed .context-body {
+  margin-inline: 6px;
+  border-color: #ad9872;
+  box-shadow:
+    0 4px 0 #070b0c,
+    0 0 0 3px #0a1517,
+    inset 0 0 0 3px #73807838,
+    inset 0 10px 16px #0206075c;
+}
+
+/* Government paper ticket: four visible edges and an undercut shadow.
+   No separate floating paper card, no paper reaching the silhouette. */
+.game.game .context-panel--terminal .context-board-bed .context-header {
+  margin-inline: 5px;
+  border-color: #d2ae7d;
+  border-bottom: 3px solid #4b2620;
+  background:
+    repeating-linear-gradient(112deg, transparent 0 26px, #fff1c00c 26px 27px),
+    linear-gradient(110deg, #973c2f, #55251e 88%);
+}
+.game.game .context-panel--terminal .context-board-bed .context-body {
+  margin: 10px 8px 9px;
+  padding: 16px 13px 19px;
+  border: 2px solid #a78a65;
+  background-color: #ecdfc1;
+  box-shadow:
+    0 4px 0 #080d0d,
+    0 0 0 4px #192322,
+    inset 0 0 0 3px #f8e8c6,
+    inset 0 0 20px #9f7c5152;
+}
+
+/* Archival folio: deeper dark wood/steel gutter, pale inner sheet,
+   independent of the red-brown title plate above it. */
+.game.game .context-panel--knowledge .context-board-bed {
+  padding-inline: 7px;
+}
+.game.game .context-panel--knowledge .context-board-bed .context-header {
+  margin-inline: 5px;
+  border-color: #c2a078;
+  border-bottom: 3px solid #452c23;
+  background: linear-gradient(100deg, #713d30, #8e6045 59%, #53382c);
+}
+.game.game .context-panel--knowledge .context-board-bed .context-body {
+  margin: 10px 8px 9px;
+  padding: 16px 13px 19px;
+  border: 2px solid #a98a63;
+  background-color: #efe0bc;
+  box-shadow:
+    0 4px 0 #110f0e,
+    0 0 0 4px #25211a,
+    inset 0 0 0 3px #f8e9ca,
+    inset 0 0 18px #8062465c;
+}
+
+/* Menu and controls use the same mounted instrument construction, but do not
+   masquerade as documents with paper. */
+.game.game .context-panel--menu .context-board-bed .context-body,
+.game.game .context-panel--configuration .context-board-bed .context-body {
+  background-color: #132123;
+}
+
+/* Original vector clamp, kept outside scrolling content and never hit-testable.
+   This is hardware on the board, not a fake data indicator. */
+.game.game .context-retainer {
+  position: absolute;
+  z-index: 11;
+  top: -9px;
+  left: 50%;
+  width: 112px;
+  height: 39px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  background: url("/ui/clipboard-retainer.svg") center / contain no-repeat;
+  filter: drop-shadow(0 2px 2px #000b);
+  display: none;
+}
+.game.game .context-panel--terminal .context-retainer,
+.game.game .context-panel--knowledge .context-retainer {
+  display: block;
+}
+.game.game .context-screw--upper-left,
+.game.game .context-screw--lower-left {
+  right: auto;
+  left: 2px;
+}
+.game.game .context-screw--upper-left { top: 63px; }
+.game.game .context-screw--lower-left { bottom: 22px; }
+
+/* The panel still occupies the SAME viewport coordinates. Thin the mounting
+   plate on smaller screens rather than shrinking touch targets or clipping
+   scrollable paper. */
+@media (max-width: 650px) {
+  .game.game .context-panel,
+  .game.game .context-panel--selection {
+    --ui-rim: 10px;
+    --ui-cut: 18px;
+    --board-bed-cut: 8px;
+  }
+  .game.game .context-panel--terminal,
+  .game.game .context-panel--knowledge {
+    --ui-rim: 11px;
+    --ui-cut: 20px;
+  }
+  .game.game .context-panel--menu,
+  .game.game .context-panel--configuration { --ui-rim: 9px; --ui-cut: 17px; }
+  .game.game .context-board-bed { padding: 5px 4px 6px; }
+  .game.game .context-board-bed .context-header {
+    margin: 2px 3px 0;
+    padding-block: 7px;
+  }
+  .game.game .context-board-bed .context-body {
+    margin: 6px 4px 5px;
+    padding: 13px 11px 15px;
+  }
+  .game.game .context-panel--terminal .context-board-bed .context-body,
+  .game.game .context-panel--knowledge .context-board-bed .context-body {
+    margin: 7px 5px 6px;
+    padding: 13px 11px 15px;
+  }
+  .game.game .context-retainer { top: -7px; width: 82px; height: 29px; }
+  .game.game .context-screw--upper-left { top: 49px; }
+  .game.game .context-screw--lower-left { bottom: 17px; }
+}
