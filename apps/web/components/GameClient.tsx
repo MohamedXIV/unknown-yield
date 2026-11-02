@@ -1090,6 +1090,8 @@ function GameClientInner() {
             <span className="context-screw context-screw--lower" />
             <span className="context-screw context-screw--upper-left" />
             <span className="context-screw context-screw--lower-left" />
+            <span className="context-screw context-screw--mid-left" />
+            <span className="context-screw context-screw--mid-right" />
           </div>
           <div className="context-retainer" aria-hidden="true" />
           {/* Mounted board bed, not an overlay. Both the enamel header and the

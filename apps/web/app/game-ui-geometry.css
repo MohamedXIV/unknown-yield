@@ -769,3 +769,258 @@
   letter-spacing: 0;
   white-space: nowrap;
 }
+
+
+/* V0.7 / GEMINI MATERIAL STUDY, GAME-NATIVE IMPLEMENTATION
+   Adopts the prototype's gunmetal, asymmetric wear, recessed brass and
+   typographic contrast; does NOT import its fake cargo/knowledge mechanics,
+   its fixed-height demo UI, or clip the interactive root.
+   All hardware and grain are pointer-inert and use a 1.2kb SVG etching. */
+
+/* Material palette is independent of data and the simulation. It allows
+   inspectors, company forms and archives to share one manufactured lineage. */
+.game.game .context-panel {
+  --uy-shell-rust: #aa632d;
+  --uy-shell-glint: #f1c98c;
+  --uy-shell-cold: #50595b;
+  --uy-shell-mid: #30383c;
+  --uy-shell-deep: #171e21;
+  --uy-bed-lip: #8b7558;
+  --uy-bed-dark: #121a1c;
+  --uy-paper-ink: #2e241c;
+  filter:
+    drop-shadow(0 1px 0 #bba47b7d)
+    drop-shadow(0 3px 0 #070c0e)
+    drop-shadow(0 17px 24px #000c);
+}
+
+/* Only a decorative layer is chamfered: the enclosing React aside itself
+   stays square/unclipped so its shadow, hit regions and scroll remain intact.
+   The bright metal is now a fine machined edge, NOT the whole frame face. */
+.game.game .context-panel::before {
+  background:
+    radial-gradient(ellipse 84px 21px at 17% 0%, #c17839a8, #9e59243d 58%, transparent 81%),
+    radial-gradient(ellipse 95px 24px at 83% 100%, #b5703280, transparent 81%),
+    radial-gradient(ellipse 20px 105px at 0% 43%, #ab602b59, transparent 80%),
+    radial-gradient(ellipse 21px 88px at 100% 72%, #b2712c54, transparent 82%),
+    linear-gradient(160deg, #f0dcac50 0%, transparent 9%, transparent 82%, #0a0e12ad 100%),
+    url("/ui/steel-edge-wear.svg") 0 0 / 224px 224px repeat,
+    linear-gradient(144deg, var(--uy-shell-cold), #343b3e 20%, var(--uy-shell-mid) 42%, var(--uy-shell-deep) 78%, #393c3a 100%);
+}
+.game.game .context-panel::after {
+  /* Narrow specular rim + inner shadow gives a die-cast edge, not a gold card. */
+  inset: calc(var(--ui-rim) - 3px);
+  padding: 2px;
+  background: linear-gradient(139deg, #e2ceaa 0%, #aa906d 11%, #485150 35%, #191f20 69%, #b29b75 88%, #302a24 100%);
+}
+.game.game .context-panel--selection {
+  --uy-shell-rust: #b47b41;
+  --uy-bed-lip: #9b8c70;
+}
+.game.game .context-panel--terminal {
+  --uy-shell-rust: #bb6a33;
+  --uy-bed-lip: #a78a63;
+}
+.game.game .context-panel--knowledge {
+  --uy-shell-rust: #a66b3d;
+  --uy-bed-lip: #9b8062;
+}
+
+/* Real bolted hardware mounts into the metal face, beside the contained
+   paper. Do not bolt through the text or hide a working button. */
+.game.game .context-screw {
+  width: 11px;
+  height: 11px;
+  border: 1px solid #0a0f11;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 25%, #a9a398 0 12%, #736d62 22%, #434646 55%, #1e2323 82%);
+  box-shadow:
+    0 1px 0 #d0b18a7a,
+    0 2px 3px #000b,
+    0 0 0 1px #121516,
+    inset 0 1px #e5d8b04d;
+}
+.game.game .context-screw::before {
+  left: 1px;
+  top: 4px;
+  width: 7px;
+  height: 2px;
+  transform: rotate(-31deg);
+  border-radius: 1px;
+  background: #151c1c;
+  box-shadow: 0 1px #d1c4a357;
+}
+.game.game .context-screw--upper,
+.game.game .context-screw--upper-left { top: 68px; }
+.game.game .context-screw--lower,
+.game.game .context-screw--lower-left { bottom: 20px; }
+.game.game .context-screw--mid-left,
+.game.game .context-screw--mid-right { top: 50%; }
+.game.game .context-screw--mid-left { left: 2px; right: auto; }
+.game.game .context-screw--mid-right { right: 2px; }
+
+/* Under the steel, a darker machined pocket. The highlight lands on the top
+   left wall of the brass rim; the lower right wall catches shadow. */
+.game.game .context-board-bed::before {
+  background:
+    linear-gradient(150deg, #b2a17b72 0%, transparent 11%, transparent 85%, #0b1112cc 99%),
+    repeating-linear-gradient(90deg, #c8bb9f08 0 1px, transparent 1px 19px),
+    linear-gradient(128deg, #524c3f 0%, #242c2d 18%, #10191b 57%, #3e3c34 96%);
+  box-shadow: inset 0 0 0 1px #d8bb925e;
+}
+.game.game .context-board-bed::after {
+  background: linear-gradient(137deg, #e2c99e, var(--uy-bed-lip) 24%, #292d2b 61%, #927955 87%, #c0a57b);
+  padding: 2px;
+}
+/* The rail bridge remains visible above the surface; a clipped interface
+   root would amputate these contact shadows in Chromium. */
+.game.game .context-board-bed .context-header {
+  border: 1px solid #857456;
+  border-top-color: #d3b58b;
+  border-bottom: 3px solid #171e20;
+  box-shadow:
+    0 3px 0 #0a0f10,
+    0 0 0 2px #060b0b,
+    inset 0 1px #f0dec24f,
+    inset 0 -2px #090d1075;
+}
+.game.game .context-panel--selection .context-board-bed .context-header {
+  background:
+    radial-gradient(ellipse 75px 20px at 15% 0, #bb79312b, transparent),
+    linear-gradient(107deg, #3b3430, #252d31 55%, #141d20);
+}
+.game.game .context-panel--terminal .context-board-bed .context-header,
+.game.game .context-panel--knowledge .context-board-bed .context-header {
+  border-color: #b88d68;
+  border-top-color: #e4b68f;
+  border-bottom: 3px solid #36231e;
+  background:
+    radial-gradient(ellipse 65px 22px at 21% 0, #cf7b485c, transparent 88%),
+    radial-gradient(circle at 90% 95%, #17070854, transparent 62%),
+    linear-gradient(114deg, #8d3328, #6a2821 57%, #4b211c);
+}
+.game.game .context-board-bed .context-header button {
+  border-color: #ac8b65;
+  background: linear-gradient(#343735, #151c1d);
+  box-shadow: inset 0 1px #f3d1a444, 1px 2px 0 #070b0d;
+}
+.game.game .context-retainer {
+  filter: drop-shadow(0 2px 1px #06090a) drop-shadow(0 3px 3px #000a);
+}
+
+/* The instrument surface is inset dark glass/painted steel, Gemini's
+   blueprint micro-grid is deliberately close to invisible behind text. */
+.game.game .context-panel--selection .context-board-bed .context-body {
+  border-color: #847759;
+  background-color: #101d23;
+  background-image:
+    linear-gradient(#69838c0a 1px, transparent 1px),
+    linear-gradient(90deg, #69838c0a 1px, transparent 1px),
+    linear-gradient(180deg, #0a1418e8 0, #17242cdb 40%, #0a1519f2 100%),
+    url("/ui/engineering-schematic.svg");
+  background-size: 19px 19px, 19px 19px, auto, 155px auto;
+  background-position: 0 0, 0 0, 0 0, top right;
+  background-repeat: repeat, repeat, no-repeat, no-repeat;
+  box-shadow:
+    0 4px 0 #070b0c,
+    0 0 0 3px #070e0f,
+    inset 0 2px 12px #000c,
+    inset 0 0 0 2px #42585d42;
+}
+.game.game .context-panel--selection .context-overview,
+.game.game .context-panel--selection .facts {
+  background: linear-gradient(180deg, #0c151a, #152127);
+  border-color: #746e5a;
+  box-shadow: inset 0 2px 7px #0008, inset 0 0 0 1px #d3b47d19;
+}
+
+/* Field stock belongs in the pocket: edge aging and fibers are generated
+   on the scrollable sheet itself, which is always inset on all four sides.
+   Do not add faux cargo values, print records, or AI-authored lore here. */
+.game.game .context-panel--terminal .context-board-bed .context-body {
+  background-color: #e4d5b9;
+  background-image:
+    radial-gradient(ellipse at 50% 46%, #f6ebce66 0%, transparent 69%),
+    linear-gradient(90deg, #6d4a2b22, transparent 13%, transparent 86%, #83593420),
+    repeating-linear-gradient(0deg, #6649290a 0 1px, transparent 1px 27px),
+    url("/ui/archival-paper.svg");
+  background-blend-mode: screen, multiply, normal, normal;
+  border-color: #9a7c54;
+  box-shadow:
+    0 4px 0 #090c0d,
+    0 0 0 3px #111b1b,
+    inset 0 0 0 3px #f1e3c4,
+    inset 0 7px 14px #50341d24,
+    inset 0 0 18px #89663c44;
+}
+.game.game .context-panel--knowledge .context-board-bed .context-body {
+  background-color: #e8d7b5;
+  background-image:
+    radial-gradient(ellipse at 48% 40%, #ffefd564 0%, transparent 70%),
+    linear-gradient(90deg, #9e7754ad 0 2px, #f0dfba 3px 16px, #9f665b65 17px 18px, transparent 19px),
+    linear-gradient(90deg, #7352352a, transparent 12%, transparent 87%, #7a512d24),
+    repeating-linear-gradient(0deg, #a389681a 0 1px, transparent 1px 28px),
+    url("/ui/archival-paper.svg");
+  background-blend-mode: screen, normal, multiply, normal, normal;
+  border-color: #9e805d;
+  box-shadow:
+    0 4px 0 #0e1010,
+    0 0 0 3px #191e1d,
+    inset 0 0 0 3px #f3e3c1,
+    inset 0 6px 13px #583e2828,
+    inset 0 0 17px #80624647;
+}
+/* More authored filing, less web-card. Preserve live status values. */
+.game.game .context-panel--terminal .context-overview {
+  box-shadow: inset 0 2px 7px #000a, 0 1px 0 #c2a88750;
+}
+.game.game .context-panel--knowledge .context-overview {
+  box-shadow: inset 0 0 0 2px #f4e7ca, 0 2px 3px #6d503b23;
+}
+.game.game .context-panel--terminal .context-tabs button,
+.game.game .context-panel--knowledge .context-tabs button {
+  border: 1px solid #957a5a;
+  border-bottom: 3px solid #756044;
+  background: linear-gradient(180deg, #e6d6b9, #d0bb97);
+  box-shadow: inset 0 1px #fff2d6b8, 0 2px 2px #422f204a;
+}
+.game.game .context-panel--terminal .context-tabs button:hover,
+.game.game .context-panel--terminal .context-tabs button:focus-visible,
+.game.game .context-panel--knowledge .context-tabs button:hover,
+.game.game .context-panel--knowledge .context-tabs button:focus-visible {
+  background: linear-gradient(#f5e2c3, #d9c29b);
+}
+.game.game .context-panel--knowledge .context-tabs button.active,
+.game.game .context-panel--knowledge .context-tabs button[aria-pressed="true"] {
+  border-color: #722d26;
+  border-bottom-color: #471913;
+  background: linear-gradient(#9d3f30, #692720);
+  color: #fff0d5;
+}
+.game.game .context-panel--terminal .context-body h3 {
+  letter-spacing: .48px;
+}
+.game.game .context-panel--knowledge .context-body h2,
+.game.game .context-panel--knowledge .observation h3 {
+  text-shadow: 0 1px #fff6df61;
+}
+
+/* At handheld sizes ornate details diminish before controls do. The plate's
+   hit regions, root and scroll remain uncut and top clamp remains decorative. */
+@media (max-width: 650px) {
+  .game.game .context-panel::before {
+    background:
+      radial-gradient(ellipse 55px 15px at 18% 0%, #b9773880, transparent 83%),
+      radial-gradient(ellipse 60px 16px at 82% 100%, #ae723a65, transparent 83%),
+      url("/ui/steel-edge-wear.svg") 0 0 / 224px 224px repeat,
+      linear-gradient(144deg, #485154, #283135 47%, #171e20 81%, #363937);
+  }
+  .game.game .context-screw { width: 8px; height: 8px; }
+  .game.game .context-screw::before { width: 5px; left: 1px; top: 3px; height: 1px; }
+  .game.game .context-screw--upper,
+  .game.game .context-screw--upper-left { top: 50px; }
+  .game.game .context-screw--lower,
+  .game.game .context-screw--lower-left { bottom: 16px; }
+  .game.game .context-screw--mid-left,
+  .game.game .context-screw--mid-right { display: none; }
+}

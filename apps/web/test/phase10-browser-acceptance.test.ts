@@ -1293,6 +1293,9 @@ browserIt(
           tabs.getBoundingClientRect().right + 1;
       })()`)).toBe(true);
       expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--terminal .context-retainer")).backgroundImage`)).toContain("clipboard-retainer.svg");
+      // Production frame must use authored steel etching, but the real panel stays uncut.
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--terminal"), "::before").backgroundImage`)).toContain("steel-edge-wear.svg");
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--terminal")).clipPath`)).toBe("none");
       // Zoom belongs to the world viewport and may not cover the paper or tabs.
       expect(await evaluate<boolean>(`(() => {
         const board = document.querySelector(".context-panel--terminal");
