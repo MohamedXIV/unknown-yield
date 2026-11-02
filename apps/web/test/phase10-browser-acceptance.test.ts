@@ -1226,6 +1226,19 @@ browserIt(
       expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--knowledge")).clipPath`)).toBe("none");
       expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--knowledge"), "::before").clipPath`)).toContain("polygon(");
       expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--knowledge"), "::after").clipPath`)).toContain("polygon(");
+      // Actual sheet/instrument must sit within a recessed tray on all sides.
+      expect(await evaluate<boolean>(`(() => {
+        const panel = document.querySelector(".context-panel--knowledge");
+        const bed = panel?.querySelector(".context-board-bed");
+        const face = bed?.querySelector(".context-body");
+        if (!panel || !bed || !face) return false;
+        const outer = panel.getBoundingClientRect();
+        const inner = face.getBoundingClientRect();
+        return getComputedStyle(bed, "::before").clipPath.includes("polygon(") &&
+          inner.left - outer.left > 18 &&
+          outer.right - inner.right > 18 &&
+          outer.bottom - inner.bottom > 18;
+      })()`)).toBe(true);
       expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--knowledge .context-header > span")).fontFamily`)).toContain("Georgia");
       await captureUiReview("ui-03-desktop-notebook.png");
       await evaluate(`(() => {
@@ -1257,7 +1270,21 @@ browserIt(
       expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--terminal")).clipPath`)).toBe("none");
       expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--terminal"), "::before").clipPath`)).toContain("polygon(");
       expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--terminal"), "::after").clipPath`)).toContain("polygon(");
+      // Actual sheet/instrument must sit within a recessed tray on all sides.
+      expect(await evaluate<boolean>(`(() => {
+        const panel = document.querySelector(".context-panel--terminal");
+        const bed = panel?.querySelector(".context-board-bed");
+        const face = bed?.querySelector(".context-body");
+        if (!panel || !bed || !face) return false;
+        const outer = panel.getBoundingClientRect();
+        const inner = face.getBoundingClientRect();
+        return getComputedStyle(bed, "::before").clipPath.includes("polygon(") &&
+          inner.left - outer.left > 18 &&
+          outer.right - inner.right > 18 &&
+          outer.bottom - inner.bottom > 18;
+      })()`)).toBe(true);
       expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--terminal .context-header > span")).fontFamily`)).toContain("Bebas Neue");
+      expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--terminal .context-retainer")).backgroundImage`)).toContain("clipboard-retainer.svg");
       const terminalInk = await evaluate<{ labels: string; values: string }>(`(() => ({
         labels: getComputedStyle(document.querySelector(".context-panel--terminal .facts span")).color,
         values: getComputedStyle(document.querySelector(".context-panel--terminal .facts b")).color,
@@ -1687,6 +1714,19 @@ browserIt(
       expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--selection")).clipPath`)).toBe("none");
       expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--selection"), "::before").clipPath`)).toContain("polygon(");
       expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--selection"), "::after").clipPath`)).toContain("polygon(");
+      // Actual sheet/instrument must sit within a recessed tray on all sides.
+      expect(await evaluate<boolean>(`(() => {
+        const panel = document.querySelector(".context-panel--selection");
+        const bed = panel?.querySelector(".context-board-bed");
+        const face = bed?.querySelector(".context-body");
+        if (!panel || !bed || !face) return false;
+        const outer = panel.getBoundingClientRect();
+        const inner = face.getBoundingClientRect();
+        return getComputedStyle(bed, "::before").clipPath.includes("polygon(") &&
+          inner.left - outer.left > 18 &&
+          outer.right - inner.right > 18 &&
+          outer.bottom - inner.bottom > 18;
+      })()`)).toBe(true);
       await captureUiReview("ui-07-desktop-depot-inspector.png");
       const loadedDepotText = await evaluate<string>(
         `document.querySelector(".context-panel")?.textContent?.replace(/\\s+/g, " ") ?? ""`,
