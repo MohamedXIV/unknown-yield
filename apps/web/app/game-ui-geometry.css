@@ -734,3 +734,19 @@
   .game.game .context-screw--upper-left { top: 49px; }
   .game.game .context-screw--lower-left { bottom: 17px; }
 }
+
+
+/* World zoom commands must never float over a seated paper sheet or hide its
+   tabs. When a board is open, preserve every zoom button and move this *world*
+   control rail immediately outside the board on desktop. Do not relocate the
+   build tray. Mobile remains a modal reading surface with zoom controls hidden. */
+@media (min-width: 901px) {
+  .game.game:has(.context-panel) .world-zoom-controls {
+    right: calc(20px + 336px + 20px);
+  }
+}
+@media (min-width: 651px) and (max-width: 900px) {
+  .game.game:has(.context-panel) .world-zoom-controls {
+    right: calc(12px + 280px + 18px);
+  }
+}
