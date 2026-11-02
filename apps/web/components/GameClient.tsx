@@ -1088,8 +1088,14 @@ function GameClientInner() {
           <div className="context-hardware" aria-hidden="true">
             <span className="context-screw context-screw--upper" />
             <span className="context-screw context-screw--lower" />
+            <span className="context-screw context-screw--upper-left" />
+            <span className="context-screw context-screw--lower-left" />
           </div>
-          <div className="context-header">
+          <div className="context-retainer" aria-hidden="true" />
+          {/* Mounted board bed, not an overlay. Both the enamel header and the
+              scrollable instrument/paper surface live entirely inside it. */}
+          <div className="context-board-bed">
+            <div className="context-header">
             <span>
               {panel === "knowledge"
                 ? "FIELD NOTEBOOK"
@@ -3516,6 +3522,7 @@ function GameClientInner() {
                 )}
               </>
             )}
+            </div>
           </div>
         </aside>
       )}
