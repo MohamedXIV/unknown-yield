@@ -750,3 +750,22 @@
     right: calc(12px + 280px + 18px);
   }
 }
+
+
+/* Four equal command stamps fit the narrower mounted freight sheet: no
+   horizontal scrolling or partially hidden "Company" section control. */
+.game.game .context-panel--terminal .context-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  width: 100%;
+  gap: 2px;
+  overflow: visible;
+}
+.game.game .context-panel--terminal .context-tabs button {
+  min-width: 0;
+  width: 100%;
+  padding-inline: 2px;
+  font: 700 12px/1.15 var(--ui-operation);
+  letter-spacing: 0;
+  white-space: nowrap;
+}
