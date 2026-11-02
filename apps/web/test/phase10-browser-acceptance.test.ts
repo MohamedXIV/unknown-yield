@@ -1240,6 +1240,13 @@ browserIt(
           outer.bottom - inner.bottom > 18;
       })()`)).toBe(true);
       expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--knowledge .context-header > span")).fontFamily`)).toContain("Georgia");
+      expect(await evaluate<boolean>(`(() => {
+        const tabs = document.querySelector('nav[aria-label="Notebook filters"]');
+        const last = tabs?.lastElementChild;
+        if (!tabs || !last) return false;
+        return tabs.scrollWidth <= tabs.clientWidth + 1 &&
+          last.getBoundingClientRect().right <= tabs.getBoundingClientRect().right + 1;
+      })()`)).toBe(true);
       await captureUiReview("ui-03-desktop-notebook.png");
       await evaluate(`(() => {
         [...document.querySelectorAll('nav[aria-label="Notebook filters"] button')]

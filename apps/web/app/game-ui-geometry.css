@@ -1024,3 +1024,23 @@
   .game.game .context-screw--mid-left,
   .game.game .context-screw--mid-right { display: none; }
 }
+
+
+/* Mounted evidence tabs: expose ALL four true filters at once, just as the
+   freight section stamps do. No clipped "Confirmed" label and no sideways
+   browser-style tabs underneath a narrow physical notebook plate. */
+.game.game .context-panel--knowledge .context-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 3px;
+  width: 100%;
+  overflow: visible;
+}
+.game.game .context-panel--knowledge .context-tabs button {
+  min-width: 0;
+  width: 100%;
+  padding-inline: 2px;
+  font: 700 11px/1.15 var(--ui-operation);
+  letter-spacing: -.1px;
+  white-space: nowrap;
+}
