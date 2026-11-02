@@ -1284,6 +1284,14 @@ browserIt(
           outer.bottom - inner.bottom > 18;
       })()`)).toBe(true);
       expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--terminal .context-header > span")).fontFamily`)).toContain("Bebas Neue");
+      expect(await evaluate<boolean>(`(() => {
+        const tabs = document.querySelector('nav[aria-label="Terminal sections"]');
+        const last = tabs?.lastElementChild;
+        if (!tabs || !last) return false;
+        return tabs.scrollWidth <= tabs.clientWidth + 1 &&
+          last.getBoundingClientRect().right <=
+          tabs.getBoundingClientRect().right + 1;
+      })()`)).toBe(true);
       expect(await evaluate<string>(`getComputedStyle(document.querySelector(".context-panel--terminal .context-retainer")).backgroundImage`)).toContain("clipboard-retainer.svg");
       // Zoom belongs to the world viewport and may not cover the paper or tabs.
       expect(await evaluate<boolean>(`(() => {
