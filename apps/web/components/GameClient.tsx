@@ -1065,6 +1065,7 @@ function GameClientInner() {
         activePack={activePack}
         pendingPack={pendingPack}
         preferences={preferences}
+        notice={notice}
         onResume={resumeFromMenu}
         onStartNew={startNewFromMenu}
         onLoad={loadFromMenu}
