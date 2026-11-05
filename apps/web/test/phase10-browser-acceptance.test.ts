@@ -1119,6 +1119,10 @@ browserIt(
         return true;
       })()`);
       await waitForExpression(
+        `document.querySelector("canvas") !== null &&
+          document.querySelector('nav[aria-label="Build tools"]') !== null`,
+      );
+      await waitForExpression(
         `document.querySelector('[data-onboarding-beat="camera-build"]')
           ?.textContent?.includes("Read the site before you automate it.") === true`,
       );
