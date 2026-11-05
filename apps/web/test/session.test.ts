@@ -1,5 +1,9 @@
 import { it, expect } from "vitest";
 import { Session } from "../game/session";
+import { Simulation } from "@site/sim-core";
+import { fixture } from "@site/content";
+import type { ArchiveStorage } from "../game/save-archive";
+
 
 it("shares a single snapshot projection across listeners until the world changes", () => {
   const session = new Session();
@@ -39,10 +43,6 @@ it("shares a single snapshot projection across listeners until the world changes
   session.advance(2100, false);
   expect(readings).toHaveLength(subscribersBefore);
 });
-
-import { Simulation } from "@site/sim-core";
-import { fixture } from "@site/content";
-import type { ArchiveStorage } from "../game/save-archive";
 
 function archiveStorage() {
   const records = new Map<string, string>();
