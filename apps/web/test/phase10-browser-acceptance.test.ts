@@ -688,6 +688,7 @@ browserIt(
           },
         );
     let serverLog = "";
+    const evidenceDirectory = process.env.UNKNOWN_YIELD_EVIDENCE_DIR;
     server.stdout?.on("data", (chunk) => {
       serverLog += String(chunk);
     });
@@ -810,6 +811,22 @@ browserIt(
               "Browser evaluation failed",
           );
         return response.result?.value as T;
+      };
+      const captureEvidence = async (name: string) => {
+        const screenshot = await call("Page.captureScreenshot", {
+          format: "png",
+          captureBeyondViewport: false,
+        });
+        const bytes = Buffer.from(
+          (screenshot as unknown as { data: string }).data,
+          "base64",
+        );
+        const sha256 = createHash("sha256").update(bytes).digest("hex");
+        if (evidenceDirectory) {
+          mkdirSync(evidenceDirectory, { recursive: true });
+          writeFileSync(join(evidenceDirectory, name), bytes);
+        }
+        return { bytes: bytes.length, sha256, retained: Boolean(evidenceDirectory) };
       };
 
       /** Test-only seed of an archive revision; Save/Load buttons remain real UI. */
@@ -1059,6 +1076,8 @@ browserIt(
       await waitForExpression(`document.readyState === "complete" &&
         document.querySelector(".main-menu") !== null`);
       await waitForExpression(`document.querySelector(".menu-home .menu-action") !== null`);
+      const bootMenuScreenshot = await captureEvidence("main-menu-boot-desktop.png");
+      console.log("UNKNOWN_YIELD_MAIN_MENU_BOOT " + JSON.stringify(bootMenuScreenshot));
       const emptyBoot = await evaluate<{
         hasCanvas: boolean;
         resumeDisabled: boolean;
@@ -1077,13 +1096,28 @@ browserIt(
 
       await clickMainMenuAction("Personnel Archives");
       await waitForExpression(`document.body.textContent?.includes("No archived expeditions have been recorded") === true`);
+      const emptyArchiveScreenshot = await captureEvidence("main-menu-empty-archives.png");
+      console.log("UNKNOWN_YIELD_MAIN_MENU_EMPTY_ARCHIVES " + JSON.stringify(emptyArchiveScreenshot));
       await evaluate<boolean>(`(() => { document.querySelector(".menu-back")?.click(); return true; })()`);
       await clickMainMenuAction("Operational Regulations");
       await waitForExpression(`document.body.textContent?.includes("Field controls") === true &&
         document.querySelector('input[aria-label="Show performance counter"]') !== null`);
       await evaluate<boolean>(`(() => { document.querySelector(".menu-back")?.click(); return true; })()`);
 
-      await startNewExpeditionFromMenu("Browser acceptance expedition");
+      await clickMainMenuAction("Begin Assignment");
+      await waitForExpression(`document.querySelector('input[aria-label="Expedition designation"]') !== null`);
+      const newAssignmentScreenshot = await captureEvidence("main-menu-new-assignment.png");
+      console.log("UNKNOWN_YIELD_MAIN_MENU_NEW_ASSIGNMENT " + JSON.stringify(newAssignmentScreenshot));
+      await evaluate<boolean>(`(() => {
+        const input = document.querySelector('input[aria-label="Expedition designation"]');
+        const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set;
+        setter.call(input, "Browser acceptance expedition");
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+        [...document.querySelectorAll("button")].find((button) =>
+          button.textContent?.includes("Create Expedition"))?.click();
+        return true;
+      })()`);
       await waitForExpression(
         `document.querySelector('[data-onboarding-beat="camera-build"]')
           ?.textContent?.includes("Read the site before you automate it.") === true`,
@@ -1397,7 +1431,6 @@ browserIt(
       const beltPreviewSha256 = createHash("sha256")
         .update(beltPreviewBytes)
         .digest("hex");
-      const evidenceDirectory = process.env.UNKNOWN_YIELD_EVIDENCE_DIR;
       if (evidenceDirectory) {
         mkdirSync(evidenceDirectory, { recursive: true });
         writeFileSync(
