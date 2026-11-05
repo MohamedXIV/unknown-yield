@@ -4157,16 +4157,38 @@ browserIt(
           return true;
         })()`);
         await waitForExpression(
-          `[...document.querySelectorAll("button")].some(b => b.textContent?.includes("Play new expedition with imported pack"))`,
+          `[...document.querySelectorAll("button")].some(b => b.textContent?.includes("Return to Main Menu to use this pack"))`,
         );
         await evaluate<boolean>(`(() => {
-          [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Play new expedition with imported pack"))?.click();
+          [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Return to Main Menu to use this pack"))?.click();
+          return true;
+        })()`);
+        await waitForExpression(`document.querySelector(".menu-return-dialog") !== null`);
+        await evaluate<boolean>(`(() => {
+          [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Save & Return"))?.click();
+          return true;
+        })()`);
+        await waitForExpression(`document.querySelector(".main-menu") !== null`);
+        await clickMainMenuAction("Content Packs");
+        await waitForExpression(`document.querySelector(".menu-pack-pending") !== null`);
+        await evaluate<boolean>(`(() => {
+          [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Use this pack"))?.click();
+          return true;
+        })()`);
+        await waitForExpression(`document.querySelector('input[aria-label="Expedition designation"]') !== null`);
+        await evaluate<boolean>(`(() => {
+          const input = document.querySelector('input[aria-label="Expedition designation"]');
+          const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set;
+          setter.call(input, "Imported browser pack");
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+          input.dispatchEvent(new Event("change", { bubbles: true }));
+          [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Create Expedition"))?.click();
           return true;
         })()`);
         await waitForExpression(
-          `localStorage.getItem("unknown-yield-active-pack-v1") !== null`,
+          `localStorage.getItem("unknown-yield-active-pack-v1") !== null &&
+            document.querySelector("canvas") !== null`,
         );
-        await waitForExpression(`document.querySelector("canvas") !== null`);
         await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Close field brief"]')?.click(); return true; })()`);
         await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Center camera"]')?.click(); return true; })()`);
         await sleep(150);
@@ -4228,8 +4250,7 @@ browserIt(
           `document.querySelector('button[aria-label="Game menu"]') !== null`,
         );
         await evaluate<boolean>(`(() => {
-          if (!document.body.textContent?.includes("Expedition controls"))
-            document.querySelector('button[aria-label="Game menu"]')?.click();
+          document.querySelector('button[aria-label="Game menu"]')?.click();
           return true;
         })()`);
         await waitForExpression(
@@ -4242,30 +4263,11 @@ browserIt(
           "PHASE19_PACK_MENU " + JSON.stringify({ text: packMenuText }),
         );
         expect(packMenuText).toContain("Offline content packs");
-        // The imported pack starts as an unsaved assignment; name a slot.
-        await evaluate<boolean>(`(() => {
-          const input = document.querySelector('input[aria-label="New expedition name"]');
-          const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set;
-          setter.call(input, "Imported browser pack");
-          input.dispatchEvent(new Event("input", { bubbles: true }));
-          return true;
-        })()`);
-        await waitForExpression(`[...document.querySelectorAll("button")].some((b) =>
-          b.textContent?.includes("Create and begin") && !b.disabled)`);
-        await evaluate<boolean>(`(() => {
-          [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Create and begin"))?.click();
-          return true;
-        })()`);
-        await waitForExpression(`document.querySelector('[aria-label="Personnel Archives"]') === null`);
-        await evaluate<boolean>(`(() => {
-          document.querySelector('button[aria-label="Game menu"]')?.click();
-          return true;
-        })()`);
-        await waitForExpression(`document.body.textContent?.includes("Offline content packs") === true`);
         await evaluate<boolean>(`(() => {
           [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Save current expedition"))?.click();
           return true;
         })()`);
+        await waitForExpression(`document.querySelector('[role="status"]')?.textContent.includes("Expedition saved locally on this device") === true`);
         const packEvidence = await evaluate<{
           id: string;
           scopedSave: boolean;
@@ -4296,27 +4298,22 @@ browserIt(
         await waitForExpression(
           `document.body.textContent?.includes("Offline content packs") === true`,
         );
-        await waitForExpression(
-          `[...document.querySelectorAll("button")].some(b => b.textContent?.includes("Start new expedition with built-in content"))`,
-        );
         await evaluate<boolean>(`(() => {
-          [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Load"))?.click();
+          [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Return to Main Menu to switch to built-in content"))?.click();
           return true;
         })()`);
-        await waitForExpression(
-          `document.body.textContent?.includes("Expedition restored") === true`,
-        );
-        // A successful Load closes the menu, so reopen it before rollback.
+        await waitForExpression(`document.querySelector(".menu-return-dialog") !== null`);
         await evaluate<boolean>(`(() => {
-          if (!document.body.textContent?.includes("Expedition controls"))
-            document.querySelector('button[aria-label="Game menu"]')?.click();
+          [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Save & Return"))?.click();
           return true;
         })()`);
+        await waitForExpression(`document.querySelector(".main-menu") !== null`);
+        await clickMainMenuAction("Content Packs");
         await waitForExpression(
-          `[...document.querySelectorAll("button")].some(b => b.textContent?.includes("Start new expedition with built-in content"))`,
+          `[...document.querySelectorAll("button")].some(b => b.textContent?.includes("Switch to built-in content"))`,
         );
         await evaluate<boolean>(`(() => {
-          [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Start new expedition with built-in content"))?.click();
+          [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Switch to built-in content"))?.click();
           return true;
         })()`);
         await waitForExpression(
