@@ -2020,3 +2020,11 @@ kbd {
  .main-menu-brand-copy h1{font-size:23px}.main-menu-rule{padding:7px 0 9px}.menu-appointment{padding:9px 11px;margin-bottom:9px}
  .menu-appointment h2{font-size:16px}.menu-home-actions{gap:4px}.menu-action{min-height:43px}.menu-action-primary{min-height:49px}
 }
+
+.menu-return-backdrop{position:fixed;z-index:80;inset:0;display:grid;place-items:center;padding:18px;background:#050b0edb;backdrop-filter:blur(5px)}
+.menu-return-dialog{width:min(440px,100%);padding:22px;color:#e8e2d2;border:1px solid #b18a52;background:linear-gradient(145deg,#1c292d,#10191e);box-shadow:0 22px 70px #000c}
+.menu-return-dialog>small{color:#d7a86c;font:8px var(--mono);letter-spacing:1.2px}
+.menu-return-dialog h2{margin:9px 0;color:#f0e6d2;font:500 22px Georgia,serif}
+.menu-return-dialog p{color:#b9c0b6;font-size:11px;line-height:1.6}
+.menu-return-actions{display:flex;flex-direction:column;gap:7px;margin-top:18px}
+.menu-return-actions button{width:100%;min-height:40px}
