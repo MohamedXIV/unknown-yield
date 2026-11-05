@@ -468,14 +468,18 @@ function GameClientInner() {
       setArchiveError(String(error));
     }
   }, [panel, session, activePack]);
-  const archiveAction = (result: CommandResult, switched = false) => {
+  const archiveAction = (result: CommandResult, switched = false, newWorld = false) => {
     setNotice(result);
     refreshArchives();
     if (result.ok && switched) {
       setMode(DEFAULT_MODE);
       setPanel(null);
-      setGuide(true);
-      setHomeToken((n) => n + 1);
+      // Resuming a saved site must not revive a previously dismissed brief
+      // or unexpectedly reposition the player's camera.
+      if (newWorld) {
+        setGuide(true);
+        setHomeToken((n) => n + 1);
+      }
     }
   };
   const commitPreferences = (next: GamePreferences) => {
@@ -3434,7 +3438,7 @@ function GameClientInner() {
                   }}
                   onCreate={(name) => {
                     const result = session.createSlot(window.localStorage, name);
-                    archiveAction(result, result.ok);
+                    archiveAction(result, result.ok, true);
                     return result;
                   }}
                   onLoad={(id) => {
