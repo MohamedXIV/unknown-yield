@@ -6,12 +6,15 @@ import {
   type GameCommand,
   type CommandResult,
 } from "@site/sim-core";
-const SAVE_KEY = "industrial-site-save-v15";
-type StorageReader = { getItem(key: string): string | null };
-type StorageWriter = { setItem(key: string, value: string): void };
+import {
+  createExpedition, deleteExpedition, listExpeditions, readLegacyRecord,
+  renameExpedition, saveExpedition, slotRevisions,
+  type ArchiveStorage, type ArchiveListing,
+} from "./save-archive";
 export class Session {
   private sim = new Simulation(fixture);
   private pack: RuntimePack | null = null;
+  private slotId: string | null = null;
   private last: number | null = null;
   private listeners = new Set<() => void>();
   // Both React and Phaser consume the same read-only projection per update.
@@ -65,88 +68,119 @@ export class Session {
     const next = new Simulation(pack?.bundle.content ?? fixture);
     this.sim = next;
     this.pack = pack;
+    this.slotId = null;
     this.last = null;
     this.notify();
   }
   activePackFingerprint() {
     return this.pack?.fingerprint ?? null;
   }
+  activeSlotId() {
+    return this.slotId;
+  }
+  list(storage: ArchiveStorage): ArchiveListing {
+    return listExpeditions(storage, this.activePackFingerprint());
+  }
   reset() {
     this.sim = new Simulation(this.pack?.bundle.content ?? fixture);
+    this.slotId = null;
     this.last = null;
     this.notify();
   }
-  save(storage: StorageWriter): CommandResult {
+  /** Create and persist a NEW world before replacing the running world. */
+  createSlot(storage: ArchiveStorage, name: string): CommandResult {
     try {
-      const save = this.sim.serialize();
-      if (this.pack) {
-        storage.setItem(
-          SAVE_KEY + "-pack-" + this.pack.fingerprint,
-          JSON.stringify({ fingerprint: this.pack.fingerprint, save }),
-        );
-      } else {
-        storage.setItem(SAVE_KEY, JSON.stringify(save));
-      }
-      return { ok: true, message: "Field record saved on this device" };
-    } catch {
-      return {
-        ok: false,
-        message: "Storage unavailable. Your current session is still running.",
-      };
+      const next = new Simulation(this.pack?.bundle.content ?? fixture);
+      const slot = createExpedition(storage, name, this.activePackFingerprint(), next.serialize());
+      this.sim = next;
+      this.slotId = slot.id;
+      this.last = null;
+      this.notify();
+      return { ok: true, message: "New expedition recorded: " + slot.name };
+    } catch (error) {
+      return { ok: false, message: "New expedition not created. Current world unchanged. " + String(error) };
     }
   }
-  restore(storage: StorageReader): CommandResult {
+  /** Load by ID, never by name, content-pack prefix or array index. */
+  loadSlot(storage: ArchiveStorage, slotId: string): CommandResult {
     try {
-      if (this.pack) {
-        const raw = storage.getItem(SAVE_KEY + "-pack-" + this.pack.fingerprint);
-        if (!raw) return {
-          ok: false, message: "No world saved for this exact content pack. Existing other worlds were not changed.",
-        };
-        const envelope = JSON.parse(raw) as { fingerprint?: unknown; save?: unknown };
-        if (!envelope || envelope.fingerprint !== this.pack.fingerprint || !envelope.save)
-          return { ok: false, message: "Saved world content identity mismatch. Current session unchanged." };
-        const result = this.sim.load(envelope.save);
-        if (result.ok) {
-          this.last = null;
-          this.notify();
+      const candidates = slotRevisions(storage, slotId, this.activePackFingerprint());
+      let reason = "No readable copies remain.";
+      for (const candidate of candidates) {
+        const next = new Simulation(this.pack?.bundle.content ?? fixture);
+        const checked = next.load(candidate.save);
+        if (!checked.ok) {
+          reason = checked.message;
+          continue;
         }
-        return result;
-      }
-      // Older browser records remain readable for explicit compatibility diagnostics.
-      const raw =
-        storage.getItem(SAVE_KEY) ??
-        storage.getItem("industrial-site-save-v14") ??
-        storage.getItem("industrial-site-save-v13") ??
-        storage.getItem("industrial-site-save-v12") ??
-        storage.getItem("industrial-site-save-v11") ??
-        storage.getItem("industrial-site-save-v10") ??
-        storage.getItem("industrial-site-save-v9") ??
-        storage.getItem("industrial-site-save-v8") ??
-        storage.getItem("industrial-site-save-v7") ??
-        storage.getItem("industrial-site-save-v6") ??
-        storage.getItem("industrial-site-save-v5") ??
-        storage.getItem("industrial-site-save-v4");
-      if (!raw)
-        return {
-          ok: false,
-          message:
-            storage.getItem("industrial-site-save-v3") ||
-            storage.getItem("industrial-site-save-v2") ||
-            storage.getItem("industrial-site-save-v1")
-              ? "This field record uses an older world format (schema 3 or earlier) and cannot be loaded. Start a new site."
-              : "No world saved on this device",
-        };
-      const result = this.sim.load(JSON.parse(raw));
-      if (result.ok) {
+        this.sim = next;
+        this.slotId = slotId;
         this.last = null;
         this.notify();
+        return {
+          ok: true,
+          message: candidate.backup
+            ? "Previous valid expedition revision recovered. Save again to preserve it."
+            : "Expedition restored",
+        };
       }
-      return result;
-    } catch {
+      return { ok: false, message: "Expedition not loaded. Current world unchanged. " + reason };
+    } catch (error) {
+      return { ok: false, message: "Expedition not loaded. Current world unchanged. " + String(error) };
+    }
+  }
+  /** Legacy keys are never rewritten or deleted by adoption. */
+  importLegacy(storage: ArchiveStorage, key: string, name: string): CommandResult {
+    try {
+      const saved = readLegacyRecord(storage, key, this.activePackFingerprint());
+      const next = new Simulation(this.pack?.bundle.content ?? fixture);
+      const checked = next.load(saved);
+      if (!checked.ok) return checked;
+      const slot = createExpedition(
+        storage, name, this.activePackFingerprint(), next.serialize(), key,
+      );
+      this.sim = next;
+      this.slotId = slot.id;
+      this.last = null;
+      this.notify();
+      return { ok: true, message: "Legacy record imported without altering the original." };
+    } catch (error) {
+      return { ok: false, message: "Legacy import failed; original and current world unchanged. " + String(error) };
+    }
+  }
+  save(storage: ArchiveStorage): CommandResult {
+    if (!this.slotId)
+      return { ok: false, message: "Create a named expedition before saving. Old field records remain safe." };
+    try {
+      saveExpedition(storage, this.slotId, this.activePackFingerprint(), this.sim.serialize());
+      return { ok: true, message: "Expedition saved locally on this device" };
+    } catch (error) {
+      return { ok: false, message: "Save failed; prior expedition record is intact. " + String(error) };
+    }
+  }
+  restore(storage: ArchiveStorage): CommandResult {
+    if (!this.slotId)
+      return { ok: false, message: "Choose a saved expedition from Personnel Archives." };
+    return this.loadSlot(storage, this.slotId);
+  }
+  renameSlot(storage: ArchiveStorage, slotId: string, name: string): CommandResult {
+    try {
+      renameExpedition(storage, slotId, name);
+      return { ok: true, message: "Expedition renamed" };
+    } catch (error) {
+      return { ok: false, message: "Rename failed; archive unchanged. " + String(error) };
+    }
+  }
+  deleteSlot(storage: ArchiveStorage, slotId: string): CommandResult {
+    try {
+      deleteExpedition(storage, slotId);
+      if (this.slotId === slotId) this.slotId = null;
       return {
-        ok: false,
-        message: "Could not read this field record. Current session unchanged.",
+        ok: true,
+        message: "Expedition deleted. The running world remains in memory but is not saved.",
       };
+    } catch (error) {
+      return { ok: false, message: "Could not fully delete expedition: " + String(error) };
     }
   }
 }
