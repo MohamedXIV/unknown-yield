@@ -1070,6 +1070,9 @@ browserIt(
         };
       })()`);
       expect(emptyBoot).toEqual({ hasCanvas: false, resumeDisabled: true, hasNew: true, hasQuit: false });
+      await pressKey("Tab", "Tab", 9);
+      const firstKeyboardTarget = await evaluate<string>(`document.activeElement?.textContent?.replace(/\\s+/g, " ").trim() ?? ""`);
+      expect(firstKeyboardTarget).toContain("Begin Assignment");
 
       await clickMainMenuAction("Personnel Archives");
       await waitForExpression(`document.body.textContent?.includes("No archived expeditions have been recorded") === true`);
