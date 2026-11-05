@@ -882,6 +882,11 @@ browserIt(
         await clickMainMenuAction("Resume Duty");
         await waitForExpression(`document.querySelector("canvas") !== null &&
           document.querySelector('nav[aria-label="Build tools"]') !== null`);
+        // The React game shell and canvas can render before Phaser has
+        // finished scene creation and wired its opt-in camera probe.
+        // Do not send world-space pointer events before the camera exists.
+        await waitForExpression(`typeof window.__UNKNOWN_YIELD_PROJECT_WORLD__ === "function" &&
+          window.__UNKNOWN_YIELD_PROJECT_WORLD__(23.5 * 32, 24.5 * 24) !== null`);
       };
 
       const tapButtonByText = async (label: string) => {
