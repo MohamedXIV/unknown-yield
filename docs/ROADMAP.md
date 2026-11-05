@@ -1,5 +1,9 @@
 # Roadmap
 
+## Current proposed player-experience track (5 Nov 2026)
+
+**The First Assignment / Personnel Archives / Industrial Atmosphere** is specified in [GAME_DNA.md](GAME_DNA.md) and scheduled in [FIRST_ASSIGNMENT_ROADMAP.md](FIRST_ASSIGNMENT_ROADMAP.md). It builds on accepted Phase 16 onboarding, Concept C menu and Phaser world without reopening existing factory/economy decisions. New gameplay-identity work remains separate from unapproved UI-art PR #339 and machine-art PR #291. The tracker Epic and its child issues must each be linked back to those documents; approval and completed CI are not implied by planning.
+
 ## Roadmap philosophy
 
 The project should move by **proof**, not by feature accumulation.
