@@ -1,0 +1,200 @@
+/* Main Menu hardware continuity with the actual PR #339 v0.7 in-game boards.
+   This mounts ornamental steel AROUND the real buttons, scroll and keyboard
+   hit targets, not on top of them. Deliberately no generated pictures. */
+.main-menu {
+  --menu-cream: #f0e3c9;
+  --menu-gold: #e7b873;
+  --menu-line: #ae865d;
+  --menu-mono: "IBM Plex Mono", Consolas, monospace;
+  font-family: "Barlow Condensed", "Arial Narrow", sans-serif;
+}
+.main-menu-plaque {
+  isolation: isolate;
+  width: min(476px, 43vw);
+  padding: 22px 24px 18px;
+  border: 9px solid #343b3c;
+  border-radius: 13px 13px 17px 17px;
+  background: url("/ui/steel-edge-wear.svg") repeat,
+    linear-gradient(157deg, #121c20f9, #0e1619f9 70%, #171d1f);
+  box-shadow: 0 0 0 2px #0a1113, 0 0 0 4px #8e7050,
+    0 0 0 6px #12191c, 0 26px 60px #000b,
+    inset 0 0 0 4px #111719, inset 0 0 0 6px #8b785a,
+    inset 0 0 0 9px #292f31, inset 0 12px 18px #0008;
+  backdrop-filter: none;
+}
+/* The chamfer is on a pointer-inert cosmetic plate. Never clip panel children. */
+.main-menu-plaque::before {
+  content: "";
+  position: absolute;
+  inset: -9px;
+  z-index: -1;
+  height: auto;
+  border: 1px solid #b6936a;
+  border-radius: inherit;
+  background: radial-gradient(ellipse 90px 28px at 0 5%, #d490536b, transparent 85%),
+    radial-gradient(ellipse 95px 30px at 100% 95%, #b4774281, transparent 85%),
+    url("/ui/steel-edge-wear.svg") repeat,
+    linear-gradient(140deg, #62686a, #303639 36%, #181f22 75%, #464d4d);
+  clip-path: polygon(0 23px, 23px 0, calc(100% - 23px) 0, 100% 23px,
+    100% calc(100% - 23px), calc(100% - 23px) 100%,
+    23px 100%, 0 calc(100% - 23px));
+  pointer-events: none;
+}
+.main-menu-plaque::after {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  z-index: 0;
+  height: auto;
+  border: 1px solid #c1a06f8f;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 2px #080e11;
+  background: none;
+  pointer-events: none;
+}
+.main-menu-plaque > * { position: relative; z-index: 1; }
+.main-menu-retainer {
+  position: absolute !important;
+  z-index: 3 !important;
+  left: 50%;
+  top: -23px;
+  width: 108px;
+  height: 38px;
+  transform: translateX(-50%);
+  background: url("/ui/clipboard-retainer.svg") center / contain no-repeat;
+  pointer-events: none;
+}
+.main-menu-brand {
+  gap: 11px;
+  margin-top: 3px;
+  padding: 11px 11px 14px;
+  border: 2px solid #a87551;
+  background: linear-gradient(120deg, #783326, #482420 78%, #271b1c);
+  box-shadow: inset 0 0 0 2px #301b18, inset 0 1px #eac08d7c, 0 4px 0 #0b1114;
+}
+.directorate-seal {
+  flex: 0 0 51px;
+  width: 51px;
+  height: 51px;
+  border: 0;
+  background: url("/ui/directorate-seal.svg") center / contain no-repeat;
+  box-shadow: none;
+}
+.directorate-seal svg { display: none; }
+.main-menu-brand-copy > small {
+  color: #e1be8d;
+  font: 600 9px/1.3 "Barlow Condensed", sans-serif;
+}
+.main-menu-brand-copy h1 {
+  font: 500 clamp(29px, 2.6vw, 38px)/1 "Bebas Neue", Impact, sans-serif;
+  letter-spacing: 1.1px;
+  color: #ffedcd;
+}
+.main-menu-brand-copy h1 span { color: #ffc67b; }
+.main-menu-brand-copy p { color: #edc9a0; font-size: 8px; }
+.main-menu-rule { padding: 14px 1px 10px; color: #d8b37f; border: 0; font-weight: 700; }
+.main-menu-rule::before {
+  content: "";
+  width: 48px;
+  height: 5px;
+  flex: 0 0 48px;
+  background: repeating-linear-gradient(115deg, #c98848 0 9px, #172126 9px 15px);
+}
+.menu-appointment {
+  margin-bottom: 13px;
+  border: 1px solid #9b7652;
+  border-left: 4px solid #a44a34;
+  color: #302820;
+  background: linear-gradient(90deg, #6d493222, transparent 17%, transparent 85%, #6d493222),
+    url("/ui/archival-paper.svg") 0 0 / 160px 160px repeat, #e5d1af;
+  box-shadow: inset 0 0 0 3px #f5e5c3, 0 3px 0 #070d10;
+}
+.menu-appointment > small { color: #893e30; font-weight: 700; }
+.menu-appointment h2 {
+  color: #3c3027;
+  font: 500 20px/1.18 "Bebas Neue", Impact, sans-serif;
+}
+.menu-appointment p { color: #4b4034; font: 500 12px/1.34 "Barlow Condensed", sans-serif; }
+.menu-home-actions { gap: 5px; }
+.menu-action {
+  min-height: 48px;
+  border: 1px solid #7d765d;
+  border-bottom: 3px solid #3b342b;
+  background: linear-gradient(172deg, #374043, #172329 82%);
+  box-shadow: inset 0 1px #e5c59126, 0 2px 0 #050c0e;
+}
+.menu-action:hover:not(:disabled), .menu-action:focus-visible {
+  border-color: #c69a60;
+  background: linear-gradient(#515352, #293238);
+}
+.menu-action-primary {
+  min-height: 55px;
+  border: 1px solid #ebba78;
+  border-bottom: 4px solid #69452a;
+  border-left: 4px solid #f5bd73;
+  background: linear-gradient(170deg, #8d5635, #493128 75%, #302b28);
+  box-shadow: inset 0 1px #f6d1988c, 0 3px 0 #0a1012;
+}
+.menu-action-copy strong {
+  font: 600 15px/1.1 "Barlow Condensed", sans-serif;
+  letter-spacing: .3px;
+}
+.menu-action-copy small { font: 400 10px/1.2 "Barlow Condensed", sans-serif; color: #c9c4b4; }
+.menu-action-mark { color: #e9ae67; }
+.menu-action-primary .menu-action-mark { color: #ffe0a9; }
+.menu-action-arrow { color: #e5a96d; }
+.menu-section-heading h2, .menu-return-dialog h2 {
+  font: 500 28px/1.12 "Bebas Neue", Impact, sans-serif;
+  color: #f1d7b3;
+}
+.menu-primary, .menu-secondary, .menu-danger {
+  border-bottom-width: 3px;
+  font: 700 12px/1.2 "Barlow Condensed", sans-serif;
+}
+.menu-archive-card, .menu-settings-group, .menu-pack-summary, .menu-legacy {
+  border: 1px solid #766c54;
+  border-left: 3px solid #a5794b;
+  background: linear-gradient(150deg, #202c2f, #111d21);
+  box-shadow: inset 0 1px #d5c5a421;
+}
+.menu-settings-group h3 { font: 700 13px/1.15 "Barlow Condensed", sans-serif; }
+.main-menu-footer { border-top: 2px solid #8c7151; color: #b2ada0; }
+.main-menu-scene-caption { border-left: 3px solid #9e5037; }
+.main-menu-scene-caption strong { font: 500 22px/1 "Bebas Neue", Impact, sans-serif; }
+.menu-return-dialog {
+  border: 9px ridge #6a6254;
+  background: #192428 url("/ui/pressed-metal.svg") repeat;
+  box-shadow: 0 20px 55px #000c, inset 0 0 0 4px #0d1416;
+}
+@media (max-width: 1050px) { .main-menu-plaque { width: min(440px, 49vw); } }
+@media (max-width: 700px) {
+  .main-menu-layout { padding: 14px; }
+  .main-menu-plaque {
+    width: 100%;
+    height: calc(100dvh - 28px);
+    padding: 16px 13px 10px;
+    border-width: 6px;
+  }
+  .main-menu-plaque::before { inset: -6px; }
+  .main-menu-plaque::after { inset: 3px; }
+  .main-menu-retainer { width: 80px; height: 30px; top: -18px; }
+  .main-menu-brand { gap: 8px; padding: 9px 7px; }
+  .directorate-seal { flex: 0 0 37px; width: 37px; height: 37px; }
+  .main-menu-brand-copy > small { font-size: 7px; }
+  .main-menu-brand-copy h1 { font-size: 28px; }
+  .main-menu-brand-copy p { font-size: 7px; }
+  .main-menu-rule { padding: 12px 0 8px; }
+  .menu-appointment { padding: 9px; margin-bottom: 10px; }
+  .menu-appointment h2 { font-size: 18px; }
+  .menu-appointment p { font-size: 11px; }
+  .menu-action { min-height: 43px; padding: 5px 8px; }
+  .menu-action-primary { min-height: 47px; }
+  .menu-action-copy strong { font-size: 13px; }
+  .menu-action-copy small { font-size: 9px; }
+}
+@media (max-height: 700px) and (min-width: 701px) {
+  .main-menu-plaque { height: calc(100dvh - 24px); padding: 16px 17px 10px; }
+  .menu-appointment { padding: 8px; }
+  .menu-action { min-height: 40px; }
+  .menu-action-primary { min-height: 44px; }
+}
