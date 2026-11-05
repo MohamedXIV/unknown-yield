@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { CommandResult } from "@site/sim-core";
 import type { ArchiveListing } from "../game/save-archive";
 import {
@@ -68,6 +68,18 @@ function ActionButton({
 
 export default function MainMenu(props: Props) {
   const [view, setView] = useState<MenuView>("home");
+  const plaqueRef = useRef<HTMLElement>(null);
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    if (!mountedRef.current) {
+      mountedRef.current = true;
+      return;
+    }
+    const target = plaqueRef.current?.querySelector<HTMLElement>(
+      'input[aria-label="Expedition designation"], .menu-back, .menu-action:not(:disabled), input:not(:disabled), button:not(:disabled)',
+    );
+    target?.focus({ preventScroll: true });
+  }, [view]);
   const [newName, setNewName] = useState("");
   const [legacyName, setLegacyName] = useState("Recovered expedition");
   const [renameId, setRenameId] = useState<string | null>(null);
@@ -119,7 +131,7 @@ export default function MainMenu(props: Props) {
       </div>
       <div className="main-menu-atmosphere" aria-hidden="true" />
       <div className="main-menu-layout">
-        <section className="main-menu-plaque" aria-label="Unknown Yield main menu">
+        <section ref={plaqueRef} className="main-menu-plaque" aria-label="Unknown Yield main menu">
           <header className="main-menu-brand">
             <div className="directorate-seal" aria-hidden="true">
               <svg viewBox="0 0 48 48">
@@ -132,7 +144,7 @@ export default function MainMenu(props: Props) {
             <div className="main-menu-brand-copy">
               <small>EXTRAPLANETARY INDUSTRIAL DIRECTORATE</small>
               <h1>UNKNOWN <span>YIELD</span></h1>
-              <p>DISCOVERY IS A DUTY. PRODUCTION IS A VICTORY.</p>
+              <p>OFFICIAL INDUSTRIAL OPERATIONS</p>
             </div>
           </header>
 
@@ -149,7 +161,7 @@ export default function MainMenu(props: Props) {
               {view === "home" && (
                 <div className="menu-view menu-home" id="main-menu-actions">
                   <div className="menu-appointment">
-                    <small>APPOINTMENT NOTICE · PALE REACH</small>
+                    <small>APPOINTMENT NOTICE · EXPEDITION SITE</small>
                     <h2>Your assignment is a historic honor.</h2>
                     <p>
                       The Directorate has entrusted you with an industrial site.
@@ -230,7 +242,7 @@ export default function MainMenu(props: Props) {
                     <div className="menu-current-record">
                       <span>LAST VALID ASSIGNMENT</span>
                       <strong>{resumeSlot.name}</strong>
-                      <small>{resumeSlot.fingerprint ? "IMPORTED CONTENT" : "STANDARD CONTENT"} · {resumeSlot.exported} exports recorded</small>
+                      <small>{resumeSlot.fingerprint ? "IMPORTED CONTENT" : "STANDARD CONTENT"} · {resumeSlot.exported} units exported</small>
                     </div>
                   )}
                 </div>
@@ -241,6 +253,7 @@ export default function MainMenu(props: Props) {
                   <button className="menu-back" onClick={() => setView("home")}>← Main menu</button>
                   <div className="menu-section-heading">
                     <small>PERSONNEL ORDER · 001</small>
+                    <div className="menu-operator-title">COMRADE DIRECTOR / SITE OPERATOR</div>
                     <h2>Begin Assignment</h2>
                     <p>Register a new expedition before entering the site. Existing assignments remain untouched.</p>
                   </div>
@@ -316,7 +329,7 @@ export default function MainMenu(props: Props) {
                             <span className="menu-record-icon" aria-hidden="true">▤</span>
                             <div>
                               <strong>{slot.name}{slot.id === props.activeSlotId ? " · LAST OPENED" : ""}</strong>
-                              <small>{new Date(slot.savedAt).toLocaleString()} · {slot.exported} exports · schema {slot.schemaVersion}</small>
+                              <small>{new Date(slot.savedAt).toLocaleString()} · {slot.exported} units exported · schema {slot.schemaVersion}</small>
                               <small>{slot.fingerprint ? "Pack " + slot.fingerprint.slice(0, 12) : "Built-in content"}</small>
                               {!compatible && <small>Requires another content pack. Import the matching Studio bundle under Content Packs before loading this world.</small>}
                               {compatible && !loadable && <small>No valid current or backup save revision could be read.</small>}
@@ -546,7 +559,7 @@ export default function MainMenu(props: Props) {
         </section>
         <aside className="main-menu-scene-caption" aria-label="Site identity">
           <span className="scene-caption-rule" />
-          <small>THE PALE REACH · SITE 01</small>
+          <small>EXTRAPLANETARY SITE · FIELD OPERATIONS</small>
           <strong>THE FUTURE IS FORGED BY LABOR.</strong>
           <span className="scene-caption-sub">A STATE-OPERATED INDUSTRIAL EXPEDITION</span>
         </aside>
