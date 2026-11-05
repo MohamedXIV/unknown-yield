@@ -433,8 +433,15 @@ function GameClientInner() {
     }
   };
   const choosePack = (pack: RuntimePack | null) => {
+    if (screen === "game") {
+      setNotice({
+        ok: false,
+        message: "Content packs can only be changed from the Main Menu. Return there first; this expedition remains unchanged.",
+      });
+      return;
+    }
     try {
-      // An explicit new expedition is the only point where content changes.
+      // An explicit, named new expedition is the only point where content changes.
       session.usePack(pack);
       setRuntimeContentLocale(pack?.bundle.locale ?? null);
       setActivePack(pack);
@@ -3636,15 +3643,15 @@ function GameClientInner() {
                   {pendingPack && (
                     <div className="reset-confirm">
                       <p>Validated SHA-256: {pendingPack.fingerprint.slice(0, 16)}. Start a NEW expedition? Unsaved world progress will be lost; all existing saved worlds remain stored.</p>
-                      <button className="primary" onClick={() => choosePack(pendingPack)}>
-                        Play new expedition with imported pack
+                      <button className="primary" onClick={requestMainMenu}>
+                        Return to Main Menu to use this pack
                       </button>
                       <button className="secondary" onClick={() => setPendingPack(null)}>Cancel import</button>
                     </div>
                   )}
                   {activePack && (
-                    <button className="secondary" onClick={() => choosePack(null)}>
-                      Start new expedition with built-in content
+                    <button className="secondary" onClick={requestMainMenu}>
+                      Return to Main Menu to switch to built-in content
                     </button>
                   )}
                 </section>
