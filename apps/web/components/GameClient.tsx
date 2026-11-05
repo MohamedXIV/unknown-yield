@@ -1052,6 +1052,56 @@ function GameClientInner() {
       <p>{entry.detail}</p>
     </section>
   );
+  if (screen === "menu") {
+    return (
+      <MainMenu
+        ready={packReady}
+        listing={archiveView}
+        archiveError={archiveError}
+        loadableSlotIds={loadableSlotIds}
+        resumeSlotId={resumeSlotId}
+        activeSlotId={session.activeSlotId()}
+        activeFingerprint={session.activePackFingerprint()}
+        activePack={activePack}
+        pendingPack={pendingPack}
+        preferences={preferences}
+        onResume={resumeFromMenu}
+        onStartNew={startNewFromMenu}
+        onLoad={loadFromMenu}
+        onRename={(id, name) => {
+          try {
+            const result = session.renameSlot(window.localStorage, id, name);
+            archiveAction(result);
+            return result;
+          } catch (error) {
+            return { ok: false, message: "Rename failed. " + String(error) };
+          }
+        }}
+        onDelete={(id) => {
+          try {
+            const result = session.deleteSlot(window.localStorage, id);
+            archiveAction(result);
+            return result;
+          } catch (error) {
+            return { ok: false, message: "Delete failed. " + String(error) };
+          }
+        }}
+        onImportLegacy={importLegacyFromMenu}
+        onRecover={() => {
+          try {
+            const result = session.recoverArchive(window.localStorage);
+            archiveAction(result);
+            return result;
+          } catch (error) {
+            return { ok: false, message: "Archive recovery failed. " + String(error) };
+          }
+        }}
+        onImportPack={(file) => { void importPack(file); }}
+        onUsePack={choosePack}
+        onPreferencesChange={commitPreferences}
+      />
+    );
+  }
   return (
     <main
       className="game"
