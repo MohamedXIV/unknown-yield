@@ -1196,6 +1196,45 @@ browserIt(
         "8",
       ]);
 
+      const compactHardware = await evaluate<{
+        housings: number;
+        screws: number;
+        insetFaces: number;
+        commandKeyDepth: string;
+        pendingBook: boolean;
+        currentPlates: string;
+        commandCount: number;
+        firstFrameMaterial: string;
+      }>(`(() => {
+        const modules = [".site-mark", ".resources", ".hud-actions"]
+          .map((selector) => document.querySelector(selector));
+        const tray = document.querySelector('nav[aria-label="Build tools"]');
+        const key = tray.querySelector('button[aria-label="Inspect"]');
+        return {
+          housings: modules.filter(Boolean).length,
+          screws: modules.reduce((sum, element) => sum +
+            (element?.querySelectorAll(":scope > .uy-hud-fasteners > span").length ?? 0), 0),
+          insetFaces: modules.filter((element) =>
+            getComputedStyle(element, "::after").backgroundImage.includes("linear-gradient")).length,
+          commandKeyDepth: getComputedStyle(key).borderBottomWidth,
+          pendingBook: document.querySelector('button[aria-label="Knowledge notebook"]')
+            .getAttribute("aria-pressed") === "false",
+          currentPlates: document.querySelector('[data-testid="plates"]').textContent,
+          commandCount: tray.children.length,
+          firstFrameMaterial: getComputedStyle(tray, "::before").backgroundImage,
+        };
+      })()`);
+      expect(compactHardware.housings).toBe(3);
+      expect(compactHardware.screws).toBe(6);
+      expect(compactHardware.insetFaces).toBe(3);
+      expect(compactHardware.commandKeyDepth).toBe("4px");
+      expect(compactHardware.pendingBook).toBe(true);
+      expect(compactHardware.currentPlates).toBe("600");
+      expect(compactHardware.commandCount).toBe(10);
+      expect(compactHardware.firstFrameMaterial).toContain("linear-gradient");
+      const instrumentRailShot = await captureEvidence("industrial-hud-and-command-tray.png");
+      console.log("INDUSTRIAL_HUD_COMMAND_TRAY " + JSON.stringify(instrumentRailShot));
+
       await evaluate(`(() => {
         document.querySelector('button[aria-label="Close field brief"]')?.click();
         return true;
