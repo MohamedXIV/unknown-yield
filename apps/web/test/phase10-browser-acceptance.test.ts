@@ -1415,6 +1415,18 @@ browserIt(
       expect(frameGeometry.paperSize).toContain("160px 160px");
       expect(frameGeometry.controlLeft).toBeGreaterThanOrEqual(frameGeometry.surfaceX);
       expect(frameGeometry.controlRight).toBeLessThanOrEqual(frameGeometry.surfaceRight);
+      // The physical board owns the right-hand footprint: the real toolbar
+      // and camera controls cannot cover its rivets, scroll or paper.
+      const reservedWorld = await evaluate<{
+        boardLeft: number; toolbarRight: number; zoomRight: number;
+      }>(`(() => {
+        const board = document.querySelector(".context-panel--knowledge").getBoundingClientRect();
+        const toolbar = document.querySelector(".build-zone").getBoundingClientRect();
+        const zoom = document.querySelector(".world-zoom-controls").getBoundingClientRect();
+        return { boardLeft: board.left, toolbarRight: toolbar.right, zoomRight: zoom.right };
+      })()`);
+      expect(reservedWorld.toolbarRight).toBeLessThan(reservedWorld.boardLeft - 6);
+      expect(reservedWorld.zoomRight).toBeLessThan(reservedWorld.boardLeft - 6);
       // Physical +/−/Home operate on reading only, never on production totals.
       await evaluate<boolean>(`(() => {
         document.querySelector('button[aria-label="Magnify panel content"]').click();
