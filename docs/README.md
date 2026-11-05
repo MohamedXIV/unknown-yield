@@ -2,6 +2,11 @@
 
 This directory is the project design and engineering source of truth. Documents describe **current decisions**, distinguish implementation proof from target design, and avoid turning provisional fixture values into sacred content.
 
+## Active gameplay-identity direction (5 Nov 2026)
+
+- [GAME_DNA.md](GAME_DNA.md) — approved **First Assignment**, gradual machine authorizations, Directorate personality, multiple expeditions and dim alien world identity. Design intent, not delivered gameplay.
+- [FIRST_ASSIGNMENT_ROADMAP.md](FIRST_ASSIGNMENT_ROADMAP.md) — dependency-aware player-experience Epic, issue-sized deliverables and evidence gates for implementation.
+
 ## Reading order
 
 1. [GAME_DESIGN.md](GAME_DESIGN.md) — player fantasy, pillars, core loop, progression and scope.
