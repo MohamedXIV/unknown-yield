@@ -1078,6 +1078,10 @@ browserIt(
       await waitForExpression(`document.readyState === "complete" &&
         document.querySelector(".main-menu") !== null`);
       await waitForExpression(`document.querySelector(".menu-home .menu-action") !== null`);
+      await waitForExpression(`getComputedStyle(document.querySelector(".main-menu-plaque"), "::before")
+        .backgroundImage.includes("steel-edge-wear.svg") &&
+        getComputedStyle(document.querySelector(".directorate-seal")).backgroundImage
+          .includes("directorate-seal.svg")`);
       const bootMenuScreenshot = await captureEvidence("main-menu-boot-desktop.png");
       console.log("UNKNOWN_YIELD_MAIN_MENU_BOOT " + JSON.stringify(bootMenuScreenshot));
       const emptyBoot = await evaluate<{
@@ -1364,6 +1368,20 @@ browserIt(
           document.body.textContent?.includes("Veined ore") === true &&
           document.body.textContent?.includes("Catalytic stone") === true`,
       );
+      await waitForExpression(`(() => {
+        const panel = document.querySelector(".context-panel--knowledge");
+        const paper = panel?.querySelector(".context-board-bed .context-body");
+        if (!panel || !paper) return false;
+        return getComputedStyle(paper).backgroundImage.includes("archival-paper.svg") &&
+          getComputedStyle(panel, "::before").backgroundImage.includes("steel-edge-wear.svg") &&
+          !!panel.querySelector(".context-retainer");
+      })()`);
+      // Capture only after the real 165ms panel arrival animation settles;
+      // a partially transparent first frame can ghost the Phaser world below.
+      await waitForExpression(`Number(getComputedStyle(
+        document.querySelector(".context-panel--knowledge")).opacity) >= 0.999`);
+      const notebookIndustrialScreenshot = await captureEvidence("industrial-ui-notebook.png");
+      console.log("INDUSTRIAL_UI_NOTEBOOK " + JSON.stringify(notebookIndustrialScreenshot));
       const initialNotebook = await evaluate<string>(
         `document.querySelector(".context-panel")?.textContent ?? ""`,
       );
@@ -1394,6 +1412,19 @@ browserIt(
           !!document.querySelector("#terminal-shipment") &&
           !!document.querySelector("#terminal-company")`,
       );
+      await waitForExpression(`(() => {
+        const panel = document.querySelector(".context-panel--terminal");
+        const paper = panel?.querySelector(".context-board-bed .context-body");
+        return !!paper &&
+          getComputedStyle(paper).backgroundImage.includes("archival-paper.svg") &&
+          !!panel?.querySelector(".context-header-stamp");
+      })()`);
+      // Capture only after the real 165ms panel arrival animation settles;
+      // a partially transparent first frame can ghost the Phaser world below.
+      await waitForExpression(`Number(getComputedStyle(
+        document.querySelector(".context-panel--terminal")).opacity) >= 0.999`);
+      const terminalIndustrialScreenshot = await captureEvidence("industrial-ui-terminal.png");
+      console.log("INDUSTRIAL_UI_TERMINAL " + JSON.stringify(terminalIndustrialScreenshot));
       await evaluate(`(() => {
         document.querySelector('button[aria-label="Company terminal"]')?.click();
         return true;
