@@ -4188,6 +4188,26 @@ browserIt(
           "PHASE19_PACK_MENU " + JSON.stringify({ text: packMenuText }),
         );
         expect(packMenuText).toContain("Offline content packs");
+        // The imported pack starts as an unsaved assignment; name a slot.
+        await evaluate<boolean>(`(() => {
+          const input = document.querySelector('input[aria-label="New expedition name"]');
+          const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set;
+          setter.call(input, "Imported browser pack");
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+          return true;
+        })()`);
+        await waitForExpression(`[...document.querySelectorAll("button")].some((b) =>
+          b.textContent?.includes("Create and begin") && !b.disabled)`);
+        await evaluate<boolean>(`(() => {
+          [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Create and begin"))?.click();
+          return true;
+        })()`);
+        await waitForExpression(`document.querySelector('[aria-label="Personnel Archives"]') === null`);
+        await evaluate<boolean>(`(() => {
+          document.querySelector('button[aria-label="Game menu"]')?.click();
+          return true;
+        })()`);
+        await waitForExpression(`document.body.textContent?.includes("Offline content packs") === true`);
         await evaluate<boolean>(`(() => {
           [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Save current expedition"))?.click();
           return true;
@@ -4201,7 +4221,7 @@ browserIt(
           const id = stored.fingerprint;
           return {
             id,
-            scopedSave: localStorage.getItem("industrial-site-save-v15-pack-" + id) !== null,
+            scopedSave: JSON.parse(localStorage.getItem("unknown-yield-expeditions-v1")).slots.some((slot) => slot.fingerprint === id && !!localStorage.getItem(slot.current)),
             locale: stored.bundle.locale["material.powder.name"],
           };
         })()`);
@@ -4255,7 +4275,7 @@ browserIt(
         expect(
           await evaluate<boolean>(`(() => {
           const keys = Object.keys(localStorage);
-          return keys.some(k => k.startsWith("industrial-site-save-v15-pack-"));
+          return JSON.parse(localStorage.getItem("unknown-yield-expeditions-v1")).slots.some((slot) => slot.fingerprint !== null && !!localStorage.getItem(slot.current));
         })()`),
         ).toBe(true);
         console.log(
