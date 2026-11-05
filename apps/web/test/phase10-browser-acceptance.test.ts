@@ -1096,13 +1096,17 @@ browserIt(
 
       await clickMainMenuAction("Personnel Archives");
       await waitForExpression(`document.body.textContent?.includes("No archived expeditions have been recorded") === true`);
+      await waitForExpression(`document.activeElement?.classList.contains("menu-back") === true`);
       const emptyArchiveScreenshot = await captureEvidence("main-menu-empty-archives.png");
       console.log("UNKNOWN_YIELD_MAIN_MENU_EMPTY_ARCHIVES " + JSON.stringify(emptyArchiveScreenshot));
       await evaluate<boolean>(`(() => { document.querySelector(".menu-back")?.click(); return true; })()`);
+      await waitForExpression(`document.activeElement?.textContent?.includes("Begin Assignment") === true`);
       await clickMainMenuAction("Operational Regulations");
       await waitForExpression(`document.body.textContent?.includes("Field controls") === true &&
         document.querySelector('input[aria-label="Show performance counter"]') !== null`);
+      await waitForExpression(`document.activeElement?.classList.contains("menu-back") === true`);
       await evaluate<boolean>(`(() => { document.querySelector(".menu-back")?.click(); return true; })()`);
+      await waitForExpression(`document.activeElement?.textContent?.includes("Begin Assignment") === true`);
 
       await clickMainMenuAction("Begin Assignment");
       await waitForExpression(`document.querySelector('input[aria-label="Expedition designation"]') !== null`);
