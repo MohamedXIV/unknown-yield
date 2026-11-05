@@ -61,6 +61,7 @@ import {
   type GamePreferences,
 } from "../game/preferences";
 import GameHost from "./GameHost";
+import ExpeditionArchive from "./ExpeditionArchive";
 import { sampleBuildTool } from "../game/tool-sampling";
 import { previewDismantleArea, sameDismantleAreaReview } from "../game/dismantle-review";
 import { classifyDismantleEntity, dismantleEntityGeometry } from "../game/dismantle-selection";
@@ -181,7 +182,6 @@ function GameClientInner() {
     [paused, setPaused] = useState(false),
     [guide, setGuide] = useState(true),
     [homeToken, setHomeToken] = useState(0),
-    [confirmReset, setConfirmReset] = useState(false),
     [openToolGroup, setOpenToolGroup] = useState<ToolGroupId | null>(null),
     [preferences, setPreferences] = useState<GamePreferences>(
       DEFAULT_GAME_PREFERENCES,
@@ -191,11 +191,6 @@ function GameClientInner() {
     [packReady, setPackReady] = useState(false),
     [archiveView, setArchiveView] = useState<ArchiveListing | null>(null),
     [archiveError, setArchiveError] = useState<string | null>(null),
-    [newExpeditionName, setNewExpeditionName] = useState(""),
-    [renameSlotId, setRenameSlotId] = useState<string | null>(null),
-    [renameSlotName, setRenameSlotName] = useState(""),
-    [deleteSlotId, setDeleteSlotId] = useState<string | null>(null),
-    [legacyImportName, setLegacyImportName] = useState("Recovered expedition"),
     [keyboardAreaOpen, setKeyboardAreaOpen] = useState(false),
     [keyboardBounds, setKeyboardBounds] = useState({ fromX: 0, fromY: 0, toX: 0, toY: 0 });
   const cancelGroupHold = useRef<(() => void) | null>(null);
@@ -441,7 +436,6 @@ function GameClientInner() {
       setPendingPack(null);
       setMode(DEFAULT_MODE);
       setPanel(null);
-      setConfirmReset(false);
       setGuide(true);
       setHomeToken((n) => n + 1);
       try {
@@ -480,24 +474,9 @@ function GameClientInner() {
     if (result.ok && switched) {
       setMode(DEFAULT_MODE);
       setPanel(null);
-      setConfirmReset(false);
       setGuide(true);
       setHomeToken((n) => n + 1);
     }
-  };
-  const persist = () => archiveAction(session.save(window.localStorage));
-  const beginNamedExpedition = () => {
-    const result = session.createSlot(window.localStorage, newExpeditionName);
-    archiveAction(result, result.ok);
-    if (result.ok) setNewExpeditionName("");
-  };
-  const loadNamedExpedition = (slotId: string) => {
-    const result = session.loadSlot(window.localStorage, slotId);
-    archiveAction(result, result.ok);
-  };
-  const adoptLegacy = (key: string) => {
-    const result = session.importLegacy(window.localStorage, key, legacyImportName);
-    archiveAction(result, result.ok);
   };
   const commitPreferences = (next: GamePreferences) => {
     const normalized = normalizeGamePreferences(next);
@@ -3438,17 +3417,42 @@ function GameClientInner() {
                   <Glyph type="settings" size={17} />
                   Game settings &amp; controls
                 </button>
-                <button className="primary" onClick={() => persist(false)}>
-                  <Glyph type="save" size={17} />
-                  Save world
-                </button>
-                <button className="secondary" onClick={() => persist(true)}>
-                  Load saved world
-                </button>
-                <p className="hint">
-                  Saved locally on this device. Worlds pause while the tab is
-                  hidden. Old fixed-site saves are incompatible.
-                </p>
+                <ExpeditionArchive
+                  listing={archiveView}
+                  error={archiveError}
+                  activeSlotId={session.activeSlotId()}
+                  activeFingerprint={session.activePackFingerprint()}
+                  onSave={() => {
+                    const result = session.save(window.localStorage);
+                    archiveAction(result);
+                    return result;
+                  }}
+                  onCreate={(name) => {
+                    const result = session.createSlot(window.localStorage, name);
+                    archiveAction(result, result.ok);
+                    return result;
+                  }}
+                  onLoad={(id) => {
+                    const result = session.loadSlot(window.localStorage, id);
+                    archiveAction(result, result.ok);
+                    return result;
+                  }}
+                  onRename={(id, name) => {
+                    const result = session.renameSlot(window.localStorage, id, name);
+                    archiveAction(result);
+                    return result;
+                  }}
+                  onDelete={(id) => {
+                    const result = session.deleteSlot(window.localStorage, id);
+                    archiveAction(result);
+                    return result;
+                  }}
+                  onImportLegacy={(key, name) => {
+                    const result = session.importLegacy(window.localStorage, key, name);
+                    archiveAction(result, result.ok);
+                    return result;
+                  }}
+                />
                 <section className="configuration-section">
                   <h3>Offline content packs</h3>
                   <p className="hint">Import a validated Studio JSON bundle into this already-built client. Selecting it always starts a NEW expedition; existing saves stay separate.</p>
@@ -3501,40 +3505,6 @@ function GameClientInner() {
                   <dt>Dismantle</dt>
                   <dd>X</dd>
                 </dl>
-                {confirmReset ? (
-                  <div className="reset-confirm">
-                    <p>
-                      Start a new expedition? Unsaved progress will be lost;
-                      your saved world stays available.
-                    </p>
-                    <button
-                      className="danger"
-                      onClick={() => {
-                        session.reset();
-                        setMode(DEFAULT_MODE);
-                        setPanel(null);
-                        setConfirmReset(false);
-                        setGuide(true);
-                        setHomeToken((n) => n + 1);
-                      }}
-                    >
-                      Start new expedition
-                    </button>
-                    <button
-                      className="secondary"
-                      onClick={() => setConfirmReset(false)}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    className="danger"
-                    onClick={() => setConfirmReset(true)}
-                  >
-                    New expedition
-                  </button>
-                )}
               </>
             )}
           </div>
