@@ -456,23 +456,35 @@ function GameClientInner() {
 
   const refreshArchives = () => {
     try {
-      setArchiveView(session.list(window.localStorage));
+      const listing = session.list(window.localStorage);
+      const loadable = session.loadableSlotIds(window.localStorage);
+      setArchiveView(listing);
+      setLoadableSlotIds(loadable);
+      setResumeSlotId(listing.slots.find((slot) => loadable.includes(slot.id))?.id ?? null);
       setArchiveError(null);
     } catch (error) {
       setArchiveView(null);
+      setLoadableSlotIds([]);
+      setResumeSlotId(null);
       setArchiveError(String(error));
     }
   };
   useEffect(() => {
-    if (panel !== "menu") return;
+    if (!packReady || (screen !== "menu" && panel !== "menu")) return;
     try {
-      setArchiveView(session.list(window.localStorage));
+      const listing = session.list(window.localStorage);
+      const loadable = session.loadableSlotIds(window.localStorage);
+      setArchiveView(listing);
+      setLoadableSlotIds(loadable);
+      setResumeSlotId(listing.slots.find((slot) => loadable.includes(slot.id))?.id ?? null);
       setArchiveError(null);
     } catch (error) {
       setArchiveView(null);
+      setLoadableSlotIds([]);
+      setResumeSlotId(null);
       setArchiveError(String(error));
     }
-  }, [panel, session, activePack]);
+  }, [packReady, screen, panel, session, activePack]);
   const archiveAction = (result: CommandResult, switched = false, newWorld = false) => {
     setNotice(result);
     refreshArchives();
@@ -485,6 +497,90 @@ function GameClientInner() {
         setGuide(true);
         setHomeToken((n) => n + 1);
       }
+    }
+  };
+  const enterGame = (result: CommandResult, newWorld = false) => {
+    setNotice(result);
+    refreshArchives();
+    if (result.ok) {
+      setScreen("game");
+      setPaused(false);
+      setPanel(null);
+      setMode(DEFAULT_MODE);
+      setReturnPrompt(false);
+      setGuide(newWorld);
+      if (newWorld) setHomeToken((n) => n + 1);
+    }
+    return result;
+  };
+  const startNewFromMenu = (name: string) => {
+    try {
+      return enterGame(session.createSlot(window.localStorage, name), true);
+    } catch (error) {
+      return { ok: false, message: "New expedition not created. " + String(error) };
+    }
+  };
+  const resumeFromMenu = () => {
+    if (!resumeSlotId)
+      return { ok: false, message: "No valid compatible expedition is available." };
+    try {
+      return enterGame(session.loadSlot(window.localStorage, resumeSlotId), false);
+    } catch (error) {
+      return { ok: false, message: "Expedition not loaded. " + String(error) };
+    }
+  };
+  const loadFromMenu = (slotId: string) => {
+    try {
+      return enterGame(session.loadSlot(window.localStorage, slotId), false);
+    } catch (error) {
+      return { ok: false, message: "Expedition not loaded. " + String(error) };
+    }
+  };
+  const importLegacyFromMenu = (key: string, name: string) => {
+    try {
+      return enterGame(session.importLegacy(window.localStorage, key, name), false);
+    } catch (error) {
+      return { ok: false, message: "Legacy import failed. " + String(error) };
+    }
+  };
+  const requestMainMenu = () => {
+    if (session.hasUnsavedChanges()) {
+      setReturnPrompt(true);
+      return;
+    }
+    setScreen("menu");
+    setPaused(true);
+    setPanel(null);
+    refreshArchives();
+  };
+  const saveAndReturnToMenu = () => {
+    try {
+      const result = session.save(window.localStorage);
+      setNotice(result);
+      if (result.ok) {
+        setReturnPrompt(false);
+        setScreen("menu");
+        setPaused(true);
+        setPanel(null);
+        refreshArchives();
+      }
+    } catch (error) {
+      setNotice({ ok: false, message: "Save failed. " + String(error) });
+    }
+  };
+  const discardAndReturnToMenu = () => {
+    try {
+      const result = session.restore(window.localStorage);
+      setNotice(result);
+      if (result.ok) {
+        setReturnPrompt(false);
+        setScreen("menu");
+        setPaused(true);
+        setPanel(null);
+        refreshArchives();
+      }
+    } catch (error) {
+      setNotice({ ok: false, message: "Could not restore the last saved expedition. " + String(error) });
     }
   };
   const commitPreferences = (next: GamePreferences) => {
