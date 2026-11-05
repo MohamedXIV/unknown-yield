@@ -2741,6 +2741,9 @@ browserIt(
       await waitForExpression(`window.innerWidth === 390 && window.innerHeight === 844`);
       await call("Page.navigate", { url: appUrl });
       await waitForExpression(`document.readyState === "complete" && document.querySelector(".main-menu") !== null`);
+      await waitForExpression(`document.querySelector(".menu-home .menu-action") !== null`);
+      const mobileMenuScreenshot = await captureEvidence("main-menu-boot-mobile.png");
+      console.log("UNKNOWN_YIELD_MAIN_MENU_BOOT_MOBILE " + JSON.stringify(mobileMenuScreenshot));
       await clickMainMenuAction("Personnel Archives");
       await waitForExpression(`document.querySelector(".menu-archive-card") !== null`);
       await evaluate<boolean>(`(() => {
