@@ -623,17 +623,39 @@
   color: #d5c0a5;
 }
 
-/* The confirmation dialog is also a physical instrument, not a web card. */
+/* Confirmation, too, is the SAME four physical DOM layers. The modal
+   itself remains the focus/keyboard owner; its child board owns the hardware. */
 .game.game .menu-return-dialog {
-  border: 9px solid #2c3135;
-  outline: 2px solid #9c8665;
-  outline-offset: -5px;
-  border-radius: 2px;
-  background: #122128 url("/ui/pressed-metal.svg") repeat;
-  box-shadow: inset 0 0 0 4px #10181b, 0 20px 55px #000c;
+  width: min(520px, 100%);
+  padding: 0;
+  border: 0;
+  outline: none;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+.game.game .menu-return-dialog .uy-confirmation-board {
+  display: flex;
+  width: 100%;
+  max-height: calc(100dvh - 36px);
+}
+.game.game .menu-return-dialog .uy-confirmation-board .uy-contained-surface {
+  max-height: calc(100dvh - 150px);
+  overflow-y: auto;
+  padding: 14px;
 }
 .game.game .menu-return-dialog h2 {
   font: 600 26px/1.2 "Oswald", "Barlow Condensed", sans-serif;
+}
+.game.game .menu-return-dialog .menu-return-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.game.game .menu-return-dialog .menu-return-actions button {
+  min-height: 40px;
+  border-bottom-width: 3px;
+  font: 700 13px/1.2 "Barlow Condensed", sans-serif;
 }
 
 /* Focus always survives the physical frame, including browser keyboard and
