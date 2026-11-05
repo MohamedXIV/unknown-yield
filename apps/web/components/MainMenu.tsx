@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import type { CommandResult } from "@site/sim-core";
 import type { ArchiveListing } from "../game/save-archive";
 import {
@@ -42,7 +42,7 @@ function ActionButton({
   onClick,
   primary = false,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   detail?: string;
   disabled?: boolean;
   onClick: () => void;
