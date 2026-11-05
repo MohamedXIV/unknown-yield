@@ -1,0 +1,1775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UNKNOWN YIELD — UI Panel Frame Language (HTML/CSS/JS & React Reference)</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,500;0,600;0,700;1,400&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-canvas: #16191b;
+      --shell-dark: #25292c;
+      --shell-mid: #32373b;
+      --shell-light: #43494e;
+      --rust-amber: #b8732a;
+      --rust-deep: #7c3f16;
+      --bezel-brass: #7c6c52;
+      --bezel-brass-light: #9e8c6e;
+      --bezel-brass-dark: #3f3628;
+      --crimson-plate: #7c261d;
+      --crimson-dark: #581811;
+      --paper-light: #e5d7be;
+      --paper-mid: #d7c5a5;
+      --paper-dark: #bfa882;
+      --paper-ink: #291d14;
+      --inspect-bg: #122128;
+      --inspect-card: #10191e;
+      --inspect-border: #3d5259;
+      --inspect-ochre: #d8b382;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-canvas);
+      background-image:
+        radial-gradient(circle at 50% 18%, rgba(58, 66, 70, 0.28) 0%, rgba(16, 19, 21, 0.95) 75%),
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 3px);
+      color: #e6dac6;
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .font-display {
+      font-family: 'Oswald', 'Barlow Condensed', sans-serif;
+      letter-spacing: 0.04em;
+    }
+    .font-condensed {
+      font-family: 'Barlow Condensed', sans-serif;
+    }
+    .font-mono-tech {
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    .font-serif-field {
+      font-family: 'Lora', Georgia, serif;
+    }
+
+    /* Subtle Hazard Stripes under UNKNOWN YIELD */
+    .hazard-bar {
+      height: 7px;
+      background: repeating-linear-gradient(
+        -55deg,
+        #8c3227 0px,
+        #8c3227 8px,
+        #222629 8px,
+        #222629 15px
+      );
+      border: 1px solid rgba(184, 115, 42, 0.3);
+    }
+
+    /* ============================================================
+       LAYER 1: OUTER METAL SHELL (Physical Formed Board/Clipboard)
+       ============================================================ */
+    .uy-outer-shell {
+      position: relative;
+      background:
+        /* Rust / Paint Wear Patches */
+        radial-gradient(ellipse 90px 28px at 18% 1.5%, rgba(196, 126, 48, 0.65) 0%, rgba(168, 96, 28, 0.25) 55%, transparent 75%),
+        radial-gradient(ellipse 75px 22px at 84% 98.5%, rgba(190, 120, 42, 0.55) 0%, transparent 70%),
+        radial-gradient(ellipse 26px 85px at 1.2% 38%, rgba(186, 114, 38, 0.5) 0%, transparent 70%),
+        radial-gradient(ellipse 22px 70px at 98.8% 72%, rgba(186, 114, 38, 0.45) 0%, transparent 70%),
+        radial-gradient(circle 42px at 6% 96%, rgba(175, 108, 36, 0.5) 0%, transparent 75%),
+        /* Brushed gunmetal steel base */
+        linear-gradient(145deg, #3c4246 0%, #272b2e 38%, #1f2326 72%, #2c3034 100%);
+      padding: 15px 15px 17px 15px;
+      clip-path: polygon(
+        22px 0%, calc(100% - 22px) 0%,
+        100% 22px, 100% calc(100% - 22px),
+        calc(100% - 22px) 100%, 22px 100%,
+        0% calc(100% - 22px), 0% 22px
+      );
+      box-shadow:
+        0 22px 45px rgba(0, 0, 0, 0.85),
+        inset 0 2px 2px rgba(255, 255, 255, 0.22),
+        inset 0 -3px 5px rgba(0, 0, 0, 0.8);
+      transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), filter 0.25s ease;
+    }
+
+    /* Outer chamfer bevel border overlay */
+    .uy-outer-shell::before {
+      content: "";
+      position: absolute;
+      inset: 2px;
+      clip-path: polygon(
+        21px 0%, calc(100% - 21px) 0%,
+        100% 21px, 100% calc(100% - 21px),
+        calc(100% - 21px) 100%, 21px 100%,
+        0% calc(100% - 21px), 0% 21px
+      );
+      border: 1.5px solid rgba(195, 165, 118, 0.28);
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    /* Distress Scratches Overlay */
+    .uy-outer-shell::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        repeating-linear-gradient(115deg, transparent 0px, transparent 18px, rgba(255,220,160,0.03) 18px, rgba(255,220,160,0.03) 19px),
+        radial-gradient(circle at 25% 10%, rgba(212, 145, 62, var(--wear-opacity, 0.28)) 0%, transparent 28%),
+        radial-gradient(circle at 78% 92%, rgba(212, 145, 62, var(--wear-opacity, 0.25)) 0%, transparent 25%);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* ============================================================
+       CLIPBOARD TOP CLAMP (Molded Steel Clip at Top Center)
+       ============================================================ */
+    .uy-clipboard-clamp {
+      position: absolute;
+      top: -11px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 118px;
+      height: 24px;
+      background:
+        radial-gradient(ellipse 35px 10px at 30% 20%, rgba(196, 126, 48, 0.45), transparent 70%),
+        linear-gradient(180deg, #52585c 0%, #34393c 45%, #23272a 100%);
+      clip-path: polygon(10px 0%, calc(100% - 10px) 0%, 100% 100%, 0% 100%);
+      border-top: 1.5px solid rgba(255, 240, 210, 0.35);
+      box-shadow: 0 5px 10px rgba(0,0,0,0.75), inset 0 -2px 4px rgba(0,0,0,0.6);
+      z-index: 25;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+    }
+
+    .uy-panel-wrapper {
+      position: relative;
+      padding-top: 12px;
+      transition: transform 0.35s ease;
+    }
+
+    /* ============================================================
+       BOLTS & RIVETS (Slotted Industrial Screws)
+       ============================================================ */
+    .uy-bolt {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 32% 30%, #9b9384 0%, #575248 55%, #262420 100%);
+      box-shadow:
+        0 1px 2px rgba(0,0,0,0.9),
+        inset 0 1px 1px rgba(255,255,255,0.35),
+        0 0 0 1.5px #1b1d1f;
+      position: absolute;
+      z-index: 15;
+    }
+    .uy-bolt::after {
+      content: "";
+      position: absolute;
+      top: 4.5px;
+      left: 1.5px;
+      right: 1.5px;
+      height: 1.5px;
+      background: #1d1a17;
+      transform: rotate(var(--bolt-angle, -32deg));
+    }
+
+    .uy-pin {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #b89f74 0%, #635139 65%, #2c2216 100%);
+      box-shadow: 0 1px 1.5px rgba(0,0,0,0.75), inset 0 0.5px 0.5px rgba(255,255,255,0.4);
+      display: inline-block;
+    }
+
+    /* ============================================================
+       LAYER 2: INSET RIM / BEZEL (Recessed Brass/Steel Bed)
+       ============================================================ */
+    .uy-inset-rim {
+      position: relative;
+      background: linear-gradient(180deg, #6e5f47 0%, #4e4434 50%, #63553f 100%);
+      padding: 6px;
+      clip-path: polygon(
+        15px 0%, calc(100% - 15px) 0%,
+        100% 15px, 100% calc(100% - 15px),
+        calc(100% - 15px) 100%, 15px 100%,
+        0% calc(100% - 15px), 0% 15px
+      );
+      box-shadow:
+        inset 0 3px 8px rgba(0,0,0,0.85),
+        0 1px 0 rgba(255, 230, 185, 0.25);
+      z-index: 5;
+      transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.45s ease;
+    }
+
+    .uy-inset-rim-inner {
+      background: #141719;
+      padding: 4px;
+      clip-path: polygon(
+        12px 0%, calc(100% - 12px) 0%,
+        100% 12px, 100% calc(100% - 12px),
+        calc(100% - 12px) 100%, 12px 100%,
+        0% calc(100% - 12px), 0% 12px
+      );
+      box-shadow: inset 0 4px 10px rgba(0,0,0,0.95);
+    }
+
+    /* ============================================================
+       PANEL HEADER PLATES (Dark Metal vs Crimson Painted Metal)
+       ============================================================ */
+    .uy-header-inspect {
+      position: relative;
+      background:
+        radial-gradient(ellipse 80px 30px at 75% 15%, rgba(184, 115, 42, 0.25), transparent 70%),
+        linear-gradient(180deg, #32393d 0%, #22272a 55%, #1b2023 100%);
+      border-bottom: 3px solid #6b5c44;
+      padding: 12px 14px 10px 16px;
+      clip-path: polygon(10px 0%, calc(100% - 10px) 0%, 100% 10px, 100% 100%, 0% 100%, 0% 10px);
+      box-shadow: inset 0 1px 1px rgba(255, 240, 200, 0.2), 0 3px 8px rgba(0,0,0,0.7);
+    }
+
+    .uy-header-crimson {
+      position: relative;
+      background:
+        radial-gradient(ellipse 90px 35px at 22% 10%, rgba(215, 115, 65, 0.25), transparent 70%),
+        radial-gradient(circle at 88% 85%, rgba(40, 10, 6, 0.55), transparent 60%),
+        linear-gradient(180deg, #892b21 0%, #6e2017 55%, #591811 100%);
+      border-bottom: 3px solid #77664c;
+      padding: 10px 14px 10px 14px;
+      clip-path: polygon(10px 0%, calc(100% - 10px) 0%, 100% 10px, 100% 100%, 0% 100%, 0% 10px);
+      box-shadow: inset 0 1.5px 1px rgba(255, 205, 165, 0.28), 0 4px 9px rgba(0,0,0,0.75);
+    }
+
+    /* Close [X] button inside headers */
+    .uy-close-btn {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(180deg, #2b2723 0%, #1c1917 100%);
+      border: 1.5px solid #8a775a;
+      border-radius: 3px;
+      color: #e6d7be;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 13px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.15);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .uy-close-btn:hover {
+      background: linear-gradient(180deg, #963227 0%, #6d1f17 100%);
+      border-color: #d8b382;
+      transform: scale(1.05);
+    }
+
+    /* ============================================================
+       LAYER 3: CONTAINED SURFACE (Instrument Dark vs Field Paper)
+       ============================================================ */
+    /* Dark Instrument Surface (Panel 1: Inspect) */
+    .uy-surface-instrument {
+      position: relative;
+      background-color: #132229;
+      background-image:
+        linear-gradient(rgba(130, 165, 175, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(130, 165, 175, 0.045) 1px, transparent 1px),
+        radial-gradient(circle at 50% 35%, rgba(28, 56, 68, 0.45) 0%, rgba(12, 22, 27, 0.92) 90%);
+      background-size: 18px 18px, 18px 18px, 100% 100%;
+      padding: 12px 14px 14px 14px;
+      margin-top: 4px;
+      clip-path: polygon(0% 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0% calc(100% - 10px));
+      border: 1px solid #45585e;
+      box-shadow: inset 0 3px 10px rgba(0,0,0,0.85);
+      min-height: 495px;
+      transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.45s ease;
+    }
+
+    /* Inner Blueprint Frame inside Instrument Surface */
+    .uy-instrument-frame {
+      position: relative;
+      border: 1px solid rgba(185, 162, 122, 0.36);
+      border-radius: 4px;
+      padding: 10px 38px 12px 10px;
+      background: rgba(11, 20, 25, 0.45);
+      box-shadow: inset 0 0 18px rgba(0,0,0,0.6);
+    }
+
+    /* Field Paper Surface (Panels 2 & 3: Terminal & Notebook) */
+    .uy-surface-paper {
+      position: relative;
+      background-color: #dfd0b5;
+      background-image:
+        radial-gradient(circle at 50% 45%, rgba(235, 224, 203, 0.65) 0%, rgba(206, 186, 152, 0.45) 75%, rgba(168, 142, 104, 0.65) 100%),
+        repeating-linear-gradient(0deg, rgba(80, 55, 30, 0.018) 0px, rgba(80, 55, 30, 0.018) 1px, transparent 1px, transparent 3px);
+      color: var(--paper-ink);
+      padding: 10px 38px 14px 12px;
+      margin-top: 4px;
+      clip-path: polygon(
+        8px 0%, calc(100% - 8px) 0%,
+        100% 8px, 100% calc(100% - 10px),
+        calc(100% - 10px) 100%, 10px 100%,
+        0% calc(100% - 10px), 0% 8px
+      );
+      border: 1px solid #917b5a;
+      box-shadow:
+        inset 0 2px 8px rgba(70, 48, 24, 0.38),
+        inset 0 0 24px rgba(110, 82, 48, 0.28),
+        0 2px 4px rgba(0,0,0,0.65);
+      min-height: 495px;
+      transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.45s ease;
+    }
+
+    /* Inner thin ruled border on paper */
+    .uy-paper-inner-frame {
+      border: 1px solid rgba(98, 76, 52, 0.42);
+      padding: 8px 10px 12px 10px;
+      position: relative;
+      background: rgba(234, 222, 200, 0.32);
+    }
+
+    /* ============================================================
+       RIGHT-EDGE VERTICAL CONTROL CLUSTER (+ / - / Home)
+       ============================================================ */
+    .uy-side-controls {
+      position: absolute;
+      right: 6px;
+      top: 158px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      z-index: 20;
+    }
+
+    .uy-side-btn {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(180deg, #343d42 0%, #22282c 55%, #191e21 100%);
+      border: 1px solid #6c7376;
+      border-radius: 3px;
+      color: #e6d7be;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 16px;
+      font-weight: 600;
+      box-shadow: 0 3px 5px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.2);
+      cursor: pointer;
+      transition: all 0.14s ease;
+    }
+    .uy-side-btn:hover {
+      background: linear-gradient(180deg, #485359 0%, #2f373c 100%);
+      border-color: #d8b382;
+      color: #fff;
+      transform: translateX(-1px);
+    }
+    .uy-side-btn:active {
+      transform: translateY(1px);
+    }
+
+    /* ============================================================
+       LAYER 4: CONTENT COMPONENTS (Buttons, Tabs, Screens)
+       ============================================================ */
+    .uy-inspect-dark-box {
+      background: linear-gradient(180deg, #0d161b 0%, #101b21 100%);
+      border: 1px solid #595548;
+      border-radius: 3px;
+      padding: 10px 11px;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.8);
+    }
+
+    .uy-terminal-screen {
+      background:
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.018) 0px, rgba(255,255,255,0.018) 1px, transparent 1px, transparent 3px),
+        linear-gradient(180deg, #101b21 0%, #15232b 100%);
+      border: 1.5px solid #4a443b;
+      border-radius: 3px;
+      padding: 10px 12px;
+      color: #e9dec9;
+      box-shadow: inset 0 3px 8px rgba(0,0,0,0.85), 0 1px 0 rgba(255,255,255,0.4);
+    }
+
+    .uy-ochre-cta {
+      background: linear-gradient(180deg, #dfc092 0%, #cfa974 55%, #be965f 100%);
+      border: 1px solid #f2dec0;
+      border-radius: 4px;
+      color: #231910;
+      font-weight: 700;
+      padding: 7px 12px;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.55);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .uy-ochre-cta:hover {
+      filter: brightness(1.06);
+      transform: translateY(-1px);
+    }
+    .uy-ochre-cta.roof-open {
+      background: linear-gradient(180deg, #4b6973 0%, #344d56 100%);
+      color: #e9dec9;
+      border-color: #7ea0ab;
+    }
+
+    .uy-expand-btn {
+      width: 100%;
+      background: linear-gradient(180deg, #21323b 0%, #18252c 55%, #131e24 100%);
+      border: 1px solid #596c73;
+      border-radius: 4px;
+      color: #e6dac6;
+      padding: 7px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.12);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .uy-expand-btn:hover {
+      background: linear-gradient(180deg, #2b424d 0%, #1e2f38 100%);
+      border-color: #d8b382;
+      color: #ffffff;
+    }
+
+    /* Paper Filter / Section Pills */
+    .uy-paper-tab {
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 4px;
+      border: 1px solid #9c8665;
+      background: linear-gradient(180deg, #dfd0b6 0%, #cebba0 100%);
+      color: #342418;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.45);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .uy-paper-tab:hover {
+      border-color: #6e2017;
+      background: #e7dac3;
+    }
+    .uy-paper-tab.active {
+      background: linear-gradient(180deg, #8a2c22 0%, #681e16 100%);
+      border-color: #4a120c;
+      color: #f4ead8;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,190,150,0.3);
+    }
+
+    /* ============================================================
+       3D EXPLODED LAYER MODE (Interactive Inspection Feature)
+       ============================================================ */
+    body.exploded-mode .uy-outer-shell {
+      transform: perspective(1100px) rotateY(-12deg) rotateX(6deg);
+      overflow: visible !important;
+      clip-path: none !important;
+      border-radius: 14px;
+    }
+    body.exploded-mode .uy-inset-rim {
+      transform: translate3d(18px, -10px, 35px);
+      box-shadow: -14px 16px 26px rgba(0,0,0,0.85) !important;
+    }
+    body.exploded-mode .uy-surface-instrument,
+    body.exploded-mode .uy-surface-paper {
+      transform: translate3d(20px, -10px, 45px);
+      box-shadow: -16px 18px 28px rgba(0,0,0,0.8) !important;
+    }
+    body.exploded-mode .uy-layer-4-content {
+      transform: translate3d(16px, -8px, 40px);
+      filter: drop-shadow(-10px 12px 14px rgba(0,0,0,0.65));
+    }
+
+    /* Layer Highlight Pulse when hovering bottom construction diagram */
+    .highlight-layer-1 .uy-outer-shell {
+      outline: 3px solid #f59e0b;
+      outline-offset: 3px;
+    }
+    .highlight-layer-2 .uy-inset-rim {
+      outline: 3px solid #f59e0b;
+      outline-offset: 2px;
+    }
+    .highlight-layer-3 .uy-surface-instrument,
+    .highlight-layer-3 .uy-surface-paper {
+      outline: 3px solid #f59e0b;
+      outline-offset: 2px;
+    }
+    .highlight-layer-4 .uy-layer-4-content {
+      outline: 2px dashed #f59e0b;
+      outline-offset: 3px;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #141719;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #3d4449;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #6b5c44;
+    }
+  </style>
+</head>
+<body class="antialiased selection:bg-amber-700 selection:text-amber-50">
+
+  <!-- =====================================================================
+       TOP CONCEPT SHEET HEADER (Matches UNKNOWN YIELD Target Sheet + Tools)
+       ===================================================================== -->
+  <header class="max-w-[1440px] mx-auto px-4 sm:px-8 pt-5 pb-4 border-b border-stone-800/90">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      
+      <!-- Brand Logo & Title -->
+      <div class="flex items-center gap-4">
+        <!-- Circular Gear + Factory Badge -->
+        <div class="relative w-14 h-14 flex-shrink-0 flex items-center justify-center">
+          <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-[0_3px_6px_rgba(0,0,0,0.8)]">
+            <!-- Outer Gear Teeth -->
+            <g fill="#8c2d22" stroke="#d8b382" stroke-width="2">
+              <circle cx="50" cy="50" r="40" />
+              <rect x="44" y="3" width="12" height="10" rx="2" />
+              <rect x="44" y="87" width="12" height="10" rx="2" />
+              <rect x="3" y="44" width="10" height="12" rx="2" />
+              <rect x="87" y="44" width="10" height="12" rx="2" />
+              <rect x="15" y="15" width="11" height="11" rx="2" transform="rotate(-45 20.5 20.5)" />
+              <rect x="74" y="15" width="11" height="11" rx="2" transform="rotate(45 79.5 20.5)" />
+              <rect x="15" y="74" width="11" height="11" rx="2" transform="rotate(45 20.5 79.5)" />
+              <rect x="74" y="74" width="11" height="11" rx="2" transform="rotate(-45 79.5 79.5)" />
+            </g>
+            <circle cx="50" cy="50" r="33" fill="#5e1b13" stroke="#e5c89e" stroke-width="2.5" />
+            <!-- Factory Silhouette -->
+            <path d="M30 68 L30 48 L38 48 L38 35 L46 35 L46 26 L53 26 L53 42 L61 42 L61 32 L68 32 L68 68 Z" fill="#f0dfc6" />
+            <!-- Orbital Ring -->
+            <ellipse cx="50" cy="56" rx="44" ry="13" fill="none" stroke="#e5c89e" stroke-width="3.5" transform="rotate(-14 50 56)" />
+          </svg>
+        </div>
+
+        <div>
+          <h1 class="font-display text-3xl sm:text-4xl font-bold tracking-wider text-[#efe2cc] leading-none">
+            UNKNOWN YIELD
+          </h1>
+          <div class="hazard-bar w-full mt-2 rounded-xs"></div>
+        </div>
+
+        <div class="hidden md:block h-11 w-[1.5px] bg-stone-700 mx-2"></div>
+
+        <div>
+          <div class="font-condensed text-xl sm:text-2xl font-semibold tracking-[0.14em] text-[#e5d8c3] uppercase leading-tight">
+            UI PANEL FRAME LANGUAGE
+          </div>
+          <div class="font-mono-tech text-[10px] sm:text-[11px] tracking-[0.18em] text-stone-400 uppercase mt-0.5">
+            CONCEPT DIRECTION — IN-GAME PANELS (TARGET)
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Badges, Spec Checklist & Interactive Controls -->
+      <div class="flex flex-wrap items-center gap-4">
+        <div class="px-3 py-1.5 rounded bg-[#5b211a] border border-[#b56d58] text-[#f2dec4] font-mono-tech text-[11px] tracking-[0.14em] uppercase shadow-md">
+          PRE-IMPLEMENTATION CONCEPT
+        </div>
+
+        <!-- Spec Checklist from Image -->
+        <div class="hidden xl:grid grid-cols-1 gap-0.5 font-mono-tech text-[10px] tracking-[0.1em] text-[#dfd1ba] border-l border-stone-700 pl-4">
+          <div class="flex items-center gap-1.5"><span class="text-amber-400">☑</span> PHYSICAL METAL BOARD / CLIPBOARD</div>
+          <div class="flex items-center gap-1.5"><span class="text-amber-400">☑</span> RECESSED CONTENT SURFACE</div>
+          <div class="flex items-center gap-1.5"><span class="text-amber-400">☑</span> CONTAINED PAPER / INSTRUMENT INSET</div>
+          <div class="flex items-center gap-1.5"><span class="text-amber-400">☑</span> CONSISTENT INDUSTRIAL LANGUAGE</div>
+        </div>
+
+        <!-- Interactive Mode Toolbar -->
+        <div class="flex items-center gap-2 bg-stone-900/90 border border-stone-700 p-1.5 rounded-md">
+          <button id="toggleExplodeBtn" class="px-3 py-1.5 rounded text-xs font-mono-tech font-medium bg-stone-800 hover:bg-amber-900/60 text-amber-200 border border-amber-700/50 transition flex items-center gap-1.5 cursor-pointer" title="Inspect 4-Layer Physical Construction in 3D">
+            <span>layers</span>
+            <span id="explodeBtnText">3D Layer Explode: OFF</span>
+          </button>
+          <button id="openCodeModalBtn" class="px-3 py-1.5 rounded text-xs font-mono-tech font-semibold bg-[#7c261d] hover:bg-[#993126] text-[#f5e9d6] border border-[#c78d6b] transition flex items-center gap-1.5 cursor-pointer shadow">
+            <span>&lt;/&gt;</span>
+            <span>React &amp; CSS Code</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- =====================================================================
+       MAIN THREE TARGET PANELS GRID
+       ===================================================================== -->
+  <main class="max-w-[1440px] mx-auto px-4 sm:px-8 pt-6 pb-8">
+    
+    <!-- Status Toast Bar for Interactive Feedback -->
+    <div id="statusToast" class="mb-4 px-4 py-2 rounded bg-stone-900/90 border border-amber-700/40 flex flex-wrap items-center justify-between gap-2 text-xs font-mono-tech text-stone-300">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+        <span id="statusMessage">INTERACTIVE SIMULATION READY — Click any tab, roof toggle [F], shell expansion button, or layer number below to test the panels.</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <label class="flex items-center gap-1.5 text-[11px] text-stone-400 cursor-pointer">
+          <span>RUST WEAR:</span>
+          <input id="wearRange" type="range" min="0" max="100" value="55" class="w-20 accent-amber-600 cursor-pointer" />
+        </label>
+        <button id="resetAllBtn" class="text-[11px] text-amber-300 hover:text-amber-200 underline cursor-pointer">Reset State</button>
+      </div>
+    </div>
+
+    <!-- 3-Column Target Panels Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-7 items-start">
+
+      <!-- =================================================================
+           PANEL 1: INSPECT (SITE SERVICE DOSSIER — DARK INSTRUMENT SURFACE)
+           ================================================================= -->
+      <section class="uy-panel-wrapper" data-panel="inspect" id="panel-inspect">
+        <!-- Top Recessed Latch Detail -->
+        <div class="uy-clipboard-clamp" style="width: 96px; height: 18px; top: -6px;">
+          <span class="uy-pin"></span>
+          <span class="text-[8px] font-mono-tech tracking-widest text-stone-400">MK-IV</span>
+          <span class="uy-pin"></span>
+        </div>
+
+        <!-- LAYER 1: OUTER METAL SHELL -->
+        <div class="uy-outer-shell">
+          <!-- Outer Shell Corner & Side Bolts -->
+          <span class="uy-bolt" style="top: 10px; left: 10px; --bolt-angle: 25deg;"></span>
+          <span class="uy-bolt" style="top: 10px; right: 10px; --bolt-angle: -40deg;"></span>
+          <span class="uy-bolt" style="top: 52%; left: 4px; --bolt-angle: 70deg;"></span>
+          <span class="uy-bolt" style="top: 52%; right: 4px; --bolt-angle: 12deg;"></span>
+          <span class="uy-bolt" style="bottom: 10px; left: 10px; --bolt-angle: -18deg;"></span>
+          <span class="uy-bolt" style="bottom: 10px; right: 10px; --bolt-angle: 55deg;"></span>
+
+          <!-- LAYER 2: INSET RIM / BEZEL -->
+          <div class="uy-inset-rim">
+            <div class="uy-inset-rim-inner">
+              
+              <!-- HEADER PLATE -->
+              <header class="uy-header-inspect flex items-center justify-between">
+                <div class="flex items-baseline gap-3">
+                  <h2 class="font-display text-[28px] font-bold tracking-[0.06em] text-[#e8dac2] leading-none">
+                    INSPECT
+                  </h2>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="font-mono-tech text-[10px] tracking-[0.14em] text-[#c5b59b] uppercase">
+                    SITE SERVICE DOSSIER
+                  </span>
+                  <button class="uy-close-btn" data-action="minimize-panel" data-target="inspect" title="Toggle Panel Minimize">✕</button>
+                </div>
+              </header>
+
+              <!-- LAYER 3: CONTAINED INSTRUMENT SURFACE -->
+              <div class="uy-surface-instrument" id="inspect-body">
+                
+                <!-- Right-Side Docked Control Cluster (+ / - / Home) -->
+                <div class="uy-side-controls">
+                  <button class="uy-side-btn" data-action="inspect-machine-delta" data-delta="1" title="Add Machine to Persistent Layout">+</button>
+                  <button class="uy-side-btn" data-action="inspect-machine-delta" data-delta="-1" title="Remove Machine from Layout">−</button>
+                  <button class="uy-side-btn" data-action="toggle-roof" title="Toggle Factory Roof (Shortcut: F)">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-9.5z"/>
+                    </svg>
+                  </button>
+                </div>
+
+                <!-- LAYER 4: CONTENT -->
+                <div class="uy-instrument-frame uy-layer-4-content">
+                  
+                  <!-- FACTORY CAPITAL Box -->
+                  <div class="uy-inspect-dark-box mb-3">
+                    <div class="font-mono-tech text-[10px] tracking-[0.15em] text-[#c4ad88] uppercase mb-1">
+                      FACTORY CAPITAL
+                    </div>
+                    <div id="inspectMachineCount" class="text-[17px] font-bold text-[#f2e6d0] leading-snug mb-1.5">
+                      1 machines in persistent layout
+                    </div>
+                    <p class="text-[12px] leading-[1.4] text-[#b8c4c7]">
+                      Close or reopen this factory without deleting its internal machines, buffers or connections.
+                    </p>
+                  </div>
+
+                  <!-- Sample Tool & Grid Dimensions -->
+                  <div class="flex items-center gap-3 mb-2.5">
+                    <button id="sampleToolBtn" class="px-3 py-1 rounded bg-[#182932] hover:bg-[#233b47] border border-[#8c7858] text-[#e7d6b9] text-xs font-medium transition cursor-pointer shadow-sm">
+                      Sample tool
+                    </button>
+                    <span id="factoryGridCells" class="font-mono-tech text-[11px] tracking-[0.16em] text-[#c8b99e] uppercase">
+                      6 × 6 CELLS
+                    </span>
+                  </div>
+
+                  <!-- FACTORY 37 Header -->
+                  <div class="border-b border-[#4c5d63] pb-1.5 mb-3 flex items-center justify-between">
+                    <h3 id="factoryTitleText" class="font-display text-[24px] font-bold tracking-[0.05em] text-[#efe2cc] leading-none">
+                      FACTORY 37
+                    </h3>
+                    <span id="roofBadgeStatus" class="font-mono-tech text-[10px] px-1.5 py-0.5 rounded bg-amber-950/70 border border-amber-700/50 text-amber-300">
+                      ROOF OPEN
+                    </span>
+                  </div>
+
+                  <!-- Primary Roof Toggle CTA -->
+                  <button id="closeRoofBtn" class="uy-ochre-cta w-full flex items-center justify-center gap-2.5 text-[14px] mb-2.5">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                      <path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-9.5z"/>
+                    </svg>
+                    <span id="closeRoofBtnLabel">Close roof</span>
+                    <kbd class="ml-1 px-1.5 py-0.5 text-[11px] font-mono-tech bg-black/15 border border-black/25 rounded text-[#231910]">F</kbd>
+                  </button>
+
+                  <p class="text-[12px] leading-[1.42] text-[#b4c0c4] mb-4">
+                    Roof state is presentation-only. Every machine, belt, buffer and cargo slot continues in the detailed simulation.
+                  </p>
+
+                  <!-- SHELL RESHAPE Section -->
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="text-[#d98a3c] text-xs">◆</span>
+                    <div class="flex-1 h-[1px] bg-[#4c5d63]"></div>
+                    <span class="font-condensed text-[15px] font-bold tracking-[0.12em] text-[#e8dac2] uppercase">
+                      SHELL RESHAPE
+                    </span>
+                  </div>
+
+                  <p class="text-[12px] leading-[1.42] text-[#b4c0c4] mb-3.5">
+                    Move one wall at a time around the existing interior. Equipment stays at its world coordinates; ports and external logistics are never moved implicitly.
+                  </p>
+
+                  <!-- Expand West / East Buttons -->
+                  <div class="space-y-2">
+                    <button class="uy-expand-btn" data-action="expand-shell" data-dir="west">
+                      Expand west
+                    </button>
+                    <button class="uy-expand-btn" data-action="expand-shell" data-dir="east">
+                      Expand east
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================================================================
+           PANEL 2: COMPANY TERMINAL (FREIGHT & ALLOCATION — PAPER + SCREEN)
+           ================================================================= -->
+      <section class="uy-panel-wrapper" data-panel="terminal" id="panel-terminal">
+        <!-- Top Molded Steel Clipboard Clamp -->
+        <div class="uy-clipboard-clamp">
+          <span class="uy-pin"></span>
+          <div class="w-10 h-1.5 rounded-full bg-stone-900/80 border border-stone-600/40"></div>
+          <span class="uy-pin"></span>
+        </div>
+
+        <!-- LAYER 1: OUTER METAL SHELL -->
+        <div class="uy-outer-shell">
+          <span class="uy-bolt" style="top: 10px; left: 10px; --bolt-angle: -20deg;"></span>
+          <span class="uy-bolt" style="top: 10px; right: 10px; --bolt-angle: 35deg;"></span>
+          <span class="uy-bolt" style="top: 52%; left: 4px; --bolt-angle: 15deg;"></span>
+          <span class="uy-bolt" style="top: 52%; right: 4px; --bolt-angle: -60deg;"></span>
+          <span class="uy-bolt" style="bottom: 10px; left: 10px; --bolt-angle: 42deg;"></span>
+          <span class="uy-bolt" style="bottom: 10px; right: 10px; --bolt-angle: -12deg;"></span>
+
+          <!-- LAYER 2: INSET RIM / BEZEL -->
+          <div class="uy-inset-rim">
+            <div class="uy-inset-rim-inner">
+
+              <!-- CRIMSON HEADER PLATE -->
+              <header class="uy-header-crimson flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2.5">
+                  <!-- Mini Gear Emblem -->
+                  <div class="w-10 h-10 flex-shrink-0">
+                    <svg viewBox="0 0 100 100" class="w-full h-full">
+                      <circle cx="50" cy="50" r="42" fill="#5e1b13" stroke="#dfc49b" stroke-width="4" stroke-dasharray="12 6" />
+                      <circle cx="50" cy="50" r="32" fill="#782319" stroke="#dfc49b" stroke-width="2.5" />
+                      <path d="M32 68 L32 48 L40 48 L40 34 L48 34 L48 26 L56 26 L56 42 L66 42 L66 68 Z" fill="#f3e3c9" />
+                      <ellipse cx="50" cy="56" rx="42" ry="12" fill="none" stroke="#f3e3c9" stroke-width="3.5" transform="rotate(-14 50 56)" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 class="font-display text-[22px] font-bold tracking-[0.05em] text-[#f4e7d3] leading-[1.05] uppercase">
+                      COMPANY<br/>TERMINAL
+                    </h2>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                  <div class="font-mono-tech text-[10px] tracking-[0.13em] text-[#e5cfb1] uppercase text-right leading-tight">
+                    FREIGHT &amp;<br/>ALLOCATION
+                  </div>
+                  <button class="uy-close-btn" data-action="minimize-panel" data-target="terminal" title="Toggle Panel Minimize">✕</button>
+                </div>
+              </header>
+
+              <!-- LAYER 3: CONTAINED PAPER SURFACE -->
+              <div class="uy-surface-paper" id="terminal-body">
+                
+                <!-- Right-Side Docked Control Cluster (+ / - / Home) -->
+                <div class="uy-side-controls">
+                  <button class="uy-side-btn" data-action="terminal-export-delta" data-delta="1" title="Log Exported Freight Unit">+</button>
+                  <button class="uy-side-btn" data-action="terminal-export-delta" data-delta="-1" title="Decrement Freight Unit">−</button>
+                  <button class="uy-side-btn" data-action="terminal-reset-tab" title="Return to Work Overview">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-9.5z"/>
+                    </svg>
+                  </button>
+                </div>
+
+                <!-- LAYER 4: CONTENT -->
+                <div class="uy-paper-inner-frame uy-layer-4-content">
+                  <!-- Top Sub-Banner with Corner Pins -->
+                  <div class="flex items-center justify-between border-b-2 border-double border-[#8c7554] pb-1.5 mb-2.5">
+                    <span class="uy-pin"></span>
+                    <span class="font-mono-tech text-[10px] font-semibold tracking-[0.14em] text-[#4c3928] uppercase text-center">
+                      OFFICIAL COPY / FIELD FREIGHT &amp; ALLOCATION
+                    </span>
+                    <span class="uy-pin"></span>
+                  </div>
+
+                  <!-- Dark Recessed Terminal Screen Box -->
+                  <div class="uy-terminal-screen mb-3">
+                    <div id="terminalScreenTag" class="font-mono-tech text-[10px] tracking-[0.15em] text-[#c7b28f] uppercase mb-1">
+                      COMPANY WORK
+                    </div>
+                    <div id="terminalScreenHeadline" class="text-[17px] font-bold text-[#f4e8d3] leading-snug mb-1.5">
+                      1 active opportunity
+                    </div>
+                    <p id="terminalScreenDesc" class="text-[12px] leading-[1.4] text-[#b9c5c9]">
+                      These offers react to what the expedition has already demonstrated; they do not reveal hidden recipes.
+                    </p>
+                  </div>
+
+                  <!-- 4 Interactive Tabs: Work | Handling | Shipment | Company -->
+                  <div class="grid grid-cols-4 gap-1.5 mb-3.5" role="tablist">
+                    <button class="uy-paper-tab active" data-terminal-tab="Work">Work</button>
+                    <button class="uy-paper-tab" data-terminal-tab="Handling">Handling</button>
+                    <button class="uy-paper-tab" data-terminal-tab="Shipment">Shipment</button>
+                    <button class="uy-paper-tab" data-terminal-tab="Company">Company</button>
+                  </div>
+
+                  <!-- Main Section Headline -->
+                  <h3 id="terminalSectionTitle" class="font-display text-[22px] font-bold tracking-[0.03em] text-[#2b1c12] leading-[1.12] uppercase mb-3">
+                    KEEP THE EXPEDITION<br/>MOVING.
+                  </h3>
+
+                  <!-- Two-Column Metrics: Exported | Obligation -->
+                  <div class="grid grid-cols-2 border-t border-b border-[#9e8767] py-2 mb-3.5">
+                    <div class="pr-3 border-r border-[#9e8767]">
+                      <div class="text-[11px] font-semibold text-[#594330]">Exported</div>
+                      <div id="terminalExportedVal" class="font-mono-tech text-[20px] font-bold text-[#24170e] leading-tight">0</div>
+                    </div>
+                    <div class="pl-3">
+                      <div class="text-[11px] font-semibold text-[#594330]">Obligation</div>
+                      <div id="terminalObligationVal" class="font-mono-tech text-[20px] font-bold text-[#24170e] leading-tight">0 fuel</div>
+                    </div>
+                  </div>
+
+                  <!-- COMPANY MILESTONES Subheader -->
+                  <div class="flex items-center gap-2 border-b border-[#9e8767] pb-1.5 mb-2.5">
+                    <span class="w-1 h-3.5 bg-[#7c261d] inline-block"></span>
+                    <span class="font-condensed text-[14px] font-bold tracking-[0.12em] text-[#2b1c12] uppercase">
+                      COMPANY MILESTONES
+                    </span>
+                  </div>
+
+                  <!-- Milestone Card (Clickable to Certify/Toggle) -->
+                  <div id="milestoneCard" class="border border-[#9e8767] bg-[#e8dac2]/60 rounded-xs p-2.5 cursor-pointer hover:border-[#7c261d] transition" title="Click to toggle certification trial status">
+                    <div class="flex items-center justify-between mb-1">
+                      <span id="milestoneStatusBadge" class="font-mono-tech text-[10px] font-semibold tracking-[0.15em] text-[#6e563d] uppercase">
+                        PENDING
+                      </span>
+                      <span class="text-[10px] font-mono-tech text-[#7c261d] underline">Click to verify</span>
+                    </div>
+                    <div class="font-display text-[15px] font-bold tracking-[0.04em] text-[#24170e] uppercase mb-1">
+                      OUTBOUND HANDLING CERTIFIED
+                    </div>
+                    <p id="milestoneDescText" class="text-[12px] leading-[1.4] text-[#3d2c1e]">
+                      Confirm the sealed Heat trial to certify expanded handling.
+                    </p>
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================================================================
+           PANEL 3: FIELD NOTEBOOK (FIELD LAB / RECORDED EVIDENCE — PAPER)
+           ================================================================= -->
+      <section class="uy-panel-wrapper" data-panel="notebook" id="panel-notebook">
+        <!-- Top Molded Steel Clipboard Clamp -->
+        <div class="uy-clipboard-clamp">
+          <span class="uy-pin"></span>
+          <div class="w-10 h-1.5 rounded-full bg-stone-900/80 border border-stone-600/40"></div>
+          <span class="uy-pin"></span>
+        </div>
+
+        <!-- LAYER 1: OUTER METAL SHELL -->
+        <div class="uy-outer-shell">
+          <span class="uy-bolt" style="top: 10px; left: 10px; --bolt-angle: 48deg;"></span>
+          <span class="uy-bolt" style="top: 10px; right: 10px; --bolt-angle: -25deg;"></span>
+          <span class="uy-bolt" style="top: 52%; left: 4px; --bolt-angle: -15deg;"></span>
+          <span class="uy-bolt" style="top: 52%; right: 4px; --bolt-angle: 40deg;"></span>
+          <span class="uy-bolt" style="bottom: 10px; left: 10px; --bolt-angle: -50deg;"></span>
+          <span class="uy-bolt" style="bottom: 10px; right: 10px; --bolt-angle: 20deg;"></span>
+
+          <!-- LAYER 2: INSET RIM / BEZEL -->
+          <div class="uy-inset-rim">
+            <div class="uy-inset-rim-inner">
+
+              <!-- CRIMSON HEADER PLATE -->
+              <header class="uy-header-crimson flex items-center justify-between gap-2">
+                <div>
+                  <h2 class="font-display text-[25px] font-bold tracking-[0.05em] text-[#f4e7d3] leading-none uppercase">
+                    FIELD NOTEBOOK
+                  </h2>
+                </div>
+                <div class="flex items-center gap-2.5">
+                  <div class="font-mono-tech text-[9.5px] tracking-[0.12em] text-[#e5cfb1] uppercase text-right leading-tight">
+                    FIELD LAB /<br/>RECORDED<br/>EVIDENCE
+                  </div>
+                  <button class="uy-close-btn" data-action="minimize-panel" data-target="notebook" title="Toggle Panel Minimize">✕</button>
+                </div>
+              </header>
+
+              <!-- LAYER 3: CONTAINED PAPER SURFACE -->
+              <div class="uy-surface-paper" id="notebook-body">
+                
+                <!-- Right-Side Docked Control Cluster (+ / - / Home) -->
+                <div class="uy-side-controls">
+                  <button class="uy-side-btn" data-action="notebook-cycle-finding" data-dir="next" title="Next Recorded Finding">+</button>
+                  <button class="uy-side-btn" data-action="notebook-cycle-finding" data-dir="prev" title="Previous Recorded Finding">−</button>
+                  <button class="uy-side-btn" data-action="notebook-reset-filter" title="Reset Filter to All">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-9.5z"/>
+                    </svg>
+                  </button>
+                </div>
+
+                <!-- LAYER 4: CONTENT -->
+                <div class="uy-paper-inner-frame uy-layer-4-content">
+                  <!-- Top Sub-Banner with Corner Pins -->
+                  <div class="flex items-center justify-between border-b-2 border-double border-[#8c7554] pb-1.5 mb-2.5">
+                    <span class="uy-pin"></span>
+                    <span class="font-mono-tech text-[10px] font-semibold tracking-[0.15em] text-[#4c3928] uppercase text-center">
+                      EXPEDITION / FIELD RECORDS
+                    </span>
+                    <span class="uy-pin"></span>
+                  </div>
+
+                  <!-- EVIDENCE STATUS Recessed Box -->
+                  <div class="border border-[#9e8767] bg-[#e9dcc5]/65 p-2.5 rounded-xs mb-3 shadow-inner">
+                    <div class="font-mono-tech text-[10px] font-bold tracking-[0.14em] text-[#85291f] uppercase mb-0.5">
+                      EVIDENCE STATUS
+                    </div>
+                    <div id="evidenceCountHeadline" class="font-serif-field text-[17px] font-bold text-[#22160d] mb-1">
+                      3 open - 1 confirmed - 0 hazards
+                    </div>
+                    <p class="font-serif-field text-[12px] leading-[1.38] text-[#3b2a1d]">
+                      Filter what you know without exposing the authored recipe graph. Unconfirmed outcomes stay unnamed.
+                    </p>
+                  </div>
+
+                  <!-- 4 Interactive Filter Tabs: All | Open | Hazards | Confirmed -->
+                  <div class="grid grid-cols-4 gap-1.5 mb-3" role="tablist">
+                    <button class="uy-paper-tab active" data-notebook-filter="All">All</button>
+                    <button class="uy-paper-tab" data-notebook-filter="Open">Open</button>
+                    <button class="uy-paper-tab" data-notebook-filter="Hazards">Hazards</button>
+                    <button class="uy-paper-tab" data-notebook-filter="Confirmed">Confirmed</button>
+                  </div>
+
+                  <!-- Learn by doing Section -->
+                  <h3 class="font-serif-field text-[20px] font-bold text-[#23170e] leading-snug mb-1">
+                    Learn by doing.
+                  </h3>
+                  <p class="font-serif-field text-[12px] leading-[1.4] text-[#3d2b1d] mb-3">
+                    Known construction methods and your observed discoveries. There is no complete recipe book.
+                  </p>
+
+                  <!-- Material findings Subheader -->
+                  <div class="flex items-center justify-between border-b border-[#8c7554] pb-1 mb-2.5">
+                    <span class="font-serif-field text-[13px] font-bold text-[#23170e]">
+                      Material findings
+                    </span>
+                    <span id="findingIndexIndicator" class="font-mono-tech text-[10px] text-[#69523a]">
+                      ENTRY 1 / 4
+                    </span>
+                  </div>
+
+                  <!-- Observed Property Card -->
+                  <div id="notebookFindingCard" class="border border-[#9e8767] bg-[#e8dac2]/55 p-2.5 rounded-xs">
+                    <div id="findingPropertyTag" class="font-mono-tech text-[10px] font-bold tracking-[0.14em] text-[#85291f] uppercase mb-0.5">
+                      OBSERVED PROPERTY
+                    </div>
+                    <div id="findingTitle" class="font-serif-field text-[18px] font-bold text-[#21150c] mb-1.5">
+                      Ferrite rubble
+                    </div>
+                    <p id="findingBody" class="font-serif-field text-[12px] leading-[1.45] text-[#362619]">
+                      Ferrite already anchors site construction through structural plate production. Diverting the same feedstock into other applications competes directly with physical expansion.
+                    </p>
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ===================================================================
+         BOTTOM ARCHITECTURAL SPECIFICATION: PANEL CONSTRUCTION (LAYERED)
+         =================================================================== -->
+    <section class="mt-10 pt-6 border-t-2 border-stone-800">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center bg-[#141719]/90 border border-stone-800/90 rounded-lg p-5 shadow-2xl">
+        
+        <!-- Left Title & Description (Cols 1-3) -->
+        <div class="lg:col-span-3">
+          <h2 class="font-display text-2xl font-bold tracking-[0.05em] text-[#ece0ca] uppercase leading-tight mb-2">
+            PANEL CONSTRUCTION<br/>(LAYERED)
+          </h2>
+          <p class="text-xs leading-relaxed text-stone-400 mb-3">
+            Physical, layered construction for all major in-game panels. Hover or click any layer <strong class="text-amber-300">①–④</strong> to highlight its role across the live panels above.
+          </p>
+          <button id="bottomExplodeToggle" class="px-3 py-1.5 rounded bg-stone-800 hover:bg-amber-900/50 border border-amber-600/40 text-amber-200 font-mono-tech text-[11px] transition cursor-pointer">
+            Toggle 3D Exploded Stack
+          </button>
+        </div>
+
+        <!-- Center-Left Interactive Isometric 4-Layer Diagram (Cols 4-6) -->
+        <div class="lg:col-span-3 flex justify-center">
+          <svg viewBox="0 0 320 220" class="w-full max-w-[300px] h-auto select-none">
+            <!-- Layer 1: Outer Metal Shell -->
+            <g class="cursor-pointer transition-transform duration-200 hover:-translate-y-1" data-layer-trigger="1">
+              <polygon points="25,40 115,15 128,23 128,165 40,192 25,180" fill="#2c3135" stroke="#8c7554" stroke-width="2" />
+              <polygon points="32,45 110,23 120,30 120,158 44,182 32,172" fill="#1d2023" stroke="#52493c" stroke-width="1" />
+              <!-- Rust highlight -->
+              <line x1="45" y1="34" x2="85" y2="23" stroke="#c47e30" stroke-width="3" stroke-linecap="round" />
+              <circle cx="52" cy="204" r="11" fill="#1b1f22" stroke="#d8b382" stroke-width="1.5" />
+              <text x="52" y="208" text-anchor="middle" fill="#f3e5ce" font-size="11" font-family="IBM Plex Mono" font-weight="bold">1</text>
+            </g>
+
+            <!-- Layer 2: Inset Rim / Bezel -->
+            <g class="cursor-pointer transition-transform duration-200 hover:-translate-y-1" data-layer-trigger="2">
+              <polygon points="82,52 166,28 176,35 176,168 94,193 82,183" fill="none" stroke="#a68e68" stroke-width="7" stroke-linejoin="round" />
+              <polygon points="82,52 166,28 176,35 176,168 94,193 82,183" fill="none" stroke="#473c2b" stroke-width="2" />
+              <circle cx="108" cy="204" r="11" fill="#1b1f22" stroke="#d8b382" stroke-width="1.5" />
+              <text x="108" y="208" text-anchor="middle" fill="#f3e5ce" font-size="11" font-family="IBM Plex Mono" font-weight="bold">2</text>
+            </g>
+
+            <!-- Layer 3: Contained Surface (Paper / Instrument) -->
+            <g class="cursor-pointer transition-transform duration-200 hover:-translate-y-1" data-layer-trigger="3">
+              <polygon points="138,60 218,37 225,43 225,170 146,193 138,185" fill="#dfd0b5" stroke="#8c7554" stroke-width="1.8" />
+              <circle cx="164" cy="204" r="11" fill="#1b1f22" stroke="#d8b382" stroke-width="1.5" />
+              <text x="164" y="208" text-anchor="middle" fill="#f3e5ce" font-size="11" font-family="IBM Plex Mono" font-weight="bold">3</text>
+            </g>
+
+            <!-- Layer 4: Content (UI, text, lists, and controls) -->
+            <g class="cursor-pointer transition-transform duration-200 hover:-translate-y-1" data-layer-trigger="4">
+              <polygon points="190,68 272,45 278,50 278,174 198,196 190,189" fill="#1b2b33" fill-opacity="0.92" stroke="#627b85" stroke-width="1.8" />
+              <!-- Simulated UI bars inside Layer 4 -->
+              <polygon points="200,82 266,63 266,76 200,95" fill="#82949c" fill-opacity="0.45" />
+              <polygon points="200,104 232,95 232,105 200,114" fill="#d8b382" fill-opacity="0.7" />
+              <line x1="200" y1="128" x2="264" y2="110" stroke="#82949c" stroke-width="3" />
+              <line x1="200" y1="142" x2="254" y2="127" stroke="#82949c" stroke-width="2" />
+              <circle cx="222" cy="204" r="11" fill="#1b1f22" stroke="#d8b382" stroke-width="1.5" />
+              <text x="222" y="208" text-anchor="middle" fill="#f3e5ce" font-size="11" font-family="IBM Plex Mono" font-weight="bold">4</text>
+            </g>
+          </svg>
+        </div>
+
+        <!-- Center-Right Layer Callout Descriptions (Cols 7-9) -->
+        <div class="lg:col-span-3 space-y-2.5">
+          <div class="flex items-start gap-2.5 p-1.5 rounded hover:bg-stone-800/70 cursor-pointer transition" data-layer-trigger="1">
+            <span class="w-5 h-5 rounded-full border border-[#d8b382] text-[#f3e5ce] font-mono-tech text-[11px] flex items-center justify-center flex-shrink-0 mt-0.5">1</span>
+            <div>
+              <div class="font-condensed text-sm font-bold tracking-[0.1em] text-[#ece0ca] uppercase">OUTER METAL SHELL</div>
+              <p class="text-[11px] text-stone-400 leading-snug">Thick, formed board/clipboard with chamfers, bolts, and industrial wear.</p>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-2.5 p-1.5 rounded hover:bg-stone-800/70 cursor-pointer transition" data-layer-trigger="2">
+            <span class="w-5 h-5 rounded-full border border-[#d8b382] text-[#f3e5ce] font-mono-tech text-[11px] flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
+            <div>
+              <div class="font-condensed text-sm font-bold tracking-[0.1em] text-[#ece0ca] uppercase">INSET RIM / BEZEL</div>
+              <p class="text-[11px] text-stone-400 leading-snug">Recessed bed that holds the content surface.</p>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-2.5 p-1.5 rounded hover:bg-stone-800/70 cursor-pointer transition" data-layer-trigger="3">
+            <span class="w-5 h-5 rounded-full border border-[#d8b382] text-[#f3e5ce] font-mono-tech text-[11px] flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
+            <div>
+              <div class="font-condensed text-sm font-bold tracking-[0.1em] text-[#ece0ca] uppercase">CONTAINED SURFACE</div>
+              <p class="text-[11px] text-stone-400 leading-snug">Paper (terminal/notebook) or instrument panel (inspect), placed fully inside the rim.</p>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-2.5 p-1.5 rounded hover:bg-stone-800/70 cursor-pointer transition" data-layer-trigger="4">
+            <span class="w-5 h-5 rounded-full border border-[#d8b382] text-[#f3e5ce] font-mono-tech text-[11px] flex items-center justify-center flex-shrink-0 mt-0.5">4</span>
+            <div>
+              <div class="font-condensed text-sm font-bold tracking-[0.1em] text-[#ece0ca] uppercase">CONTENT</div>
+              <p class="text-[11px] text-stone-400 leading-snug">UI, text, lists, and controls — always contained within the surface.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Far-Right Frame Detail Macro Target (Cols 10-12) -->
+        <div class="lg:col-span-3 border-l border-stone-800 pl-0 lg:pl-5">
+          <!-- Macro Corner Loupe Graphic -->
+          <div class="relative h-36 rounded border border-stone-600 bg-[#101315] overflow-hidden shadow-inner p-3">
+            <!-- Scaled Macro Corner Reproduction -->
+            <div class="w-56 h-56 rounded-tl-[28px] bg-gradient-to-br from-[#3f464a] via-[#282d30] to-[#1e2225] border-t-4 border-l-4 border-[#c47e30]/70 p-4 shadow-2xl relative">
+              <!-- Macro Slotted Bolt -->
+              <div class="w-6 h-6 rounded-full bg-gradient-to-br from-[#a39a8b] to-[#38342e] border-2 border-[#16181a] shadow-md flex items-center justify-center">
+                <div class="w-4 h-0.5 bg-[#191715] -rotate-35"></div>
+              </div>
+              <!-- Macro Inset Brass Rim -->
+              <div class="mt-2 ml-2 w-48 h-48 rounded-tl-[16px] bg-gradient-to-b from-[#857356] to-[#524634] p-2.5 shadow-inner border-t border-l border-[#baa684]">
+                <!-- Macro Paper Corner + Crimson Header edge -->
+                <div class="w-44 h-44 rounded-tl-[10px] bg-[#dfd0b5] p-3 relative shadow-inner border border-[#7c684b]">
+                  <div class="w-3.5 h-3.5 rounded-full bg-gradient-to-br from-[#b89f74] to-[#3d2f1d] shadow"></div>
+                  <div class="mt-3 w-full h-16 bg-gradient-to-b from-[#892b21] to-[#631c14] border-2 border-[#7c684b]"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mt-2">
+            <div class="font-condensed text-sm font-bold tracking-[0.08em] text-[#ece0ca] uppercase">
+              ▲ FRAME DETAIL (TARGET)
+            </div>
+            <div class="font-mono-tech text-[10px] tracking-[0.12em] text-stone-400 uppercase">
+              THICK SHELL / INSET RIM / CONTAINED SURFACE
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- =====================================================================
+       MODAL: REUSABLE REACT COMPONENT (.JSX) & HTML/CSS ARCHITECTURE CODE
+       ===================================================================== -->
+  <div id="codeModal" class="fixed inset-0 bg-black/80 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+    <div class="bg-[#181c1f] border-2 border-[#7c6c52] rounded-lg max-w-4xl w-full max-h-[88vh] flex flex-col shadow-2xl overflow-hidden">
+      
+      <!-- Modal Header -->
+      <div class="px-5 py-3.5 bg-[#24292d] border-b border-[#5c503d] flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <span class="px-2 py-0.5 rounded bg-[#7c261d] text-[#f3e5ce] font-mono-tech text-xs font-bold">EXPORT</span>
+          <h3 class="font-display text-xl text-[#efe2cc] tracking-wide">
+            UNKNOWN YIELD — Reusable React Component &amp; CSS Layer Spec
+          </h3>
+        </div>
+        <button id="closeCodeModalBtn" class="uy-close-btn">✕</button>
+      </div>
+
+      <!-- Code Format Tabs -->
+      <div class="px-5 pt-3 bg-[#1d2124] border-b border-stone-800 flex items-center justify-between flex-wrap gap-2">
+        <div class="flex gap-2">
+          <button class="code-tab-btn px-3 py-1.5 rounded-t text-xs font-mono-tech font-semibold bg-[#7c261d] text-[#f5e9d6] cursor-pointer" data-code-tab="react">
+            UnknownYieldPanel.jsx (React Component)
+          </button>
+          <button class="code-tab-btn px-3 py-1.5 rounded-t text-xs font-mono-tech font-semibold bg-stone-800 text-stone-300 hover:bg-stone-700 cursor-pointer" data-code-tab="css">
+            industrial-frame.css (4-Layer CSS Spec)
+          </button>
+        </div>
+        <button id="copyCodeBtn" class="mb-1.5 px-3 py-1 rounded bg-amber-700 hover:bg-amber-600 text-amber-50 font-mono-tech text-xs font-medium transition cursor-pointer">
+          Copy Code
+        </button>
+      </div>
+
+      <!-- Code Content Pre -->
+      <div class="p-5 overflow-y-auto flex-1 bg-[#101315] font-mono-tech text-xs text-amber-100/90 leading-relaxed">
+        <pre id="codeDisplayArea" class="whitespace-pre-wrap select-all"></pre>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       APPLICATION LOGIC & INTERACTIVE CONTROLLERS
+       ===================================================================== -->
+  <script>
+    (function () {
+      // --- State Store ---
+      const state = {
+        exploded3D: false,
+        wearIntensity: 55,
+        inspect: {
+          machines: 1,
+          cols: 6,
+          rows: 6,
+          roofClosed: false,
+          sampleToolActive: false,
+          minimized: false
+        },
+        terminal: {
+          activeTab: 'Work',
+          exported: 0,
+          obligationFuel: 0,
+          milestoneCertified: false,
+          minimized: false,
+          tabsData: {
+            Work: {
+              tag: 'COMPANY WORK',
+              headline: '1 active opportunity',
+              desc: 'These offers react to what the expedition has already demonstrated; they do not reveal hidden recipes.',
+              sectionTitle: 'KEEP THE EXPEDITION\nMOVING.'
+            },
+            Handling: {
+              tag: 'FREIGHT HANDLING',
+              headline: '2 dock bays online',
+              desc: 'Sealed transfer chutes route bulk ore and structural plates directly to orbital tether pallets.',
+              sectionTitle: 'CERTIFY HEAVY\nBAY LOADOUTS.'
+            },
+            Shipment: {
+              tag: 'ORBITAL SHIPMENT',
+              headline: 'Next manifest unlocked',
+              desc: 'Outbound pods depart on manual release once fuel obligations and thermal seals are verified.',
+              sectionTitle: 'DISPATCH VERIFIED\nCARGO PODS.'
+            },
+            Company: {
+              tag: 'CHARTER STANDING',
+              headline: 'Tier II Field License',
+              desc: 'Sustained ferrite plate exports maintain orbital resupply priority without exposing core blueprints.',
+              sectionTitle: 'HONOR THE FIELD\nALLOCATION.'
+            }
+          }
+        },
+        notebook: {
+          activeFilter: 'All',
+          currentIndex: 0,
+          minimized: false,
+          findings: [
+            {
+              status: 'Open',
+              tag: 'OBSERVED PROPERTY',
+              title: 'Ferrite rubble',
+              body: 'Ferrite already anchors site construction through structural plate production. Diverting the same feedstock into other applications competes directly with physical expansion.'
+            },
+            {
+              status: 'Confirmed',
+              tag: 'CONFIRMED REACTION',
+              title: 'Sintered slag plate',
+              body: 'High-pressure kiln compaction locks loose ferrite rubble into load-bearing hull decking without requiring imported flux agents.'
+            },
+            {
+              status: 'Open',
+              tag: 'OBSERVED PROPERTY',
+              title: 'Volatile brine condensate',
+              body: 'Collected from deep thermal vents. Remains stable in sealed drum buffers but corrodes unlined brass intake valves over extended cycles.'
+            },
+            {
+              status: 'Open',
+              tag: 'OBSERVED PROPERTY',
+              title: 'Calcined silicate dust',
+              body: 'Fine byproduct recovered from primary crushers. High thermal resistance suggests potential use in sealed heat trial linings.'
+            }
+          ]
+        }
+      };
+
+      // --- Helper to update status bar ---
+      const statusMessageEl = document.getElementById('statusMessage');
+      function setStatus(msg) {
+        if (statusMessageEl) {
+          statusMessageEl.textContent = msg;
+        }
+      }
+
+      // --- Render Inspect Panel ---
+      function renderInspect() {
+        const machineEl = document.getElementById('inspectMachineCount');
+        const cellsEl = document.getElementById('factoryGridCells');
+        const roofBtn = document.getElementById('closeRoofBtn');
+        const roofBtnLabel = document.getElementById('closeRoofBtnLabel');
+        const roofBadge = document.getElementById('roofBadgeStatus');
+        const sampleToolBtn = document.getElementById('sampleToolBtn');
+
+        machineEl.textContent = `${state.inspect.machines} ${state.inspect.machines === 1 ? 'machine' : 'machines'} in persistent layout`;
+        cellsEl.textContent = `${state.inspect.cols} × ${state.inspect.rows} CELLS`;
+
+        if (state.inspect.roofClosed) {
+          roofBtn.classList.add('roof-open');
+          roofBtnLabel.textContent = 'Open roof';
+          roofBadge.textContent = 'ROOF CLOSED';
+          roofBadge.className = 'font-mono-tech text-[10px] px-1.5 py-0.5 rounded bg-teal-950/90 border border-teal-600/50 text-teal-200';
+        } else {
+          roofBtn.classList.remove('roof-open');
+          roofBtnLabel.textContent = 'Close roof';
+          roofBadge.textContent = 'ROOF OPEN';
+          roofBadge.className = 'font-mono-tech text-[10px] px-1.5 py-0.5 rounded bg-amber-950/70 border border-amber-700/50 text-amber-300';
+        }
+
+        if (state.inspect.sampleToolActive) {
+          sampleToolBtn.classList.add('bg-amber-800/60', 'border-amber-400', 'text-white');
+          sampleToolBtn.textContent = 'Sample tool: ACTIVE';
+        } else {
+          sampleToolBtn.classList.remove('bg-amber-800/60', 'border-amber-400', 'text-white');
+          sampleToolBtn.textContent = 'Sample tool';
+        }
+      }
+
+      // --- Render Company Terminal Panel ---
+      function renderTerminal() {
+        const tabInfo = state.terminal.tabsData[state.terminal.activeTab];
+        document.getElementById('terminalScreenTag').textContent = tabInfo.tag;
+        document.getElementById('terminalScreenHeadline').textContent = tabInfo.headline;
+        document.getElementById('terminalScreenDesc').textContent = tabInfo.desc;
+        document.getElementById('terminalSectionTitle').innerHTML = tabInfo.sectionTitle.replace('\n', '<br/>');
+
+        document.getElementById('terminalExportedVal').textContent = String(state.terminal.exported);
+        document.getElementById('terminalObligationVal').textContent = `${state.terminal.obligationFuel} fuel`;
+
+        document.querySelectorAll('[data-terminal-tab]').forEach(btn => {
+          const isMatch = btn.getAttribute('data-terminal-tab') === state.terminal.activeTab;
+          btn.classList.toggle('active', isMatch);
+        });
+
+        const milestoneBadge = document.getElementById('milestoneStatusBadge');
+        const milestoneDesc = document.getElementById('milestoneDescText');
+        if (state.terminal.milestoneCertified) {
+          milestoneBadge.textContent = 'CERTIFIED ✓';
+          milestoneBadge.className = 'font-mono-tech text-[10px] font-bold tracking-[0.15em] text-emerald-800 uppercase';
+          milestoneDesc.textContent = 'Sealed Heat trial verified. Expanded outbound freight handling is now active.';
+        } else {
+          milestoneBadge.textContent = 'PENDING';
+          milestoneBadge.className = 'font-mono-tech text-[10px] font-semibold tracking-[0.15em] text-[#6e563d] uppercase';
+          milestoneDesc.textContent = 'Confirm the sealed Heat trial to certify expanded handling.';
+        }
+      }
+
+      // --- Render Field Notebook Panel ---
+      function renderNotebook() {
+        document.querySelectorAll('[data-notebook-filter]').forEach(btn => {
+          const isMatch = btn.getAttribute('data-notebook-filter') === state.notebook.activeFilter;
+          btn.classList.toggle('active', isMatch);
+        });
+
+        const filtered = state.notebook.findings.filter(item => {
+          if (state.notebook.activeFilter === 'All') return true;
+          return item.status === state.notebook.activeFilter;
+        });
+
+        const indicatorEl = document.getElementById('findingIndexIndicator');
+        const tagEl = document.getElementById('findingPropertyTag');
+        const titleEl = document.getElementById('findingTitle');
+        const bodyEl = document.getElementById('findingBody');
+
+        if (filtered.length === 0) {
+          indicatorEl.textContent = '0 ENTRIES';
+          tagEl.textContent = 'NO RECORDED HAZARDS';
+          titleEl.textContent = 'Zero hazards logged';
+          bodyEl.textContent = 'No containment breaches or thermal hazards have been triggered during current field lab trials.';
+          return;
+        }
+
+        const safeIdx = ((state.notebook.currentIndex % filtered.length) + filtered.length) % filtered.length;
+        const entry = filtered[safeIdx];
+        indicatorEl.textContent = `ENTRY ${safeIdx + 1} / ${filtered.length}`;
+        tagEl.textContent = entry.tag;
+        titleEl.textContent = entry.title;
+        bodyEl.textContent = entry.body;
+      }
+
+      // --- Event Delegation for Panel Controls ---
+      document.addEventListener('click', function (e) {
+        // 1. Roof Toggle Button
+        if (e.target.closest('#closeRoofBtn') || e.target.closest('[data-action="toggle-roof"]')) {
+          state.inspect.roofClosed = !state.inspect.roofClosed;
+          renderInspect();
+          setStatus(`INSPECT [FACTORY 37]: Roof state set to ${state.inspect.roofClosed ? 'CLOSED' : 'OPEN'} (simulation continues).`);
+          return;
+        }
+
+        // 2. Sample Tool Toggle
+        if (e.target.closest('#sampleToolBtn')) {
+          state.inspect.sampleToolActive = !state.inspect.sampleToolActive;
+          renderInspect();
+          setStatus(`INSPECT: Sample tool ${state.inspect.sampleToolActive ? 'engaged — click any machine cell to sample' : 'disengaged'}.`);
+          return;
+        }
+
+        // 3. Shell Reshape (Expand West / East)
+        const expandBtn = e.target.closest('[data-action="expand-shell"]');
+        if (expandBtn) {
+          const dir = expandBtn.getAttribute('data-dir');
+          state.inspect.cols += 1;
+          renderInspect();
+          setStatus(`SHELL RESHAPE: Expanded ${dir.toUpperCase()} wall by 1 cell → Footprint is now ${state.inspect.cols} × ${state.inspect.rows} CELLS.`);
+          return;
+        }
+
+        // 4. Inspect Machine Delta (+ / -)
+        const machineDeltaBtn = e.target.closest('[data-action="inspect-machine-delta"]');
+        if (machineDeltaBtn) {
+          const delta = parseInt(machineDeltaBtn.getAttribute('data-delta'), 10);
+          state.inspect.machines = Math.max(0, state.inspect.machines + delta);
+          renderInspect();
+          setStatus(`FACTORY CAPITAL: ${state.inspect.machines} machine(s) in persistent layout.`);
+          return;
+        }
+
+        // 5. Terminal Tabs
+        const termTabBtn = e.target.closest('[data-terminal-tab]');
+        if (termTabBtn) {
+          state.terminal.activeTab = termTabBtn.getAttribute('data-terminal-tab');
+          renderTerminal();
+          setStatus(`COMPANY TERMINAL: Switched view to [${state.terminal.activeTab.toUpperCase()}] dossier.`);
+          return;
+        }
+
+        // 6. Terminal Export Delta (+ / -)
+        const termDeltaBtn = e.target.closest('[data-action="terminal-export-delta"]');
+        if (termDeltaBtn) {
+          const delta = parseInt(termDeltaBtn.getAttribute('data-delta'), 10);
+          state.terminal.exported = Math.max(0, state.terminal.exported + delta);
+          state.terminal.obligationFuel = state.terminal.exported * 15;
+          renderTerminal();
+          setStatus(`FREIGHT & ALLOCATION: Exported = ${state.terminal.exported} units | Obligation = ${state.terminal.obligationFuel} fuel.`);
+          return;
+        }
+
+        // 7. Terminal Reset Home
+        if (e.target.closest('[data-action="terminal-reset-tab"]')) {
+          state.terminal.activeTab = 'Work';
+          renderTerminal();
+          setStatus('COMPANY TERMINAL: Returned to primary [WORK] view.');
+          return;
+        }
+
+        // 8. Milestone Card Toggle
+        if (e.target.closest('#milestoneCard')) {
+          state.terminal.milestoneCertified = !state.terminal.milestoneCertified;
+          renderTerminal();
+          setStatus(`COMPANY MILESTONE: Outbound Handling ${state.terminal.milestoneCertified ? 'CERTIFIED' : 'reverted to PENDING'}.`);
+          return;
+        }
+
+        // 9. Notebook Filter Tabs
+        const nbFilterBtn = e.target.closest('[data-notebook-filter]');
+        if (nbFilterBtn) {
+          state.notebook.activeFilter = nbFilterBtn.getAttribute('data-notebook-filter');
+          state.notebook.currentIndex = 0;
+          renderNotebook();
+          setStatus(`FIELD NOTEBOOK: Filtered evidence records by [${state.notebook.activeFilter.toUpperCase()}].`);
+          return;
+        }
+
+        // 10. Notebook Cycle Findings (+ / -)
+        const nbCycleBtn = e.target.closest('[data-action="notebook-cycle-finding"]');
+        if (nbCycleBtn) {
+          const dir = nbCycleBtn.getAttribute('data-dir');
+          state.notebook.currentIndex += (dir === 'next' ? 1 : -1);
+          renderNotebook();
+          setStatus('FIELD NOTEBOOK: Cycled material finding entry.');
+          return;
+        }
+
+        // 11. Notebook Reset Filter
+        if (e.target.closest('[data-action="notebook-reset-filter"]')) {
+          state.notebook.activeFilter = 'All';
+          state.notebook.currentIndex = 0;
+          renderNotebook();
+          setStatus('FIELD NOTEBOOK: Reset filter to [ALL] findings (Ferrite rubble).');
+          return;
+        }
+
+        // 12. Minimize / Restore Panel Body
+        const minBtn = e.target.closest('[data-action="minimize-panel"]');
+        if (minBtn) {
+          const target = minBtn.getAttribute('data-target');
+          const bodyEl = document.getElementById(`${target}-body`);
+          if (bodyEl) {
+            const isHidden = bodyEl.classList.toggle('hidden');
+            minBtn.textContent = isHidden ? '▢' : '✕';
+            setStatus(`PANEL [${target.toUpperCase()}]: ${isHidden ? 'Collapsed to header bar' : 'Restored full recessed surface'}.`);
+          }
+          return;
+        }
+      });
+
+      // --- Keyboard Shortcut [F] for Roof Toggle ---
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'f' || e.key === 'F') {
+          if (document.activeElement && ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+          state.inspect.roofClosed = !state.inspect.roofClosed;
+          renderInspect();
+          setStatus(`KEYBOARD [F]: Factory 37 roof ${state.inspect.roofClosed ? 'CLOSED' : 'OPENED'}.`);
+        }
+      });
+
+      // --- 3D Exploded Layer Mode Toggle ---
+      function toggleExplodeMode() {
+        state.exploded3D = !state.exploded3D;
+        document.body.classList.toggle('exploded-mode', state.exploded3D);
+        document.getElementById('explodeBtnText').textContent = `3D Layer Explode: ${state.exploded3D ? 'ON' : 'OFF'}`;
+        setStatus(
+          state.exploded3D
+            ? '3D LAYER EXPLODE ACTIVE: Showing physical separation of ① Outer Metal Shell, ② Inset Rim, ③ Contained Surface, and ④ Content.'
+            : '3D LAYER EXPLODE OFF: Returned to standard orthographic in-game panel view.'
+        );
+      }
+
+      document.getElementById('toggleExplodeBtn').addEventListener('click', toggleExplodeMode);
+      document.getElementById('bottomExplodeToggle').addEventListener('click', toggleExplodeMode);
+
+      // --- Interactive Layer Highlighting from Bottom Construction Diagram ---
+      document.querySelectorAll('[data-layer-trigger]').forEach(el => {
+        const layerNum = el.getAttribute('data-layer-trigger');
+        el.addEventListener('mouseenter', () => {
+          document.body.classList.add(`highlight-layer-${layerNum}`);
+          const names = {
+            '1': 'LAYER ① OUTER METAL SHELL — Thick formed board with chamfers, bolts & rust wear',
+            '2': 'LAYER ② INSET RIM / BEZEL — Recessed metallic bed holding the surface',
+            '3': 'LAYER ③ CONTAINED SURFACE — Aged field paper or dark instrument blueprint surface',
+            '4': 'LAYER ④ CONTENT — Strictly contained UI controls, lists, and typography'
+          };
+          setStatus(names[layerNum] || '');
+        });
+        el.addEventListener('mouseleave', () => {
+          document.body.classList.remove(`highlight-layer-${layerNum}`);
+        });
+        el.addEventListener('click', toggleExplodeMode);
+      });
+
+      // --- Rust & Paint Wear Slider ---
+      document.getElementById('wearRange').addEventListener('input', function (e) {
+        const val = Number(e.target.value);
+        const opacity = (val / 100) * 0.52;
+        document.documentElement.style.setProperty('--wear-opacity', opacity.toFixed(2));
+        setStatus(`INDUSTRIAL WEAR INTENSITY: Adjusted edge paint chipping & oxidation to ${val}%.`);
+      });
+
+      // --- Reset All Button ---
+      document.getElementById('resetAllBtn').addEventListener('click', function () {
+        state.exploded3D = false;
+        document.body.classList.remove('exploded-mode');
+        document.getElementById('explodeBtnText').textContent = '3D Layer Explode: OFF';
+
+        state.inspect = { machines: 1, cols: 6, rows: 6, roofClosed: false, sampleToolActive: false, minimized: false };
+        state.terminal.activeTab = 'Work';
+        state.terminal.exported = 0;
+        state.terminal.obligationFuel = 0;
+        state.terminal.milestoneCertified = false;
+        state.notebook.activeFilter = 'All';
+        state.notebook.currentIndex = 0;
+
+        ['inspect', 'terminal', 'notebook'].forEach(id => {
+          const bodyEl = document.getElementById(`${id}-body`);
+          if (bodyEl) bodyEl.classList.remove('hidden');
+          const btn = document.querySelector(`[data-action="minimize-panel"][data-target="${id}"]`);
+          if (btn) btn.textContent = '✕';
+        });
+
+        renderInspect();
+        renderTerminal();
+        renderNotebook();
+        setStatus('RESET COMPLETE: Restored all three panels to exact target concept state.');
+      });
+
+      // --- React & CSS Code Modal ---
+      const reactCodeSnippet = `import React, { useState } from 'react';
+
+/**
+ * UNKNOWN YIELD — 4-Layer Physical Industrial Panel Component
+ * Variants: 'inspect' (dark instrument surface) | 'terminal' | 'notebook' (contained paper surface)
+ */
+export function UnknownYieldPanel({
+  variant = 'inspect',
+  title,
+  subtitle,
+  hasClipboardClamp = false,
+  onClose,
+  sideControls,
+  children,
+}) {
+  const isPaper = variant === 'terminal' || variant === 'notebook';
+
+  return (
+    <section className="uy-panel-wrapper relative pt-3">
+      {/* Optional Molded Steel Clipboard Clamp */}
+      {hasClipboardClamp && (
+        <div className="uy-clipboard-clamp">
+          <span className="uy-pin" />
+          <div className="w-10 h-1.5 rounded-full bg-stone-900/80 border border-stone-600/40" />
+          <span className="uy-pin" />
+        </div>
+      )}
+
+      {/* LAYER 1: OUTER METAL SHELL (Formed Board with Chamfers, Bolts & Wear) */}
+      <div className="uy-outer-shell">
+        <span className="uy-bolt" style={{ top: 10, left: 10 }} />
+        <span className="uy-bolt" style={{ top: 10, right: 10 }} />
+        <span className="uy-bolt" style={{ bottom: 10, left: 10 }} />
+        <span className="uy-bolt" style={{ bottom: 10, right: 10 }} />
+
+        {/* LAYER 2: INSET RIM / BEZEL (Recessed Brass/Steel Bed) */}
+        <div className="uy-inset-rim">
+          <div className="uy-inset-rim-inner">
+            
+            {/* HEADER PLATE */}
+            <header className={isPaper ? 'uy-header-crimson' : 'uy-header-inspect'}>
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="font-display text-2xl font-bold tracking-wider text-[#f4e7d3] uppercase">
+                  {title}
+                </h2>
+                <div className="flex items-center gap-3">
+                  <span className="font-mono-tech text-[10px] tracking-widest text-[#e5cfb1] uppercase text-right">
+                    {subtitle}
+                  </span>
+                  <button onClick={onClose} className="uy-close-btn">✕</button>
+                </div>
+              </div>
+            </header>
+
+            {/* LAYER 3: CONTAINED SURFACE (Paper vs Instrument Panel) */}
+            <div className={isPaper ? 'uy-surface-paper' : 'uy-surface-instrument'}>
+              {/* Right-Side Docked Control Cluster (+ / - / Home) */}
+              {sideControls && (
+                <div className="uy-side-controls">{sideControls}</div>
+              )}
+
+              {/* LAYER 4: CONTENT (Strictly Contained Inside Surface) */}
+              <div className={isPaper ? 'uy-paper-inner-frame' : 'uy-instrument-frame'}>
+                {children}
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}`;
+
+      const cssCodeSnippet = `/* UNKNOWN YIELD — 4-Layer Physical Panel CSS Specification */
+
+/* LAYER 1: OUTER METAL SHELL */
+.uy-outer-shell {
+  position: relative;
+  background:
+    radial-gradient(ellipse 90px 28px at 18% 1.5%, rgba(196, 126, 48, 0.65) 0%, transparent 75%),
+    linear-gradient(145deg, #3c4246 0%, #272b2e 38%, #1f2326 72%, #2c3034 100%);
+  padding: 15px 15px 17px 15px;
+  clip-path: polygon(
+    22px 0%, calc(100% - 22px) 0%,
+    100% 22px, 100% calc(100% - 22px),
+    calc(100% - 22px) 100%, 22px 100%,
+    0% calc(100% - 22px), 0% 22px
+  );
+  box-shadow: 0 22px 45px rgba(0,0,0,0.85), inset 0 2px 2px rgba(255,255,255,0.22);
+}
+
+/* LAYER 2: INSET RIM / BEZEL */
+.uy-inset-rim {
+  background: linear-gradient(180deg, #6e5f47 0%, #4e4434 50%, #63553f 100%);
+  padding: 6px;
+  clip-path: polygon(
+    15px 0%, calc(100% - 15px) 0%,
+    100% 15px, 100% calc(100% - 15px),
+    calc(100% - 15px) 100%, 15px 100%,
+    0% calc(100% - 15px), 0% 15px
+  );
+  box-shadow: inset 0 3px 8px rgba(0,0,0,0.85);
+}
+
+/* LAYER 3A: CONTAINED INSTRUMENT SURFACE (INSPECT) */
+.uy-surface-instrument {
+  background-color: #132229;
+  border: 1px solid #45585e;
+  box-shadow: inset 0 3px 10px rgba(0,0,0,0.85);
+}
+
+/* LAYER 3B: CONTAINED FIELD PAPER SURFACE (TERMINAL & NOTEBOOK) */
+.uy-surface-paper {
+  background-color: #dfd0b5;
+  color: #291d14;
+  border: 1px solid #917b5a;
+  box-shadow: inset 0 2px 8px rgba(70, 48, 24, 0.38);
+}`;
+
+      const codeModal = document.getElementById('codeModal');
+      const codeDisplayArea = document.getElementById('codeDisplayArea');
+      let currentCodeTab = 'react';
+
+      function updateCodeModalView() {
+        codeDisplayArea.textContent = currentCodeTab === 'react' ? reactCodeSnippet : cssCodeSnippet;
+        document.querySelectorAll('.code-tab-btn').forEach(btn => {
+          const active = btn.getAttribute('data-code-tab') === currentCodeTab;
+          btn.className = active
+            ? 'code-tab-btn px-3 py-1.5 rounded-t text-xs font-mono-tech font-semibold bg-[#7c261d] text-[#f5e9d6] cursor-pointer'
+            : 'code-tab-btn px-3 py-1.5 rounded-t text-xs font-mono-tech font-semibold bg-stone-800 text-stone-300 hover:bg-stone-700 cursor-pointer';
+        });
+      }
+
+      document.getElementById('openCodeModalBtn').addEventListener('click', () => {
+        updateCodeModalView();
+        codeModal.classList.remove('hidden');
+        codeModal.classList.add('flex');
+      });
+
+      document.getElementById('closeCodeModalBtn').addEventListener('click', () => {
+        codeModal.classList.add('hidden');
+        codeModal.classList.remove('flex');
+      });
+
+      document.querySelectorAll('.code-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          currentCodeTab = btn.getAttribute('data-code-tab');
+          updateCodeModalView();
+        });
+      });
+
+      document.getElementById('copyCodeBtn').addEventListener('click', function () {
+        const text = codeDisplayArea.textContent;
+        const btn = this;
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text);
+          } else {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+          }
+          btn.textContent = 'Copied ✓';
+          setTimeout(() => { btn.textContent = 'Copy Code'; }, 1800);
+        } catch (err) {
+          btn.textContent = 'Select & Ctrl+C';
+        }
+      });
+
+      // Initial Render
+      renderInspect();
+      renderTerminal();
+      renderNotebook();
+    })();
+  </script>
+</body>
+</html>
