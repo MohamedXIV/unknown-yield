@@ -31,6 +31,10 @@
   content: "";
   position: absolute;
   pointer-events: none;
+  /* Older site-mark/resources pseudo-elements had explicit marker widths.
+     Reset those dimensions or the actual inset plate becomes a 4px stripe. */
+  width: auto;
+  height: auto;
   clip-path: polygon(9px 0, calc(100% - 9px) 0, 100% 9px,
     100% calc(100% - 9px), calc(100% - 9px) 100%,
     9px 100%, 0 calc(100% - 9px), 0 9px);
