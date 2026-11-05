@@ -1376,6 +1376,10 @@ browserIt(
           getComputedStyle(panel, "::before").backgroundImage.includes("steel-edge-wear.svg") &&
           !!panel.querySelector(".context-retainer");
       })()`);
+      // Capture only after the real 165ms panel arrival animation settles;
+      // a partially transparent first frame can ghost the Phaser world below.
+      await waitForExpression(`Number(getComputedStyle(
+        document.querySelector(".context-panel--knowledge")).opacity) >= 0.999`);
       const notebookIndustrialScreenshot = await captureEvidence("industrial-ui-notebook.png");
       console.log("INDUSTRIAL_UI_NOTEBOOK " + JSON.stringify(notebookIndustrialScreenshot));
       const initialNotebook = await evaluate<string>(
@@ -1415,6 +1419,10 @@ browserIt(
           getComputedStyle(paper).backgroundImage.includes("archival-paper.svg") &&
           !!panel?.querySelector(".context-header-stamp");
       })()`);
+      // Capture only after the real 165ms panel arrival animation settles;
+      // a partially transparent first frame can ghost the Phaser world below.
+      await waitForExpression(`Number(getComputedStyle(
+        document.querySelector(".context-panel--terminal")).opacity) >= 0.999`);
       const terminalIndustrialScreenshot = await captureEvidence("industrial-ui-terminal.png");
       console.log("INDUSTRIAL_UI_TERMINAL " + JSON.stringify(terminalIndustrialScreenshot));
       await evaluate(`(() => {
