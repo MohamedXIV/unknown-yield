@@ -47,6 +47,7 @@ import {
 } from "./camera-navigation";
 import { TouchGestureArbiter, type TouchPoint } from "./touch-gesture";
 import { DEFAULT_GAME_PREFERENCES, type GamePreferences } from "./preferences";
+import { COLD_TWILIGHT_SITE } from "./environment-profile";
 import {
   browserPerformanceEnabled,
   finishBrowserMetric,
@@ -81,6 +82,7 @@ export type WorldActions = {
   disarmTouchArea(): void;
   sample(id: string | null): void;
 };
+const ENV = COLD_TWILIGHT_SITE;
 const X = ART_CAMERA.cellWidth,
   Y = ART_CAMERA.cellHeight;
 const color = (value: string) => parseInt(value.slice(1), 16);
@@ -196,10 +198,10 @@ export function createWorld(
       // The bridge retains the scene for coarse snapshot and camera updates.
       // eslint-disable-next-line @typescript-eslint/no-this-alias
       scene = this;
-      this.cameras.main.setBackgroundColor("#343d30");
+      this.cameras.main.setBackgroundColor(ENV.terrain.background);
       const ground = this.add.graphics();
       ground
-        .fillStyle(0x3a4233)
+        .fillStyle(ENV.terrain.surface)
         .fillRect(0, 0, snapshot.map.width * X, snapshot.map.height * Y);
       const terrain = artAsset("terrain-basalt");
       this.add
@@ -211,27 +213,34 @@ export function createWorld(
           terrain.textureKey,
         )
         .setOrigin(0)
-        .setAlpha(0.14);
+        .setAlpha(ENV.terrain.textureOpacity);
       // A subtle perimeter makes the actual buildable map edge legible.
       this.mapBoundary = this.add.graphics();
       this.drawMapBoundary();
-      let seed = 131;
+      let seed = ENV.terrain.rockScatter.seed;
       const rand = () => {
         seed = (seed * 1664525 + 1013904223) >>> 0;
         return seed / 4294967296;
       };
-      for (let i = 0; i < 1700; i++) {
+      for (let i = 0; i < ENV.terrain.rockScatter.count; i++) {
         const x = rand() * snapshot.map.width * X,
           y = rand() * snapshot.map.height * Y,
           r = 1 + rand() * 5;
         ground
-          .fillStyle(i % 3 ? 0x252e25 : 0x72705a, 0.35)
+          .fillStyle(
+            i % 13 === 0
+              ? ENV.terrain.rockScatter.oxidized
+              : i % 3
+                ? ENV.terrain.rockScatter.shadow
+                : ENV.terrain.rockScatter.light,
+            ENV.terrain.rockScatter.opacity,
+          )
           .fillEllipse(x, y, r * 2, r);
       }
       for (const d of snapshot.deposits) {
         const mat = snapshot.materials.find((m) => m.id === d.material)!;
         ground
-          .fillStyle(color(mat.color), 0.12)
+          .fillStyle(color(mat.color), ENV.terrain.depositHaloOpacity)
           .fillRoundedRect(
             d.x * X - 10,
             d.y * Y - 10,
@@ -243,12 +252,12 @@ export function createWorld(
           const x = (d.x + rand() * d.width) * X,
             y = (d.y + rand() * d.height) * Y,
             w = 5 + rand() * 11;
-          ground.fillStyle(0x1d241c, 0.5).fillEllipse(x + 4, y + 5, w * 2, w);
+          ground.fillStyle(ENV.terrain.depositShadow, 0.5).fillEllipse(x + 4, y + 5, w * 2, w);
           ground
             .fillStyle(color(mat.color), 0.5 + rand() * 0.4)
             .fillTriangle(x - w, y + 3, x - w / 3, y - w / 2, x + w, y + 2);
           ground
-            .lineStyle(1, 0xe0c590, 0.45)
+            .lineStyle(1, ENV.terrain.depositEdge, ENV.terrain.depositEdgeOpacity)
             .lineBetween(x - w / 3, y - w / 2, x + w, y + 2);
         }
         if (d.material === "ferrite") {
@@ -268,12 +277,12 @@ export function createWorld(
           (d.y + d.height) * Y + 17,
           translate(mat.nameKey).toUpperCase(),
           9,
-          "#b6b397",
+          ENV.terrain.depositLabel,
         );
       }
       const t = snapshot.map.terminal;
       ground
-        .fillStyle(0x85836b, 0.15)
+        .fillStyle(ENV.terrain.terminalHalo, ENV.terrain.terminalHaloOpacity)
         .fillRoundedRect(
           t.x * X - 20,
           t.y * Y - 20,
@@ -310,7 +319,7 @@ export function createWorld(
         ground.destroy();
       }
       this.grid = this.add.graphics().setVisible(false);
-      this.grid.lineStyle(1, 0xc5c4a2, 0.12);
+      this.grid.lineStyle(1, ENV.guides.grid, ENV.guides.gridOpacity);
       for (let x = 0; x <= snapshot.map.width; x++)
         this.grid.lineBetween(x * X, 0, x * X, snapshot.map.height * Y);
       for (let y = 0; y <= snapshot.map.height; y++)
@@ -323,7 +332,7 @@ export function createWorld(
           fontFamily: "Consolas,monospace",
           fontSize: 12,
           color: "#e2dfc3",
-          backgroundColor: "#172018ed",
+          backgroundColor: ENV.guides.tooltipBackground,
           padding: { x: 9, y: 6 },
         })
         .setDepth(1000);
@@ -2253,7 +2262,7 @@ export function createWorld(
   const game = new Phaser.Game({
     type: Phaser.AUTO,
     parent,
-    backgroundColor: "#343d30",
+    backgroundColor: ENV.terrain.background,
     antialias: true,
     scale: {
       mode: Phaser.Scale.RESIZE,
