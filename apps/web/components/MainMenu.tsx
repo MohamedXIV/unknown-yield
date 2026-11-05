@@ -23,6 +23,7 @@ type Props = {
   activePack: RuntimePack | null;
   pendingPack: RuntimePack | null;
   preferences: GamePreferences;
+  notice: CommandResult | null;
   onResume: () => CommandResult;
   onStartNew: (name: string) => CommandResult;
   onLoad: (id: string) => CommandResult;
@@ -512,7 +513,9 @@ export default function MainMenu(props: Props) {
             </>
           )}
 
-          {feedback && <p className="menu-feedback" role="status">{feedback}</p>}
+          {(feedback || (props.notice && !props.notice.ok ? props.notice.message : null)) && (
+            <p className="menu-feedback" role="status">{feedback ?? props.notice?.message}</p>
+          )}
           <footer className="main-menu-footer">
             <span>LOCAL ARCHIVE · THIS DEVICE</span>
             <span>{activePackLabel}</span>
