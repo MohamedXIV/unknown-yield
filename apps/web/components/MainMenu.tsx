@@ -158,23 +158,44 @@ export default function MainMenu(props: Props) {
                     </p>
                   </div>
                   <div className="menu-home-actions">
-                    <ActionButton
-                      primary
-                      disabled={!props.resumeSlotId || !!props.archiveError}
-                      detail={resumeSlot
-                        ? resumeSlot.name + " · saved " + new Date(resumeSlot.savedAt).toLocaleString()
-                        : "No compatible saved assignment on this device"}
-                      onClick={() => report(props.onResume())}
-                    >
-                      Resume Duty
-                    </ActionButton>
-                    <ActionButton
-                      disabled={!props.ready || !!props.archiveError}
-                      detail={props.archiveError ? "Repair Personnel Archives before creating a new record" : "Create a separate, named industrial expedition"}
-                      onClick={() => { setFeedback(null); setView("new"); }}
-                    >
-                      Begin Assignment
-                    </ActionButton>
+                    {props.resumeSlotId ? (
+                      <ActionButton
+                        primary
+                        disabled={!props.ready || !!props.archiveError}
+                        detail={resumeSlot
+                          ? resumeSlot.name + " · saved " + new Date(resumeSlot.savedAt).toLocaleString()
+                          : "Most recent valid compatible expedition"}
+                        onClick={() => report(props.onResume())}
+                      >
+                        Resume Duty
+                      </ActionButton>
+                    ) : (
+                      <ActionButton
+                        primary
+                        disabled={!props.ready || !!props.archiveError}
+                        detail={props.archiveError ? "Repair Personnel Archives before creating a new record" : "Your first named industrial expedition"}
+                        onClick={() => { setFeedback(null); setView("new"); }}
+                      >
+                        Begin Assignment
+                      </ActionButton>
+                    )}
+                    {props.resumeSlotId ? (
+                      <ActionButton
+                        disabled={!props.ready || !!props.archiveError}
+                        detail="Create a separate, named industrial expedition"
+                        onClick={() => { setFeedback(null); setView("new"); }}
+                      >
+                        Begin Assignment
+                      </ActionButton>
+                    ) : (
+                      <ActionButton
+                        disabled
+                        detail="No valid compatible saved assignment on this device"
+                        onClick={() => setView("archives")}
+                      >
+                        Resume Duty
+                      </ActionButton>
+                    )}
                     <ActionButton
                       detail="Load, rename, import or remove local expeditions"
                       onClick={() => { setFeedback(null); setView("archives"); }}
