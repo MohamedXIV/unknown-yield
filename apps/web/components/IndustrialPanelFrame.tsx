@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 
 /**
  * One physical construction for the game's real UI.
@@ -44,6 +44,10 @@ export default function IndustrialPanelFrame({
   children,
 }: Props) {
   const paper = kind === "terminal" || kind === "notebook";
+  const [magnification, setMagnification] = useState(1);
+  const surfaceRef = useRef<HTMLDivElement>(null);
+  // Reference buttons must never fake export/discovery state.
+  const showReadingTools = as === "aside";
   const chrome = (
     <>
       <div className="uy-clipboard-clamp" aria-hidden="true">
@@ -83,15 +87,35 @@ export default function IndustrialPanelFrame({
                 )}
               </header>
             )}
-            <div className={
-              "uy-contained-surface " +
-              (paper ? "uy-surface-paper" : "uy-surface-instrument") +
-              (bodyClassName ? " " + bodyClassName : "")
-            }>
+            <div
+              ref={surfaceRef}
+              className={
+                "uy-contained-surface " +
+                (paper ? "uy-surface-paper" : "uy-surface-instrument") +
+                (bodyClassName ? " " + bodyClassName : "")
+              }
+            >
+              {showReadingTools && (
+                <nav className="uy-side-controls" aria-label="Panel reading controls">
+                  <button type="button" className="uy-side-btn"
+                    title="Magnify document" aria-label="Magnify panel content"
+                    disabled={magnification >= 1.2}
+                    onClick={() => setMagnification((m) => Math.min(1.2, Math.round((m + 0.1) * 10) / 10))}>+</button>
+                  <button type="button" className="uy-side-btn"
+                    title="Reduce document magnification" aria-label="Reduce panel content magnification"
+                    disabled={magnification <= 0.9}
+                    onClick={() => setMagnification((m) => Math.max(0.9, Math.round((m - 0.1) * 10) / 10))}>−</button>
+                  <button type="button" className="uy-side-btn"
+                    title="Return to top of document" aria-label="Scroll panel to top"
+                    onClick={() => surfaceRef.current?.scrollTo({ top: 0, behavior: "instant" })}>
+                    <span aria-hidden="true">⌂</span>
+                  </button>
+                </nav>
+              )}
               <div className={
                 "uy-layer-4-content " +
                 (paper ? "uy-paper-inner-frame" : "uy-instrument-frame")
-              }>
+              } style={{ zoom: magnification }}>
                 {children}
               </div>
             </div>
