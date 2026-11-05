@@ -3909,8 +3909,8 @@ browserIt(
       await call("Page.navigate", { url: appUrl });
       await waitForExpression(`document.readyState === "complete" && document.querySelector(".main-menu") !== null`);
       await waitForExpression(`document.querySelector(".menu-home .menu-action") !== null`);
-      const mobileMenuScreenshot = await captureEvidence("main-menu-boot-mobile-touch.png");
-      console.log("UNKNOWN_YIELD_MAIN_MENU_BOOT_MOBILE_TOUCH " + JSON.stringify(mobileMenuScreenshot));
+      const mobileTouchMenuScreenshot = await captureEvidence("main-menu-boot-mobile-touch.png");
+      console.log("UNKNOWN_YIELD_MAIN_MENU_BOOT_MOBILE_TOUCH " + JSON.stringify(mobileTouchMenuScreenshot));
       await tapButtonByText("Personnel Archives");
       await waitForExpression(`document.querySelector(".menu-archive-card") !== null`);
       await tapButtonByText("Load expedition");
