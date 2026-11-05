@@ -1082,6 +1082,18 @@ browserIt(
         .backgroundImage.includes("steel-edge-wear.svg") &&
         getComputedStyle(document.querySelector(".directorate-seal")).backgroundImage
           .includes("directorate-seal.svg")`);
+      await waitForExpression(`(() => {
+        const board = document.querySelector(".main-menu-plaque");
+        const shell = board?.querySelector(":scope > .uy-outer-shell");
+        const rim = shell?.querySelector(":scope > .uy-inset-rim");
+        const bed = rim?.querySelector(":scope > .uy-inset-rim-inner");
+        const surface = bed?.querySelector(":scope > .uy-contained-surface");
+        const content = surface?.querySelector(":scope > .uy-layer-4-content");
+        return !!content &&
+          board.querySelectorAll(".uy-bolt").length === 6 &&
+          getComputedStyle(shell, "::before").backgroundImage.includes("linear-gradient") &&
+          getComputedStyle(surface).backgroundColor === "rgb(19, 34, 41)";
+      })()`);
       const bootMenuScreenshot = await captureEvidence("main-menu-boot-desktop.png");
       console.log("UNKNOWN_YIELD_MAIN_MENU_BOOT " + JSON.stringify(bootMenuScreenshot));
       const emptyBoot = await evaluate<{
@@ -1380,6 +1392,42 @@ browserIt(
       // a partially transparent first frame can ghost the Phaser world below.
       await waitForExpression(`Number(getComputedStyle(
         document.querySelector(".context-panel--knowledge")).opacity) >= 0.999`);
+      const frameGeometry = await evaluate<{
+        panelX: number; surfaceX: number; surfaceRight: number;
+        controlLeft: number; controlRight: number;
+        paperSize: string; bolts: number;
+      }>(`(() => {
+        const panel = document.querySelector(".context-panel--knowledge");
+        const surface = panel.querySelector(".uy-contained-surface");
+        const control = panel.querySelector('button[aria-label="Magnify panel content"]');
+        const p = panel.getBoundingClientRect();
+        const area = surface.getBoundingClientRect();
+        const button = control.getBoundingClientRect();
+        return {
+          panelX: p.x, surfaceX: area.x, surfaceRight: area.right,
+          controlLeft: button.left, controlRight: button.right,
+          paperSize: getComputedStyle(surface).backgroundSize,
+          bolts: panel.querySelectorAll(".uy-bolt").length,
+        };
+      })()`);
+      expect(frameGeometry.panelX).toBeGreaterThan(700);
+      expect(frameGeometry.bolts).toBe(6);
+      expect(frameGeometry.paperSize).toContain("160px 160px");
+      expect(frameGeometry.controlLeft).toBeGreaterThanOrEqual(frameGeometry.surfaceX);
+      expect(frameGeometry.controlRight).toBeLessThanOrEqual(frameGeometry.surfaceRight);
+      // Physical +/−/Home operate on reading only, never on production totals.
+      await evaluate<boolean>(`(() => {
+        document.querySelector('button[aria-label="Magnify panel content"]').click();
+        return true;
+      })()`);
+      await waitForExpression(`document.querySelector(".context-panel--knowledge .uy-layer-4-content")
+        ?.style.zoom === "1.1"`);
+      await evaluate<boolean>(`(() => {
+        document.querySelector('button[aria-label="Reduce panel content magnification"]').click();
+        return true;
+      })()`);
+      await waitForExpression(`document.querySelector(".context-panel--knowledge .uy-layer-4-content")
+        ?.style.zoom === "1"`);
       const notebookIndustrialScreenshot = await captureEvidence("industrial-ui-notebook.png");
       console.log("INDUSTRIAL_UI_NOTEBOOK " + JSON.stringify(notebookIndustrialScreenshot));
       const initialNotebook = await evaluate<string>(
@@ -1423,6 +1471,11 @@ browserIt(
       // a partially transparent first frame can ghost the Phaser world below.
       await waitForExpression(`Number(getComputedStyle(
         document.querySelector(".context-panel--terminal")).opacity) >= 0.999`);
+      await waitForExpression(`(() => {
+        const panel = document.querySelector(".context-panel--terminal");
+        return panel.getBoundingClientRect().left > 700 &&
+          panel.querySelector(".uy-inset-rim-inner .uy-surface-paper .uy-paper-inner-frame") !== null;
+      })()`);
       const terminalIndustrialScreenshot = await captureEvidence("industrial-ui-terminal.png");
       console.log("INDUSTRIAL_UI_TERMINAL " + JSON.stringify(terminalIndustrialScreenshot));
       await evaluate(`(() => {
