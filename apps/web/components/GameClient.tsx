@@ -62,6 +62,7 @@ import {
 } from "../game/preferences";
 import GameHost from "./GameHost";
 import ExpeditionArchive from "./ExpeditionArchive";
+import MainMenu from "./MainMenu";
 import { sampleBuildTool } from "../game/tool-sampling";
 import { previewDismantleArea, sameDismantleAreaReview } from "../game/dismantle-review";
 import { classifyDismantleEntity, dismantleEntityGeometry } from "../game/dismantle-selection";
@@ -167,6 +168,8 @@ function GameClientInner() {
   };
   const [session] = useState(() => new Session()),
     [snapshot, setSnapshot] = useState(() => session.snapshot());
+  const [screen, setScreen] = useState<"menu" | "game">("menu");
+  const [returnPrompt, setReturnPrompt] = useState(false);
   const [mode, setMode] = useState<WorldMode>(DEFAULT_MODE),
     [panel, setPanel] = useState<
       | "selection"
@@ -179,7 +182,7 @@ function GameClientInner() {
     [knowledgeFilter, setKnowledgeFilter] =
       useState<KnowledgeFilter>("all");
   const [notice, setNotice] = useState<CommandResult | null>(null),
-    [paused, setPaused] = useState(false),
+    [paused, setPaused] = useState(true),
     [guide, setGuide] = useState(true),
     [homeToken, setHomeToken] = useState(0),
     [openToolGroup, setOpenToolGroup] = useState<ToolGroupId | null>(null),
@@ -191,6 +194,8 @@ function GameClientInner() {
     [packReady, setPackReady] = useState(false),
     [archiveView, setArchiveView] = useState<ArchiveListing | null>(null),
     [archiveError, setArchiveError] = useState<string | null>(null),
+    [loadableSlotIds, setLoadableSlotIds] = useState<string[]>([]),
+    [resumeSlotId, setResumeSlotId] = useState<string | null>(null),
     [keyboardAreaOpen, setKeyboardAreaOpen] = useState(false),
     [keyboardBounds, setKeyboardBounds] = useState({ fromX: 0, fromY: 0, toX: 0, toY: 0 });
   const cancelGroupHold = useRef<(() => void) | null>(null);
