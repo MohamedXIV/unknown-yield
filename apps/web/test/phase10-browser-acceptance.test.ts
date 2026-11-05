@@ -2750,15 +2750,16 @@ browserIt(
       await call("Emulation.setTouchEmulationEnabled", { enabled: true, maxTouchPoints: 3 });
       await waitForExpression(`window.innerWidth === 390 && window.innerHeight === 844`);
       await call("Page.navigate", { url: appUrl });
-      await waitForExpression(
-        `document.readyState === "complete" &&
-          !!document.querySelector("canvas") &&
-          !!document.querySelector('nav[aria-label="Build tools"]')`,
-      );
-      await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Game menu"]')?.click(); return true; })()`);
-      await waitForExpression(`document.body.textContent?.includes("Expedition controls") === true`);
-      await evaluate<boolean>(`(() => { [...document.querySelectorAll("button")].find((button) => button.textContent?.includes("Load"))?.click(); return true; })()`);
-      await waitForExpression(`document.querySelector('[role="status"]')?.textContent.includes("Expedition restored") === true`);
+      await waitForExpression(`document.readyState === "complete" && document.querySelector(".main-menu") !== null`);
+      await clickMainMenuAction("Personnel Archives");
+      await waitForExpression(`document.querySelector(".menu-archive-card") !== null`);
+      await evaluate<boolean>(`(() => {
+        [...document.querySelectorAll("button")].find((button) =>
+          button.textContent?.includes("Load expedition"))?.click();
+        return true;
+      })()`);
+      await waitForExpression(`document.querySelector("canvas") !== null &&
+        document.querySelector('nav[aria-label="Build tools"]') !== null`);
       await evaluate<boolean>(`(() => { document.querySelector('nav[aria-label="Build tools"] button[aria-label="Dismantle"]')?.click(); return true; })()`);
       await waitForExpression(`document.querySelector('[data-testid="dismantle-mode-single"]') !== null`);
       await chooseMode("area-all");
@@ -3445,10 +3446,9 @@ browserIt(
       });
 
       await call("Page.navigate", { url: appUrl });
-      await waitForExpression(
-        `document.readyState === "complete" &&
-          !!document.querySelector('button[aria-label="Game configuration"]')`,
-      );
+      await waitForExpression(`document.readyState === "complete" && document.querySelector(".main-menu") !== null`);
+      await resumeMostRecentExpedition();
+      await waitForExpression(`document.querySelector('button[aria-label="Game configuration"]') !== null`);
       await evaluate(`(() => {
         document.querySelector('button[aria-label="Game configuration"]')?.click();
         return true;
@@ -3557,11 +3557,10 @@ browserIt(
       );
 
       await call("Page.navigate", { url: appUrl });
-      await waitForExpression(
-        `document.readyState === "complete" &&
-          document.querySelector('[data-build-group="thermal"]')
-            ?.getAttribute("aria-label") === "Sealed furnace group"`,
-      );
+      await waitForExpression(`document.readyState === "complete" && document.querySelector(".main-menu") !== null`);
+      await resumeMostRecentExpedition();
+      await waitForExpression(`document.querySelector('[data-build-group="thermal"]')
+        ?.getAttribute("aria-label") === "Sealed furnace group"`);
       const promotedAfterReload = await evaluate<{
         promoteLastUsed: boolean;
         thermal: string | null;
@@ -3664,10 +3663,9 @@ browserIt(
       );
 
       await call("Page.navigate", { url: appUrl });
-      await waitForExpression(
-        `document.readyState === "complete" &&
-          !!document.querySelector('button[aria-label="Game configuration"]')`,
-      );
+      await waitForExpression(`document.readyState === "complete" && document.querySelector(".main-menu") !== null`);
+      await resumeMostRecentExpedition();
+      await waitForExpression(`document.querySelector('button[aria-label="Game configuration"]') !== null`);
       await evaluate(`(() => {
         document.querySelector('button[aria-label="Game configuration"]')?.click();
         return true;
@@ -3785,10 +3783,10 @@ browserIt(
       // Read-only camera diagnostics are opt-in; ordinary players do not
       // expose the probe. These assertions run against the production export.
       await call("Page.navigate", { url: appUrl });
-      await waitForExpression(
-        `typeof window.__UNKNOWN_YIELD_CAMERA__ === "function" &&
-          window.__UNKNOWN_YIELD_CAMERA__()?.zoom > 0`,
-      );
+      await waitForExpression(`document.readyState === "complete" && document.querySelector(".main-menu") !== null`);
+      await resumeMostRecentExpedition();
+      await waitForExpression(`typeof window.__UNKNOWN_YIELD_CAMERA__ === "function" &&
+        window.__UNKNOWN_YIELD_CAMERA__()?.zoom > 0`);
       const initialCamera = await evaluate<{
         scrollX: number;
         scrollY: number;
@@ -3893,11 +3891,11 @@ browserIt(
         maxTouchPoints: 3,
       });
       await call("Page.navigate", { url: appUrl });
-      await waitForExpression(
-        `typeof window.__UNKNOWN_YIELD_CAMERA__ === "function" &&
-          window.__UNKNOWN_YIELD_CAMERA__()?.zoom > 0 &&
-          document.querySelector(".world-host canvas") !== null`,
-      );
+      await waitForExpression(`document.readyState === "complete" && document.querySelector(".main-menu") !== null`);
+      await resumeMostRecentExpedition();
+      await waitForExpression(`typeof window.__UNKNOWN_YIELD_CAMERA__ === "function" &&
+        window.__UNKNOWN_YIELD_CAMERA__()?.zoom > 0 &&
+        document.querySelector(".world-host canvas") !== null`);
       expect(
         await evaluate<string>(
           `getComputedStyle(document.querySelector(".world-host canvas"))
@@ -4308,16 +4306,12 @@ browserIt(
         expect(packEvidence.scopedSave).toBe(true);
         expect(packEvidence.locale).toBe("Polished powder");
         await call("Page.reload", { ignoreCache: true });
-        // CDP Page.reload acknowledges navigation start, not React hydration.
-        // The static export and async persisted-pack verification both finish
-        // before the test attempts to load a pack-scoped world.
+        // A reload returns to the boot menu; continue must select the latest
+        // valid expedition for the now-restored exact content-pack identity.
         await sleep(900);
-        await waitForExpression(
-          `document.body.textContent?.includes("UNKNOWN YIELD") === true`,
-        );
-        await waitForExpression(
-          `document.querySelector('button[aria-label="Game menu"]') !== null`,
-        );
+        await waitForExpression(`document.querySelector(".main-menu") !== null`);
+        await resumeMostRecentExpedition();
+        await waitForExpression(`document.querySelector('button[aria-label="Game menu"]') !== null`);
         await evaluate<boolean>(`(() => {
           document.querySelector('button[aria-label="Game menu"]')?.click();
           return true;
