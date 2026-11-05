@@ -858,6 +858,7 @@ browserIt(
       };
       const startNewExpeditionFromMenu = async (name: string) => {
         await waitForExpression(`document.querySelector(".main-menu") !== null`);
+        await waitForExpression(`document.querySelector(".menu-home .menu-action") !== null`);
         await clickMainMenuAction("Begin Assignment");
         await waitForExpression(`document.querySelector('input[aria-label="Expedition designation"]') !== null`);
         await evaluate<boolean>(`(() => {
@@ -880,6 +881,7 @@ browserIt(
       };
       const resumeMostRecentExpedition = async () => {
         await waitForExpression(`document.querySelector(".main-menu") !== null`);
+        await waitForExpression(`document.querySelector(".menu-home .menu-action") !== null`);
         const enabled = await evaluate<boolean>(`[...document.querySelectorAll(".menu-action")]
           .some((button) => button.textContent?.includes("Resume Duty") && !button.disabled)`);
         expect(enabled, "Main Menu Continue must select a valid compatible expedition").toBe(true);
@@ -1056,6 +1058,7 @@ browserIt(
       await call("Page.navigate", { url: appUrl });
       await waitForExpression(`document.readyState === "complete" &&
         document.querySelector(".main-menu") !== null`);
+      await waitForExpression(`document.querySelector(".menu-home .menu-action") !== null`);
       const emptyBoot = await evaluate<{
         hasCanvas: boolean;
         resumeDisabled: boolean;
