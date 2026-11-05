@@ -3986,8 +3986,16 @@ function GameClientInner() {
               }
             }}
           >
-            <small>UNSAVED FIELD ACTIVITY</small>
-            <h2 id="menu-return-title">Return to the Main Menu?</h2>
+            <IndustrialPanelFrame
+              kind="expedition"
+              className="uy-confirmation-board"
+              bodyClassName="uy-confirmation-body"
+              title="FIELD OPERATIONS"
+              subtitle="UNSAVED FIELD ACTIVITY"
+              onClose={() => setReturnPrompt(false)}
+            >
+              <small>UNSAVED FIELD ACTIVITY</small>
+              <h2 id="menu-return-title">Return to the Main Menu?</h2>
             <p>
               This expedition has changed since its last save. Save the current
               world, restore its last saved revision, or remain on site.
@@ -4003,6 +4011,7 @@ function GameClientInner() {
                 Stay in Expedition
               </button>
             </div>
+            </IndustrialPanelFrame>
           </section>
         </div>
       )}
