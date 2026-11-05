@@ -124,6 +124,8 @@ export class Session {
     this.sim = new Simulation(this.pack?.bundle.content ?? fixture);
     this.slotId = null;
     this.last = null;
+    this.revision = 0;
+    this.savedRevision = 0;
     this.notify();
   }
   /** Create and persist a NEW world before replacing the running world. */
@@ -185,6 +187,8 @@ export class Session {
       this.sim = next;
       this.slotId = slot.id;
       this.last = null;
+      this.revision = 0;
+      this.savedRevision = 0;
       this.notify();
       return { ok: true, message: "Legacy record imported without altering the original." };
     } catch (error) {
