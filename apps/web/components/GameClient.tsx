@@ -63,6 +63,7 @@ import {
 import GameHost from "./GameHost";
 import ExpeditionArchive from "./ExpeditionArchive";
 import MainMenu from "./MainMenu";
+import IndustrialPanelFrame from "./IndustrialPanelFrame";
 import { sampleBuildTool } from "../game/tool-sampling";
 import { previewDismantleArea, sameDismantleAreaReview } from "../game/dismantle-review";
 import { classifyDismantleEntity, dismantleEntityGeometry } from "../game/dismantle-selection";
@@ -1262,47 +1263,25 @@ function GameClientInner() {
       )}
       {paused && <div className="paused-label">PAUSED</div>}
       {panel && (
-        <aside className={"context-panel context-panel--" + panel} data-panel-kind={panel}>
-          <div className="context-hardware" aria-hidden="true">
-            <span className="context-screw context-screw--upper" />
-            <span className="context-screw context-screw--lower" />
-            <span className="context-screw context-screw--upper-left" />
-            <span className="context-screw context-screw--lower-left" />
-            <span className="context-screw context-screw--mid-left" />
-            <span className="context-screw context-screw--mid-right" />
-          </div>
-          <div className="context-retainer" aria-hidden="true" />
-          {/* Real game UI: mounted enamel header and working scroll surface remain
-              physically inset inside the industrial board; no gameplay-state changes. */}
-          <div className="context-board-bed">
-          <div className="context-header">
-            <span>
-              {panel === "knowledge"
-                ? "FIELD NOTEBOOK"
-                : panel === "terminal"
-                  ? "COMPANY TERMINAL"
-                  : panel === "configuration"
-                    ? "GAME CONFIGURATION"
-                    : panel === "menu"
-                      ? "EXPEDITION MENU"
-                      : "INSPECT"}
-            </span>
-            <span className="context-header-stamp" aria-hidden="true">
-              {panel === "knowledge"
-                ? "FIELD LAB / RECORDED EVIDENCE"
-                : panel === "terminal"
-                  ? "FREIGHT & ALLOCATION"
-                  : panel === "selection"
-                    ? "SITE SERVICE DOSSIER"
-                    : panel === "configuration"
-                      ? "OPERATOR CONTROLS"
-                      : "FIELD OPERATIONS"}
-            </span>
-            <button aria-label="Close panel" onClick={close}>
-              ×
-            </button>
-          </div>
-          <div className="context-body">
+        <IndustrialPanelFrame
+          as="aside"
+          kind={panel === "knowledge" ? "notebook"
+            : panel === "terminal" ? "terminal"
+            : panel === "selection" ? "inspect"
+            : panel === "configuration" ? "configuration" : "expedition"}
+          className={"context-panel context-panel--" + panel}
+          dataPanelKind={panel}
+          bodyClassName="context-body"
+          title={panel === "knowledge" ? "FIELD NOTEBOOK"
+            : panel === "terminal" ? "COMPANY TERMINAL"
+            : panel === "configuration" ? "GAME CONFIGURATION"
+            : panel === "menu" ? "EXPEDITION MENU" : "INSPECT"}
+          subtitle={panel === "knowledge" ? "FIELD LAB / RECORDED EVIDENCE"
+            : panel === "terminal" ? "FREIGHT & ALLOCATION"
+            : panel === "selection" ? "SITE SERVICE DOSSIER"
+            : panel === "configuration" ? "OPERATOR CONTROLS" : "FIELD OPERATIONS"}
+          onClose={close}
+        >
             {panel === "selection" && overview(inspectorSummary)}
             {panel === "knowledge" && (
               <>
@@ -3701,9 +3680,7 @@ function GameClientInner() {
                 </dl>
               </>
             )}
-          </div>
-          </div>
-        </aside>
+        </IndustrialPanelFrame>
       )}
       <div className="build-zone">
         {mode.tool === "demolish" && (
@@ -4009,8 +3986,16 @@ function GameClientInner() {
               }
             }}
           >
-            <small>UNSAVED FIELD ACTIVITY</small>
-            <h2 id="menu-return-title">Return to the Main Menu?</h2>
+            <IndustrialPanelFrame
+              kind="expedition"
+              className="uy-confirmation-board"
+              bodyClassName="uy-confirmation-body"
+              title="FIELD OPERATIONS"
+              subtitle="UNSAVED FIELD ACTIVITY"
+              onClose={() => setReturnPrompt(false)}
+            >
+              <small>UNSAVED FIELD ACTIVITY</small>
+              <h2 id="menu-return-title">Return to the Main Menu?</h2>
             <p>
               This expedition has changed since its last save. Save the current
               world, restore its last saved revision, or remain on site.
@@ -4026,6 +4011,7 @@ function GameClientInner() {
                 Stay in Expedition
               </button>
             </div>
+            </IndustrialPanelFrame>
           </section>
         </div>
       )}
@@ -4067,6 +4053,14 @@ function GameClientInner() {
               }
             }}
           >
+            <IndustrialPanelFrame
+              kind="inspect"
+              className="uy-dismantle-board"
+              bodyClassName="uy-dismantle-board-body"
+              title={t("ui.dismantle.review.title")}
+              subtitle="AREA REVIEW / PHYSICAL RECLAIM"
+              onClose={cancelAreaReview}
+            >
             <small>{t("ui.dismantle.review.eyebrow")}</small>
             <h2 id="dismantle-review-title">{t("ui.dismantle.review.title")}</h2>
             <p id="dismantle-review-summary">
@@ -4113,6 +4107,7 @@ function GameClientInner() {
                 {t("ui.dismantle.review.confirm")}
               </button>
             </div>
+            </IndustrialPanelFrame>
           </section>
         </div>
       )}

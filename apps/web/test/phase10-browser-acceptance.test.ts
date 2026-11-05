@@ -876,6 +876,11 @@ browserIt(
       const resumeMostRecentExpedition = async () => {
         await waitForExpression(`document.querySelector(".main-menu") !== null`);
         await waitForExpression(`document.querySelector(".menu-home .menu-action") !== null`);
+        // Menu DOM mounts before the local archive is checked asynchronously.
+        // Waiting for a rendered button alone can intermittently catch the
+        // disabled loading state; require genuinely validated Continue.
+        await waitForExpression(`[...document.querySelectorAll(".menu-action")]
+          .some((button) => button.textContent?.includes("Resume Duty") && !button.disabled)`);
         const enabled = await evaluate<boolean>(`[...document.querySelectorAll(".menu-action")]
           .some((button) => button.textContent?.includes("Resume Duty") && !button.disabled)`);
         expect(enabled, "Main Menu Continue must select a valid compatible expedition").toBe(true);
@@ -1082,6 +1087,18 @@ browserIt(
         .backgroundImage.includes("steel-edge-wear.svg") &&
         getComputedStyle(document.querySelector(".directorate-seal")).backgroundImage
           .includes("directorate-seal.svg")`);
+      await waitForExpression(`(() => {
+        const board = document.querySelector(".main-menu-plaque");
+        const shell = board?.querySelector(":scope > .uy-outer-shell");
+        const rim = shell?.querySelector(":scope > .uy-inset-rim");
+        const bed = rim?.querySelector(":scope > .uy-inset-rim-inner");
+        const surface = bed?.querySelector(":scope > .uy-contained-surface");
+        const content = surface?.querySelector(":scope > .uy-layer-4-content");
+        return !!content &&
+          board.querySelectorAll(".uy-bolt").length === 6 &&
+          getComputedStyle(shell, "::before").backgroundImage.includes("linear-gradient") &&
+          getComputedStyle(surface).backgroundColor === "rgb(18, 33, 40)";
+      })()`);
       const bootMenuScreenshot = await captureEvidence("main-menu-boot-desktop.png");
       console.log("UNKNOWN_YIELD_MAIN_MENU_BOOT " + JSON.stringify(bootMenuScreenshot));
       const emptyBoot = await evaluate<{
@@ -1380,6 +1397,54 @@ browserIt(
       // a partially transparent first frame can ghost the Phaser world below.
       await waitForExpression(`Number(getComputedStyle(
         document.querySelector(".context-panel--knowledge")).opacity) >= 0.999`);
+      const frameGeometry = await evaluate<{
+        panelX: number; surfaceX: number; surfaceRight: number;
+        controlLeft: number; controlRight: number;
+        paperSize: string; bolts: number;
+      }>(`(() => {
+        const panel = document.querySelector(".context-panel--knowledge");
+        const surface = panel.querySelector(".uy-contained-surface");
+        const control = panel.querySelector('button[aria-label="Magnify panel content"]');
+        const p = panel.getBoundingClientRect();
+        const area = surface.getBoundingClientRect();
+        const button = control.getBoundingClientRect();
+        return {
+          panelX: p.x, surfaceX: area.x, surfaceRight: area.right,
+          controlLeft: button.left, controlRight: button.right,
+          paperSize: getComputedStyle(surface).backgroundSize,
+          bolts: panel.querySelectorAll(".uy-bolt").length,
+        };
+      })()`);
+      expect(frameGeometry.panelX).toBeGreaterThan(700);
+      expect(frameGeometry.bolts).toBe(6);
+      expect(frameGeometry.paperSize).toContain("160px 160px");
+      expect(frameGeometry.controlLeft).toBeGreaterThanOrEqual(frameGeometry.surfaceX);
+      expect(frameGeometry.controlRight).toBeLessThanOrEqual(frameGeometry.surfaceRight);
+      // The physical board owns the right-hand footprint: the real toolbar
+      // and camera controls cannot cover its rivets, scroll or paper.
+      const reservedWorld = await evaluate<{
+        boardLeft: number; toolbarRight: number; zoomRight: number;
+      }>(`(() => {
+        const board = document.querySelector(".context-panel--knowledge").getBoundingClientRect();
+        const toolbar = document.querySelector(".build-zone").getBoundingClientRect();
+        const zoom = document.querySelector(".world-zoom-controls").getBoundingClientRect();
+        return { boardLeft: board.left, toolbarRight: toolbar.right, zoomRight: zoom.right };
+      })()`);
+      expect(reservedWorld.toolbarRight).toBeLessThan(reservedWorld.boardLeft - 6);
+      expect(reservedWorld.zoomRight).toBeLessThan(reservedWorld.boardLeft - 6);
+      // Physical +/−/Home operate on reading only, never on production totals.
+      await evaluate<boolean>(`(() => {
+        document.querySelector('button[aria-label="Magnify panel content"]').click();
+        return true;
+      })()`);
+      await waitForExpression(`document.querySelector(".context-panel--knowledge .uy-layer-4-content")
+        ?.style.zoom === "1.1"`);
+      await evaluate<boolean>(`(() => {
+        document.querySelector('button[aria-label="Reduce panel content magnification"]').click();
+        return true;
+      })()`);
+      await waitForExpression(`document.querySelector(".context-panel--knowledge .uy-layer-4-content")
+        ?.style.zoom === "1"`);
       const notebookIndustrialScreenshot = await captureEvidence("industrial-ui-notebook.png");
       console.log("INDUSTRIAL_UI_NOTEBOOK " + JSON.stringify(notebookIndustrialScreenshot));
       const initialNotebook = await evaluate<string>(
@@ -1423,6 +1488,11 @@ browserIt(
       // a partially transparent first frame can ghost the Phaser world below.
       await waitForExpression(`Number(getComputedStyle(
         document.querySelector(".context-panel--terminal")).opacity) >= 0.999`);
+      await waitForExpression(`(() => {
+        const panel = document.querySelector(".context-panel--terminal");
+        return panel.getBoundingClientRect().left > 700 &&
+          panel.querySelector(".uy-inset-rim-inner .uy-surface-paper .uy-paper-inner-frame") !== null;
+      })()`);
       const terminalIndustrialScreenshot = await captureEvidence("industrial-ui-terminal.png");
       console.log("INDUSTRIAL_UI_TERMINAL " + JSON.stringify(terminalIndustrialScreenshot));
       await evaluate(`(() => {
