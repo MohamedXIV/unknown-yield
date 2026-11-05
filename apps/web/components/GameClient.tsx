@@ -3572,6 +3572,9 @@ function GameClientInner() {
                   <Glyph type="settings" size={17} />
                   Game settings &amp; controls
                 </button>
+                <button className="secondary" onClick={requestMainMenu}>
+                  Return to Main Menu
+                </button>
                 <ExpeditionArchive
                   listing={archiveView}
                   error={archiveError}
@@ -3960,6 +3963,40 @@ function GameClientInner() {
           <span>R rotate · Esc cancel · Home center</span>
         </div>
       </div>
+      {returnPrompt && (
+        <div className="menu-return-backdrop">
+          <section
+            className="menu-return-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="menu-return-title"
+            onKeyDown={(event) => {
+              if (event.key === "Escape") {
+                event.preventDefault();
+                setReturnPrompt(false);
+              }
+            }}
+          >
+            <small>UNSAVED FIELD ACTIVITY</small>
+            <h2 id="menu-return-title">Return to the Main Menu?</h2>
+            <p>
+              This expedition has changed since its last save. Save the current
+              world, restore its last saved revision, or remain on site.
+            </p>
+            <div className="menu-return-actions">
+              <button className="menu-primary" onClick={saveAndReturnToMenu}>
+                Save &amp; Return
+              </button>
+              <button className="menu-danger" onClick={discardAndReturnToMenu}>
+                Discard Unsaved Changes
+              </button>
+              <button className="menu-secondary" onClick={() => setReturnPrompt(false)}>
+                Stay in Expedition
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
       {mode.dismantleReview && (
         <div className="dismantle-review-backdrop">
           <section
