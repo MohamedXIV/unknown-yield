@@ -3422,6 +3422,11 @@ function GameClientInner() {
                   error={archiveError}
                   activeSlotId={session.activeSlotId()}
                   activeFingerprint={session.activePackFingerprint()}
+                  onRecover={() => {
+                    const result = session.recoverArchive(window.localStorage);
+                    archiveAction(result);
+                    return result;
+                  }}
                   onSave={() => {
                     const result = session.save(window.localStorage);
                     archiveAction(result);
