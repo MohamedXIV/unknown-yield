@@ -2961,17 +2961,39 @@ browserIt(
 
       const center = canvasCenter;
       const cameraBeforePinch = await evaluate<{ zoom: number }>(`window.__UNKNOWN_YIELD_CAMERA__()`);
-      await sendTouch("touchStart", [
-        { x: center.x - 35, y: center.y, id: 2 },
-        { x: center.x + 35, y: center.y, id: 3 },
-      ]);
-      await sendTouch("touchMove", [
-        { x: center.x - 65, y: center.y, id: 2 },
-        { x: center.x + 65, y: center.y, id: 3 },
-      ]);
-      await sendTouch("touchEnd", []);
-      await evaluate<void>(`new Promise((resolve) => setTimeout(resolve, 350))`);
-      const cameraAfterPinch = await evaluate<{ zoom: number }>(`window.__UNKNOWN_YIELD_CAMERA__()`);
+      // Chrome's input dispatch may coalesce an immediate start/move/end
+      // burst, dropping either pointermove before Phaser's second pointer
+      // enters the gesture arbiter. Exercise a realistic progressive gesture,
+      // and try the other direction if the first was already at its zoom bound.
+      const performMobilePinch = async (startHalfDistance: number, steps: number[]) => {
+        await sendTouch("touchStart", [
+          { x: center.x - startHalfDistance, y: center.y, id: 2 },
+          { x: center.x + startHalfDistance, y: center.y, id: 3 },
+        ]);
+        await sleep(70);
+        for (const halfDistance of steps) {
+          await sendTouch("touchMove", [
+            { x: center.x - halfDistance, y: center.y, id: 2 },
+            { x: center.x + halfDistance, y: center.y, id: 3 },
+          ]);
+          await sleep(70);
+        }
+        await sendTouch("touchEnd", []);
+        await sleep(450);
+        return evaluate<{ zoom: number }>(`window.__UNKNOWN_YIELD_CAMERA__()`);
+      };
+      const cameraAfterOutwardPinch = await performMobilePinch(35, [48, 65]);
+      const outwardDelta = Math.abs(cameraAfterOutwardPinch.zoom - cameraBeforePinch.zoom);
+      const cameraAfterPinch = outwardDelta > 0.001
+        ? cameraAfterOutwardPinch
+        : await performMobilePinch(65, [45, 27]);
+      console.log("UY_REAL_TOUCH_PINCH_ZOOM " + JSON.stringify({
+        before: cameraBeforePinch.zoom,
+        afterOutward: cameraAfterOutwardPinch.zoom,
+        afterFinal: cameraAfterPinch.zoom,
+      }));
+      // Never assert success from a DOM click or synthetic game-state edit.
+      // At least one real two-finger browser gesture must change Phaser zoom.
       expect(Math.abs(cameraAfterPinch.zoom - cameraBeforePinch.zoom)).toBeGreaterThan(0.001);
       expect(await evaluate<boolean>(`document.querySelector('[data-testid="dismantle-review"]') === null`)).toBe(true);
 
