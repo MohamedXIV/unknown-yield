@@ -884,6 +884,26 @@ browserIt(
           document.querySelector('nav[aria-label="Build tools"]') !== null`);
       };
 
+      const tapButtonByText = async (label: string) => {
+        const point = await evaluate<{ x: number; y: number } | null>(`(() => {
+          const button = [...document.querySelectorAll("button")]
+            .find((entry) => entry.textContent?.includes(${JSON.stringify(label)}));
+          if (!button || button.disabled) return null;
+          const rect = button.getBoundingClientRect();
+          return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+        })()`);
+        if (!point) throw new Error("Touch target unavailable: " + label);
+        await call("Input.dispatchTouchEvent", {
+          type: "touchStart",
+          touchPoints: [{ x: point.x, y: point.y, id: 1 }],
+        });
+        await sleep(60);
+        await call("Input.dispatchTouchEvent", {
+          type: "touchEnd",
+          touchPoints: [],
+        });
+      };
+
       const openBuildGroup = async (identity: string): Promise<void> => {
         await evaluate(`(async () => {
           const entry = [...document.querySelectorAll(
@@ -3888,7 +3908,12 @@ browserIt(
       });
       await call("Page.navigate", { url: appUrl });
       await waitForExpression(`document.readyState === "complete" && document.querySelector(".main-menu") !== null`);
-      await resumeMostRecentExpedition();
+      await waitForExpression(`document.querySelector(".menu-home .menu-action") !== null`);
+      const mobileMenuScreenshot = await captureEvidence("main-menu-boot-mobile.png");
+      console.log("UNKNOWN_YIELD_MAIN_MENU_BOOT_MOBILE " + JSON.stringify(mobileMenuScreenshot));
+      await tapButtonByText("Personnel Archives");
+      await waitForExpression(`document.querySelector(".menu-archive-card") !== null`);
+      await tapButtonByText("Load expedition");
       await waitForExpression(`typeof window.__UNKNOWN_YIELD_CAMERA__ === "function" &&
         window.__UNKNOWN_YIELD_CAMERA__()?.zoom > 0 &&
         document.querySelector(".world-host canvas") !== null`);
