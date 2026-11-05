@@ -318,6 +318,8 @@ export default function MainMenu(props: Props) {
                               <strong>{slot.name}{slot.id === props.activeSlotId ? " · LAST OPENED" : ""}</strong>
                               <small>{new Date(slot.savedAt).toLocaleString()} · {slot.exported} exports · schema {slot.schemaVersion}</small>
                               <small>{slot.fingerprint ? "Pack " + slot.fingerprint.slice(0, 12) : "Built-in content"}</small>
+                              {!compatible && <small>Requires a different content pack. Select its matching fingerprint under Content Packs to load this world.</small>}
+                              {compatible && !loadable && <small>No valid current or backup save revision could be read.</small>}
                             </div>
                             <span className={loadable ? "menu-record-status ready" : "menu-record-status"}>
                               {loadable ? "VALID" : compatible ? "UNREADABLE" : "OTHER PACK"}
