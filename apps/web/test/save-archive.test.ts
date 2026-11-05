@@ -4,6 +4,8 @@ import { Simulation, auditLedger, type Save } from "@site/sim-core";
 import { Session } from "../game/session";
 import {
   ARCHIVE_INDEX_KEY,
+  ARCHIVE_DAMAGED_INDEX_KEY,
+  recoverArchiveIndex,
   createExpedition,
   deleteExpedition,
   listExpeditions,
@@ -206,6 +208,19 @@ describe("Personnel Archives — local multi-expedition persistence (#343)", () 
     session.usePack(null);
     expect(session.loadSlot(storage, id).ok).toBe(false);
     expect(session.list(storage).legacy).toEqual([]);
+  });
+
+  it("requires explicit recovery and preserves damaged index bytes", () => {
+    const storage = new LocalStorageStub();
+    const source = new Simulation(fixture).serialize();
+    const alpha = createExpedition(storage, "Alpha", null, source);
+    createExpedition(storage, "Beta", null, source);
+    storage.setItem(ARCHIVE_INDEX_KEY, "{damaged");
+    expect(() => listExpeditions(storage, null)).toThrow(/index/);
+    expect(recoverArchiveIndex(storage)).toBe(1);
+    expect(storage.getItem(ARCHIVE_DAMAGED_INDEX_KEY)).toBe("{damaged");
+    expect(listExpeditions(storage, null).slots.map((slot) => slot.id)).toEqual([alpha.id]);
+    expect(() => recoverArchiveIndex(storage)).toThrow(/unnecessary/);
   });
 
   it("rejects invalid names and maintains immutable revisions on rename/save", () => {
