@@ -126,6 +126,7 @@ describe("Personnel Archives — local multi-expedition persistence (#343)", () 
     expect(session.createSlot(storage, "Base world").ok).toBe(true);
     const builtIn = session.activeSlotId()!;
     expect(session.command(firstExtractor).ok).toBe(true);
+    expect(session.save(storage).ok).toBe(true);
     const before = session.snapshot();
 
     session.usePack(pack("a".repeat(64)));
