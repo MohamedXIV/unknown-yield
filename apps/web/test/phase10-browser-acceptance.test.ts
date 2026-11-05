@@ -876,6 +876,11 @@ browserIt(
       const resumeMostRecentExpedition = async () => {
         await waitForExpression(`document.querySelector(".main-menu") !== null`);
         await waitForExpression(`document.querySelector(".menu-home .menu-action") !== null`);
+        // Menu DOM mounts before the local archive is checked asynchronously.
+        // Waiting for a rendered button alone can intermittently catch the
+        // disabled loading state; require genuinely validated Continue.
+        await waitForExpression(`[...document.querySelectorAll(".menu-action")]
+          .some((button) => button.textContent?.includes("Resume Duty") && !button.disabled)`);
         const enabled = await evaluate<boolean>(`[...document.querySelectorAll(".menu-action")]
           .some((button) => button.textContent?.includes("Resume Duty") && !button.disabled)`);
         expect(enabled, "Main Menu Continue must select a valid compatible expedition").toBe(true);
