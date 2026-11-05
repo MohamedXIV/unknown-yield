@@ -13,6 +13,7 @@ type Props = {
   activeSlotId: string | null;
   activeFingerprint: string | null;
   onSave: () => CommandResult;
+  onRecover: () => CommandResult;
   onCreate: (name: string) => CommandResult;
   onLoad: (id: string) => CommandResult;
   onRename: (id: string, name: string) => CommandResult;
@@ -27,12 +28,32 @@ export default function ExpeditionArchive(props: Props) {
   const [renameId, setRenameId] = useState<string | null>(null);
   const [renameName, setRenameName] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [confirmRecovery, setConfirmRecovery] = useState(false);
 
   return (
     <section className="configuration-section" aria-label={t("ui.archive.heading")}>
       <h3>{t("ui.archive.heading")}</h3>
       <p className="hint">{t("ui.archive.local-only")}</p>
-      {props.error && <p role="alert">{props.error}</p>}
+      {props.error && (
+        <div className="reset-confirm" role="alert">
+          <p>{props.error}</p>
+          {confirmRecovery ? (
+            <>
+              <p>{t("ui.archive.recover-warning")}</p>
+              <button className="danger" onClick={() => {
+                if (props.onRecover().ok) setConfirmRecovery(false);
+              }}>{t("ui.archive.confirm-recover")}</button>
+              <button className="secondary" onClick={() => setConfirmRecovery(false)}>
+                {t("ui.archive.cancel")}
+              </button>
+            </>
+          ) : (
+            <button className="secondary" onClick={() => setConfirmRecovery(true)}>
+              {t("ui.archive.recover")}
+            </button>
+          )}
+        </div>
+      )}
       <p className="hint">
         {t("ui.archive.active")}: {props.listing?.slots.find(
           (slot) => slot.id === props.activeSlotId,
