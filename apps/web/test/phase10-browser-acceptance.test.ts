@@ -1205,6 +1205,7 @@ browserIt(
         pendingBook: boolean;
         currentPlates: string;
         commandCount: number;
+        commandRows: number;
         firstFrameMaterial: string;
       }>(`(() => {
         const modules = [".site-mark", ".resources", ".hud-actions"]
@@ -1225,6 +1226,10 @@ browserIt(
             .getAttribute("aria-pressed") === "false",
           currentPlates: document.querySelector('[data-testid="plates"]').textContent,
           commandCount: tray.children.length,
+          commandRows: new Set(
+            [...tray.querySelectorAll(":scope > button, :scope > .build-group > button")]
+              .map((button) => Math.round(button.getBoundingClientRect().top))
+          ).size,
           firstFrameMaterial: getComputedStyle(tray, "::before").backgroundImage,
         };
       })()`);
@@ -1236,6 +1241,7 @@ browserIt(
       expect(compactHardware.pendingBook).toBe(true);
       expect(compactHardware.currentPlates).toBe("600");
       expect(compactHardware.commandCount).toBe(10);
+      expect(compactHardware.commandRows).toBe(1);
       expect(compactHardware.firstFrameMaterial).toContain("linear-gradient");
       const instrumentRailShot = await captureEvidence("industrial-hud-and-command-tray.png");
       console.log("INDUSTRIAL_HUD_COMMAND_TRAY " + JSON.stringify(instrumentRailShot));
