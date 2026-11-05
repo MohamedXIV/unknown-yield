@@ -847,6 +847,47 @@ browserIt(
         throw new Error("Browser condition timed out: " + expression);
       };
 
+      const clickMainMenuAction = async (label: string) => {
+        await evaluate<boolean>(`(() => {
+          const button = [...document.querySelectorAll(".menu-action")]
+            .find((entry) => entry.textContent?.includes(${JSON.stringify(label)}));
+          if (!button || button.disabled) throw new Error("Main menu action unavailable: " + ${JSON.stringify(label)});
+          button.click();
+          return true;
+        })()`);
+      };
+      const startNewExpeditionFromMenu = async (name: string) => {
+        await waitForExpression(`document.querySelector(".main-menu") !== null`);
+        await clickMainMenuAction("Begin Assignment");
+        await waitForExpression(`document.querySelector('input[aria-label="Expedition designation"]') !== null`);
+        await evaluate<boolean>(`(() => {
+          const input = document.querySelector('input[aria-label="Expedition designation"]');
+          const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set;
+          setter.call(input, ${JSON.stringify(name)});
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+          input.dispatchEvent(new Event("change", { bubbles: true }));
+          return true;
+        })()`);
+        await waitForExpression(`[...document.querySelectorAll("button")].some((button) =>
+          button.textContent?.includes("Create Expedition") && !button.disabled)`);
+        await evaluate<boolean>(`(() => {
+          [...document.querySelectorAll("button")].find((button) =>
+            button.textContent?.includes("Create Expedition"))?.click();
+          return true;
+        })()`);
+        await waitForExpression(`document.querySelector("canvas") !== null &&
+          document.querySelector('nav[aria-label="Build tools"]') !== null`);
+      };
+      const resumeMostRecentExpedition = async () => {
+        await waitForExpression(`document.querySelector(".main-menu") !== null`);
+        const enabled = await evaluate<boolean>(`[...document.querySelectorAll(".menu-action")]
+          .some((button) => button.textContent?.includes("Resume Duty") && !button.disabled)`);
+        expect(enabled, "Main Menu Continue must select a valid compatible expedition").toBe(true);
+        await clickMainMenuAction("Resume Duty");
+        await waitForExpression(`document.querySelector("canvas") !== null &&
+          document.querySelector('nav[aria-label="Build tools"]') !== null`);
+      };
+
       const openBuildGroup = async (identity: string): Promise<void> => {
         await evaluate(`(async () => {
           const entry = [...document.querySelectorAll(
@@ -1013,37 +1054,37 @@ browserIt(
       await call("Page.enable");
       await call("Runtime.enable");
       await call("Page.navigate", { url: appUrl });
-      await waitForExpression(
-        `document.readyState === "complete" &&
-          !!document.querySelector("canvas") &&
-          !!document.querySelector('nav[aria-label="Build tools"]')`,
-      );
+      await waitForExpression(`document.readyState === "complete" &&
+        document.querySelector(".main-menu") !== null`);
+      const emptyBoot = await evaluate<{
+        hasCanvas: boolean;
+        resumeDisabled: boolean;
+        hasNew: boolean;
+        hasQuit: boolean;
+      }>(`(() => {
+        const actions = [...document.querySelectorAll(".menu-action")];
+        return {
+          hasCanvas: !!document.querySelector("canvas"),
+          resumeDisabled: !!actions.find((button) => button.textContent?.includes("Resume Duty"))?.disabled,
+          hasNew: actions.some((button) => button.textContent?.includes("Begin Assignment")),
+          hasQuit: actions.some((button) => /quit|exit/i.test(button.textContent ?? "")),
+        };
+      })()`);
+      expect(emptyBoot).toEqual({ hasCanvas: false, resumeDisabled: true, hasNew: true, hasQuit: false });
+
+      await clickMainMenuAction("Personnel Archives");
+      await waitForExpression(`document.body.textContent?.includes("No archived expeditions have been recorded") === true`);
+      await evaluate<boolean>(`(() => { document.querySelector(".menu-back")?.click(); return true; })()`);
+      await clickMainMenuAction("Operational Regulations");
+      await waitForExpression(`document.body.textContent?.includes("Field controls") === true &&
+        document.querySelector('input[aria-label="Show performance counter"]') !== null`);
+      await evaluate<boolean>(`(() => { document.querySelector(".menu-back")?.click(); return true; })()`);
+
+      await startNewExpeditionFromMenu("Browser acceptance expedition");
       await waitForExpression(
         `document.querySelector('[data-onboarding-beat="camera-build"]')
           ?.textContent?.includes("Read the site before you automate it.") === true`,
       );
-      // First real slot is created via the player menu, before field actions.
-      await evaluate<boolean>(`(() => {
-        document.querySelector('button[aria-label="Game menu"]')?.click();
-        return true;
-      })()`);
-      await waitForExpression(`document.querySelector('input[aria-label="New expedition name"]') !== null`);
-      await evaluate<boolean>(`(() => {
-        const input = document.querySelector('input[aria-label="New expedition name"]');
-        const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set;
-        setter.call(input, "Browser acceptance expedition");
-        input.dispatchEvent(new Event("input", { bubbles: true }));
-        return true;
-      })()`);
-      await waitForExpression(`[...document.querySelectorAll("button")].some((button) =>
-        button.textContent?.includes("Create and begin") && !button.disabled)`);
-      await evaluate<boolean>(`(() => {
-        [...document.querySelectorAll("button")].find((button) =>
-          button.textContent?.includes("Create and begin"))?.click();
-        return true;
-      })()`);
-      await waitForExpression(`document.querySelector('[aria-label="Personnel Archives"]') === null`);
-
 
       const initialState = await evaluate<{
         canvas: boolean;
