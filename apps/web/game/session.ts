@@ -17,6 +17,8 @@ export class Session {
   private pack: RuntimePack | null = null;
   private slotId: string | null = null;
   private last: number | null = null;
+  private revision = 0;
+  private savedRevision = 0;
   private listeners = new Set<() => void>();
   // Both React and Phaser consume the same read-only projection per update.
   // Do not run Simulation.snapshot() and its structuredClone twice for one tick.
@@ -42,9 +44,29 @@ export class Session {
   }
   command = (cmd: GameCommand) => {
     const result = this.sim.command(cmd);
+    if (result.ok) this.revision += 1;
     this.notify();
     return result;
   };
+  hasUnsavedChanges() {
+    return this.slotId === null || this.revision !== this.savedRevision;
+  }
+  /** Only exact-pack slots with at least one fully valid Simulation snapshot are loadable. */
+  loadableSlotIds(storage: ArchiveStorage): string[] {
+    const fingerprint = this.activePackFingerprint();
+    return this.list(storage).slots.flatMap((slot) => {
+      if (slot.fingerprint !== fingerprint) return [];
+      const valid = slotRevisions(storage, slot.id, fingerprint).some((candidate) => {
+        const checked = new Simulation(this.pack?.bundle.content ?? fixture);
+        return checked.load(candidate.save).ok;
+      });
+      return valid ? [slot.id] : [];
+    });
+  }
+  mostRecentValidSlotId(storage: ArchiveStorage): string | null {
+    const valid = new Set(this.loadableSlotIds(storage));
+    return this.list(storage).slots.find((slot) => valid.has(slot.id))?.id ?? null;
+  }
   preview = (cmd: GameCommand) => this.sim.preview(cmd);
   suspend() {
     this.last = null;
@@ -56,7 +78,9 @@ export class Session {
     }
     if (this.last !== null) {
       const startedAt = startBrowserMetric();
-      this.sim.step(Math.max(0, Math.min(250, now - this.last)));
+      const elapsed = Math.max(0, Math.min(250, now - this.last));
+      this.sim.step(elapsed);
+      if (elapsed > 0) this.revision += 1;
       finishBrowserMetric("simulation-step", startedAt);
       this.notify();
     }
@@ -71,6 +95,8 @@ export class Session {
     this.pack = pack;
     this.slotId = null;
     this.last = null;
+    this.revision = 0;
+    this.savedRevision = 0;
     this.notify();
   }
   activePackFingerprint() {
@@ -98,6 +124,8 @@ export class Session {
     this.sim = new Simulation(this.pack?.bundle.content ?? fixture);
     this.slotId = null;
     this.last = null;
+    this.revision = 0;
+    this.savedRevision = 0;
     this.notify();
   }
   /** Create and persist a NEW world before replacing the running world. */
@@ -108,6 +136,8 @@ export class Session {
       this.sim = next;
       this.slotId = slot.id;
       this.last = null;
+      this.revision = 0;
+      this.savedRevision = 0;
       this.notify();
       return { ok: true, message: "New expedition recorded: " + slot.name };
     } catch (error) {
@@ -129,6 +159,8 @@ export class Session {
         this.sim = next;
         this.slotId = slotId;
         this.last = null;
+        this.revision = 0;
+        this.savedRevision = 0;
         this.notify();
         return {
           ok: true,
@@ -155,6 +187,8 @@ export class Session {
       this.sim = next;
       this.slotId = slot.id;
       this.last = null;
+      this.revision = 0;
+      this.savedRevision = 0;
       this.notify();
       return { ok: true, message: "Legacy record imported without altering the original." };
     } catch (error) {
@@ -166,6 +200,7 @@ export class Session {
       return { ok: false, message: "Create a named expedition before saving. Old field records remain safe." };
     try {
       saveExpedition(storage, this.slotId, this.activePackFingerprint(), this.sim.serialize());
+      this.savedRevision = this.revision;
       return { ok: true, message: "Expedition saved locally on this device" };
     } catch (error) {
       return { ok: false, message: "Save failed; prior expedition record is intact. " + String(error) };

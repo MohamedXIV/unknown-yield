@@ -54,6 +54,49 @@ function archiveStorage() {
   return { records, storage };
 }
 
+it("tracks unsaved changes across create, simulation, save and restore", () => {
+  const { storage } = archiveStorage();
+  const session = new Session();
+  expect(session.hasUnsavedChanges()).toBe(true);
+  expect(session.createSlot(storage, "Dirty tracking").ok).toBe(true);
+  expect(session.hasUnsavedChanges()).toBe(false);
+
+  session.advance(1000, false);
+  session.advance(1100, false);
+  expect(session.hasUnsavedChanges()).toBe(true);
+  expect(session.save(storage).ok).toBe(true);
+  expect(session.hasUnsavedChanges()).toBe(false);
+
+  expect(session.command({
+    type: "placeMachine", definitionId: "extractor",
+    x: 15, y: 25, direction: 0,
+  }).ok).toBe(true);
+  expect(session.hasUnsavedChanges()).toBe(true);
+  expect(session.restore(storage).ok).toBe(true);
+  expect(session.hasUnsavedChanges()).toBe(false);
+});
+
+it("chooses the most recent valid compatible expedition, skipping corrupt or mismatched slots", () => {
+  const { records, storage } = archiveStorage();
+  const session = new Session();
+  expect(session.createSlot(storage, "Older valid").ok).toBe(true);
+  const older = session.activeSlotId()!;
+  expect(session.createSlot(storage, "Newer corrupt").ok).toBe(true);
+  const newer = session.activeSlotId()!;
+
+  const rawIndex = records.get("unknown-yield-expeditions-v1")!;
+  const index = JSON.parse(rawIndex) as { slots: Array<{ id: string; savedAt: number; current: string; previous: string | null }> };
+  const first = index.slots.find((slot) => slot.id === older)!;
+  const second = index.slots.find((slot) => slot.id === newer)!;
+  second.savedAt = first.savedAt + 10_000;
+  records.set("unknown-yield-expeditions-v1", JSON.stringify(index));
+  records.set(second.current, "{broken-current");
+  if (second.previous) records.set(second.previous, "{broken-previous");
+
+  expect(session.loadableSlotIds(storage)).toEqual([older]);
+  expect(session.mostRecentValidSlotId(storage)).toBe(older);
+});
+
 it("invalidates the cached projection only after a successful slot load", () => {
   const { records, storage } = archiveStorage();
   const current = new Session();

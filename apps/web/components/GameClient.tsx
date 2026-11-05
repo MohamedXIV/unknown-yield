@@ -62,6 +62,7 @@ import {
 } from "../game/preferences";
 import GameHost from "./GameHost";
 import ExpeditionArchive from "./ExpeditionArchive";
+import MainMenu from "./MainMenu";
 import { sampleBuildTool } from "../game/tool-sampling";
 import { previewDismantleArea, sameDismantleAreaReview } from "../game/dismantle-review";
 import { classifyDismantleEntity, dismantleEntityGeometry } from "../game/dismantle-selection";
@@ -167,6 +168,8 @@ function GameClientInner() {
   };
   const [session] = useState(() => new Session()),
     [snapshot, setSnapshot] = useState(() => session.snapshot());
+  const [screen, setScreen] = useState<"menu" | "game">("menu");
+  const [returnPrompt, setReturnPrompt] = useState(false);
   const [mode, setMode] = useState<WorldMode>(DEFAULT_MODE),
     [panel, setPanel] = useState<
       | "selection"
@@ -179,7 +182,7 @@ function GameClientInner() {
     [knowledgeFilter, setKnowledgeFilter] =
       useState<KnowledgeFilter>("all");
   const [notice, setNotice] = useState<CommandResult | null>(null),
-    [paused, setPaused] = useState(false),
+    [paused, setPaused] = useState(true),
     [guide, setGuide] = useState(true),
     [homeToken, setHomeToken] = useState(0),
     [openToolGroup, setOpenToolGroup] = useState<ToolGroupId | null>(null),
@@ -191,6 +194,8 @@ function GameClientInner() {
     [packReady, setPackReady] = useState(false),
     [archiveView, setArchiveView] = useState<ArchiveListing | null>(null),
     [archiveError, setArchiveError] = useState<string | null>(null),
+    [loadableSlotIds, setLoadableSlotIds] = useState<string[]>([]),
+    [resumeSlotId, setResumeSlotId] = useState<string | null>(null),
     [keyboardAreaOpen, setKeyboardAreaOpen] = useState(false),
     [keyboardBounds, setKeyboardBounds] = useState({ fromX: 0, fromY: 0, toX: 0, toY: 0 });
   const cancelGroupHold = useRef<(() => void) | null>(null);
@@ -428,8 +433,15 @@ function GameClientInner() {
     }
   };
   const choosePack = (pack: RuntimePack | null) => {
+    if (screen === "game") {
+      setNotice({
+        ok: false,
+        message: "Content packs can only be changed from the Main Menu. Return there first; this expedition remains unchanged.",
+      });
+      return;
+    }
     try {
-      // An explicit new expedition is the only point where content changes.
+      // An explicit, named new expedition is the only point where content changes.
       session.usePack(pack);
       setRuntimeContentLocale(pack?.bundle.locale ?? null);
       setActivePack(pack);
@@ -451,23 +463,35 @@ function GameClientInner() {
 
   const refreshArchives = () => {
     try {
-      setArchiveView(session.list(window.localStorage));
+      const listing = session.list(window.localStorage);
+      const loadable = session.loadableSlotIds(window.localStorage);
+      setArchiveView(listing);
+      setLoadableSlotIds(loadable);
+      setResumeSlotId(listing.slots.find((slot) => loadable.includes(slot.id))?.id ?? null);
       setArchiveError(null);
     } catch (error) {
       setArchiveView(null);
+      setLoadableSlotIds([]);
+      setResumeSlotId(null);
       setArchiveError(String(error));
     }
   };
   useEffect(() => {
-    if (panel !== "menu") return;
+    if (!packReady || (screen !== "menu" && panel !== "menu")) return;
     try {
-      setArchiveView(session.list(window.localStorage));
+      const listing = session.list(window.localStorage);
+      const loadable = session.loadableSlotIds(window.localStorage);
+      setArchiveView(listing);
+      setLoadableSlotIds(loadable);
+      setResumeSlotId(listing.slots.find((slot) => loadable.includes(slot.id))?.id ?? null);
       setArchiveError(null);
     } catch (error) {
       setArchiveView(null);
+      setLoadableSlotIds([]);
+      setResumeSlotId(null);
       setArchiveError(String(error));
     }
-  }, [panel, session, activePack]);
+  }, [packReady, screen, panel, session, activePack]);
   const archiveAction = (result: CommandResult, switched = false, newWorld = false) => {
     setNotice(result);
     refreshArchives();
@@ -480,6 +504,90 @@ function GameClientInner() {
         setGuide(true);
         setHomeToken((n) => n + 1);
       }
+    }
+  };
+  const enterGame = (result: CommandResult, newWorld = false) => {
+    setNotice(result);
+    refreshArchives();
+    if (result.ok) {
+      setScreen("game");
+      setPaused(false);
+      setPanel(null);
+      setMode(DEFAULT_MODE);
+      setReturnPrompt(false);
+      setGuide(newWorld);
+      if (newWorld) setHomeToken((n) => n + 1);
+    }
+    return result;
+  };
+  const startNewFromMenu = (name: string) => {
+    try {
+      return enterGame(session.createSlot(window.localStorage, name), true);
+    } catch (error) {
+      return { ok: false, message: "New expedition not created. " + String(error) };
+    }
+  };
+  const resumeFromMenu = () => {
+    if (!resumeSlotId)
+      return { ok: false, message: "No valid compatible expedition is available." };
+    try {
+      return enterGame(session.loadSlot(window.localStorage, resumeSlotId), false);
+    } catch (error) {
+      return { ok: false, message: "Expedition not loaded. " + String(error) };
+    }
+  };
+  const loadFromMenu = (slotId: string) => {
+    try {
+      return enterGame(session.loadSlot(window.localStorage, slotId), false);
+    } catch (error) {
+      return { ok: false, message: "Expedition not loaded. " + String(error) };
+    }
+  };
+  const importLegacyFromMenu = (key: string, name: string) => {
+    try {
+      return enterGame(session.importLegacy(window.localStorage, key, name), false);
+    } catch (error) {
+      return { ok: false, message: "Legacy import failed. " + String(error) };
+    }
+  };
+  const requestMainMenu = () => {
+    if (session.hasUnsavedChanges()) {
+      setReturnPrompt(true);
+      return;
+    }
+    setScreen("menu");
+    setPaused(true);
+    setPanel(null);
+    refreshArchives();
+  };
+  const saveAndReturnToMenu = () => {
+    try {
+      const result = session.save(window.localStorage);
+      setNotice(result);
+      if (result.ok) {
+        setReturnPrompt(false);
+        setScreen("menu");
+        setPaused(true);
+        setPanel(null);
+        refreshArchives();
+      }
+    } catch (error) {
+      setNotice({ ok: false, message: "Save failed. " + String(error) });
+    }
+  };
+  const discardAndReturnToMenu = () => {
+    try {
+      const result = session.restore(window.localStorage);
+      setNotice(result);
+      if (result.ok) {
+        setReturnPrompt(false);
+        setScreen("menu");
+        setPaused(true);
+        setPanel(null);
+        refreshArchives();
+      }
+    } catch (error) {
+      setNotice({ ok: false, message: "Could not restore the last saved expedition. " + String(error) });
     }
   };
   const commitPreferences = (next: GamePreferences) => {
@@ -951,6 +1059,57 @@ function GameClientInner() {
       <p>{entry.detail}</p>
     </section>
   );
+  if (screen === "menu") {
+    return (
+      <MainMenu
+        ready={packReady}
+        listing={archiveView}
+        archiveError={archiveError}
+        loadableSlotIds={loadableSlotIds}
+        resumeSlotId={resumeSlotId}
+        activeSlotId={session.activeSlotId()}
+        activeFingerprint={session.activePackFingerprint()}
+        activePack={activePack}
+        pendingPack={pendingPack}
+        preferences={preferences}
+        notice={notice}
+        onResume={resumeFromMenu}
+        onStartNew={startNewFromMenu}
+        onLoad={loadFromMenu}
+        onRename={(id, name) => {
+          try {
+            const result = session.renameSlot(window.localStorage, id, name);
+            archiveAction(result);
+            return result;
+          } catch (error) {
+            return { ok: false, message: "Rename failed. " + String(error) };
+          }
+        }}
+        onDelete={(id) => {
+          try {
+            const result = session.deleteSlot(window.localStorage, id);
+            archiveAction(result);
+            return result;
+          } catch (error) {
+            return { ok: false, message: "Delete failed. " + String(error) };
+          }
+        }}
+        onImportLegacy={importLegacyFromMenu}
+        onRecover={() => {
+          try {
+            const result = session.recoverArchive(window.localStorage);
+            archiveAction(result);
+            return result;
+          } catch (error) {
+            return { ok: false, message: "Archive recovery failed. " + String(error) };
+          }
+        }}
+        onImportPack={(file) => { void importPack(file); }}
+        onUsePack={choosePack}
+        onPreferencesChange={commitPreferences}
+      />
+    );
+  }
   return (
     <main
       className="game"
@@ -3421,6 +3580,9 @@ function GameClientInner() {
                   <Glyph type="settings" size={17} />
                   Game settings &amp; controls
                 </button>
+                <button className="secondary" onClick={requestMainMenu}>
+                  Return to Main Menu
+                </button>
                 <ExpeditionArchive
                   listing={archiveView}
                   error={archiveError}
@@ -3481,15 +3643,15 @@ function GameClientInner() {
                   {pendingPack && (
                     <div className="reset-confirm">
                       <p>Validated SHA-256: {pendingPack.fingerprint.slice(0, 16)}. Start a NEW expedition? Unsaved world progress will be lost; all existing saved worlds remain stored.</p>
-                      <button className="primary" onClick={() => choosePack(pendingPack)}>
-                        Play new expedition with imported pack
+                      <button className="primary" onClick={requestMainMenu}>
+                        Return to Main Menu to use this pack
                       </button>
                       <button className="secondary" onClick={() => setPendingPack(null)}>Cancel import</button>
                     </div>
                   )}
                   {activePack && (
-                    <button className="secondary" onClick={() => choosePack(null)}>
-                      Start new expedition with built-in content
+                    <button className="secondary" onClick={requestMainMenu}>
+                      Return to Main Menu to switch to built-in content
                     </button>
                   )}
                 </section>
@@ -3809,6 +3971,40 @@ function GameClientInner() {
           <span>R rotate · Esc cancel · Home center</span>
         </div>
       </div>
+      {returnPrompt && (
+        <div className="menu-return-backdrop">
+          <section
+            className="menu-return-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="menu-return-title"
+            onKeyDown={(event) => {
+              if (event.key === "Escape") {
+                event.preventDefault();
+                setReturnPrompt(false);
+              }
+            }}
+          >
+            <small>UNSAVED FIELD ACTIVITY</small>
+            <h2 id="menu-return-title">Return to the Main Menu?</h2>
+            <p>
+              This expedition has changed since its last save. Save the current
+              world, restore its last saved revision, or remain on site.
+            </p>
+            <div className="menu-return-actions">
+              <button className="menu-primary" onClick={saveAndReturnToMenu}>
+                Save &amp; Return
+              </button>
+              <button className="menu-danger" onClick={discardAndReturnToMenu}>
+                Discard Unsaved Changes
+              </button>
+              <button className="menu-secondary" onClick={() => setReturnPrompt(false)}>
+                Stay in Expedition
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
       {mode.dismantleReview && (
         <div className="dismantle-review-backdrop">
           <section
