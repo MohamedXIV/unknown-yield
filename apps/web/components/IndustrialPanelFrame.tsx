@@ -21,6 +21,7 @@ type Props = {
   kind: IndustrialPanelKind;
   className?: string;
   ariaLabel?: string;
+  dataPanelKind?: string;
   title?: string;
   subtitle?: string;
   header?: ReactNode;
@@ -34,6 +35,7 @@ export default function IndustrialPanelFrame({
   kind,
   className = "",
   ariaLabel,
+  dataPanelKind,
   title,
   subtitle,
   header,
@@ -100,7 +102,7 @@ export default function IndustrialPanelFrame({
   );
   const classes = "uy-panel-wrapper uy-panel--" + kind + " " + className;
   return as === "aside" ? (
-    <aside className={classes} aria-label={ariaLabel}>{chrome}</aside>
+    <aside className={classes} aria-label={ariaLabel} data-panel-kind={dataPanelKind}>{chrome}</aside>
   ) : (
     <section className={classes} aria-label={ariaLabel}>{chrome}</section>
   );
