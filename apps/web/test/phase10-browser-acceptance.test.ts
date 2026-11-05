@@ -1721,28 +1721,10 @@ browserIt(
       ).toBe(true);
       await call("Page.reload", { ignoreCache: true });
       await sleep(900);
-      await waitForExpression(
-        `document.querySelector("canvas") !== null &&
-          document.querySelector('button[aria-label="Game menu"]') !== null`,
-      );
-      await evaluate(`(() => {
-        document.querySelector('button[aria-label="Game menu"]')?.click();
-        return true;
-      })()`);
-      await waitForExpression(
-        `[...document.querySelectorAll("button")]
-          .some((button) => button.textContent?.includes("Load"))`,
-      );
-      await evaluate(`(() => {
-        [...document.querySelectorAll("button")]
-          .find((button) => button.textContent?.includes("Load"))
-          ?.click();
-        return true;
-      })()`);
-      await waitForExpression(
-        `document.querySelector('[role="status"]')
-          ?.textContent.includes("Expedition restored") === true`,
-      );
+      await waitForExpression(`document.querySelector(".main-menu") !== null`);
+      await resumeMostRecentExpedition();
+      await waitForExpression(`document.querySelector('[role="status"]')
+        ?.textContent.includes("Expedition restored") === true`);
       await clickCell(23, 24);
       await waitForExpression(
         `document.querySelector(".context-panel h2")?.textContent === "Depot"`,
@@ -2152,9 +2134,8 @@ browserIt(
         },
       }))})`);
       await call("Page.reload", { ignoreCache: true });
-      await waitForExpression(
-        `document.readyState === "complete" && !!document.querySelector("canvas") && !!document.querySelector('nav[aria-label="Build tools"]')`,
-      );
+      await waitForExpression(`document.readyState === "complete" && document.querySelector(".main-menu") !== null`);
+      await resumeMostRecentExpedition();
       await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Game menu"]')?.click(); return true; })()`);
       await waitForExpression(
         `[...document.querySelectorAll("button")].some((button) => button.textContent?.includes("Game settings & controls"))`,
@@ -2359,12 +2340,8 @@ browserIt(
 
       const savedExpeditionBytes = await evaluate<string>(`${archiveReadExpression}`);
       await call("Page.reload", { ignoreCache: true });
-      await waitForExpression(
-        `document.readyState === "complete" && !!document.querySelector("canvas") && !!document.querySelector('nav[aria-label="Build tools"]')`,
-      );
-      await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Game menu"]')?.click(); return true; })()`);
-      await waitForExpression(`[...document.querySelectorAll("button")].some((button) => button.textContent?.includes("Load"))`);
-      await evaluate<boolean>(`(() => { [...document.querySelectorAll("button")].find((button) => button.textContent?.includes("Load"))?.click(); return true; })()`);
+      await waitForExpression(`document.readyState === "complete" && document.querySelector(".main-menu") !== null`);
+      await resumeMostRecentExpedition();
       await waitForExpression(`document.querySelector('[role="status"]')?.textContent.includes("Expedition restored") === true`);
       await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Close field brief"]')?.click(); return true; })()`);
       await waitForExpression(`document.querySelector('button[aria-label="Close field brief"]') === null`);
