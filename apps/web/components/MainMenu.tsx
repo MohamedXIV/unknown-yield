@@ -168,7 +168,8 @@ export default function MainMenu(props: Props) {
                       Resume Duty
                     </ActionButton>
                     <ActionButton
-                      detail="Create a separate, named industrial expedition"
+                      disabled={!props.ready || !!props.archiveError}
+                      detail={props.archiveError ? "Repair Personnel Archives before creating a new record" : "Create a separate, named industrial expedition"}
                       onClick={() => { setFeedback(null); setView("new"); }}
                     >
                       Begin Assignment
@@ -248,7 +249,7 @@ export default function MainMenu(props: Props) {
                   </div>
                   <div className="menu-inline-actions">
                     <button className="menu-secondary" onClick={() => setView("home")}>Cancel</button>
-                    <button className="menu-primary" disabled={!newName.trim()} onClick={() => report(props.onStartNew(newName))}>
+                    <button className="menu-primary" disabled={!newName.trim() || !!props.archiveError} onClick={() => report(props.onStartNew(newName))}>
                       Create Expedition <span>→</span>
                     </button>
                   </div>
@@ -325,7 +326,7 @@ export default function MainMenu(props: Props) {
                                 <button className="menu-secondary" onClick={() => setDeleteId(null)}>Keep</button>
                               </div>
                             ) : (
-                              <button className="menu-secondary" onClick={() => setDeleteId(slot.id)}>Delete</button>
+                              <button className="menu-secondary" disabled={!!props.archiveError} onClick={() => setDeleteId(slot.id)}>Delete</button>
                             )}
                           </div>
                         </article>
