@@ -33,6 +33,12 @@
   filter: none;
 }
 .game.game .context-panel.uy-panel-wrapper {
+  /* The shared root used to override this with position:relative, which
+     silently moved every live panel from the right edge to x=0. */
+  position: absolute;
+  top: 88px;
+  right: 20px;
+  left: auto;
   width: min(388px, calc(100dvw - 34px));
   max-height: calc(100dvh - 148px);
   filter: drop-shadow(0 2px 0 #060b0e) drop-shadow(0 17px 24px #000b);
@@ -279,7 +285,7 @@
   min-width: 0;
   min-height: 0;
   margin: 4px 0 0;
-  padding: 12px 37px 14px 12px;
+  padding: 12px 10px 14px 12px;
   border: 1px solid #45585e;
   background-color: #132229;
   background-image:
@@ -302,6 +308,11 @@
     repeating-linear-gradient(0deg, #50371e05 0 1px, transparent 1px 3px),
     url("/ui/archival-paper.svg");
   background-blend-mode: normal, normal, multiply;
+  /* The inherited 18px dark-grid background-size would stretch the
+     160x160 archival stock into enormous vertical bars (observed in real
+     Chromium). Tile the genuine paper grain at its native size instead. */
+  background-size: 100% 100%, auto, 160px 160px;
+  background-repeat: no-repeat, repeat, repeat;
   color: #291d14;
   border-color: #917b5a;
   box-shadow: inset 0 2px 8px #46301861, inset 0 0 24px #6e523047, 0 2px 4px #000a;
@@ -355,7 +366,8 @@
   flex-direction: column;
   gap: 6px;
   width: 28px;
-  margin-right: -33px;
+  margin-right: 0;
+  margin-left: 6px;
   margin-top: 0;
   pointer-events: auto;
 }
@@ -664,7 +676,7 @@
     left: 6px; top: 6px; width: 32px; height: 32px;
   }
   .game.game .uy-panel-wrapper .uy-contained-surface {
-    padding: 8px 34px 11px 8px;
+    padding: 8px 7px 11px 8px;
   }
   .game.game .uy-panel-wrapper .uy-layer-4-content { padding: 8px 6px; }
   .main-menu .uy-panel--menu .main-menu-brand { min-height: 55px; padding: 6px 7px; }
