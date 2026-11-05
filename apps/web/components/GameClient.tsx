@@ -20,6 +20,7 @@ import type {
   MachineStatus,
 } from "@site/sim-core";
 import { Session } from "../game/session";
+import type { ArchiveListing } from "../game/save-archive";
 import {
   BUILD_PALETTE,
   DEFAULT_MODE,
@@ -188,6 +189,13 @@ function GameClientInner() {
     [activePack, setActivePack] = useState<RuntimePack | null>(null),
     [pendingPack, setPendingPack] = useState<RuntimePack | null>(null),
     [packReady, setPackReady] = useState(false),
+    [archiveView, setArchiveView] = useState<ArchiveListing | null>(null),
+    [archiveError, setArchiveError] = useState<string | null>(null),
+    [newExpeditionName, setNewExpeditionName] = useState(""),
+    [renameSlotId, setRenameSlotId] = useState<string | null>(null),
+    [renameSlotName, setRenameSlotName] = useState(""),
+    [deleteSlotId, setDeleteSlotId] = useState<string | null>(null),
+    [legacyImportName, setLegacyImportName] = useState("Recovered expedition"),
     [keyboardAreaOpen, setKeyboardAreaOpen] = useState(false),
     [keyboardBounds, setKeyboardBounds] = useState({ fromX: 0, fromY: 0, toX: 0, toY: 0 });
   const cancelGroupHold = useRef<(() => void) | null>(null);
@@ -446,22 +454,50 @@ function GameClientInner() {
       setNotice({ ok: false, message: "Could not start expedition: " + String(error) });
     }
   };
-  const persist = (load: boolean) => {
+
+  const refreshArchives = () => {
     try {
-      const result = load
-        ? session.restore(localStorage)
-        : session.save(localStorage);
-      setNotice(result);
-      if (load && result.ok) {
-        setMode(DEFAULT_MODE);
-        setPanel(null);
-      }
-    } catch {
-      setNotice({
-        ok: false,
-        message: "Storage is unavailable. Your running site is unchanged.",
-      });
+      setArchiveView(session.list(window.localStorage));
+      setArchiveError(null);
+    } catch (error) {
+      setArchiveView(null);
+      setArchiveError(String(error));
     }
+  };
+  useEffect(() => {
+    if (panel !== "menu") return;
+    try {
+      setArchiveView(session.list(window.localStorage));
+      setArchiveError(null);
+    } catch (error) {
+      setArchiveView(null);
+      setArchiveError(String(error));
+    }
+  }, [panel, session, activePack]);
+  const archiveAction = (result: CommandResult, switched = false) => {
+    setNotice(result);
+    refreshArchives();
+    if (result.ok && switched) {
+      setMode(DEFAULT_MODE);
+      setPanel(null);
+      setConfirmReset(false);
+      setGuide(true);
+      setHomeToken((n) => n + 1);
+    }
+  };
+  const persist = () => archiveAction(session.save(window.localStorage));
+  const beginNamedExpedition = () => {
+    const result = session.createSlot(window.localStorage, newExpeditionName);
+    archiveAction(result, result.ok);
+    if (result.ok) setNewExpeditionName("");
+  };
+  const loadNamedExpedition = (slotId: string) => {
+    const result = session.loadSlot(window.localStorage, slotId);
+    archiveAction(result, result.ok);
+  };
+  const adoptLegacy = (key: string) => {
+    const result = session.importLegacy(window.localStorage, key, legacyImportName);
+    archiveAction(result, result.ok);
   };
   const commitPreferences = (next: GamePreferences) => {
     const normalized = normalizeGamePreferences(next);
