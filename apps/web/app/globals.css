@@ -2034,3 +2034,7 @@ kbd {
   50%{transform:translate(-9px,-5px) scale(1.025);opacity:.13}
 }
 .menu-smoke{transform-box:fill-box;transform-origin:center;animation:menu-smoke-drift 24s ease-in-out infinite}
+
+.menu-operator-title{margin:-6px 0 8px;color:#d1aa70;font:9px var(--menu-mono);letter-spacing:1.05px}
+.menu-primary:disabled,.menu-secondary:disabled,.menu-danger:disabled{opacity:.42;filter:grayscale(.45);cursor:not-allowed}
+.menu-back:focus-visible,.menu-primary:focus-visible,.menu-secondary:focus-visible,.menu-danger:focus-visible,.menu-field input:focus-visible,.menu-file-field input:focus-visible,.menu-toggle input:focus-visible,.menu-select select:focus-visible{outline:2px solid #e4bc7b;outline-offset:3px}
