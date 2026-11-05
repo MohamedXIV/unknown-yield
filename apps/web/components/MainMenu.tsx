@@ -152,6 +152,7 @@ export default function MainMenu(props: Props) {
               <p>OFFICIAL INDUSTRIAL OPERATIONS</p>
             </div>
           </header>}
+        >
 
           <div className="main-menu-rule"><span>OFFICIAL SITE OPERATIONS</span><i /></div>
 
