@@ -294,6 +294,21 @@
   padding: 7px;
   filter: drop-shadow(0 8px 12px #000b);
 }
+/* On real desktop, ten cartridges must remain a SINGLE mounted switch bank.
+   With flex-wrap:auto-width the ninth and tenth keys moved to a second row,
+   leaving a large empty trough (caught in actual Chromium screenshots).
+   A contextual side board or a smaller viewport may require wrapping. */
+@media (min-width: 901px) {
+  .game.game .build-bar {
+    width: max-content;
+    max-width: calc(100vw - 36px);
+    flex-wrap: nowrap;
+  }
+  .game.game:has(.context-panel.uy-panel-wrapper) .build-bar {
+    max-width: calc(100vw - 434px);
+    flex-wrap: wrap;
+  }
+}
 .game.game .build-submenu button {
   min-height: 48px;
 }
