@@ -20,6 +20,7 @@ import type {
   MachineStatus,
 } from "@site/sim-core";
 import { Session } from "../game/session";
+import type { ArchiveListing } from "../game/save-archive";
 import {
   BUILD_PALETTE,
   DEFAULT_MODE,
@@ -60,6 +61,7 @@ import {
   type GamePreferences,
 } from "../game/preferences";
 import GameHost from "./GameHost";
+import ExpeditionArchive from "./ExpeditionArchive";
 import { sampleBuildTool } from "../game/tool-sampling";
 import { previewDismantleArea, sameDismantleAreaReview } from "../game/dismantle-review";
 import { classifyDismantleEntity, dismantleEntityGeometry } from "../game/dismantle-selection";
@@ -180,7 +182,6 @@ function GameClientInner() {
     [paused, setPaused] = useState(false),
     [guide, setGuide] = useState(true),
     [homeToken, setHomeToken] = useState(0),
-    [confirmReset, setConfirmReset] = useState(false),
     [openToolGroup, setOpenToolGroup] = useState<ToolGroupId | null>(null),
     [preferences, setPreferences] = useState<GamePreferences>(
       DEFAULT_GAME_PREFERENCES,
@@ -188,6 +189,8 @@ function GameClientInner() {
     [activePack, setActivePack] = useState<RuntimePack | null>(null),
     [pendingPack, setPendingPack] = useState<RuntimePack | null>(null),
     [packReady, setPackReady] = useState(false),
+    [archiveView, setArchiveView] = useState<ArchiveListing | null>(null),
+    [archiveError, setArchiveError] = useState<string | null>(null),
     [keyboardAreaOpen, setKeyboardAreaOpen] = useState(false),
     [keyboardBounds, setKeyboardBounds] = useState({ fromX: 0, fromY: 0, toX: 0, toY: 0 });
   const cancelGroupHold = useRef<(() => void) | null>(null);
@@ -433,7 +436,6 @@ function GameClientInner() {
       setPendingPack(null);
       setMode(DEFAULT_MODE);
       setPanel(null);
-      setConfirmReset(false);
       setGuide(true);
       setHomeToken((n) => n + 1);
       try {
@@ -446,21 +448,38 @@ function GameClientInner() {
       setNotice({ ok: false, message: "Could not start expedition: " + String(error) });
     }
   };
-  const persist = (load: boolean) => {
+
+  const refreshArchives = () => {
     try {
-      const result = load
-        ? session.restore(localStorage)
-        : session.save(localStorage);
-      setNotice(result);
-      if (load && result.ok) {
-        setMode(DEFAULT_MODE);
-        setPanel(null);
+      setArchiveView(session.list(window.localStorage));
+      setArchiveError(null);
+    } catch (error) {
+      setArchiveView(null);
+      setArchiveError(String(error));
+    }
+  };
+  useEffect(() => {
+    if (panel !== "menu") return;
+    try {
+      setArchiveView(session.list(window.localStorage));
+      setArchiveError(null);
+    } catch (error) {
+      setArchiveView(null);
+      setArchiveError(String(error));
+    }
+  }, [panel, session, activePack]);
+  const archiveAction = (result: CommandResult, switched = false, newWorld = false) => {
+    setNotice(result);
+    refreshArchives();
+    if (result.ok && switched) {
+      setMode(DEFAULT_MODE);
+      setPanel(null);
+      // Resuming a saved site must not revive a previously dismissed brief
+      // or unexpectedly reposition the player's camera.
+      if (newWorld) {
+        setGuide(true);
+        setHomeToken((n) => n + 1);
       }
-    } catch {
-      setNotice({
-        ok: false,
-        message: "Storage is unavailable. Your running site is unchanged.",
-      });
     }
   };
   const commitPreferences = (next: GamePreferences) => {
@@ -3402,17 +3421,47 @@ function GameClientInner() {
                   <Glyph type="settings" size={17} />
                   Game settings &amp; controls
                 </button>
-                <button className="primary" onClick={() => persist(false)}>
-                  <Glyph type="save" size={17} />
-                  Save world
-                </button>
-                <button className="secondary" onClick={() => persist(true)}>
-                  Load saved world
-                </button>
-                <p className="hint">
-                  Saved locally on this device. Worlds pause while the tab is
-                  hidden. Old fixed-site saves are incompatible.
-                </p>
+                <ExpeditionArchive
+                  listing={archiveView}
+                  error={archiveError}
+                  activeSlotId={session.activeSlotId()}
+                  activeFingerprint={session.activePackFingerprint()}
+                  onRecover={() => {
+                    const result = session.recoverArchive(window.localStorage);
+                    archiveAction(result);
+                    return result;
+                  }}
+                  onSave={() => {
+                    const result = session.save(window.localStorage);
+                    archiveAction(result);
+                    return result;
+                  }}
+                  onCreate={(name) => {
+                    const result = session.createSlot(window.localStorage, name);
+                    archiveAction(result, result.ok, true);
+                    return result;
+                  }}
+                  onLoad={(id) => {
+                    const result = session.loadSlot(window.localStorage, id);
+                    archiveAction(result, result.ok);
+                    return result;
+                  }}
+                  onRename={(id, name) => {
+                    const result = session.renameSlot(window.localStorage, id, name);
+                    archiveAction(result);
+                    return result;
+                  }}
+                  onDelete={(id) => {
+                    const result = session.deleteSlot(window.localStorage, id);
+                    archiveAction(result);
+                    return result;
+                  }}
+                  onImportLegacy={(key, name) => {
+                    const result = session.importLegacy(window.localStorage, key, name);
+                    archiveAction(result, result.ok);
+                    return result;
+                  }}
+                />
                 <section className="configuration-section">
                   <h3>Offline content packs</h3>
                   <p className="hint">Import a validated Studio JSON bundle into this already-built client. Selecting it always starts a NEW expedition; existing saves stay separate.</p>
@@ -3465,40 +3514,6 @@ function GameClientInner() {
                   <dt>Dismantle</dt>
                   <dd>X</dd>
                 </dl>
-                {confirmReset ? (
-                  <div className="reset-confirm">
-                    <p>
-                      Start a new expedition? Unsaved progress will be lost;
-                      your saved world stays available.
-                    </p>
-                    <button
-                      className="danger"
-                      onClick={() => {
-                        session.reset();
-                        setMode(DEFAULT_MODE);
-                        setPanel(null);
-                        setConfirmReset(false);
-                        setGuide(true);
-                        setHomeToken((n) => n + 1);
-                      }}
-                    >
-                      Start new expedition
-                    </button>
-                    <button
-                      className="secondary"
-                      onClick={() => setConfirmReset(false)}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    className="danger"
-                    onClick={() => setConfirmReset(true)}
-                  >
-                    New expedition
-                  </button>
-                )}
               </>
             )}
           </div>

@@ -60,30 +60,35 @@ describe("offline runtime content pack identity and save isolation", () => {
     const storage = {
       getItem: (k: string) => records.get(k) ?? null,
       setItem: (k: string, v: string) => { records.set(k, v); },
+      removeItem: (k: string) => { records.delete(k); },
     };
     saveRuntimePack(storage, pack);
     expect(records.has(RUNTIME_PACK_STORAGE_KEY)).toBe(true);
     const fromStorage = await loadRuntimePack(storage);
     expect(fromStorage).toEqual(pack);
 
+    expect(session.createSlot(storage, "Custom world").ok).toBe(true);
+    const customSlot = session.activeSlotId()!;
     expect(session.save(storage).ok).toBe(true);
-    const saveKeys = [...records.keys()].filter((k) => k.startsWith("industrial-site-save"));
-    expect(saveKeys).toEqual(["industrial-site-save-v15-pack-" + pack.fingerprint]);
+    const saveKeys = [...records.keys()].filter((k) => k.startsWith("unknown-yield-expedition-payload-v1:"));
+    expect(saveKeys.length).toBeGreaterThan(0);
     const restored = new Session();
     restored.usePack(fromStorage!);
-    expect(restored.restore(storage).ok).toBe(true);
+    expect(restored.loadSlot(storage, customSlot).ok).toBe(true);
     expect(restored.snapshot()).toEqual(session.snapshot());
     expect(restored.snapshot().definitions.some((d) => d.id === "polisher")).toBe(true);
 
     // Default fixture save compatibility remains unchanged and isolated.
     const original = new Session();
-    expect(original.restore(storage).ok).toBe(false);
+    expect(original.loadSlot(storage, customSlot).ok).toBe(false);
+    expect(original.createSlot(storage, "Built-in world").ok).toBe(true);
+    const builtInSlot = original.activeSlotId()!;
     expect(original.save(storage).ok).toBe(true);
-    expect(records.has("industrial-site-save-v15")).toBe(true);
+    expect(records.has("industrial-site-save-v15")).toBe(false);
     session.usePack(null);
     expect(session.activePackFingerprint()).toBe(null);
     expect(session.snapshot().definitions.some((d) => d.id === "polisher")).toBe(false);
-    expect(session.restore(storage).ok).toBe(true);
+    expect(session.loadSlot(storage, builtInSlot).ok).toBe(true);
   });
 
   it("isolates saves even if the content version is reused but the locale changes", async () => {
@@ -94,18 +99,24 @@ describe("offline runtime content pack identity and save isolation", () => {
     expect(nextPack.bundle.content.version).toBe(pack.bundle.content.version);
     expect(nextPack.fingerprint).not.toBe(pack.fingerprint);
     const data = new Map<string, string>();
-    const storage = { setItem: (k: string, v: string) => { data.set(k, v); }, getItem: (k: string) => data.get(k) ?? null };
+    const storage = {
+      setItem: (k: string, v: string) => { data.set(k, v); },
+      getItem: (k: string) => data.get(k) ?? null,
+      removeItem: (k: string) => { data.delete(k); },
+    };
     const s = new Session();
     s.usePack(pack);
-    s.save(storage);
+    expect(s.createSlot(storage, "First pack").ok).toBe(true);
+    expect(s.save(storage).ok).toBe(true);
+    const slotId = s.activeSlotId()!;
     const different = new Session();
     different.usePack(nextPack);
     const unchanged = different.snapshot();
-    expect(different.restore(storage).ok).toBe(false);
+    expect(different.loadSlot(storage, slotId).ok).toBe(false);
     expect(different.snapshot()).toEqual(unchanged);
     const key = "industrial-site-save-v15-pack-" + nextPack.fingerprint;
     data.set(key, JSON.stringify({ fingerprint: pack.fingerprint, save: s.snapshot() }));
-    expect(different.restore(storage).ok).toBe(false);
+    expect(different.importLegacy(storage, key, "Wrong identity").ok).toBe(false);
     expect(different.snapshot()).toEqual(unchanged);
   });
 
