@@ -234,6 +234,7 @@ export default function MainMenu(props: Props) {
                       maxLength={80}
                       value={newName}
                       placeholder="Name this expedition"
+                      aria-label="Expedition designation"
                       onChange={(event) => setNewName(event.currentTarget.value)}
                       onKeyDown={(event) => {
                         if (event.key === "Enter" && newName.trim())
