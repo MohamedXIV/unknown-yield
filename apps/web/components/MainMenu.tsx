@@ -444,12 +444,12 @@ export default function MainMenu(props: Props) {
                     <h3>Display &amp; sound</h3>
                     <label className="menu-toggle">
                       <span>Show performance counter<small>Display live browser frame rate in the field.</small></span>
-                      <input type="checkbox" checked={props.preferences.interface.showFps}
+                      <input type="checkbox" aria-label="Show performance counter" checked={props.preferences.interface.showFps}
                         onChange={(event) => updateInterface({ showFps: event.currentTarget.checked })} />
                     </label>
                     <label className="menu-toggle">
                       <span>Sound effects<small>Allow industrial machine and interface sounds.</small></span>
-                      <input type="checkbox" checked={props.preferences.interface.soundEffects}
+                      <input type="checkbox" aria-label="Sound effects" checked={props.preferences.interface.soundEffects}
                         onChange={(event) => updateInterface({ soundEffects: event.currentTarget.checked })} />
                     </label>
                   </section>
@@ -457,17 +457,17 @@ export default function MainMenu(props: Props) {
                     <h3>Camera &amp; input</h3>
                     <label className="menu-toggle">
                       <span>Smooth camera movement<small>Use eased panning and camera transitions.</small></span>
-                      <input type="checkbox" checked={props.preferences.camera.smooth}
+                      <input type="checkbox" aria-label="Smooth camera movement" checked={props.preferences.camera.smooth}
                         onChange={(event) => updateCamera({ smooth: event.currentTarget.checked })} />
                     </label>
                     <label className="menu-toggle">
                       <span>Invert mouse-wheel zoom</span>
-                      <input type="checkbox" checked={props.preferences.controls.invertWheelZoom}
+                      <input type="checkbox" aria-label="Invert mouse-wheel zoom" checked={props.preferences.controls.invertWheelZoom}
                         onChange={(event) => updateControls({ invertWheelZoom: event.currentTarget.checked })} />
                     </label>
                     <label className="menu-range">
                       <span>Pan speed</span>
-                      <input type="range" min={CAMERA_TUNING_BOUNDS.panSpeed.min}
+                      <input type="range" aria-label="Pan speed" min={CAMERA_TUNING_BOUNDS.panSpeed.min}
                         max={CAMERA_TUNING_BOUNDS.panSpeed.max} step={CAMERA_TUNING_BOUNDS.panSpeed.step}
                         value={props.preferences.camera.panSpeed}
                         onChange={(event) => updateCamera({ panSpeed: Number(event.currentTarget.value) })} />
@@ -475,7 +475,7 @@ export default function MainMenu(props: Props) {
                     </label>
                     <label className="menu-range">
                       <span>Zoom sensitivity</span>
-                      <input type="range" min={CAMERA_TUNING_BOUNDS.zoomSensitivity.min}
+                      <input type="range" aria-label="Zoom sensitivity" min={CAMERA_TUNING_BOUNDS.zoomSensitivity.min}
                         max={CAMERA_TUNING_BOUNDS.zoomSensitivity.max} step={CAMERA_TUNING_BOUNDS.zoomSensitivity.step}
                         value={props.preferences.camera.zoomSensitivity}
                         onChange={(event) => updateCamera({ zoomSensitivity: Number(event.currentTarget.value) })} />
@@ -486,7 +486,7 @@ export default function MainMenu(props: Props) {
                     <h3>Accessibility</h3>
                     <label className="menu-select">
                       <span>Reduced motion</span>
-                      <select value={props.preferences.accessibility.reducedMotion}
+                      <select aria-label="Reduced motion" value={props.preferences.accessibility.reducedMotion}
                         onChange={(event) => updateAccessibility({ reducedMotion: event.currentTarget.value as GamePreferences["accessibility"]["reducedMotion"] })}>
                         <option value="system">Follow system</option>
                         <option value="on">Reduce motion</option>
