@@ -11,6 +11,7 @@ import type { Save } from "@site/sim-core";
  */
 export const ARCHIVE_INDEX_KEY = "unknown-yield-expeditions-v1";
 export const ARCHIVE_INDEX_BACKUP_KEY = "unknown-yield-expeditions-index-backup-v1";
+export const ARCHIVE_DAMAGED_INDEX_KEY = "unknown-yield-expeditions-damaged-index-v1";
 const PAYLOAD_PREFIX = "unknown-yield-expedition-payload-v1:";
 const LEGACY_PREFIX = "industrial-site-save-v";
 const INDEX_VERSION = 1;
@@ -137,6 +138,41 @@ function writePayloadThenIndex(
     throw error;
   }
 }
+/**
+ * Explicit repair only. Never silently prefer an older backup over a damaged
+ * primary index: doing so can hide newer expeditions. Preserve the damaged
+ * bytes first, then restore the last valid index if its payloads still exist.
+ */
+export function recoverArchiveIndex(storage: ArchiveStorage): number {
+  const damaged = storage.getItem(ARCHIVE_INDEX_KEY);
+  if (damaged === null) throw new Error("No archive index needs recovery.");
+  try {
+    parseIndex(damaged);
+  } catch {
+    const backupRaw = storage.getItem(ARCHIVE_INDEX_BACKUP_KEY);
+    if (!backupRaw) throw new Error("No recoverable index backup is available.");
+    const backup = parseIndex(backupRaw);
+    for (const slot of backup.slots) {
+      const available = [slot.current, slot.previous].some((key) => {
+        if (!key) return false;
+        try {
+          const raw = storage.getItem(key);
+          if (!raw) return false;
+          const entry = JSON.parse(raw) as Partial<SlotEnvelope>;
+          return entry?.version === INDEX_VERSION && entry.slotId === slot.id &&
+            entry.fingerprint === slot.fingerprint && !!entry.save;
+        } catch { return false; }
+      });
+      if (!available)
+        throw new Error("Index backup refers to missing expedition data; repair refused.");
+    }
+    storage.setItem(ARCHIVE_DAMAGED_INDEX_KEY, damaged);
+    storage.setItem(ARCHIVE_INDEX_KEY, backupRaw);
+    return backup.slots.length;
+  }
+  throw new Error("Archive index is valid; recovery is unnecessary.");
+}
+
 export function listExpeditions(storage: ArchiveStorage, fingerprint: string | null): ArchiveListing {
   const { index } = readIndex(storage);
   const keys = fingerprint
