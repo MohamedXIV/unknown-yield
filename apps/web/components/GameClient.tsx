@@ -4053,6 +4053,14 @@ function GameClientInner() {
               }
             }}
           >
+            <IndustrialPanelFrame
+              kind="inspect"
+              className="uy-dismantle-board"
+              bodyClassName="uy-dismantle-board-body"
+              title={t("ui.dismantle.review.title")}
+              subtitle="AREA REVIEW / PHYSICAL RECLAIM"
+              onClose={cancelAreaReview}
+            >
             <small>{t("ui.dismantle.review.eyebrow")}</small>
             <h2 id="dismantle-review-title">{t("ui.dismantle.review.title")}</h2>
             <p id="dismantle-review-summary">
@@ -4099,6 +4107,7 @@ function GameClientInner() {
                 {t("ui.dismantle.review.confirm")}
               </button>
             </div>
+            </IndustrialPanelFrame>
           </section>
         </div>
       )}
