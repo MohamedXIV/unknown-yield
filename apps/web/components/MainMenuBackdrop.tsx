@@ -166,7 +166,7 @@ export default function MainMenuBackdrop(props: SVGProps<SVGSVGElement>) {
         <circle cx="1450" cy="451" r="42" fill="url(#uy-menu-glow)" filter="url(#uy-menu-soft-glow)"/>
         <g fill="#ffd18b"><rect x="1044" y="370" width="19" height="7" rx="2"/><rect x="1241" y="321" width="18" height="7" rx="2"/><rect x="1442" y="445" width="16" height="7" rx="2"/></g>
       </g>
-      <g fill="#b8b4a5" opacity=".11">
+      <g className="menu-smoke" fill="#b8b4a5" opacity=".11">
         <path d="M1091 188q-42-43-15-78 25-31 8-61 52 44 19 91 22 28-12 48z"/>
         <path d="M1260 147q-30-30-8-57 21-23 7-45 39 30 16 65 16 19-9 37z"/>
       </g>
