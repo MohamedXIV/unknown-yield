@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <!-- Repeating industrial enamel texture: purely decorative, no fictional emblem. -->
+  <rect width="128" height="128" fill="#172225"/>
+  <path d="M0 0H128M0 127H128" stroke="#bcab80" stroke-opacity=".10"/>
+  <path d="M0 7H128M0 113H128" stroke="#000" stroke-opacity=".30"/>
+  <path d="M0 19H128M0 53H128M0 91H128" stroke="#e5d9bb" stroke-opacity=".023"/>
+  <path d="M0 34H128M0 71H128M0 111H128" stroke="#000" stroke-opacity=".08"/>
+  <g fill="#798483" fill-opacity=".30" stroke="#0a1214" stroke-width="1.5">
+    <circle cx="9" cy="9" r="3.3"/><circle cx="119" cy="9" r="3.3"/>
+    <circle cx="9" cy="119" r="3.3"/><circle cx="119" cy="119" r="3.3"/>
+  </g>
+  <g stroke="#c8c1aa" stroke-opacity=".4" stroke-width=".9">
+    <path d="M7 9H11M117 9H121M7 119H11M117 119H121"/>
+  </g>
+</svg>
