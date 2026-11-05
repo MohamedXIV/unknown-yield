@@ -9,6 +9,7 @@ import {
 } from "../game/preferences";
 import type { RuntimePack } from "../game/runtime-content";
 import MainMenuBackdrop from "./MainMenuBackdrop";
+import IndustrialPanelFrame from "./IndustrialPanelFrame";
 
 type MenuView = "home" | "new" | "archives" | "content" | "settings" | "credits";
 
@@ -68,7 +69,7 @@ function ActionButton({
 
 export default function MainMenu(props: Props) {
   const [view, setView] = useState<MenuView>("home");
-  const plaqueRef = useRef<HTMLElement>(null);
+  const plaqueRef = useRef<HTMLDivElement>(null);
   const mountedRef = useRef(false);
   useEffect(() => {
     if (!mountedRef.current) {
@@ -130,10 +131,13 @@ export default function MainMenu(props: Props) {
         <MainMenuBackdrop />
       </div>
       <div className="main-menu-atmosphere" aria-hidden="true" />
-      <div className="main-menu-layout">
-        <section ref={plaqueRef} className="main-menu-plaque" aria-label="Unknown Yield main menu">
-          <div className="main-menu-retainer" aria-hidden="true" />
-          <header className="main-menu-brand">
+      <div className="main-menu-layout" ref={plaqueRef}>
+        <IndustrialPanelFrame
+          kind="menu"
+          className="main-menu-plaque"
+          ariaLabel="Unknown Yield main menu"
+          bodyClassName="menu-board-body"
+          header={<header className="main-menu-brand">
             <div className="directorate-seal" aria-hidden="true">
               <svg viewBox="0 0 48 48">
                 <circle cx="24" cy="24" r="19" />
@@ -147,7 +151,7 @@ export default function MainMenu(props: Props) {
               <h1>UNKNOWN <span>YIELD</span></h1>
               <p>OFFICIAL INDUSTRIAL OPERATIONS</p>
             </div>
-          </header>
+          </header>}
 
           <div className="main-menu-rule"><span>OFFICIAL SITE OPERATIONS</span><i /></div>
 
@@ -557,7 +561,7 @@ export default function MainMenu(props: Props) {
             <span>LOCAL ARCHIVE · THIS DEVICE</span>
             <span>{activePackLabel}</span>
           </footer>
-        </section>
+        </IndustrialPanelFrame>
         <aside className="main-menu-scene-caption" aria-label="Site identity">
           <span className="scene-caption-rule" />
           <small>EXTRAPLANETARY SITE · FIELD OPERATIONS</small>
