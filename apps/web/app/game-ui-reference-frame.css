@@ -623,6 +623,24 @@
   color: #d5c0a5;
 }
 
+/* While a physical board is mounted on desktop, reserve its footprint.
+   Shift the live build tray into the remaining world area so it cannot
+   obscure the lower steel/paper edge. Keep all commands and touch targets. */
+@media (min-width: 651px) {
+  .game.game:has(.context-panel.uy-panel-wrapper) .build-zone {
+    left: calc((100vw - 410px) / 2);
+    max-width: calc(100vw - 430px);
+  }
+  .game.game:has(.context-panel.uy-panel-wrapper) .world-zoom-controls {
+    right: calc(20px + 388px + 15px);
+  }
+}
+@media (min-width: 651px) and (max-width: 900px) {
+  .game.game:has(.context-panel.uy-panel-wrapper) .world-zoom-controls {
+    right: calc(12px + 388px + 15px);
+  }
+}
+
 /* Confirmation, too, is the SAME four physical DOM layers. The modal
    itself remains the focus/keyboard owner; its child board owns the hardware. */
 .game.game .menu-return-dialog {
