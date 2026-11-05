@@ -2028,3 +2028,9 @@ kbd {
 .menu-return-dialog p{color:#b9c0b6;font-size:11px;line-height:1.6}
 .menu-return-actions{display:flex;flex-direction:column;gap:7px;margin-top:18px}
 .menu-return-actions button{width:100%;min-height:40px}
+
+@keyframes menu-smoke-drift{
+  0%,100%{transform:translate(0,3px) scale(.99);opacity:.08}
+  50%{transform:translate(-9px,-5px) scale(1.025);opacity:.13}
+}
+.menu-smoke{transform-box:fill-box;transform-origin:center;animation:menu-smoke-drift 24s ease-in-out infinite}
