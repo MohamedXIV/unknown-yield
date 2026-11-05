@@ -1200,6 +1200,7 @@ browserIt(
         housings: number;
         screws: number;
         insetFaces: number;
+        fullWidthBezel: boolean;
         commandKeyDepth: string;
         pendingBook: boolean;
         currentPlates: string;
@@ -1216,6 +1217,9 @@ browserIt(
             (element?.querySelectorAll(":scope > .uy-hud-fasteners > span").length ?? 0), 0),
           insetFaces: modules.filter((element) =>
             getComputedStyle(element, "::after").backgroundImage.includes("linear-gradient")).length,
+          fullWidthBezel: modules.every((element) =>
+            parseFloat(getComputedStyle(element, "::after").width) >=
+              element.getBoundingClientRect().width - 14),
           commandKeyDepth: getComputedStyle(key).borderBottomWidth,
           pendingBook: document.querySelector('button[aria-label="Knowledge notebook"]')
             .getAttribute("aria-pressed") === "false",
@@ -1227,6 +1231,7 @@ browserIt(
       expect(compactHardware.housings).toBe(3);
       expect(compactHardware.screws).toBe(6);
       expect(compactHardware.insetFaces).toBe(3);
+      expect(compactHardware.fullWidthBezel).toBe(true);
       expect(compactHardware.commandKeyDepth).toBe("4px");
       expect(compactHardware.pendingBook).toBe(true);
       expect(compactHardware.currentPlates).toBe("600");
