@@ -873,29 +873,6 @@ browserIt(
           return true;
         })()`);
       };
-      const startNewExpeditionFromMenu = async (name: string) => {
-        await waitForExpression(`document.querySelector(".main-menu") !== null`);
-        await waitForExpression(`document.querySelector(".menu-home .menu-action") !== null`);
-        await clickMainMenuAction("Begin Assignment");
-        await waitForExpression(`document.querySelector('input[aria-label="Expedition designation"]') !== null`);
-        await evaluate<boolean>(`(() => {
-          const input = document.querySelector('input[aria-label="Expedition designation"]');
-          const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set;
-          setter.call(input, ${JSON.stringify(name)});
-          input.dispatchEvent(new Event("input", { bubbles: true }));
-          input.dispatchEvent(new Event("change", { bubbles: true }));
-          return true;
-        })()`);
-        await waitForExpression(`[...document.querySelectorAll("button")].some((button) =>
-          button.textContent?.includes("Create Expedition") && !button.disabled)`);
-        await evaluate<boolean>(`(() => {
-          [...document.querySelectorAll("button")].find((button) =>
-            button.textContent?.includes("Create Expedition"))?.click();
-          return true;
-        })()`);
-        await waitForExpression(`document.querySelector("canvas") !== null &&
-          document.querySelector('nav[aria-label="Build tools"]') !== null`);
-      };
       const resumeMostRecentExpedition = async () => {
         await waitForExpression(`document.querySelector(".main-menu") !== null`);
         await waitForExpression(`document.querySelector(".menu-home .menu-action") !== null`);
