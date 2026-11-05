@@ -1130,6 +1130,44 @@ browserIt(
         return true;
       })()`);
 
+      // Leaving a live site is never a silent discard: stay, save-and-return,
+      // then resume the exact valid local expedition through the boot menu.
+      await evaluate<boolean>(`(() => {
+        document.querySelector('button[aria-label="Game menu"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(`document.body.textContent?.includes("Return to Main Menu") === true`);
+      await evaluate<boolean>(`(() => {
+        [...document.querySelectorAll("button")].find((button) =>
+          button.textContent?.includes("Return to Main Menu"))?.click();
+        return true;
+      })()`);
+      await waitForExpression(`document.body.textContent?.includes("Return to the Main Menu?") === true`);
+      await evaluate<boolean>(`(() => {
+        [...document.querySelectorAll("button")].find((button) =>
+          button.textContent?.includes("Stay in Expedition"))?.click();
+        return true;
+      })()`);
+      await waitForExpression(`document.querySelector(".menu-return-dialog") === null &&
+        document.querySelector("canvas") !== null`);
+      await evaluate<boolean>(`(() => {
+        document.querySelector('button[aria-label="Game menu"]')?.click();
+        [...document.querySelectorAll("button")].find((button) =>
+          button.textContent?.includes("Return to Main Menu"))?.click();
+        return true;
+      })()`);
+      await waitForExpression(`document.querySelector(".menu-return-dialog") !== null`);
+      await evaluate<boolean>(`(() => {
+        [...document.querySelectorAll("button")].find((button) =>
+          button.textContent?.includes("Save & Return"))?.click();
+        return true;
+      })()`);
+      await waitForExpression(`document.querySelector(".main-menu") !== null &&
+        document.querySelector("canvas") === null`);
+      await resumeMostRecentExpedition();
+      await waitForExpression(`document.querySelector("canvas") !== null &&
+        document.querySelector('nav[aria-label="Build tools"]') !== null`);
+
       await pressKey("5", "Digit5", 53);
       await waitForExpression(
         `document.querySelector('[data-build-group="solid-logistics"]')
