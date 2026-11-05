@@ -113,7 +113,9 @@ export default function ExpeditionArchive(props: Props) {
                 setRenameName(slot.name);
               }}>{t("ui.archive.rename")}</button>
             )}
-            {deleteId === slot.id ? (
+            {slot.id === props.activeSlotId ? (
+              <p className="hint">Return to the Main Menu before deleting the expedition currently open.</p>
+            ) : deleteId === slot.id ? (
               <div role="group" aria-label={t("ui.archive.confirm-delete")}>
                 <p>{t("ui.archive.delete-warning")}</p>
                 <button className="danger" onClick={() => {
