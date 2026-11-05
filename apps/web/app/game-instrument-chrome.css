@@ -346,6 +346,16 @@
   color: #d7d3c1;
   font: 500 12px/1.43 "Barlow Condensed", sans-serif;
 }
+/* The recovery warning is an actual safety signal, not another routine
+   Directorate directive. Preserve its urgency after the common reskin. */
+.game.game .field-guide.beat-recovery {
+  border-color: #be7460;
+  border-left: 4px solid #dc8062;
+  background:
+    repeating-linear-gradient(90deg, #efb28b0b 0 1px, transparent 1px 19px),
+    linear-gradient(155deg, #4b2c2b, #251d20 88%);
+}
+.game.game .field-guide.beat-recovery > small { color: #ffba99; }
 .game.game .toast {
   border: 1px solid #988068;
   border-left: 4px solid #c39560;
