@@ -40,23 +40,40 @@ it("shares a single snapshot projection across listeners until the world changes
   expect(readings).toHaveLength(subscribersBefore);
 });
 
-it("invalidates the cached projection only after a successful restore", () => {
+import { Simulation } from "@site/sim-core";
+import { fixture } from "@site/content";
+import type { ArchiveStorage } from "../game/save-archive";
+
+function archiveStorage() {
+  const records = new Map<string, string>();
+  const storage: ArchiveStorage = {
+    getItem: (key) => records.get(key) ?? null,
+    setItem: (key, value) => { records.set(key, value); },
+    removeItem: (key) => { records.delete(key); },
+  };
+  return { records, storage };
+}
+
+it("invalidates the cached projection only after a successful slot load", () => {
+  const { records, storage } = archiveStorage();
   const current = new Session();
+  expect(current.createSlot(storage, "Original").ok).toBe(true);
   current.advance(1000, false);
   current.advance(1100, false);
-  const records = new Map<string, string>();
-  expect(current.save({ setItem: (key, value) => records.set(key, value) }).ok).toBe(true);
+  expect(current.save(storage).ok).toBe(true);
+  const id = current.activeSlotId()!;
 
   const restored = new Session();
   const stale = restored.snapshot();
-  expect(restored.restore({
-    getItem: (key) => records.get(key) ?? null,
-  }).ok).toBe(true);
+  expect(restored.loadSlot(storage, id).ok).toBe(true);
   expect(restored.snapshot()).not.toBe(stale);
   expect(restored.snapshot().tick).toBe(1);
   const loaded = restored.snapshot();
 
-  expect(restored.restore({ getItem: () => "{bad-json" }).ok).toBe(false);
+  const slot = restored.list(storage).slots.find((entry) => entry.id === id)!;
+  records.set(slot.current, "{bad-json");
+  records.set(slot.previous!, "{also-bad");
+  expect(restored.loadSlot(storage, id).ok).toBe(false);
   expect(restored.snapshot()).toBe(loaded);
 });
 
@@ -71,93 +88,72 @@ it("does not catch up hidden time and bounds a stalled frame", () => {
   s.advance(101000, false);
   expect(s.snapshot().tick).toBe(3);
 });
-it("reports storage errors and leaves the game usable", () => {
+it("reports storage errors without damaging the running world", () => {
   const s = new Session();
-  const storage = {
-    setItem() {
-      throw new Error("quota");
-    },
-    getItem() {
-      throw new Error("blocked");
-    },
+  const { storage } = archiveStorage();
+  expect(s.createSlot(storage, "Current").ok).toBe(true);
+  const denied: ArchiveStorage = {
+    ...storage,
+    getItem() { throw new Error("blocked"); },
+    setItem() { throw new Error("quota"); },
   };
-  expect(s.save(storage).ok).toBe(false);
-  expect(s.restore(storage).ok).toBe(false);
-  expect(
-    s.command({
-      type: "placeMachine",
-      definitionId: "extractor",
-      x: 15,
-      y: 25,
-      direction: 0,
-    }).ok,
-  ).toBe(true);
+  expect(s.save(denied).ok).toBe(false);
+  expect(s.restore(denied).ok).toBe(false);
+  expect(s.command({
+    type: "placeMachine", definitionId: "extractor",
+    x: 15, y: 25, direction: 0,
+  }).ok).toBe(true);
 });
-it("refuses malformed saved JSON without replacing live state", () => {
+
+it("refuses malformed archives without replacing the live world", () => {
   const s = new Session();
+  const { storage, records } = archiveStorage();
+  expect(s.createSlot(storage, "Current").ok).toBe(true);
   const before = s.snapshot();
-  expect(s.restore({ getItem: () => "{broken" }).ok).toBe(false);
-  expect(s.snapshot()).toEqual(before);
+  records.set("unknown-yield-expeditions-v1", "{broken");
+  expect(s.restore(storage).ok).toBe(false);
+  expect(s.snapshot()).toBe(before);
 });
 
-it("writes the current save key and reads the previous compatible key", () => {
+it("stores new snapshots under independent keys instead of overwriting v15", () => {
   const current = new Session();
-  const records = new Map<string, string>();
-  expect(
-    current.save({
-      setItem(key, value) {
-        records.set(key, value);
-      },
-    }).ok,
-  ).toBe(true);
-  expect(records.has("industrial-site-save-v15")).toBe(true);
-
+  const { records, storage } = archiveStorage();
+  expect(current.createSlot(storage, "One").ok).toBe(true);
+  const first = current.activeSlotId()!;
+  expect(current.createSlot(storage, "Two").ok).toBe(true);
+  const second = current.activeSlotId()!;
+  expect(first).not.toBe(second);
+  expect(records.has("industrial-site-save-v15")).toBe(false);
+  expect(current.list(storage).slots).toHaveLength(2);
   const restored = new Session();
-  const previous = records.get("industrial-site-save-v15")!;
-  expect(
-    restored.restore({
-      getItem(key) {
-        return key === "industrial-site-save-v14" ? previous : null;
-      },
-    }).ok,
-  ).toBe(true);
+  expect(restored.loadSlot(storage, first).ok).toBe(true);
+  expect(restored.loadSlot(storage, second).ok).toBe(true);
 });
 
-it("preserves older content records and rejects them without replacing the expedition", () => {
-  const s = new Session(),
-    records = new Map<string, string>();
-  s.save({ setItem: (key, value) => records.set(key, value) });
-  const old = JSON.parse(records.get("industrial-site-save-v15")!);
+it("does not overwrite historical v7 content or import an incompatible record", () => {
+  const { records, storage } = archiveStorage();
+  const s = new Session();
+  expect(s.createSlot(storage, "Current").ok).toBe(true);
+  const old = new Simulation(fixture).serialize();
   old.contentVersion = "world-01-v6";
-  records.set("industrial-site-save-v7", JSON.stringify(old));
-  records.delete("industrial-site-save-v15");
+  const raw = JSON.stringify(old);
+  records.set("industrial-site-save-v7", raw);
   const before = s.snapshot();
-  expect(s.restore({ getItem: (key) => records.get(key) ?? null }).ok).toBe(
-    false,
-  );
-  expect(s.snapshot()).toEqual(before);
-  expect(s.save({ setItem: (key, value) => records.set(key, value) }).ok).toBe(
-    true,
-  );
-  expect(
-    JSON.parse(records.get("industrial-site-save-v7")!).contentVersion,
-  ).toBe("world-01-v6");
+  expect(s.importLegacy(storage, "industrial-site-save-v7", "Old").ok).toBe(false);
+  expect(s.snapshot()).toBe(before);
+  expect(s.save(storage).ok).toBe(true);
+  expect(records.get("industrial-site-save-v7")).toBe(raw);
 });
 
-it("reads v11 fallback and atomically rejects schema 17 without altering its record", () => {
-  const source = new Session(),
-    records = new Map<string, string>();
-  source.save({ setItem: (k, v) => records.set(k, v) });
-  const old = JSON.parse(records.get("industrial-site-save-v15")!);
-  old.schemaVersion = 17;
-  const raw = JSON.stringify(old),
-    restored = new Session(),
-    before = restored.snapshot();
-  expect(
-    restored.restore({
-      getItem: (k) => (k === "industrial-site-save-v11" ? raw : null),
-    }).ok,
-  ).toBe(false);
-  expect(restored.snapshot()).toEqual(before);
-  expect(JSON.parse(raw).schemaVersion).toBe(17);
+it("detects a v11 legacy fallback and rejects future schema without modifying it", () => {
+  const { records, storage } = archiveStorage();
+  const save = new Simulation(fixture).serialize();
+  save.schemaVersion = 17;
+  const raw = JSON.stringify(save);
+  records.set("industrial-site-save-v11", raw);
+  const restored = new Session();
+  const before = restored.snapshot();
+  expect(restored.importLegacy(storage, "industrial-site-save-v11", "Future").ok).toBe(false);
+  expect(restored.snapshot()).toBe(before);
+  expect(records.get("industrial-site-save-v11")).toBe(raw);
 });
