@@ -260,6 +260,15 @@
   background: linear-gradient(#963227, #6d1f17);
   border-color: #d8b382;
 }
+.game.game .uy-panel--notebook .context-header > span:first-child {
+  white-space: nowrap;
+  font-size: 22px;
+}
+.game.game .uy-panel--notebook .context-header-stamp {
+  max-width: 78px;
+  font-size: 7.5px;
+  line-height: 1.17;
+}
 .game.game .uy-panel--terminal .context-header {
   padding-left: 61px;
 }
