@@ -1092,7 +1092,7 @@ browserIt(
         return !!content &&
           board.querySelectorAll(".uy-bolt").length === 6 &&
           getComputedStyle(shell, "::before").backgroundImage.includes("linear-gradient") &&
-          getComputedStyle(surface).backgroundColor === "rgb(19, 34, 41)";
+          getComputedStyle(surface).backgroundColor === "rgb(18, 33, 40)";
       })()`);
       const bootMenuScreenshot = await captureEvidence("main-menu-boot-desktop.png");
       console.log("UNKNOWN_YIELD_MAIN_MENU_BOOT " + JSON.stringify(bootMenuScreenshot));
