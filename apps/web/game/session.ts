@@ -8,6 +8,7 @@ import {
 } from "@site/sim-core";
 import {
   createExpedition, deleteExpedition, listExpeditions, readLegacyRecord,
+  recoverArchiveIndex,
   renameExpedition, saveExpedition, slotRevisions,
   type ArchiveStorage, type ArchiveListing,
 } from "./save-archive";
@@ -80,6 +81,18 @@ export class Session {
   }
   list(storage: ArchiveStorage): ArchiveListing {
     return listExpeditions(storage, this.activePackFingerprint());
+  }
+  recoverArchive(storage: ArchiveStorage): CommandResult {
+    try {
+      const count = recoverArchiveIndex(storage);
+      return {
+        ok: true,
+        message: "Archive index recovered from prior backup (" + count +
+          " expeditions). A damaged-index copy was preserved. Review saved slots before continuing.",
+      };
+    } catch (error) {
+      return { ok: false, message: "Archive repair refused. No existing data changed. " + String(error) };
+    }
   }
   reset() {
     this.sim = new Simulation(this.pack?.bundle.content ?? fixture);
