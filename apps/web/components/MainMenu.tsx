@@ -132,6 +132,7 @@ export default function MainMenu(props: Props) {
       <div className="main-menu-atmosphere" aria-hidden="true" />
       <div className="main-menu-layout">
         <section ref={plaqueRef} className="main-menu-plaque" aria-label="Unknown Yield main menu">
+          <div className="main-menu-retainer" aria-hidden="true" />
           <header className="main-menu-brand">
             <div className="directorate-seal" aria-hidden="true">
               <svg viewBox="0 0 48 48">
