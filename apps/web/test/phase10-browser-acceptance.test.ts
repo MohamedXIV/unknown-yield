@@ -1179,6 +1179,10 @@ browserIt(
         document.querySelector('button[aria-label="Close field brief"]')?.click();
         return true;
       })()`);
+      await waitForExpression(`typeof window.__UNKNOWN_YIELD_PROJECT_WORLD__ === "function" &&
+        window.__UNKNOWN_YIELD_PROJECT_WORLD__(23.5 * 32, 24.5 * 24) !== null`);
+      const firstTwilightShot = await captureEvidence("planet-twilight-first-site.png");
+      console.log("PLANET_TWILIGHT_FIRST_SITE " + JSON.stringify(firstTwilightShot));
 
       // Leaving a live site is never a silent discard: stay, save-and-return,
       // then resume the exact valid local expedition through the boot menu.
@@ -1768,6 +1772,8 @@ browserIt(
             .inventory,
         ).some((quantity) => quantity > 0),
       ).toBe(true);
+      const productionTwilightShot = await captureEvidence("planet-twilight-active-production.png");
+      console.log("PLANET_TWILIGHT_PRODUCTION " + JSON.stringify(productionTwilightShot));
       await call("Page.reload", { ignoreCache: true });
       await sleep(900);
       await waitForExpression(`document.querySelector(".main-menu") !== null`);
@@ -3038,6 +3044,8 @@ browserIt(
         `document.querySelector('[role="status"]')
           ?.textContent.includes("Expedition restored") === true`,
       );
+      const incidentTwilightShot = await captureEvidence("planet-twilight-real-incident.png");
+      console.log("PLANET_TWILIGHT_INCIDENT " + JSON.stringify(incidentTwilightShot));
       await evaluate(`(() => {
         document.querySelector('button[aria-label="Knowledge notebook"]')?.click();
         return true;
