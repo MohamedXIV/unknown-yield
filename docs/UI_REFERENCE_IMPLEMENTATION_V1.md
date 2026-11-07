@@ -29,6 +29,10 @@ Keep physical surfaces independent, with the paper fully surrounded by rim on ev
 - `apps/web/components/MainMenu.tsx`: Begin/Continue/Archives/Content Packs/Settings/Credits inside same manufactured shell. The panoramic game illustration is a separate art-quality question and is not solved by CSS.
 - `apps/web/test/phase10-browser-acceptance.test.ts`: must verify nested physical layers, correct right-edge orientation on desktop, paper texture native tiling, visible/functional reading controls, actual browser navigation and no leaked fictional values.
 
+### Companion compact instruments — PR #356
+
+The permanent HUD, Build Palette, contextual build forms, world zoom rail and field brief are **smaller physical siblings**, not large paper clipboards. Their engineering appearance comes from `apps/web/app/game-instrument-chrome.css`. Three top HUD modules have mounted, pointer-inert rivets and two distinguishable manufactured layers; real UI commands and read-only stock labels sit in the recessed face. The command rail retains ten real direct nav children (eight groups, Inspect and Dismantle), long-press interactions and existing keyboard/touch hit targets. Aesthetic refinements must not disrupt this count or hijack Phaser's world input. Chrome browser acceptance checks the structural hardware, command count, live stock, inset geometry and real first-site screenshots. Using `aria-pressed` on game controls reflects real panel/pause state; it does **not** create new progress or authorizations.
+
 ## Gameplay truth and design constraints
 
 Never port the sample's pretend `machines++`, `exported++`, auto-certified milestones or simulated hidden findings into game state. Existing real simulator commands, factual DOM data, company markets, save slots/content-pack validation and touch/pointer controls remain authoritative.

@@ -1143,6 +1143,7 @@ function GameClientInner() {
           <div>
             UNKNOWN YIELD<small>THE PALE REACH · SITE 01</small>
           </div>
+          <div className="uy-hud-fasteners" aria-hidden="true"><span /><span /></div>
         </div>
         <div className="resources">
           <span title="Construction stock">
@@ -1158,10 +1159,12 @@ function GameClientInner() {
             <b data-testid="fuel">{snapshot.fuel}</b>
             <small>FUEL</small>
           </span>
+          <div className="uy-hud-fasteners" aria-hidden="true"><span /><span /></div>
         </div>
         <nav className="hud-actions" aria-label="Game controls">
           <button
             aria-label="Knowledge notebook"
+            aria-pressed={panel === "knowledge"}
             title="Knowledge"
             onClick={() => {
               setOnboarding((state) => ({ ...state, knowledgeOpened: true }));
@@ -1175,6 +1178,7 @@ function GameClientInner() {
           </button>
           <button
             aria-label="Company terminal"
+            aria-pressed={panel === "terminal"}
             title="Company terminal"
             onClick={() => {
               setOnboarding((state) => ({ ...state, terminalOpened: true }));
@@ -1193,6 +1197,7 @@ function GameClientInner() {
           </button>
           <button
             aria-label={paused ? "Resume simulation" : "Pause simulation"}
+            aria-pressed={paused}
             title={paused ? "Resume" : "Pause"}
             onClick={() => {
               session.suspend();
@@ -1203,6 +1208,7 @@ function GameClientInner() {
           </button>
           <button
             aria-label="Game configuration"
+            aria-pressed={panel === "configuration"}
             title="Game configuration"
             onClick={() => {
               setPanel(panel === "configuration" ? null : "configuration");
@@ -1213,11 +1219,13 @@ function GameClientInner() {
           </button>
           <button
             aria-label="Game menu"
+            aria-pressed={panel === "menu"}
             title="Expedition menu"
             onClick={() => setPanel(panel === "menu" ? null : "menu")}
           >
             <Glyph type="menu" />
           </button>
+          <div className="uy-hud-fasteners" aria-hidden="true"><span /><span /></div>
         </nav>
       </header>
       {guide && (
