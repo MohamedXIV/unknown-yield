@@ -2966,6 +2966,28 @@ browserIt(
       expect(await evaluate<boolean>(`document.querySelector('[data-testid="dismantle-review"]') === null`)).toBe(true);
 
       const center = canvasCenter;
+      // Temporary read-only DOM trace helps distinguish CDP coalescing,
+      // native touch cancellation and Phaser's gesture arbiter. Nothing is
+      // injected into the authoritative game input handlers.
+      await evaluate<boolean>(`(() => {
+        const canvas = document.querySelector(".world-host canvas");
+        window.__UY_TEST_TOUCH_TRACE__ = [];
+        const record = (type, payload) => {
+          const traces = window.__UY_TEST_TOUCH_TRACE__;
+          traces.push({ type, ...payload });
+          if (traces.length > 75) traces.shift();
+        };
+        for (const type of ["pointerdown", "pointermove", "pointerup", "pointercancel"]) {
+          canvas.addEventListener(type, (event) =>
+            record(type, { id: event.pointerId, isPrimary: event.isPrimary,
+              pointerType: event.pointerType, x: Math.round(event.clientX) }));
+        }
+        for (const type of ["touchstart", "touchmove", "touchend", "touchcancel"]) {
+          canvas.addEventListener(type, (event) =>
+            record(type, { active: event.touches.length, changed: event.changedTouches.length }));
+        }
+        return true;
+      })()`);
       const cameraBeforePinch = await evaluate<{ zoom: number }>(`window.__UNKNOWN_YIELD_CAMERA__()`);
       // Chrome's input dispatch may coalesce an immediate start/move/end
       // burst, dropping either pointermove before Phaser's second pointer
@@ -2997,6 +3019,7 @@ browserIt(
         before: cameraBeforePinch.zoom,
         afterOutward: cameraAfterOutwardPinch.zoom,
         afterFinal: cameraAfterPinch.zoom,
+        domTrace: await evaluate(`window.__UY_TEST_TOUCH_TRACE__`),
       }));
       // Never assert success from a DOM click or synthetic game-state edit.
       // At least one real two-finger browser gesture must change Phaser zoom.
