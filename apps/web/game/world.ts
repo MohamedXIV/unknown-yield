@@ -124,6 +124,12 @@ export function createWorld(
     private beltCornerOrder: BeltCornerOrder = "horizontal-first";
     private keys = new Set<string>();
     private readonly touch = new TouchGestureArbiter();
+    // Browser-native two-finger fallback. Phaser can miss the second pointer
+    // even when the canvas receives two real touches in Chromium, leaving the
+    // camera permanently at its zoom floor. The native pinch owns multi-touch
+    // only; ordinary single-finger inspect/build stays on Phaser's arbiter.
+    private nativePinchActive = false;
+    private nativePinchPrevious: { distance: number; center: TouchPoint } | null = null;
     private navigation!: CameraNavigation;
     private viewportWidth = 0;
     private viewportHeight = 0;
@@ -352,25 +358,81 @@ export function createWorld(
       this.events.once("shutdown", () =>
         this.reducedMotionQuery?.removeEventListener("change", mediaChanged),
       );
-      // Phaser 4's default includes a mouse pointer and may not retain two
-      // independent touch pointers after a prior drag/release. Reserve two
-      // additional pointers (rather than just one) for reliable second-finger
-      // entry and an extra slot when mobile browsers recycle touch ids.
-      // This changes no command semantics, touch policy or simulation state.
+      // Phaser remains authoritative for one-finger selection/build gestures.
+      // Reserve two independent touch pointers as recommended for multitouch.
       this.input.addPointer(2);
       this.input.mouse?.disableContextMenu();
-      const cancelNativeTouch = () => this.cancelTouch();
-      this.game.canvas.addEventListener("touchcancel", cancelNativeTouch);
-      this.game.canvas.addEventListener("pointercancel", cancelNativeTouch);
+      const canvas = this.game.canvas;
+      const pair = (touches: TouchList) => {
+        if (touches.length !== 2) return null;
+        const a = touches.item(0), b = touches.item(1);
+        if (!a || !b) return null;
+        const rect = canvas.getBoundingClientRect();
+        if (rect.width <= 0 || rect.height <= 0) return null;
+        const scaleX = this.viewportWidth / rect.width;
+        const scaleY = this.viewportHeight / rect.height;
+        const ax = (a.clientX - rect.left) * scaleX;
+        const ay = (a.clientY - rect.top) * scaleY;
+        const bx = (b.clientX - rect.left) * scaleX;
+        const by = (b.clientY - rect.top) * scaleY;
+        const distance = Math.hypot(ax - bx, ay - by);
+        if (distance <= 0) return null;
+        return { distance, center: { x: (ax + bx) / 2, y: (ay + by) / 2 } };
+      };
+      const nativeTouchStart = (event: TouchEvent) => {
+        if (event.touches.length < 2) return;
+        if (!this.nativePinchActive) {
+          this.nativePinchActive = true;
+          // Cancel any active dismantle/build selection before zooming. Never
+          // allow a completed two-finger gesture to place or remove cargo.
+          this.cancelTouch();
+        }
+        this.nativePinchPrevious = pair(event.touches);
+      };
+      const nativeTouchMove = (event: TouchEvent) => {
+        if (!this.nativePinchActive) return;
+        const current = pair(event.touches);
+        if (!current) return;
+        const previous = this.nativePinchPrevious;
+        if (previous) {
+          const factor = current.distance / previous.distance;
+          this.navigation.pinchBy(
+            Math.pow(factor, preferences.camera.zoomSensitivity),
+            previous.center, current.center,
+          );
+        }
+        this.nativePinchPrevious = current;
+      };
+      const nativeTouchEnd = (event: TouchEvent) => {
+        if (!this.nativePinchActive) return;
+        if (event.touches.length < 2) this.nativePinchPrevious = null;
+        // Keep ignoring the remaining finger until it lifts, preventing
+        // accidental tap/build commands after a zoom gesture.
+        if (event.touches.length === 0) {
+          this.nativePinchActive = false;
+          this.cancelTouch();
+        }
+      };
+      const cancelNativeTouch = () => {
+        this.nativePinchActive = false;
+        this.nativePinchPrevious = null;
+        this.cancelTouch();
+      };
+      canvas.addEventListener("touchstart", nativeTouchStart);
+      canvas.addEventListener("touchmove", nativeTouchMove);
+      canvas.addEventListener("touchend", nativeTouchEnd);
+      canvas.addEventListener("touchcancel", cancelNativeTouch);
+      canvas.addEventListener("pointercancel", cancelNativeTouch);
       this.events.once("shutdown", () => {
-        this.game.canvas.removeEventListener("touchcancel", cancelNativeTouch);
-        this.game.canvas.removeEventListener(
-          "pointercancel",
-          cancelNativeTouch,
-        );
+        canvas.removeEventListener("touchstart", nativeTouchStart);
+        canvas.removeEventListener("touchmove", nativeTouchMove);
+        canvas.removeEventListener("touchend", nativeTouchEnd);
+        canvas.removeEventListener("touchcancel", cancelNativeTouch);
+        canvas.removeEventListener("pointercancel", cancelNativeTouch);
       });
       this.input.on("pointermove", (p: Phaser.Input.Pointer) => {
         if (p.wasTouch) {
+          if (this.nativePinchActive) return;
           const gesture = this.touch.move(
             p.id,
             { x: p.x, y: p.y },
@@ -413,6 +475,7 @@ export function createWorld(
         if (preferences.interface.soundEffects)
           void feedbackAudio.enable().then(() => this.syncMachineAudio());
         if (p.wasTouch) {
+          if (this.nativePinchActive) return;
           const result = this.touch.down(p.id, { x: p.x, y: p.y });
           if (result?.kind === "cancel-build") {
             this.anchor = null;
@@ -448,6 +511,7 @@ export function createWorld(
       this.input.on("pointerup", (p: Phaser.Input.Pointer) => {
         this.invalidateOverlays();
         if (p.wasTouch) {
+          if (this.nativePinchActive) return;
           const gesture = this.touch.up(
             p.id,
             { x: p.x, y: p.y },
