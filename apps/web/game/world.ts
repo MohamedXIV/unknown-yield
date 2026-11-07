@@ -390,7 +390,20 @@ export function createWorld(
         this.nativePinchPrevious = pair(event.touches);
       };
       const nativeTouchMove = (event: TouchEvent) => {
-        if (!this.nativePinchActive) return;
+        if (!this.nativePinchActive) {
+          // Browsers may keep a touch pointer captured by the canvas after it
+          // crosses the visible boundary. Do not treat the eventual release as
+          // an in-world area-dismantle command.
+          if (event.touches.length === 1) {
+            const finger = event.touches.item(0);
+            const rect = canvas.getBoundingClientRect();
+            if (finger && (
+              finger.clientX < rect.left || finger.clientX >= rect.right ||
+              finger.clientY < rect.top || finger.clientY >= rect.bottom
+            )) this.cancelTouch();
+          }
+          return;
+        }
         const current = pair(event.touches);
         if (!current) return;
         const previous = this.nativePinchPrevious;
@@ -418,12 +431,25 @@ export function createWorld(
         this.nativePinchPrevious = null;
         this.cancelTouch();
       };
+      // Pointer-capture variants of mobile browsers can dispatch the native
+      // PointerEvent outside the element while still targeting its canvas.
+      // Detect that exit before Phaser's subsequent pointerup can commit.
+      const nativePointerMove = (event: PointerEvent) => {
+        if (event.pointerType !== "touch" || this.nativePinchActive) return;
+        const rect = canvas.getBoundingClientRect();
+        if (
+          event.clientX < rect.left || event.clientX >= rect.right ||
+          event.clientY < rect.top || event.clientY >= rect.bottom
+        ) this.cancelTouch();
+      };
+      canvas.addEventListener("pointermove", nativePointerMove, true);
       canvas.addEventListener("touchstart", nativeTouchStart);
       canvas.addEventListener("touchmove", nativeTouchMove);
       canvas.addEventListener("touchend", nativeTouchEnd);
       canvas.addEventListener("touchcancel", cancelNativeTouch);
       canvas.addEventListener("pointercancel", cancelNativeTouch);
       this.events.once("shutdown", () => {
+        canvas.removeEventListener("pointermove", nativePointerMove, true);
         canvas.removeEventListener("touchstart", nativeTouchStart);
         canvas.removeEventListener("touchmove", nativeTouchMove);
         canvas.removeEventListener("touchend", nativeTouchEnd);
