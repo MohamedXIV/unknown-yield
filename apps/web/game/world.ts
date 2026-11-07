@@ -352,9 +352,12 @@ export function createWorld(
       this.events.once("shutdown", () =>
         this.reducedMotionQuery?.removeEventListener("change", mediaChanged),
       );
-      // The default pointer allocation is not enough for dependable pinch:
-      // request an additional independent touch pointer.
-      this.input.addPointer(1);
+      // Phaser 4's default includes a mouse pointer and may not retain two
+      // independent touch pointers after a prior drag/release. Reserve two
+      // additional pointers (rather than just one) for reliable second-finger
+      // entry and an extra slot when mobile browsers recycle touch ids.
+      // This changes no command semantics, touch policy or simulation state.
+      this.input.addPointer(2);
       this.input.mouse?.disableContextMenu();
       const cancelNativeTouch = () => this.cancelTouch();
       this.game.canvas.addEventListener("touchcancel", cancelNativeTouch);
