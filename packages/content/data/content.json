@@ -1,0 +1,1857 @@
+{
+  "version": "world-01-v27",
+  "tickMs": 100,
+  "containmentCapabilities": [
+    {
+      "id": "corrosion-resistant",
+      "nameKey": "containment.corrosion-resistant.name"
+    },
+    {
+      "id": "cryogenic-rated",
+      "nameKey": "containment.cryogenic-rated.name"
+    },
+    {
+      "id": "hazard-isolated",
+      "nameKey": "containment.hazard-isolated.name"
+    },
+    {
+      "id": "secure-chain",
+      "nameKey": "containment.secure-chain.name"
+    }
+  ],
+  "hazardClasses": [
+    {
+      "id": "thermal-runaway",
+      "nameKey": "hazard.class.thermal-runaway.name",
+      "evidenceKey": "hazard.class.thermal-runaway.evidence",
+      "machineEffect": "lockout",
+      "strandedOutputUnits": 0,
+      "requiresContainedRecovery": false,
+      "integrityDamage": 0,
+      "foulingWear": 0,
+      "recoveryRange": 0
+    },
+    {
+      "id": "pressure-expansion",
+      "nameKey": "hazard.class.pressure-expansion.name",
+      "evidenceKey": "hazard.class.pressure-expansion.evidence",
+      "machineEffect": "lockout",
+      "strandedOutputUnits": 0,
+      "requiresContainedRecovery": false,
+      "integrityDamage": 2000,
+      "foulingWear": 0,
+      "localShock": {
+        "range": 2,
+        "integrityDamage": 1200
+      },
+      "recoveryRange": 0
+    },
+    {
+      "id": "corrosion",
+      "nameKey": "hazard.class.corrosion.name",
+      "evidenceKey": "hazard.class.corrosion.evidence",
+      "machineEffect": "lockout",
+      "strandedOutputUnits": 0,
+      "requiresContainedRecovery": false,
+      "integrityDamage": 0,
+      "foulingWear": 0,
+      "recoveryRange": 0
+    },
+    {
+      "id": "instability",
+      "nameKey": "hazard.class.instability.name",
+      "evidenceKey": "hazard.class.instability.evidence",
+      "machineEffect": "lockout",
+      "strandedOutputUnits": 1,
+      "requiresContainedRecovery": false,
+      "integrityDamage": 0,
+      "foulingWear": 300,
+      "recoveryRange": 6
+    },
+    {
+      "id": "contamination",
+      "nameKey": "hazard.class.contamination.name",
+      "evidenceKey": "hazard.class.contamination.evidence",
+      "machineEffect": "lockout",
+      "strandedOutputUnits": 1,
+      "requiresContainedRecovery": true,
+      "integrityDamage": 0,
+      "foulingWear": 0,
+      "recoveryRange": 8
+    }
+  ],
+  "materials": [
+    {
+      "id": "gas-0",
+      "nameKey": "material.gas-0.name",
+      "color": "#dbbf7f",
+      "handlingState": "gas",
+      "requiredContainment": [],
+      "known": false
+    },
+    {
+      "id": "liquid-0",
+      "nameKey": "material.liquid-0.name",
+      "color": "#69bac8",
+      "handlingState": "liquid",
+      "requiredContainment": [
+        "corrosion-resistant"
+      ],
+      "known": false
+    },
+    {
+      "id": "ferrite",
+      "nameKey": "material.ferrite.name",
+      "color": "#a88d78",
+      "handlingState": "solid",
+      "requiredContainment": [],
+      "known": true,
+      "mechanics": {
+        "hardness": 2,
+        "abrasiveness": 1,
+        "brittleness": 2
+      }
+    },
+    {
+      "id": "plates",
+      "nameKey": "material.plates.name",
+      "color": "#b7c6ad",
+      "handlingState": "solid",
+      "requiredContainment": [],
+      "known": true
+    },
+    {
+      "id": "ferrite-ceramic",
+      "nameKey": "material.ferrite-ceramic.name",
+      "color": "#c98f72",
+      "handlingState": "solid",
+      "requiredContainment": [],
+      "known": false
+    },
+    {
+      "id": "raw",
+      "nameKey": "material.raw.name",
+      "color": "#c8aa73",
+      "handlingState": "solid",
+      "requiredContainment": [],
+      "known": true,
+      "mechanics": {
+        "hardness": 3,
+        "abrasiveness": 2,
+        "brittleness": 1
+      }
+    },
+    {
+      "id": "granules",
+      "nameKey": "material.granules.name",
+      "color": "#aadea0",
+      "handlingState": "solid",
+      "requiredContainment": [],
+      "known": false
+    },
+    {
+      "id": "tainted-residue",
+      "nameKey": "material.tainted-residue.name",
+      "color": "#b69580",
+      "handlingState": "solid",
+      "requiredContainment": [
+        "hazard-isolated"
+      ],
+      "known": false
+    },
+    {
+      "id": "residue",
+      "nameKey": "material.residue.name",
+      "color": "#b298c4",
+      "handlingState": "solid",
+      "requiredContainment": [],
+      "known": false
+    },
+    {
+      "id": "catalyst",
+      "nameKey": "material.catalyst.name",
+      "color": "#d5c4a1",
+      "handlingState": "solid",
+      "requiredContainment": [],
+      "known": true,
+      "mechanics": {
+        "hardness": 6,
+        "abrasiveness": 4,
+        "brittleness": 1
+      }
+    },
+    {
+      "id": "catalyst-powder",
+      "nameKey": "material.catalyst-powder.name",
+      "color": "#d8cfb9",
+      "handlingState": "solid",
+      "requiredContainment": [],
+      "known": false
+    },
+    {
+      "id": "orbital-binder",
+      "nameKey": "material.orbital-binder.name",
+      "color": "#9eb6d8",
+      "handlingState": "solid",
+      "requiredContainment": [],
+      "known": true
+    },
+    {
+      "id": "orbital-resonance-seed",
+      "nameKey": "material.orbital-resonance-seed.name",
+      "color": "#a99be0",
+      "handlingState": "solid",
+      "requiredContainment": [],
+      "known": false
+    },
+    {
+      "id": "orbital-propellant",
+      "nameKey": "material.orbital-propellant.name",
+      "color": "#a8c4de",
+      "handlingState": "gas",
+      "requiredContainment": [],
+      "known": true
+    },
+    {
+      "id": "orbital-coolant",
+      "nameKey": "material.orbital-coolant.name",
+      "color": "#9fd8e5",
+      "handlingState": "liquid",
+      "requiredContainment": [
+        "cryogenic-rated",
+        "hazard-isolated",
+        "secure-chain"
+      ],
+      "known": true
+    },
+    {
+      "id": "matrix",
+      "nameKey": "material.matrix.name",
+      "color": "#8fd1c8",
+      "handlingState": "solid",
+      "requiredContainment": [],
+      "known": false
+    },
+    {
+      "id": "phase-lattice",
+      "nameKey": "material.phase-lattice.name",
+      "color": "#79d7c8",
+      "handlingState": "solid",
+      "requiredContainment": [],
+      "known": false
+    },
+    {
+      "id": "phase-suspension",
+      "nameKey": "material.phase-suspension.name",
+      "color": "#78b9d8",
+      "handlingState": "liquid",
+      "requiredContainment": [
+        "cryogenic-rated",
+        "hazard-isolated",
+        "secure-chain"
+      ],
+      "known": false
+    },
+    {
+      "id": "phase-ceramic",
+      "nameKey": "material.phase-ceramic.name",
+      "color": "#88d6bc",
+      "handlingState": "solid",
+      "requiredContainment": [],
+      "known": false
+    }
+  ],
+  "operations": [
+    {
+      "id": "vaporize",
+      "nameKey": "operation.vaporize.name"
+    },
+    {
+      "id": "collect-gas",
+      "nameKey": "operation.collect-gas.name"
+    },
+    {
+      "id": "liquefy",
+      "nameKey": "operation.liquefy.name"
+    },
+    {
+      "id": "precipitate",
+      "nameKey": "operation.precipitate.name"
+    },
+    {
+      "id": "crush",
+      "nameKey": "operation.crush.name"
+    },
+    {
+      "id": "heat",
+      "nameKey": "operation.heat.name"
+    },
+    {
+      "id": "sinter",
+      "nameKey": "operation.sinter.name"
+    },
+    {
+      "id": "phase-quench",
+      "nameKey": "operation.phase-quench.name"
+    },
+    {
+      "id": "phase-stabilize",
+      "nameKey": "operation.phase-stabilize.name"
+    }
+  ],
+  "fuelClasses": [
+    {
+      "id": "advanced-propellant",
+      "nameKey": "fuel.class.advanced-propellant.name",
+      "materialId": "orbital-propellant",
+      "terminalModuleId": "gas-dock",
+      "requiredMilestoneId": "gas-study-certified"
+    },
+    {
+      "id": "research-coolant",
+      "nameKey": "fuel.class.research-coolant.name",
+      "materialId": "orbital-coolant",
+      "terminalModuleId": "cryo-dock",
+      "requiredMilestoneId": "resonance-survey-certified"
+    }
+  ],
+  "machines": [
+    {
+      "id": "vaporizer",
+      "nameKey": "machine.vaporizer.name",
+      "role": "processor",
+      "operatingModes": [],
+      "maxExtractionDepth": 0,
+      "inputContainment": [
+        "corrosion-resistant"
+      ],
+      "outputContainment": [],
+      "inputStates": [
+        "liquid"
+      ],
+      "outputStates": [
+        "gas"
+      ],
+      "operations": [
+        "vaporize"
+      ],
+      "capacity": 12,
+      "fuel": 2,
+      "durationTicks": 30,
+      "width": 2,
+      "height": 2,
+      "cost": 32
+    },
+    {
+      "id": "gas-collector",
+      "nameKey": "machine.gas-collector.name",
+      "role": "processor",
+      "operatingModes": [],
+      "maxExtractionDepth": 0,
+      "inputContainment": [],
+      "outputContainment": [],
+      "inputStates": [
+        "gas"
+      ],
+      "outputStates": [
+        "solid"
+      ],
+      "operations": [
+        "collect-gas"
+      ],
+      "capacity": 12,
+      "fuel": 2,
+      "durationTicks": 30,
+      "width": 2,
+      "height": 2,
+      "cost": 32
+    },
+    {
+      "id": "liquefier",
+      "nameKey": "machine.liquefier.name",
+      "role": "processor",
+      "operatingModes": [],
+      "maxExtractionDepth": 0,
+      "inputContainment": [],
+      "outputContainment": [
+        "corrosion-resistant"
+      ],
+      "inputStates": [
+        "solid"
+      ],
+      "outputStates": [
+        "liquid"
+      ],
+      "operations": [
+        "liquefy"
+      ],
+      "capacity": 12,
+      "fuel": 2,
+      "durationTicks": 30,
+      "width": 2,
+      "height": 2,
+      "cost": 32
+    },
+    {
+      "id": "precipitator",
+      "nameKey": "machine.precipitator.name",
+      "role": "processor",
+      "operatingModes": [],
+      "maxExtractionDepth": 0,
+      "inputContainment": [
+        "corrosion-resistant"
+      ],
+      "outputContainment": [],
+      "inputStates": [
+        "liquid"
+      ],
+      "outputStates": [
+        "solid"
+      ],
+      "operations": [
+        "precipitate"
+      ],
+      "capacity": 12,
+      "fuel": 2,
+      "durationTicks": 30,
+      "width": 2,
+      "height": 2,
+      "cost": 32
+    },
+    {
+      "id": "extractor",
+      "nameKey": "machine.extractor.name",
+      "role": "extractor",
+      "presentation": {
+        "version": 1,
+        "assets": {
+          "base": "machine-extractor",
+          "incidentOverlay": "effect-scorch"
+        },
+        "indicatorColors": {
+          "idle": "#c0c6a9",
+          "working": "#b2d68a",
+          "blocked": "#d6a66e",
+          "incident": "#e57865",
+          "disabled": "#727866"
+        },
+        "audio": {
+          "start": "machine-heavy-start",
+          "blocked": "warning",
+          "incident": "hazard",
+          "runningLoop": "diesel-drive"
+        }
+      },
+      "operatingModes": [
+        {
+          "id": "steady",
+          "nameKey": "machine.extractor.mode.steady.name",
+          "nominalLoadBonus": 0,
+          "maximumLoadBonus": 0,
+          "durationBps": 10000,
+          "extraFuel": 0,
+          "wearBps": 10000
+        },
+        {
+          "id": "force",
+          "nameKey": "machine.extractor.mode.force.name",
+          "nominalLoadBonus": 2,
+          "maximumLoadBonus": 2,
+          "durationBps": 8500,
+          "extraFuel": 2,
+          "wearBps": 18000
+        }
+      ],
+      "extractionEnvelope": {
+        "nominalLoad": 6,
+        "maximumLoad": 10,
+        "strainedDurationPerLoadBps": 2500,
+        "strainedFuelPerLoad": 1
+      },
+      "reliability": {
+        "baseWearPerBatch": 5,
+        "loadWearPerPoint": 2,
+        "strainedWearPerPoint": 4,
+        "wornAt": 80,
+        "integrityLossPerWear": 2,
+        "damagedBelow": 1500,
+        "damagedDurationBps": 11500,
+        "failure": {
+          "kind": "jam",
+          "integrityAtOrBelow": 600,
+          "minimumStressLoad": 5
+        },
+        "wreck": {
+          "integrityAtOrBelow": 1200,
+          "minimumStressLoad": 9
+        },
+        "service": {
+          "materialId": "ferrite",
+          "units": 2,
+          "range": 5,
+          "restoreIntegrity": 3000,
+          "reduceWear": 150
+        }
+      },
+      "maxExtractionDepth": 0,
+      "inputContainment": [],
+      "outputContainment": [],
+      "inputStates": [
+        "solid"
+      ],
+      "outputStates": [
+        "solid"
+      ],
+      "operations": [],
+      "capacity": 8,
+      "fuel": 1,
+      "durationTicks": 20,
+      "width": 2,
+      "height": 2,
+      "cost": 18
+    },
+    {
+      "id": "deep-extractor",
+      "nameKey": "machine.deep-extractor.name",
+      "role": "extractor",
+      "operatingModes": [],
+      "extractionEnvelope": {
+        "nominalLoad": 14,
+        "maximumLoad": 18,
+        "strainedDurationPerLoadBps": 2000,
+        "strainedFuelPerLoad": 0
+      },
+      "reliability": {
+        "baseWearPerBatch": 4,
+        "loadWearPerPoint": 2,
+        "strainedWearPerPoint": 3,
+        "wornAt": 110,
+        "integrityLossPerWear": 2,
+        "damagedBelow": 1500,
+        "damagedDurationBps": 11000,
+        "failure": {
+          "kind": "tool-break",
+          "integrityAtOrBelow": 500,
+          "minimumStressLoad": 12
+        },
+        "wreck": {
+          "integrityAtOrBelow": 1200,
+          "minimumStressLoad": 17
+        },
+        "service": {
+          "materialId": "ferrite",
+          "units": 3,
+          "range": 5,
+          "restoreIntegrity": 3000,
+          "reduceWear": 150
+        }
+      },
+      "maxExtractionDepth": 20,
+      "fuelClassId": "advanced-propellant",
+      "unlock": {
+        "reactionId": "heat-raw-sealed",
+        "hintKey": "machine.deep-extractor.unlock-hint"
+      },
+      "inputContainment": [],
+      "outputContainment": [],
+      "inputStates": [
+        "solid"
+      ],
+      "outputStates": [
+        "solid"
+      ],
+      "operations": [],
+      "capacity": 8,
+      "fuel": 1,
+      "durationTicks": 30,
+      "width": 2,
+      "height": 2,
+      "cost": 36
+    },
+    {
+      "id": "atmospheric-intake",
+      "nameKey": "machine.atmospheric-intake.name",
+      "role": "extractor",
+      "operatingModes": [],
+      "maxExtractionDepth": 0,
+      "sourceKind": "atmosphere",
+      "unlock": {
+        "reactionId": "vaporize-liquid-0",
+        "hintKey": "machine.atmospheric-intake.unlock-hint"
+      },
+      "inputContainment": [],
+      "outputContainment": [],
+      "inputStates": [
+        "solid"
+      ],
+      "outputStates": [
+        "gas"
+      ],
+      "operations": [],
+      "capacity": 8,
+      "fuel": 2,
+      "durationTicks": 20,
+      "width": 2,
+      "height": 2,
+      "cost": 28
+    },
+    {
+      "id": "sinterer",
+      "nameKey": "machine.sinterer.name",
+      "role": "processor",
+      "operatingModes": [],
+      "maxExtractionDepth": 0,
+      "fuelClassId": "research-coolant",
+      "inputContainment": [],
+      "outputContainment": [],
+      "inputStates": [
+        "solid"
+      ],
+      "outputStates": [
+        "solid"
+      ],
+      "operations": [
+        "sinter"
+      ],
+      "capacity": 12,
+      "fuel": 1,
+      "durationTicks": 36,
+      "width": 2,
+      "height": 2,
+      "cost": 34
+    },
+    {
+      "id": "phase-quencher",
+      "nameKey": "machine.phase-quencher.name",
+      "role": "processor",
+      "operatingModes": [],
+      "maxExtractionDepth": 0,
+      "fuelClassId": "research-coolant",
+      "unlock": {
+        "reactionId": "sinter-resonance-seed",
+        "hintKey": "machine.phase-quencher.unlock-hint"
+      },
+      "inputContainment": [],
+      "outputContainment": [
+        "cryogenic-rated",
+        "hazard-isolated",
+        "secure-chain"
+      ],
+      "inputStates": [
+        "solid"
+      ],
+      "outputStates": [
+        "liquid"
+      ],
+      "operations": [
+        "phase-quench"
+      ],
+      "capacity": 8,
+      "fuel": 1,
+      "durationTicks": 40,
+      "width": 2,
+      "height": 2,
+      "cost": 44
+    },
+    {
+      "id": "phase-stabilizer",
+      "nameKey": "machine.phase-stabilizer.name",
+      "role": "processor",
+      "operatingModes": [],
+      "maxExtractionDepth": 0,
+      "fuelClassId": "research-coolant",
+      "unlock": {
+        "reactionId": "phase-quench-lattice",
+        "hintKey": "machine.phase-stabilizer.unlock-hint"
+      },
+      "inputContainment": [
+        "cryogenic-rated",
+        "hazard-isolated",
+        "secure-chain"
+      ],
+      "outputContainment": [],
+      "inputStates": [
+        "liquid"
+      ],
+      "outputStates": [
+        "solid"
+      ],
+      "operations": [
+        "phase-stabilize"
+      ],
+      "capacity": 8,
+      "fuel": 1,
+      "durationTicks": 40,
+      "width": 2,
+      "height": 2,
+      "cost": 46
+    },
+    {
+      "id": "crusher",
+      "nameKey": "machine.crusher.name",
+      "role": "processor",
+      "operatingModes": [],
+      "maxExtractionDepth": 0,
+      "inputContainment": [],
+      "outputContainment": [],
+      "inputStates": [
+        "solid"
+      ],
+      "outputStates": [
+        "solid"
+      ],
+      "operations": [
+        "crush"
+      ],
+      "capacity": 12,
+      "fuel": 2,
+      "durationTicks": 30,
+      "width": 2,
+      "height": 2,
+      "cost": 24
+    },
+    {
+      "id": "furnace",
+      "nameKey": "machine.furnace.name",
+      "role": "processor",
+      "operatingModes": [],
+      "maxExtractionDepth": 0,
+      "processConditionId": "ambient",
+      "inputContainment": [],
+      "outputContainment": [],
+      "inputStates": [
+        "solid"
+      ],
+      "outputStates": [
+        "solid"
+      ],
+      "operations": [
+        "heat"
+      ],
+      "capacity": 12,
+      "fuel": 2,
+      "durationTicks": 30,
+      "width": 2,
+      "height": 2,
+      "cost": 26
+    },
+    {
+      "id": "sealed-furnace",
+      "nameKey": "machine.sealed-furnace.name",
+      "role": "processor",
+      "operatingModes": [],
+      "maxExtractionDepth": 0,
+      "processConditionId": "sealed",
+      "inputContainment": [],
+      "outputContainment": [],
+      "inputStates": [
+        "solid"
+      ],
+      "outputStates": [
+        "solid"
+      ],
+      "operations": [
+        "heat"
+      ],
+      "capacity": 12,
+      "fuel": 2,
+      "durationTicks": 30,
+      "width": 2,
+      "height": 2,
+      "cost": 26
+    },
+    {
+      "id": "oversealed-furnace",
+      "nameKey": "machine.oversealed-furnace.name",
+      "role": "processor",
+      "operatingModes": [],
+      "reliability": {
+        "baseWearPerBatch": 0,
+        "loadWearPerPoint": 0,
+        "strainedWearPerPoint": 0,
+        "wornAt": 100,
+        "integrityLossPerWear": 4,
+        "damagedBelow": 9000,
+        "damagedDurationBps": 13000,
+        "service": {
+          "materialId": "ferrite",
+          "units": 2,
+          "range": 10,
+          "restoreIntegrity": 2500,
+          "reduceWear": 350
+        }
+      },
+      "maxExtractionDepth": 0,
+      "processConditionId": "oversealed",
+      "unlock": {
+        "reactionId": "heat-raw-sealed",
+        "hintKey": "machine.oversealed-furnace.unlock-hint"
+      },
+      "inputContainment": [],
+      "outputContainment": [
+        "hazard-isolated"
+      ],
+      "inputStates": [
+        "solid"
+      ],
+      "outputStates": [
+        "solid"
+      ],
+      "operations": [
+        "heat"
+      ],
+      "capacity": 12,
+      "fuel": 2,
+      "durationTicks": 30,
+      "width": 2,
+      "height": 2,
+      "cost": 30
+    },
+    {
+      "id": "relief-furnace",
+      "nameKey": "machine.relief-furnace.name",
+      "role": "processor",
+      "operatingModes": [],
+      "maxExtractionDepth": 0,
+      "processConditionId": "relieved",
+      "unlock": {
+        "hazardEvidenceId": "slag-jam",
+        "hintKey": "machine.relief-furnace.unlock-hint"
+      },
+      "inputContainment": [],
+      "outputContainment": [],
+      "inputStates": [
+        "solid"
+      ],
+      "outputStates": [
+        "solid"
+      ],
+      "operations": [
+        "heat"
+      ],
+      "capacity": 12,
+      "fuel": 3,
+      "durationTicks": 32,
+      "width": 2,
+      "height": 2,
+      "cost": 34
+    }
+  ],
+  "gasLogistics": {
+    "line": {
+      "containmentCapabilities": [],
+      "capacity": 4,
+      "transfer": 1,
+      "cost": 3
+    },
+    "vessel": {
+      "containmentCapabilities": [],
+      "capacity": 48,
+      "width": 2,
+      "height": 2,
+      "cost": 28
+    },
+    "compressor": {
+      "containmentCapabilities": [],
+      "transfer": 1,
+      "fuel": 1,
+      "cost": 16
+    }
+  },
+  "liquidLogistics": {
+    "pipe": {
+      "containmentCapabilities": [],
+      "capacity": 4,
+      "transfer": 1,
+      "cost": 2
+    },
+    "tank": {
+      "containmentCapabilities": [],
+      "capacity": 64,
+      "width": 2,
+      "height": 2,
+      "cost": 24
+    },
+    "pump": {
+      "containmentCapabilities": [],
+      "transfer": 1,
+      "fuel": 1,
+      "cost": 12,
+      "containmentFailure": {
+        "id": "pump-corrosion",
+        "nameKey": "handling.failure.pump-corrosion.name",
+        "descriptionKey": "handling.failure.pump-corrosion.description",
+        "exposedProfileId": "standard",
+        "missingCapabilityId": "corrosion-resistant",
+        "trappedCapacity": 1
+      }
+    },
+    "containmentProfiles": [
+      {
+        "id": "standard",
+        "nameKey": "containment.profile.standard.name",
+        "capabilities": [],
+        "additionalCost": {
+          "pipe": 0,
+          "tank": 0,
+          "pump": 0
+        }
+      },
+      {
+        "id": "lined",
+        "nameKey": "containment.profile.lined.name",
+        "capabilities": [
+          "corrosion-resistant"
+        ],
+        "additionalCost": {
+          "pipe": 2,
+          "tank": 10,
+          "pump": 4
+        }
+      },
+      {
+        "id": "sealed-cold",
+        "nameKey": "containment.profile.sealed-cold.name",
+        "capabilities": [
+          "cryogenic-rated",
+          "hazard-isolated",
+          "secure-chain"
+        ],
+        "additionalCost": {
+          "pipe": 4,
+          "tank": 14,
+          "pump": 6
+        }
+      }
+    ]
+  },
+  "storages": [
+    {
+      "id": "depot",
+      "nameKey": "storage.depot.name",
+      "containmentCapabilities": [],
+      "capacity": 40,
+      "width": 3,
+      "height": 2,
+      "cost": 30
+    },
+    {
+      "id": "isolation-depot",
+      "nameKey": "storage.isolation-depot.name",
+      "containmentCapabilities": [
+        "hazard-isolated"
+      ],
+      "capacity": 24,
+      "width": 3,
+      "height": 2,
+      "cost": 38
+    }
+  ],
+  "junctions": [
+    {
+      "id": "splitter",
+      "kind": "splitter",
+      "nameKey": "junction.splitter.name",
+      "cost": 8
+    },
+    {
+      "id": "merger",
+      "kind": "merger",
+      "nameKey": "junction.merger.name",
+      "cost": 8
+    },
+    {
+      "id": "crossing",
+      "kind": "crossing",
+      "nameKey": "junction.crossing.name",
+      "cost": 12,
+      "windowSteps": 4
+    }
+  ],
+  "reactions": [
+    {
+      "id": "vaporize-liquid-0",
+      "operation": "vaporize",
+      "input": "liquid-0",
+      "inputAmount": 1,
+      "output": "gas-0",
+      "outputAmount": 1,
+      "observationKey": "reaction.vaporize-liquid-0.observation",
+      "known": false
+    },
+    {
+      "id": "collect-gas-0",
+      "operation": "collect-gas",
+      "input": "gas-0",
+      "inputAmount": 1,
+      "output": "granules",
+      "outputAmount": 1,
+      "observationKey": "reaction.collect-gas-0.observation",
+      "known": false
+    },
+    {
+      "id": "liquefy-raw",
+      "operation": "liquefy",
+      "input": "raw",
+      "inputAmount": 2,
+      "output": "liquid-0",
+      "outputAmount": 2,
+      "observationKey": "reaction.liquefy-raw.observation",
+      "known": false
+    },
+    {
+      "id": "precipitate-liquid-0",
+      "operation": "precipitate",
+      "input": "liquid-0",
+      "inputAmount": 2,
+      "output": "granules",
+      "outputAmount": 1,
+      "observationKey": "reaction.precipitate-liquid-0.observation",
+      "known": false
+    },
+    {
+      "id": "press-ferrite",
+      "operation": "crush",
+      "input": "ferrite",
+      "inputAmount": 2,
+      "output": "plates",
+      "outputAmount": 6,
+      "observationKey": "reaction.press-ferrite.observation",
+      "known": true
+    },
+    {
+      "id": "heat-ferrite",
+      "operation": "heat",
+      "processConditionId": "ambient",
+      "input": "ferrite",
+      "inputAmount": 2,
+      "output": "ferrite-ceramic",
+      "outputAmount": 1,
+      "observationKey": "reaction.heat-ferrite.observation",
+      "known": false
+    },
+    {
+      "id": "crush-raw",
+      "operation": "crush",
+      "input": "raw",
+      "inputAmount": 2,
+      "output": "granules",
+      "outputAmount": 1,
+      "observationKey": "reaction.crush-raw.observation",
+      "known": false
+    },
+    {
+      "id": "heat-raw",
+      "operation": "heat",
+      "processConditionId": "ambient",
+      "input": "raw",
+      "inputAmount": 2,
+      "output": "residue",
+      "outputAmount": 1,
+      "observationKey": "reaction.heat-raw.observation",
+      "known": false
+    },
+    {
+      "id": "heat-raw-sealed",
+      "operation": "heat",
+      "processConditionId": "sealed",
+      "input": "raw",
+      "inputAmount": 2,
+      "output": "granules",
+      "outputAmount": 1,
+      "observationKey": "reaction.heat-raw-sealed.observation",
+      "known": false
+    },
+    {
+      "id": "sinter-orbital-binder",
+      "operation": "sinter",
+      "input": "orbital-binder",
+      "inputAmount": 2,
+      "output": "matrix",
+      "outputAmount": 1,
+      "observationKey": "reaction.sinter-orbital-binder.observation",
+      "known": false
+    },
+    {
+      "id": "sinter-catalyst",
+      "operation": "sinter",
+      "input": "catalyst",
+      "inputAmount": 2,
+      "output": "matrix",
+      "outputAmount": 1,
+      "observationKey": "reaction.sinter-catalyst.observation",
+      "known": false
+    },
+    {
+      "id": "sinter-resonance-seed",
+      "operation": "sinter",
+      "input": "orbital-resonance-seed",
+      "inputAmount": 1,
+      "output": "phase-lattice",
+      "outputAmount": 1,
+      "observationKey": "reaction.sinter-resonance-seed.observation",
+      "known": false
+    },
+    {
+      "id": "phase-quench-lattice",
+      "operation": "phase-quench",
+      "input": "phase-lattice",
+      "inputAmount": 1,
+      "output": "phase-suspension",
+      "outputAmount": 1,
+      "observationKey": "reaction.phase-quench-lattice.observation",
+      "known": false
+    },
+    {
+      "id": "phase-stabilize-suspension",
+      "operation": "phase-stabilize",
+      "input": "phase-suspension",
+      "inputAmount": 1,
+      "output": "phase-ceramic",
+      "outputAmount": 1,
+      "observationKey": "reaction.phase-stabilize-suspension.observation",
+      "known": false
+    },
+    {
+      "id": "crush-catalyst",
+      "operation": "crush",
+      "input": "catalyst",
+      "inputAmount": 2,
+      "output": "catalyst-powder",
+      "outputAmount": 1,
+      "observationKey": "reaction.crush-catalyst.observation",
+      "known": false
+    },
+    {
+      "id": "heat-raw-oversealed",
+      "operation": "heat",
+      "processConditionId": "oversealed",
+      "input": "raw",
+      "inputAmount": 2,
+      "output": "residue",
+      "outputAmount": 1,
+      "observationKey": "reaction.heat-raw-oversealed.observation",
+      "hazard": {
+        "id": "chamber-blowout",
+        "classId": "pressure-expansion",
+        "nameKey": "hazard.chamber-blowout.name",
+        "observationKey": "hazard.chamber-blowout.observation",
+        "saferHintKey": "hazard.chamber-blowout.safer-hint"
+      },
+      "known": false
+    },
+    {
+      "id": "heat-ferrite-sealed",
+      "operation": "heat",
+      "processConditionId": "sealed",
+      "input": "ferrite",
+      "inputAmount": 2,
+      "output": "residue",
+      "outputAmount": 1,
+      "observationKey": "reaction.heat-ferrite-sealed.observation",
+      "known": false
+    },
+    {
+      "id": "heat-ferrite-relieved",
+      "operation": "heat",
+      "processConditionId": "relieved",
+      "input": "ferrite",
+      "inputAmount": 2,
+      "output": "residue",
+      "outputAmount": 1,
+      "observationKey": "reaction.heat-ferrite-relieved.observation",
+      "known": false
+    },
+    {
+      "id": "heat-phase-lattice-oversealed",
+      "operation": "heat",
+      "processConditionId": "oversealed",
+      "input": "phase-lattice",
+      "inputAmount": 1,
+      "output": "residue",
+      "outputAmount": 1,
+      "observationKey": "reaction.heat-phase-lattice-oversealed.observation",
+      "hazard": {
+        "id": "phase-shear-lock",
+        "classId": "instability",
+        "nameKey": "hazard.phase-shear-lock.name",
+        "observationKey": "hazard.phase-shear-lock.observation",
+        "saferHintKey": "hazard.phase-shear-lock.safer-hint"
+      },
+      "known": false
+    },
+    {
+      "id": "heat-catalyst-oversealed",
+      "operation": "heat",
+      "processConditionId": "oversealed",
+      "input": "catalyst",
+      "inputAmount": 2,
+      "output": "tainted-residue",
+      "outputAmount": 1,
+      "observationKey": "reaction.heat-catalyst-oversealed.observation",
+      "hazard": {
+        "id": "catalyst-contamination",
+        "classId": "contamination",
+        "nameKey": "hazard.catalyst-contamination.name",
+        "observationKey": "hazard.catalyst-contamination.observation",
+        "saferHintKey": "hazard.catalyst-contamination.safer-hint"
+      },
+      "known": false
+    },
+    {
+      "id": "heat-ferrite-oversealed",
+      "operation": "heat",
+      "processConditionId": "oversealed",
+      "input": "ferrite",
+      "inputAmount": 2,
+      "output": "residue",
+      "outputAmount": 1,
+      "observationKey": "reaction.heat-ferrite-oversealed.observation",
+      "hazard": {
+        "id": "slag-jam",
+        "classId": "instability",
+        "nameKey": "hazard.slag-jam.name",
+        "observationKey": "hazard.slag-jam.observation",
+        "saferHintKey": "hazard.slag-jam.safer-hint"
+      },
+      "known": false
+    }
+  ],
+  "knowledgeInsights": [
+    {
+      "id": "ferrite-capital",
+      "materialId": "ferrite",
+      "kind": "property",
+      "textKey": "knowledge.insight.ferrite-capital.text",
+      "requires": {
+        "type": "material-known",
+        "materialId": "ferrite"
+      }
+    },
+    {
+      "id": "ferrite-thermal-branch",
+      "materialId": "ferrite",
+      "kind": "branch",
+      "textKey": "knowledge.insight.ferrite-thermal-branch.text",
+      "requires": {
+        "type": "material-known",
+        "materialId": "ferrite"
+      }
+    },
+    {
+      "id": "ferrite-ceramic-market",
+      "materialId": "ferrite-ceramic",
+      "kind": "opportunity",
+      "textKey": "knowledge.insight.ferrite-ceramic-market.text",
+      "requires": {
+        "type": "reaction-evidence",
+        "reactionId": "heat-ferrite",
+        "state": "confirmed"
+      }
+    },
+    {
+      "id": "veined-multi-state",
+      "materialId": "raw",
+      "kind": "branch",
+      "textKey": "knowledge.insight.veined-multi-state.text",
+      "requires": {
+        "type": "material-known",
+        "materialId": "raw"
+      }
+    },
+    {
+      "id": "corrosive-liquid",
+      "materialId": "liquid-0",
+      "kind": "property",
+      "textKey": "knowledge.insight.corrosive-liquid.text",
+      "requires": {
+        "type": "reaction-evidence",
+        "reactionId": "liquefy-raw",
+        "state": "confirmed"
+      }
+    },
+    {
+      "id": "catalyst-choice",
+      "materialId": "catalyst",
+      "kind": "branch",
+      "textKey": "knowledge.insight.catalyst-choice.text",
+      "requires": {
+        "type": "material-known",
+        "materialId": "catalyst"
+      }
+    },
+    {
+      "id": "catalyst-powder-market",
+      "materialId": "catalyst-powder",
+      "kind": "opportunity",
+      "textKey": "knowledge.insight.catalyst-powder-market.text",
+      "requires": {
+        "type": "reaction-evidence",
+        "reactionId": "crush-catalyst",
+        "state": "confirmed"
+      }
+    },
+    {
+      "id": "matrix-local-value",
+      "materialId": "matrix",
+      "kind": "opportunity",
+      "textKey": "knowledge.insight.matrix-local-value.text",
+      "requires": {
+        "type": "reaction-evidence",
+        "reactionId": "sinter-catalyst",
+        "state": "confirmed"
+      }
+    }
+  ],
+  "site": {
+    "sensingCapabilities": [
+      {
+        "id": "survey-scanner",
+        "nameKey": "sensing.capability.survey-scanner.name",
+        "mode": "scan",
+        "range": 8,
+        "hiddenUntilUnlocked": false
+      },
+      {
+        "id": "core-probe",
+        "nameKey": "sensing.capability.core-probe.name",
+        "mode": "probe",
+        "range": 1,
+        "requiredMilestoneId": "sealed-study-certified",
+        "hiddenUntilUnlocked": false
+      },
+      {
+        "id": "resonance-probe",
+        "nameKey": "sensing.capability.resonance-probe.name",
+        "mode": "probe",
+        "range": 1,
+        "requiredMilestoneId": "resonance-survey-certified",
+        "hiddenUntilUnlocked": false
+      },
+      {
+        "id": "phase-probe",
+        "nameKey": "sensing.capability.phase-probe.name",
+        "mode": "probe",
+        "range": 1,
+        "requiredMilestoneId": "phase-lattice-certified",
+        "hiddenUntilUnlocked": true
+      }
+    ],
+    "surveySignals": [
+      {
+        "id": "anomaly-a",
+        "x": 46,
+        "y": 18,
+        "strength": 8,
+        "depth": 14
+      },
+      {
+        "id": "anomaly-b",
+        "x": 62,
+        "y": 42,
+        "strength": 5,
+        "depth": 4
+      },
+      {
+        "id": "anomaly-c",
+        "x": 70,
+        "y": 26,
+        "strength": 7,
+        "depth": 1
+      },
+      {
+        "id": "anomaly-d",
+        "x": 57,
+        "y": 10,
+        "strength": 8,
+        "depth": 9
+      },
+      {
+        "id": "anomaly-e",
+        "x": 73,
+        "y": 50,
+        "strength": 9,
+        "depth": 18
+      }
+    ],
+    "hiddenDeposits": [
+      {
+        "id": "deep-vein-a",
+        "material": "raw",
+        "x": 43,
+        "y": 15,
+        "width": 5,
+        "height": 7,
+        "units": 1200,
+        "surveySignalId": "anomaly-a",
+        "requiredSensingCapabilityId": "core-probe"
+      },
+      {
+        "id": "catalyst-seam-a",
+        "material": "catalyst",
+        "x": 55,
+        "y": 8,
+        "width": 5,
+        "height": 5,
+        "units": 800,
+        "surveySignalId": "anomaly-d",
+        "requiredSensingCapabilityId": "resonance-probe"
+      },
+      {
+        "id": "phase-lattice-seam-a",
+        "material": "phase-lattice",
+        "x": 70,
+        "y": 47,
+        "width": 6,
+        "height": 6,
+        "units": 480,
+        "surveySignalId": "anomaly-e",
+        "requiredSensingCapabilityId": "phase-probe"
+      }
+    ],
+    "atmosphericSources": [
+      {
+        "id": "atmospheric-plume-a",
+        "nameKey": "source.atmospheric-plume-a.name",
+        "material": "gas-0",
+        "x": 68,
+        "y": 24,
+        "width": 5,
+        "height": 5,
+        "units": 600,
+        "surveySignalId": "anomaly-c",
+        "requiredSensingCapabilityId": "core-probe"
+      }
+    ],
+    "terminalModules": [
+      {
+        "id": "liquid-dock",
+        "nameKey": "terminal.module.liquid-dock.name",
+        "handlingState": "liquid",
+        "containmentCapabilities": [
+          "corrosion-resistant"
+        ],
+        "capacity": 24,
+        "cost": 30,
+        "requiredTerminalCapabilityId": "liquid-outbound",
+        "inlet": {
+          "x": 1,
+          "y": 3,
+          "side": 1
+        }
+      },
+      {
+        "id": "gas-dock",
+        "nameKey": "terminal.module.gas-dock.name",
+        "handlingState": "gas",
+        "containmentCapabilities": [],
+        "capacity": 16,
+        "cost": 36,
+        "requiredTerminalCapabilityId": "gas-outbound",
+        "inlet": {
+          "x": 3,
+          "y": 1,
+          "side": 0
+        }
+      },
+      {
+        "id": "cryo-dock",
+        "nameKey": "terminal.module.cryo-dock.name",
+        "handlingState": "liquid",
+        "containmentCapabilities": [
+          "cryogenic-rated",
+          "hazard-isolated",
+          "secure-chain"
+        ],
+        "capacity": 8,
+        "cost": 42,
+        "requiredTerminalCapabilityId": "specialized-inbound",
+        "inlet": {
+          "x": 0,
+          "y": 1,
+          "side": 2
+        }
+      }
+    ],
+    "beltContainment": [],
+    "dryContainment": [],
+    "width": 80,
+    "height": 60,
+    "buildMaterial": "plates",
+    "startStock": 600,
+    "factoryMin": 6,
+    "factoryMax": 20,
+    "factoryCellCost": 1,
+    "factoryRelocationFuelPerStep": 2,
+    "factoryRelocationDowntimeTicks": 24,
+    "beltCost": 1,
+    "elevatedSolid": {
+      "maxSupportSpan": 4,
+      "deckCostPerCell": 1,
+      "supportCost": 2
+    },
+    "portCost": 2,
+    "transportEveryTicks": 3,
+    "stagingCapacity": 24,
+    "terminalShipmentCapacity": 12,
+    "terminal": {
+      "x": 38,
+      "y": 26,
+      "width": 4,
+      "height": 4
+    },
+    "deposits": [
+      {
+        "id": "ferrite-field",
+        "material": "ferrite",
+        "x": 15,
+        "y": 25,
+        "width": 6,
+        "height": 6,
+        "units": 3000
+      },
+      {
+        "id": "veined-field",
+        "material": "raw",
+        "x": 15,
+        "y": 35,
+        "width": 6,
+        "height": 6,
+        "units": 3000
+      },
+      {
+        "id": "catalyst-outcrop",
+        "material": "catalyst",
+        "x": 5,
+        "y": 49,
+        "width": 5,
+        "height": 5,
+        "units": 90
+      },
+      {
+        "id": "north-ferrite",
+        "material": "ferrite",
+        "x": 51,
+        "y": 14,
+        "width": 6,
+        "height": 5,
+        "units": 3000
+      },
+      {
+        "id": "east-veins",
+        "material": "raw",
+        "x": 58,
+        "y": 39,
+        "width": 7,
+        "height": 5,
+        "units": 3000
+      }
+    ]
+  },
+  "economy": {
+    "startFuel": 120,
+    "grant": 36,
+    "assistanceBelow": 2,
+    "milestoneExports": 1,
+    "marketEveryTicks": 50,
+    "defaultAssistancePackageId": "emergency-fuel",
+    "assistancePackages": [
+      {
+        "id": "emergency-fuel",
+        "nameKey": "assistance.emergency-fuel.name",
+        "briefKey": "assistance.emergency-fuel.brief",
+        "fuelBelow": 2,
+        "grantFuel": 36,
+        "baseObligationFuel": 36,
+        "repeatObligationStepFuel": 12,
+        "continuationObligationFuel": 12,
+        "recoveryNetFuel": 24
+      }
+    ],
+    "imports": [
+      {
+        "id": "orbital-binder-crate",
+        "nameKey": "import.orbital-binder-crate.name",
+        "briefKey": "import.orbital-binder-crate.brief",
+        "materialId": "orbital-binder",
+        "quantity": 6,
+        "fuelCost": 42
+      },
+      {
+        "id": "orbital-resonance-seed-crate",
+        "nameKey": "import.orbital-resonance-seed-crate.name",
+        "briefKey": "import.orbital-resonance-seed-crate.brief",
+        "materialId": "orbital-resonance-seed",
+        "quantity": 2,
+        "fuelCost": 64,
+        "requiredOpportunityId": "matrix-orbital-application"
+      },
+      {
+        "id": "orbital-propellant-cylinder",
+        "nameKey": "import.orbital-propellant-cylinder.name",
+        "briefKey": "import.orbital-propellant-cylinder.brief",
+        "materialId": "orbital-propellant",
+        "quantity": 4,
+        "fuelCost": 32,
+        "terminalModuleId": "gas-dock"
+      },
+      {
+        "id": "orbital-coolant-canister",
+        "nameKey": "import.orbital-coolant-canister.name",
+        "briefKey": "import.orbital-coolant-canister.brief",
+        "materialId": "orbital-coolant",
+        "quantity": 4,
+        "fuelCost": 36,
+        "terminalModuleId": "cryo-dock"
+      }
+    ],
+    "exchange": [
+      {
+        "materialId": "granules",
+        "baseCompensation": 12,
+        "floorCompensation": 4,
+        "baseDemandBps": 10000,
+        "saturationPerUnitBps": 1000,
+        "recoveryPerMarketTickBps": 250,
+        "demandRecoveryPerMarketTickBps": 100,
+        "requiredTerminalCapabilityId": "sealed-sample-outbound"
+      },
+      {
+        "materialId": "liquid-0",
+        "baseCompensation": 6,
+        "floorCompensation": 2,
+        "baseDemandBps": 10000,
+        "saturationPerUnitBps": 1000,
+        "recoveryPerMarketTickBps": 250,
+        "demandRecoveryPerMarketTickBps": 100,
+        "requiredTerminalCapabilityId": "liquid-outbound"
+      },
+      {
+        "materialId": "gas-0",
+        "baseCompensation": 8,
+        "floorCompensation": 3,
+        "baseDemandBps": 10000,
+        "saturationPerUnitBps": 1000,
+        "recoveryPerMarketTickBps": 250,
+        "demandRecoveryPerMarketTickBps": 100,
+        "requiredTerminalCapabilityId": "gas-outbound"
+      },
+      {
+        "materialId": "matrix",
+        "baseCompensation": 16,
+        "floorCompensation": 6,
+        "baseDemandBps": 10000,
+        "saturationPerUnitBps": 800,
+        "recoveryPerMarketTickBps": 250,
+        "demandRecoveryPerMarketTickBps": 100
+      },
+      {
+        "materialId": "ferrite-ceramic",
+        "baseCompensation": 14,
+        "floorCompensation": 3,
+        "baseDemandBps": 10000,
+        "saturationPerUnitBps": 2500,
+        "recoveryPerMarketTickBps": 200,
+        "demandRecoveryPerMarketTickBps": 100
+      },
+      {
+        "materialId": "catalyst-powder",
+        "baseCompensation": 9,
+        "floorCompensation": 5,
+        "baseDemandBps": 10000,
+        "saturationPerUnitBps": 500,
+        "recoveryPerMarketTickBps": 300,
+        "demandRecoveryPerMarketTickBps": 100
+      },
+      {
+        "materialId": "phase-ceramic",
+        "baseCompensation": 28,
+        "floorCompensation": 9,
+        "baseDemandBps": 10000,
+        "saturationPerUnitBps": 1800,
+        "recoveryPerMarketTickBps": 150,
+        "demandRecoveryPerMarketTickBps": 100
+      }
+    ],
+    "demandShocks": [
+      {
+        "id": "resonance-orbital-application",
+        "nameKey": "market.shock.resonance-orbital-application.name",
+        "briefKey": "market.shock.resonance-orbital-application.brief",
+        "materialId": "matrix",
+        "triggerReactionId": "sinter-orbital-binder",
+        "demandDeltaBps": 5000
+      }
+    ],
+    "orders": [
+      {
+        "id": "granules-procurement",
+        "nameKey": "order.granules-procurement.name",
+        "briefKey": "order.granules-procurement.brief",
+        "materialId": "granules",
+        "quantity": 4,
+        "durationTicks": 6000,
+        "rewardFuel": 24
+      },
+      {
+        "id": "matrix-procurement",
+        "nameKey": "order.matrix-procurement.name",
+        "briefKey": "order.matrix-procurement.brief",
+        "materialId": "matrix",
+        "quantity": 3,
+        "durationTicks": 8000,
+        "rewardFuel": 30
+      },
+      {
+        "id": "phase-ceramic-demonstration",
+        "nameKey": "order.phase-ceramic-demonstration.name",
+        "briefKey": "order.phase-ceramic-demonstration.brief",
+        "materialId": "phase-ceramic",
+        "quantity": 4,
+        "durationTicks": 12000,
+        "rewardFuel": 36
+      }
+    ],
+    "directives": [
+      {
+        "id": "sealed-thermal-study",
+        "nameKey": "directive.sealed-thermal-study.name",
+        "briefKey": "directive.sealed-thermal-study.brief",
+        "operationId": "heat",
+        "inputMaterialId": "raw",
+        "processConditionId": "sealed",
+        "durationTicks": 6000,
+        "rewardFuel": 18
+      }
+    ],
+    "propertyDirectives": [
+      {
+        "id": "matrix-local-route",
+        "nameKey": "directive.matrix-local-route.name",
+        "briefKey": "directive.matrix-local-route.brief",
+        "propertyKey": "property.matrix-local-route.name",
+        "targetMaterialId": "matrix",
+        "solutionReactionIds": [
+          "sinter-catalyst"
+        ],
+        "durationTicks": 10000,
+        "rewardFuel": 0,
+        "rewardImportSupplyId": "orbital-coolant-canister"
+      },
+      {
+        "id": "matrix-orbital-application",
+        "nameKey": "directive.matrix-orbital-application.name",
+        "briefKey": "directive.matrix-orbital-application.brief",
+        "propertyKey": "property.matrix-orbital-application.name",
+        "targetMaterialId": "matrix",
+        "solutionReactionIds": [
+          "sinter-orbital-binder"
+        ],
+        "durationTicks": 10000,
+        "rewardFuel": 0,
+        "rewardImportSupplyId": "orbital-resonance-seed-crate"
+      }
+    ],
+    "terminalCapabilities": [
+      {
+        "id": "sealed-sample-outbound",
+        "nameKey": "terminal.capability.sealed-sample-outbound.name"
+      },
+      {
+        "id": "liquid-outbound",
+        "nameKey": "terminal.capability.liquid-outbound.name"
+      },
+      {
+        "id": "gas-outbound",
+        "nameKey": "terminal.capability.gas-outbound.name"
+      },
+      {
+        "id": "specialized-inbound",
+        "nameKey": "terminal.capability.specialized-inbound.name"
+      }
+    ],
+    "milestones": [
+      {
+        "id": "sealed-study-certified",
+        "nameKey": "milestone.sealed-study-certified.name",
+        "hintKey": "milestone.sealed-study-certified.hint",
+        "requires": [
+          {
+            "type": "reaction-confirmed",
+            "reactionId": "heat-raw-sealed"
+          }
+        ],
+        "unlockTerminalCapabilityIds": [
+          "sealed-sample-outbound"
+        ]
+      },
+      {
+        "id": "liquid-study-certified",
+        "nameKey": "milestone.liquid-study-certified.name",
+        "hintKey": "milestone.liquid-study-certified.hint",
+        "requires": [
+          {
+            "type": "reaction-confirmed",
+            "reactionId": "liquefy-raw"
+          }
+        ],
+        "unlockTerminalCapabilityIds": [
+          "liquid-outbound"
+        ]
+      },
+      {
+        "id": "gas-study-certified",
+        "nameKey": "milestone.gas-study-certified.name",
+        "hintKey": "milestone.gas-study-certified.hint",
+        "requires": [
+          {
+            "type": "reaction-confirmed",
+            "reactionId": "vaporize-liquid-0"
+          }
+        ],
+        "unlockTerminalCapabilityIds": [
+          "gas-outbound"
+        ]
+      },
+      {
+        "id": "specialized-handling-certified",
+        "nameKey": "milestone.specialized-handling-certified.name",
+        "hintKey": "milestone.specialized-handling-certified.hint",
+        "requires": [
+          {
+            "type": "milestone-completed",
+            "milestoneId": "sealed-study-certified"
+          }
+        ],
+        "unlockTerminalCapabilityIds": [
+          "specialized-inbound"
+        ]
+      },
+      {
+        "id": "resonance-survey-certified",
+        "nameKey": "milestone.resonance-survey-certified.name",
+        "hintKey": "milestone.resonance-survey-certified.hint",
+        "requires": [
+          {
+            "type": "reaction-confirmed",
+            "reactionId": "collect-gas-0"
+          }
+        ],
+        "unlockTerminalCapabilityIds": []
+      },
+      {
+        "id": "phase-lattice-certified",
+        "nameKey": "milestone.phase-lattice-certified.name",
+        "hintKey": "milestone.phase-lattice-certified.hint",
+        "requires": [
+          {
+            "type": "reaction-confirmed",
+            "reactionId": "sinter-resonance-seed"
+          }
+        ],
+        "unlockTerminalCapabilityIds": [],
+        "hiddenUntilCompleted": true
+      }
+    ]
+  }
+}
