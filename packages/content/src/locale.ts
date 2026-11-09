@@ -114,6 +114,227 @@ export const enCatalog: LocaleCatalog = {
   "ui.archive.recover": "Recover archives from backup",
   "ui.archive.recover-warning": "Restore the previous archived index? The most recent save or rename may not appear. A copy of the damaged index will be preserved.",
   "ui.archive.confirm-recover": "Restore previous index",
+  "ui.menu.aria-main": "Unknown Yield main menu",
+  "ui.menu.brand.authority": "EXTRAPLANETARY INDUSTRIAL DIRECTORATE",
+  "ui.menu.brand.tagline": "OFFICIAL INDUSTRIAL OPERATIONS",
+  "ui.menu.rule": "OFFICIAL SITE OPERATIONS",
+  "ui.menu.loading.title": "Validating site records",
+  "ui.menu.loading.body":
+    "The Directorate is checking the selected content and local archive.",
+  "ui.menu.pack.imported": "IMPORTED CONTENT · {{fingerprint}}",
+  "ui.menu.pack.builtin": "BUILT-IN DIRECTORATE CONTENT",
+  "ui.menu.back-menu": "← Main menu",
+  "ui.menu.back": "Back",
+  "ui.menu.cancel": "Cancel",
+  "ui.menu.home.notice-eyebrow": "APPOINTMENT NOTICE · EXPEDITION SITE",
+  "ui.menu.home.notice-title": "Your assignment is a historic honor.",
+  "ui.menu.home.notice-body":
+    "The Directorate has entrusted you with an industrial site. Its official promises are ceremonial; its machines, materials and measured results are not.",
+  "ui.menu.home.resume": "Resume Duty",
+  "ui.menu.home.resume-detail": "{{name}} · saved {{date}}",
+  "ui.menu.home.resume-detail-fallback":
+    "Most recent valid compatible expedition",
+  "ui.menu.home.resume-detail-none":
+    "No valid compatible saved assignment on this device",
+  "ui.menu.home.begin": "Begin Assignment",
+  "ui.menu.home.begin-detail-first": "Your first named industrial expedition",
+  "ui.menu.home.begin-detail-repair":
+    "Repair Personnel Archives before creating a new record",
+  "ui.menu.home.begin-detail-new":
+    "Create a separate, named industrial expedition",
+  "ui.menu.home.archives": "Personnel Archives",
+  "ui.menu.home.archives-detail":
+    "Load, rename, import or remove local expeditions",
+  "ui.menu.home.content": "Content Packs",
+  "ui.menu.home.content-detail": "Select or import an offline content pack",
+  "ui.menu.home.settings": "Operational Regulations",
+  "ui.menu.home.settings-detail": "Display, camera, input and accessibility",
+  "ui.menu.home.credits": "Credits",
+  "ui.menu.home.credits-detail": "Project and technology acknowledgements",
+  "ui.menu.home.archive-warning":
+    "Personnel Archives need attention before a saved assignment can be resumed.",
+  "ui.menu.home.last-valid": "LAST VALID ASSIGNMENT",
+  "ui.menu.home.content-imported": "IMPORTED CONTENT",
+  "ui.menu.home.content-standard": "STANDARD CONTENT",
+  "ui.menu.home.record-meta": "{{content}} · {{exported}} units exported",
+  "ui.menu.new.eyebrow": "PERSONNEL ORDER · 001",
+  "ui.menu.new.role": "COMRADE DIRECTOR / SITE OPERATOR",
+  "ui.menu.new.title": "Begin Assignment",
+  "ui.menu.new.body":
+    "Register a new expedition before entering the site. Existing assignments remain untouched.",
+  "ui.menu.new.dispatch":
+    "“You have been granted the honor of making our industrial destiny inevitable.”",
+  "ui.menu.new.dispatch-source": "— Directorate appointment notice",
+  "ui.menu.new.designation": "Expedition designation",
+  "ui.menu.new.placeholder": "Name this expedition",
+  "ui.menu.new.hint":
+    "1–80 characters. This name can be changed later in Personnel Archives.",
+  "ui.menu.new.active-content": "ACTIVE CONTENT",
+  "ui.menu.new.change-pack": "Change content pack",
+  "ui.menu.new.create": "Create Expedition",
+  "ui.menu.archives.eyebrow": "LOCAL RECORDS · THIS DEVICE",
+  "ui.menu.archives.title": "Personnel Archives",
+  "ui.menu.archives.body":
+    "Every expedition is an independent world. Only compatible, validated records can be loaded.",
+  "ui.menu.archives.recover": "Recover archive index",
+  "ui.menu.archives.recover-confirm":
+    "Restore the previous index? The most recent save or rename may not appear. A copy of the damaged index will be preserved.",
+  "ui.menu.archives.recover-restore": "Restore backup index",
+  "ui.menu.archives.last-opened": "LAST OPENED",
+  "ui.menu.archives.record-meta":
+    "{{date}} · {{exported}} units exported · schema {{schema}}",
+  "ui.menu.archives.pack": "Pack {{fingerprint}}",
+  "ui.menu.archives.builtin": "Built-in content",
+  "ui.menu.archives.other-pack-note":
+    "Requires another content pack. Import the matching Studio bundle under Content Packs before loading this world.",
+  "ui.menu.archives.unreadable-note":
+    "No valid current or backup save revision could be read.",
+  "ui.menu.archives.status-valid": "VALID",
+  "ui.menu.archives.status-unreadable": "UNREADABLE",
+  "ui.menu.archives.status-other-pack": "OTHER PACK",
+  "ui.menu.archives.load": "Load expedition",
+  "ui.menu.archives.rename-label": "New expedition name",
+  "ui.menu.archives.save-name": "Save name",
+  "ui.menu.archives.rename": "Rename",
+  "ui.menu.archives.confirm-delete-label": "Confirm deletion of {{name}}",
+  "ui.menu.archives.confirm-delete": "Delete this saved world permanently?",
+  "ui.menu.archives.delete-expedition": "Delete expedition",
+  "ui.menu.archives.keep": "Keep",
+  "ui.menu.archives.delete": "Delete",
+  "ui.menu.archives.empty":
+    "No archived expeditions have been recorded on this device.",
+  "ui.menu.archives.legacy-eyebrow": "HISTORICAL FIELD RECORDS",
+  "ui.menu.archives.legacy-body":
+    "Import a validated copy. Original records are never overwritten or removed.",
+  "ui.menu.archives.legacy-name": "Name for imported expedition",
+  "ui.menu.archives.legacy-default": "Recovered expedition",
+  "ui.menu.archives.legacy-import": "Import & resume",
+  "ui.menu.archives.legacy-incompatible": "Incompatible record",
+  "ui.menu.archives.new": "+ New assignment",
+  "ui.menu.content.eyebrow": "OFFLINE EXPEDITION CONTENT",
+  "ui.menu.content.title": "Content Packs",
+  "ui.menu.content.body":
+    "Content identity is fixed when an expedition is created. A different pack cannot be loaded into an existing world.",
+  "ui.menu.content.current": "CURRENT SELECTION",
+  "ui.menu.content.sha": "SHA-256 · {{fingerprint}}",
+  "ui.menu.content.builtin-note": "Standard built-in world definitions",
+  "ui.menu.content.import-label": "Import a validated Studio JSON bundle",
+  "ui.menu.content.import-aria": "Choose Studio JSON content pack",
+  "ui.menu.content.import-hint":
+    "Maximum 2 MiB. Import validates the bundle before it can be selected.",
+  "ui.menu.content.pending-eyebrow": "VALIDATED · READY FOR A NEW EXPEDITION",
+  "ui.menu.content.use": "Use this pack",
+  "ui.menu.content.selected-feedback":
+    "Content pack selected for the next expedition.",
+  "ui.menu.content.builtin-feedback":
+    "Built-in content selected for the next expedition.",
+  "ui.menu.content.switch-builtin": "Switch to built-in content",
+  "ui.menu.content.continue": "Continue to new assignment",
+  "ui.menu.settings.eyebrow": "OPERATIONAL REGULATIONS",
+  "ui.menu.settings.title": "Settings & Help",
+  "ui.menu.settings.body":
+    "These preferences are stored separately from expedition records.",
+  "ui.menu.settings.display-group": "Display & sound",
+  "ui.menu.settings.fps": "Show performance counter",
+  "ui.menu.settings.fps-hint": "Display live browser frame rate in the field.",
+  "ui.menu.settings.sound": "Sound effects",
+  "ui.menu.settings.sound-hint":
+    "Allow industrial machine and interface sounds.",
+  "ui.menu.settings.camera-group": "Camera & input",
+  "ui.menu.settings.smooth": "Smooth camera movement",
+  "ui.menu.settings.smooth-hint": "Use eased panning and camera transitions.",
+  "ui.menu.settings.invert": "Invert mouse-wheel zoom",
+  "ui.menu.settings.pan-speed": "Pan speed",
+  "ui.menu.settings.zoom-sensitivity": "Zoom sensitivity",
+  "ui.menu.settings.access-group": "Accessibility",
+  "ui.menu.settings.motion": "Reduced motion",
+  "ui.menu.settings.motion-system": "Follow system",
+  "ui.menu.settings.motion-on": "Reduce motion",
+  "ui.menu.settings.motion-off": "Allow motion",
+  "ui.menu.settings.controls-group": "Field controls",
+  "ui.menu.settings.control-pan": "Pan",
+  "ui.menu.settings.control-pan-keys": "WASD · Arrow keys · Right-drag",
+  "ui.menu.settings.control-zoom": "Zoom",
+  "ui.menu.settings.control-zoom-keys": "Mouse wheel · Pinch",
+  "ui.menu.settings.control-rotate": "Rotate",
+  "ui.menu.settings.control-rotate-keys": "R",
+  "ui.menu.settings.control-cancel": "Cancel / close",
+  "ui.menu.settings.control-cancel-keys": "Esc",
+  "ui.menu.settings.control-center": "Center site",
+  "ui.menu.settings.control-center-keys": "Home",
+  "ui.menu.settings.control-roof": "Factory roof",
+  "ui.menu.settings.control-roof-keys": "Select factory · F",
+  "ui.menu.settings.control-touch": "Touch",
+  "ui.menu.settings.control-touch-keys": "Drag to pan · Pinch to zoom",
+  "ui.menu.settings.restore": "Restore default settings",
+  "ui.menu.credits.eyebrow": "DIRECTORATE PUBLICATIONS OFFICE",
+  "ui.menu.credits.title": "Credits",
+  "ui.menu.credits.line-1":
+    "An independent industrial discovery game in active development.",
+  "ui.menu.credits.line-2":
+    "Built with a 2D world-first experience. The simulation remains the authority; every machine, material and shipment must account for its physical state.",
+  "ui.menu.credits.note": "Full production credits will accompany the public release.",
+  "ui.menu.footer.local": "LOCAL ARCHIVE · THIS DEVICE",
+  "ui.menu.scene.aria": "Site identity",
+  "ui.menu.scene.eyebrow": "EXTRAPLANETARY SITE · FIELD OPERATIONS",
+  "ui.menu.scene.slogan": "THE FUTURE IS FORGED BY LABOR.",
+  "ui.menu.scene.sub": "A STATE-OPERATED INDUSTRIAL EXPEDITION",
+  "ui.onboarding.eyebrow": "FIELD BRIEF",
+  "ui.onboarding.eyebrow-complete": "FIELD BRIEF COMPLETE",
+  "ui.onboarding.recovery.eyebrow": "RECOVERY",
+  "ui.onboarding.recovery.title": "Stop, inspect, recover.",
+  "ui.onboarding.recovery.body":
+    "An industrial incident is physical state, not a popup penalty. Inspect the affected equipment before changing the line.",
+  "ui.onboarding.recovery.hint":
+    "Use the available drain, reclaim, repair or safer-setup action. The Field Notebook keeps the evidence the failure taught you.",
+  "ui.onboarding.camera-build.title": "Read the site before you automate it.",
+  "ui.onboarding.camera-build.body":
+    "Right-drag to pan, scroll to zoom, and Home recenters the site. Start with an Extractor on a visible surface deposit.",
+  "ui.onboarding.camera-build.hint":
+    "Build tools preview placement before committing it. Arrows are physical input/output direction, not decoration.",
+  "ui.onboarding.physical-inventory.title": "Nothing you move is global.",
+  "ui.onboarding.physical-inventory.body":
+    "Extracted material remains in a machine, belt, storage, factory buffer or terminal staging until something physically moves or transforms it.",
+  "ui.onboarding.physical-inventory.hint":
+    "Draw a factory next. Belts and wall ports connect its internal machines to the outside world; storage is geography, not a magic inventory.",
+  "ui.onboarding.experiment.title": "Operate first. Learn from the result.",
+  "ui.onboarding.experiment.body":
+    "The company does not know every recipe. Route material through a plausible process and let the equipment produce evidence.",
+  "ui.onboarding.experiment.hint":
+    "A setup, input and condition can be meaningful even when the output is unknown. The game will not reveal the authored answer in advance.",
+  "ui.onboarding.evidence.title": "Evidence is more useful than a recipe list.",
+  "ui.onboarding.evidence.body":
+    "You have learned something new. Open the Field Notebook to separate confirmed observations, unresolved branches and hazard evidence.",
+  "ui.onboarding.evidence.hint":
+    "Notebook entries describe what the expedition has actually observed. Hidden alternatives stay hidden until evidence supports them.",
+  "ui.onboarding.factory-cycle-close.title":
+    "A solved factory is persistent capital.",
+  "ui.onboarding.factory-cycle-close.body":
+    "Select a factory and close its roof with F or the factory control. Its internal topology and buffers remain real while the exterior becomes compact.",
+  "ui.onboarding.factory-cycle-close.hint":
+    "Closing is presentation and operating context—not deletion.",
+  "ui.onboarding.factory-cycle-reopen.title": "Reopen it without rebuilding it.",
+  "ui.onboarding.factory-cycle-reopen.body":
+    "Open the same factory again. The internal machines, buffers and connections should still be there for diagnosis or reconfiguration.",
+  "ui.onboarding.factory-cycle-reopen.hint":
+    "Persistent factories are meant to be adapted, not rebuilt from scratch.",
+  "ui.onboarding.terminal-export.title":
+    "The terminal turns industry into company value.",
+  "ui.onboarding.terminal-export.body":
+    "Open the Company Terminal. Exports leave the map only through physical terminal staging and an explicit shipment manifest.",
+  "ui.onboarding.terminal-export.hint":
+    "Market value can change; material truth does not. Exported units disappear only when the terminal dispatches them.",
+  "ui.onboarding.terminal-export-open.title":
+    "The terminal turns industry into company value.",
+  "ui.onboarding.terminal-export-open.body":
+    "Use physical terminal staging and the shipment manifest to dispatch something the site has actually produced.",
+  "ui.onboarding.terminal-export-open.hint":
+    "Market value can change; material truth does not. Exported units disappear only when the terminal dispatches them.",
+  "ui.onboarding.complete.title": "Discover → Experiment → Industrialize → Export.",
+  "ui.onboarding.complete.body":
+    "You now have the core operating language. New systems deepen the same loop rather than replacing it with a hidden checklist.",
+  "ui.onboarding.complete.hint":
+    "When something blocks or fails, inspect the world state first. The Notebook and terminal explain evidence and company context without revealing unknown recipes.",
   "ui.knowledge.insights.heading": "Material findings",
   "ui.knowledge.insight.property": "Observed property",
   "ui.knowledge.insight.branch": "Open branch",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import type { CommandResult } from "@site/sim-core";
 import type { ArchiveListing } from "../game/save-archive";
 import {
@@ -68,21 +69,27 @@ function ActionButton({
 }
 
 export default function MainMenu(props: Props) {
+  const { t } = useTranslation();
+  // React already escapes text nodes, so i18next must not HTML-escape values
+  // (player-chosen expedition names would otherwise show entities).
+  const tx = (key: string, vars?: Record<string, string | number>) =>
+    t(key, { ...vars, interpolation: { escapeValue: false } });
   const [view, setView] = useState<MenuView>("home");
   const plaqueRef = useRef<HTMLDivElement>(null);
   const mountedRef = useRef(false);
+  const designationLabel = t("ui.menu.new.designation");
   useEffect(() => {
     if (!mountedRef.current) {
       mountedRef.current = true;
       return;
     }
     const target = plaqueRef.current?.querySelector<HTMLElement>(
-      'input[aria-label="Expedition designation"], .menu-back, .menu-action:not(:disabled), input:not(:disabled), button:not(:disabled)',
+      'input[aria-label="' + designationLabel + '"], .menu-back, .menu-action:not(:disabled), input:not(:disabled), button:not(:disabled)',
     );
     target?.focus({ preventScroll: true });
-  }, [view]);
+  }, [view, designationLabel]);
   const [newName, setNewName] = useState("");
-  const [legacyName, setLegacyName] = useState("Recovered expedition");
+  const [legacyName, setLegacyName] = useState(() => t("ui.menu.archives.legacy-default"));
   const [renameId, setRenameId] = useState<string | null>(null);
   const [renameName, setRenameName] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -91,8 +98,8 @@ export default function MainMenu(props: Props) {
 
   const resumeSlot = props.listing?.slots.find((slot) => slot.id === props.resumeSlotId);
   const activePackLabel = props.activeFingerprint
-    ? "IMPORTED CONTENT · " + props.activeFingerprint.slice(0, 12).toUpperCase()
-    : "BUILT-IN DIRECTORATE CONTENT";
+    ? tx("ui.menu.pack.imported", { fingerprint: props.activeFingerprint.slice(0, 12).toUpperCase() })
+    : t("ui.menu.pack.builtin");
 
   const report = (result: CommandResult) => {
     setFeedback(result.message);
@@ -135,7 +142,7 @@ export default function MainMenu(props: Props) {
         <IndustrialPanelFrame
           kind="menu"
           className="main-menu-plaque"
-          ariaLabel="Unknown Yield main menu"
+          ariaLabel={t("ui.menu.aria-main")}
           bodyClassName="menu-board-body"
           header={<header className="main-menu-brand">
             <div className="directorate-seal" aria-hidden="true">
@@ -147,33 +154,29 @@ export default function MainMenu(props: Props) {
               </svg>
             </div>
             <div className="main-menu-brand-copy">
-              <small>EXTRAPLANETARY INDUSTRIAL DIRECTORATE</small>
+              <small>{t("ui.menu.brand.authority")}</small>
               <h1>UNKNOWN <span>YIELD</span></h1>
-              <p>OFFICIAL INDUSTRIAL OPERATIONS</p>
+              <p>{t("ui.menu.brand.tagline")}</p>
             </div>
           </header>}
         >
 
-          <div className="main-menu-rule"><span>OFFICIAL SITE OPERATIONS</span><i /></div>
+          <div className="main-menu-rule"><span>{t("ui.menu.rule")}</span><i /></div>
 
           {!props.ready ? (
             <section className="menu-loading" role="status">
               <span className="menu-status-light" />
-              <strong>Validating site records</strong>
-              <p>The Directorate is checking the selected content and local archive.</p>
+              <strong>{t("ui.menu.loading.title")}</strong>
+              <p>{t("ui.menu.loading.body")}</p>
             </section>
           ) : (
             <>
               {view === "home" && (
                 <div className="menu-view menu-home" id="main-menu-actions">
                   <div className="menu-appointment">
-                    <small>APPOINTMENT NOTICE · EXPEDITION SITE</small>
-                    <h2>Your assignment is a historic honor.</h2>
-                    <p>
-                      The Directorate has entrusted you with an industrial site.
-                      Its official promises are ceremonial; its machines, materials
-                      and measured results are not.
-                    </p>
+                    <small>{t("ui.menu.home.notice-eyebrow")}</small>
+                    <h2>{t("ui.menu.home.notice-title")}</h2>
+                    <p>{t("ui.menu.home.notice-body")}</p>
                   </div>
                   <div className="menu-home-actions">
                     {props.resumeSlotId ? (
@@ -181,74 +184,77 @@ export default function MainMenu(props: Props) {
                         primary
                         disabled={!props.ready || !!props.archiveError}
                         detail={resumeSlot
-                          ? resumeSlot.name + " · saved " + new Date(resumeSlot.savedAt).toLocaleString()
-                          : "Most recent valid compatible expedition"}
+                          ? tx("ui.menu.home.resume-detail", { name: resumeSlot.name, date: new Date(resumeSlot.savedAt).toLocaleString() })
+                          : t("ui.menu.home.resume-detail-fallback")}
                         onClick={() => report(props.onResume())}
                       >
-                        Resume Duty
+                        {t("ui.menu.home.resume")}
                       </ActionButton>
                     ) : (
                       <ActionButton
                         primary
                         disabled={!props.ready || !!props.archiveError}
-                        detail={props.archiveError ? "Repair Personnel Archives before creating a new record" : "Your first named industrial expedition"}
+                        detail={props.archiveError ? t("ui.menu.home.begin-detail-repair") : t("ui.menu.home.begin-detail-first")}
                         onClick={() => { setFeedback(null); setView("new"); }}
                       >
-                        Begin Assignment
+                        {t("ui.menu.home.begin")}
                       </ActionButton>
                     )}
                     {props.resumeSlotId ? (
                       <ActionButton
                         disabled={!props.ready || !!props.archiveError}
-                        detail="Create a separate, named industrial expedition"
+                        detail={t("ui.menu.home.begin-detail-new")}
                         onClick={() => { setFeedback(null); setView("new"); }}
                       >
-                        Begin Assignment
+                        {t("ui.menu.home.begin")}
                       </ActionButton>
                     ) : (
                       <ActionButton
                         disabled
-                        detail="No valid compatible saved assignment on this device"
+                        detail={t("ui.menu.home.resume-detail-none")}
                         onClick={() => setView("archives")}
                       >
-                        Resume Duty
+                        {t("ui.menu.home.resume")}
                       </ActionButton>
                     )}
                     <ActionButton
-                      detail="Load, rename, import or remove local expeditions"
+                      detail={t("ui.menu.home.archives-detail")}
                       onClick={() => { setFeedback(null); setView("archives"); }}
                     >
-                      Personnel Archives
+                      {t("ui.menu.home.archives")}
                     </ActionButton>
                     <ActionButton
-                      detail="Select or import an offline content pack"
+                      detail={t("ui.menu.home.content-detail")}
                       onClick={() => { setFeedback(null); setView("content"); }}
                     >
-                      Content Packs
+                      {t("ui.menu.home.content")}
                     </ActionButton>
                     <ActionButton
-                      detail="Display, camera, input and accessibility"
+                      detail={t("ui.menu.home.settings-detail")}
                       onClick={() => { setFeedback(null); setView("settings"); }}
                     >
-                      Operational Regulations
+                      {t("ui.menu.home.settings")}
                     </ActionButton>
                     <ActionButton
-                      detail="Project and technology acknowledgements"
+                      detail={t("ui.menu.home.credits-detail")}
                       onClick={() => { setFeedback(null); setView("credits"); }}
                     >
-                      Credits
+                      {t("ui.menu.home.credits")}
                     </ActionButton>
                   </div>
                   {props.archiveError && (
                     <p className="menu-warning" role="alert">
-                      Personnel Archives need attention before a saved assignment can be resumed.
+                      {t("ui.menu.home.archive-warning")}
                     </p>
                   )}
                   {resumeSlot && (
                     <div className="menu-current-record">
-                      <span>LAST VALID ASSIGNMENT</span>
+                      <span>{t("ui.menu.home.last-valid")}</span>
                       <strong>{resumeSlot.name}</strong>
-                      <small>{resumeSlot.fingerprint ? "IMPORTED CONTENT" : "STANDARD CONTENT"} · {resumeSlot.exported} units exported</small>
+                      <small>{tx("ui.menu.home.record-meta", {
+                        content: resumeSlot.fingerprint ? t("ui.menu.home.content-imported") : t("ui.menu.home.content-standard"),
+                        exported: resumeSlot.exported,
+                      })}</small>
                     </div>
                   )}
                 </div>
@@ -256,43 +262,43 @@ export default function MainMenu(props: Props) {
 
               {view === "new" && (
                 <div className="menu-view">
-                  <button className="menu-back" onClick={() => setView("home")}>← Main menu</button>
+                  <button className="menu-back" onClick={() => setView("home")}>{t("ui.menu.back-menu")}</button>
                   <div className="menu-section-heading">
-                    <small>PERSONNEL ORDER · 001</small>
-                    <div className="menu-operator-title">COMRADE DIRECTOR / SITE OPERATOR</div>
-                    <h2>Begin Assignment</h2>
-                    <p>Register a new expedition before entering the site. Existing assignments remain untouched.</p>
+                    <small>{t("ui.menu.new.eyebrow")}</small>
+                    <div className="menu-operator-title">{t("ui.menu.new.role")}</div>
+                    <h2>{t("ui.menu.new.title")}</h2>
+                    <p>{t("ui.menu.new.body")}</p>
                   </div>
                   <blockquote className="menu-official-dispatch">
-                    “You have been granted the honor of making our industrial destiny inevitable.”
-                    <small>— Directorate appointment notice</small>
+                    {t("ui.menu.new.dispatch")}
+                    <small>{t("ui.menu.new.dispatch-source")}</small>
                   </blockquote>
                   <label className="menu-field">
-                    <span>Expedition designation</span>
+                    <span>{t("ui.menu.new.designation")}</span>
                     <input
                       autoFocus
                       type="text"
                       maxLength={80}
                       value={newName}
-                      placeholder="Name this expedition"
-                      aria-label="Expedition designation"
+                      placeholder={t("ui.menu.new.placeholder")}
+                      aria-label={t("ui.menu.new.designation")}
                       onChange={(event) => setNewName(event.currentTarget.value)}
                       onKeyDown={(event) => {
                         if (event.key === "Enter" && newName.trim())
                           report(props.onStartNew(newName));
                       }}
                     />
-                    <small>1–80 characters. This name can be changed later in Personnel Archives.</small>
+                    <small>{t("ui.menu.new.hint")}</small>
                   </label>
                   <div className="menu-pack-summary">
-                    <span>ACTIVE CONTENT</span>
+                    <span>{t("ui.menu.new.active-content")}</span>
                     <strong>{activePackLabel}</strong>
-                    <button type="button" onClick={() => setView("content")}>Change content pack</button>
+                    <button type="button" onClick={() => setView("content")}>{t("ui.menu.new.change-pack")}</button>
                   </div>
                   <div className="menu-inline-actions">
-                    <button className="menu-secondary" onClick={() => setView("home")}>Cancel</button>
+                    <button className="menu-secondary" onClick={() => setView("home")}>{t("ui.menu.cancel")}</button>
                     <button className="menu-primary" disabled={!newName.trim() || !!props.archiveError} onClick={() => report(props.onStartNew(newName))}>
-                      Create Expedition <span>→</span>
+                      {t("ui.menu.new.create")} <span>→</span>
                     </button>
                   </div>
                 </div>
@@ -300,28 +306,28 @@ export default function MainMenu(props: Props) {
 
               {view === "archives" && (
                 <div className="menu-view menu-archives">
-                  <button className="menu-back" onClick={() => setView("home")}>← Main menu</button>
+                  <button className="menu-back" onClick={() => setView("home")}>{t("ui.menu.back-menu")}</button>
                   <div className="menu-section-heading">
-                    <small>LOCAL RECORDS · THIS DEVICE</small>
-                    <h2>Personnel Archives</h2>
-                    <p>Every expedition is an independent world. Only compatible, validated records can be loaded.</p>
+                    <small>{t("ui.menu.archives.eyebrow")}</small>
+                    <h2>{t("ui.menu.archives.title")}</h2>
+                    <p>{t("ui.menu.archives.body")}</p>
                   </div>
                   {props.archiveError && (
                     <div className="menu-warning" role="alert">
                       <p>{props.archiveError}</p>
                       {confirmRecovery ? (
                         <>
-                          <p>Restore the previous index? The most recent save or rename may not appear. A copy of the damaged index will be preserved.</p>
+                          <p>{t("ui.menu.archives.recover-confirm")}</p>
                           <div className="menu-inline-actions">
-                            <button className="menu-secondary" onClick={() => setConfirmRecovery(false)}>Cancel</button>
+                            <button className="menu-secondary" onClick={() => setConfirmRecovery(false)}>{t("ui.menu.cancel")}</button>
                             <button className="menu-primary" onClick={() => {
                               const result = report(props.onRecover());
                               if (result.ok) setConfirmRecovery(false);
-                            }}>Restore backup index</button>
+                            }}>{t("ui.menu.archives.recover-restore")}</button>
                           </div>
                         </>
                       ) : (
-                        <button className="menu-secondary" onClick={() => setConfirmRecovery(true)}>Recover archive index</button>
+                        <button className="menu-secondary" onClick={() => setConfirmRecovery(true)}>{t("ui.menu.archives.recover")}</button>
                       )}
                     </div>
                   )}
@@ -334,58 +340,62 @@ export default function MainMenu(props: Props) {
                           <div className="menu-archive-card-main">
                             <span className="menu-record-icon" aria-hidden="true">▤</span>
                             <div>
-                              <strong>{slot.name}{slot.id === props.activeSlotId ? " · LAST OPENED" : ""}</strong>
-                              <small>{new Date(slot.savedAt).toLocaleString()} · {slot.exported} units exported · schema {slot.schemaVersion}</small>
-                              <small>{slot.fingerprint ? "Pack " + slot.fingerprint.slice(0, 12) : "Built-in content"}</small>
-                              {!compatible && <small>Requires another content pack. Import the matching Studio bundle under Content Packs before loading this world.</small>}
-                              {compatible && !loadable && <small>No valid current or backup save revision could be read.</small>}
+                              <strong>{slot.name}{slot.id === props.activeSlotId ? " · " + t("ui.menu.archives.last-opened") : ""}</strong>
+                              <small>{tx("ui.menu.archives.record-meta", {
+                                date: new Date(slot.savedAt).toLocaleString(),
+                                exported: slot.exported,
+                                schema: slot.schemaVersion,
+                              })}</small>
+                              <small>{slot.fingerprint ? tx("ui.menu.archives.pack", { fingerprint: slot.fingerprint.slice(0, 12) }) : t("ui.menu.archives.builtin")}</small>
+                              {!compatible && <small>{t("ui.menu.archives.other-pack-note")}</small>}
+                              {compatible && !loadable && <small>{t("ui.menu.archives.unreadable-note")}</small>}
                             </div>
                             <span className={loadable ? "menu-record-status ready" : "menu-record-status"}>
-                              {loadable ? "VALID" : compatible ? "UNREADABLE" : "OTHER PACK"}
+                              {loadable ? t("ui.menu.archives.status-valid") : compatible ? t("ui.menu.archives.status-unreadable") : t("ui.menu.archives.status-other-pack")}
                             </span>
                           </div>
                           <div className="menu-archive-actions">
                             <button className="menu-primary" disabled={!loadable || !!props.archiveError}
-                              onClick={() => report(props.onLoad(slot.id))}>Load expedition</button>
+                              onClick={() => report(props.onLoad(slot.id))}>{t("ui.menu.archives.load")}</button>
                             {renameId === slot.id ? (
                               <div className="menu-edit-row">
-                                <input aria-label="New expedition name" maxLength={80} value={renameName}
+                                <input aria-label={t("ui.menu.archives.rename-label")} maxLength={80} value={renameName}
                                   onChange={(event) => setRenameName(event.currentTarget.value)} />
                                 <button className="menu-secondary" disabled={!renameName.trim()} onClick={() => {
                                   const result = report(props.onRename(slot.id, renameName));
                                   if (result.ok) setRenameId(null);
-                                }}>Save name</button>
-                                <button className="menu-secondary" onClick={() => setRenameId(null)}>Cancel</button>
+                                }}>{t("ui.menu.archives.save-name")}</button>
+                                <button className="menu-secondary" onClick={() => setRenameId(null)}>{t("ui.menu.cancel")}</button>
                               </div>
                             ) : (
                               <button className="menu-secondary" onClick={() => {
                                 setRenameId(slot.id);
                                 setRenameName(slot.name);
-                              }}>Rename</button>
+                              }}>{t("ui.menu.archives.rename")}</button>
                             )}
                             {deleteId === slot.id ? (
-                              <div className="menu-delete-confirm" role="group" aria-label={"Confirm deletion of " + slot.name}>
-                                <span>Delete this saved world permanently?</span>
-                                <button className="menu-danger" onClick={() => report(props.onDelete(slot.id))}>Delete expedition</button>
-                                <button className="menu-secondary" onClick={() => setDeleteId(null)}>Keep</button>
+                              <div className="menu-delete-confirm" role="group" aria-label={tx("ui.menu.archives.confirm-delete-label", { name: slot.name })}>
+                                <span>{t("ui.menu.archives.confirm-delete")}</span>
+                                <button className="menu-danger" onClick={() => report(props.onDelete(slot.id))}>{t("ui.menu.archives.delete-expedition")}</button>
+                                <button className="menu-secondary" onClick={() => setDeleteId(null)}>{t("ui.menu.archives.keep")}</button>
                               </div>
                             ) : (
-                              <button className="menu-secondary" disabled={!!props.archiveError} onClick={() => setDeleteId(slot.id)}>Delete</button>
+                              <button className="menu-secondary" disabled={!!props.archiveError} onClick={() => setDeleteId(slot.id)}>{t("ui.menu.archives.delete")}</button>
                             )}
                           </div>
                         </article>
                       );
                     })}
                     {props.ready && props.listing && props.listing.slots.length === 0 && (
-                      <p className="menu-empty">No archived expeditions have been recorded on this device.</p>
+                      <p className="menu-empty">{t("ui.menu.archives.empty")}</p>
                     )}
                   </div>
                   {!!props.listing?.legacy.length && (
                     <section className="menu-legacy">
-                      <small>HISTORICAL FIELD RECORDS</small>
-                      <p>Import a validated copy. Original records are never overwritten or removed.</p>
+                      <small>{t("ui.menu.archives.legacy-eyebrow")}</small>
+                      <p>{t("ui.menu.archives.legacy-body")}</p>
                       <label className="menu-field">
-                        <span>Name for imported expedition</span>
+                        <span>{t("ui.menu.archives.legacy-name")}</span>
                         <input value={legacyName} maxLength={80} onChange={(event) => setLegacyName(event.currentTarget.value)} />
                       </label>
                       {props.listing.legacy.map((legacy) => (
@@ -393,110 +403,110 @@ export default function MainMenu(props: Props) {
                           <span>{legacy.label}</span>
                           <button className="menu-secondary" disabled={!legacy.supported || !legacyName.trim() || !!props.archiveError}
                             onClick={() => report(props.onImportLegacy(legacy.key, legacyName))}>
-                            {legacy.supported ? "Import & resume" : "Incompatible record"}
+                            {legacy.supported ? t("ui.menu.archives.legacy-import") : t("ui.menu.archives.legacy-incompatible")}
                           </button>
                         </div>
                       ))}
                     </section>
                   )}
                   <div className="menu-inline-actions">
-                    <button className="menu-secondary" onClick={() => setView("new")}>+ New assignment</button>
-                    <button className="menu-secondary" onClick={() => setView("home")}>Back</button>
+                    <button className="menu-secondary" onClick={() => setView("new")}>{t("ui.menu.archives.new")}</button>
+                    <button className="menu-secondary" onClick={() => setView("home")}>{t("ui.menu.back")}</button>
                   </div>
                 </div>
               )}
 
               {view === "content" && (
                 <div className="menu-view">
-                  <button className="menu-back" onClick={() => setView("home")}>← Main menu</button>
+                  <button className="menu-back" onClick={() => setView("home")}>{t("ui.menu.back-menu")}</button>
                   <div className="menu-section-heading">
-                    <small>OFFLINE EXPEDITION CONTENT</small>
-                    <h2>Content Packs</h2>
-                    <p>Content identity is fixed when an expedition is created. A different pack cannot be loaded into an existing world.</p>
+                    <small>{t("ui.menu.content.eyebrow")}</small>
+                    <h2>{t("ui.menu.content.title")}</h2>
+                    <p>{t("ui.menu.content.body")}</p>
                   </div>
                   <div className="menu-pack-summary">
-                    <span>CURRENT SELECTION</span>
+                    <span>{t("ui.menu.content.current")}</span>
                     <strong>{activePackLabel}</strong>
-                    {props.activeFingerprint && <small>SHA-256 · {props.activeFingerprint}</small>}
-                    {!props.activeFingerprint && <small>Standard built-in world definitions</small>}
+                    {props.activeFingerprint && <small>{tx("ui.menu.content.sha", { fingerprint: props.activeFingerprint })}</small>}
+                    {!props.activeFingerprint && <small>{t("ui.menu.content.builtin-note")}</small>}
                   </div>
                   <label className="menu-file-field">
-                    <span>Import a validated Studio JSON bundle</span>
-                    <input type="file" accept=".json,application/json" aria-label="Choose Studio JSON content pack"
+                    <span>{t("ui.menu.content.import-label")}</span>
+                    <input type="file" accept=".json,application/json" aria-label={t("ui.menu.content.import-aria")}
                       onChange={(event) => {
                         props.onImportPack(event.currentTarget.files?.[0]);
                         event.currentTarget.value = "";
                       }} />
-                    <small>Maximum 2 MiB. Import validates the bundle before it can be selected.</small>
+                    <small>{t("ui.menu.content.import-hint")}</small>
                   </label>
                   {props.pendingPack && (
                     <div className="menu-pack-pending">
-                      <small>VALIDATED · READY FOR A NEW EXPEDITION</small>
+                      <small>{t("ui.menu.content.pending-eyebrow")}</small>
                       <strong>{props.pendingPack.fingerprint}</strong>
                       <button className="menu-primary" onClick={() => {
                         props.onUsePack(props.pendingPack);
-                        setFeedback("Content pack selected for the next expedition.");
+                        setFeedback(t("ui.menu.content.selected-feedback"));
                         setView("new");
-                      }}>Use this pack</button>
+                      }}>{t("ui.menu.content.use")}</button>
                     </div>
                   )}
                   {props.activePack && (
                     <button className="menu-secondary menu-full" onClick={() => {
                       props.onUsePack(null);
-                      setFeedback("Built-in content selected for the next expedition.");
-                    }}>Switch to built-in content</button>
+                      setFeedback(t("ui.menu.content.builtin-feedback"));
+                    }}>{t("ui.menu.content.switch-builtin")}</button>
                   )}
                   <div className="menu-inline-actions">
-                    <button className="menu-secondary" onClick={() => setView("home")}>Back</button>
-                    <button className="menu-primary" onClick={() => setView("new")}>Continue to new assignment</button>
+                    <button className="menu-secondary" onClick={() => setView("home")}>{t("ui.menu.back")}</button>
+                    <button className="menu-primary" onClick={() => setView("new")}>{t("ui.menu.content.continue")}</button>
                   </div>
                 </div>
               )}
 
               {view === "settings" && (
                 <div className="menu-view menu-settings">
-                  <button className="menu-back" onClick={() => setView("home")}>← Main menu</button>
+                  <button className="menu-back" onClick={() => setView("home")}>{t("ui.menu.back-menu")}</button>
                   <div className="menu-section-heading">
-                    <small>OPERATIONAL REGULATIONS</small>
-                    <h2>Settings &amp; Help</h2>
-                    <p>These preferences are stored separately from expedition records.</p>
+                    <small>{t("ui.menu.settings.eyebrow")}</small>
+                    <h2>{t("ui.menu.settings.title")}</h2>
+                    <p>{t("ui.menu.settings.body")}</p>
                   </div>
                   <section className="menu-settings-group">
-                    <h3>Display &amp; sound</h3>
+                    <h3>{t("ui.menu.settings.display-group")}</h3>
                     <label className="menu-toggle">
-                      <span>Show performance counter<small>Display live browser frame rate in the field.</small></span>
-                      <input type="checkbox" aria-label="Show performance counter" checked={props.preferences.interface.showFps}
+                      <span>{t("ui.menu.settings.fps")}<small>{t("ui.menu.settings.fps-hint")}</small></span>
+                      <input type="checkbox" aria-label={t("ui.menu.settings.fps")} checked={props.preferences.interface.showFps}
                         onChange={(event) => updateInterface({ showFps: event.currentTarget.checked })} />
                     </label>
                     <label className="menu-toggle">
-                      <span>Sound effects<small>Allow industrial machine and interface sounds.</small></span>
-                      <input type="checkbox" aria-label="Sound effects" checked={props.preferences.interface.soundEffects}
+                      <span>{t("ui.menu.settings.sound")}<small>{t("ui.menu.settings.sound-hint")}</small></span>
+                      <input type="checkbox" aria-label={t("ui.menu.settings.sound")} checked={props.preferences.interface.soundEffects}
                         onChange={(event) => updateInterface({ soundEffects: event.currentTarget.checked })} />
                     </label>
                   </section>
                   <section className="menu-settings-group">
-                    <h3>Camera &amp; input</h3>
+                    <h3>{t("ui.menu.settings.camera-group")}</h3>
                     <label className="menu-toggle">
-                      <span>Smooth camera movement<small>Use eased panning and camera transitions.</small></span>
-                      <input type="checkbox" aria-label="Smooth camera movement" checked={props.preferences.camera.smooth}
+                      <span>{t("ui.menu.settings.smooth")}<small>{t("ui.menu.settings.smooth-hint")}</small></span>
+                      <input type="checkbox" aria-label={t("ui.menu.settings.smooth")} checked={props.preferences.camera.smooth}
                         onChange={(event) => updateCamera({ smooth: event.currentTarget.checked })} />
                     </label>
                     <label className="menu-toggle">
-                      <span>Invert mouse-wheel zoom</span>
-                      <input type="checkbox" aria-label="Invert mouse-wheel zoom" checked={props.preferences.controls.invertWheelZoom}
+                      <span>{t("ui.menu.settings.invert")}</span>
+                      <input type="checkbox" aria-label={t("ui.menu.settings.invert")} checked={props.preferences.controls.invertWheelZoom}
                         onChange={(event) => updateControls({ invertWheelZoom: event.currentTarget.checked })} />
                     </label>
                     <label className="menu-range">
-                      <span>Pan speed</span>
-                      <input type="range" aria-label="Pan speed" min={CAMERA_TUNING_BOUNDS.panSpeed.min}
+                      <span>{t("ui.menu.settings.pan-speed")}</span>
+                      <input type="range" aria-label={t("ui.menu.settings.pan-speed")} min={CAMERA_TUNING_BOUNDS.panSpeed.min}
                         max={CAMERA_TUNING_BOUNDS.panSpeed.max} step={CAMERA_TUNING_BOUNDS.panSpeed.step}
                         value={props.preferences.camera.panSpeed}
                         onChange={(event) => updateCamera({ panSpeed: Number(event.currentTarget.value) })} />
                       <output>{props.preferences.camera.panSpeed.toFixed(1)}×</output>
                     </label>
                     <label className="menu-range">
-                      <span>Zoom sensitivity</span>
-                      <input type="range" aria-label="Zoom sensitivity" min={CAMERA_TUNING_BOUNDS.zoomSensitivity.min}
+                      <span>{t("ui.menu.settings.zoom-sensitivity")}</span>
+                      <input type="range" aria-label={t("ui.menu.settings.zoom-sensitivity")} min={CAMERA_TUNING_BOUNDS.zoomSensitivity.min}
                         max={CAMERA_TUNING_BOUNDS.zoomSensitivity.max} step={CAMERA_TUNING_BOUNDS.zoomSensitivity.step}
                         value={props.preferences.camera.zoomSensitivity}
                         onChange={(event) => updateCamera({ zoomSensitivity: Number(event.currentTarget.value) })} />
@@ -504,27 +514,27 @@ export default function MainMenu(props: Props) {
                     </label>
                   </section>
                   <section className="menu-settings-group">
-                    <h3>Accessibility</h3>
+                    <h3>{t("ui.menu.settings.access-group")}</h3>
                     <label className="menu-select">
-                      <span>Reduced motion</span>
-                      <select aria-label="Reduced motion" value={props.preferences.accessibility.reducedMotion}
+                      <span>{t("ui.menu.settings.motion")}</span>
+                      <select aria-label={t("ui.menu.settings.motion")} value={props.preferences.accessibility.reducedMotion}
                         onChange={(event) => updateAccessibility({ reducedMotion: event.currentTarget.value as GamePreferences["accessibility"]["reducedMotion"] })}>
-                        <option value="system">Follow system</option>
-                        <option value="on">Reduce motion</option>
-                        <option value="off">Allow motion</option>
+                        <option value="system">{t("ui.menu.settings.motion-system")}</option>
+                        <option value="on">{t("ui.menu.settings.motion-on")}</option>
+                        <option value="off">{t("ui.menu.settings.motion-off")}</option>
                       </select>
                     </label>
                   </section>
                   <section className="menu-settings-group">
-                    <h3>Field controls</h3>
+                    <h3>{t("ui.menu.settings.controls-group")}</h3>
                     <dl className="menu-controls-list">
-                      <dt>Pan</dt><dd>WASD · Arrow keys · Right-drag</dd>
-                      <dt>Zoom</dt><dd>Mouse wheel · Pinch</dd>
-                      <dt>Rotate</dt><dd>R</dd>
-                      <dt>Cancel / close</dt><dd>Esc</dd>
-                      <dt>Center site</dt><dd>Home</dd>
-                      <dt>Factory roof</dt><dd>Select factory · F</dd>
-                      <dt>Touch</dt><dd>Drag to pan · Pinch to zoom</dd>
+                      <dt>{t("ui.menu.settings.control-pan")}</dt><dd>{t("ui.menu.settings.control-pan-keys")}</dd>
+                      <dt>{t("ui.menu.settings.control-zoom")}</dt><dd>{t("ui.menu.settings.control-zoom-keys")}</dd>
+                      <dt>{t("ui.menu.settings.control-rotate")}</dt><dd>{t("ui.menu.settings.control-rotate-keys")}</dd>
+                      <dt>{t("ui.menu.settings.control-cancel")}</dt><dd>{t("ui.menu.settings.control-cancel-keys")}</dd>
+                      <dt>{t("ui.menu.settings.control-center")}</dt><dd>{t("ui.menu.settings.control-center-keys")}</dd>
+                      <dt>{t("ui.menu.settings.control-roof")}</dt><dd>{t("ui.menu.settings.control-roof-keys")}</dd>
+                      <dt>{t("ui.menu.settings.control-touch")}</dt><dd>{t("ui.menu.settings.control-touch-keys")}</dd>
                     </dl>
                   </section>
                   <button className="menu-secondary menu-full" onClick={() => props.onPreferencesChange({
@@ -534,22 +544,22 @@ export default function MainMenu(props: Props) {
                     controls: { invertWheelZoom: false },
                     interface: { showFps: false, soundEffects: true },
                     accessibility: { reducedMotion: "system" },
-                  })}>Restore default settings</button>
+                  })}>{t("ui.menu.settings.restore")}</button>
                 </div>
               )}
 
               {view === "credits" && (
                 <div className="menu-view menu-credits">
-                  <button className="menu-back" onClick={() => setView("home")}>← Main menu</button>
+                  <button className="menu-back" onClick={() => setView("home")}>{t("ui.menu.back-menu")}</button>
                   <div className="menu-section-heading">
-                    <small>DIRECTORATE PUBLICATIONS OFFICE</small>
-                    <h2>Credits</h2>
+                    <small>{t("ui.menu.credits.eyebrow")}</small>
+                    <h2>{t("ui.menu.credits.title")}</h2>
                   </div>
                   <div className="menu-credit-mark" aria-hidden="true">✦</div>
                   <p><strong>UNKNOWN YIELD</strong></p>
-                  <p>An independent industrial discovery game in active development.</p>
-                  <p>Built with a 2D world-first experience. The simulation remains the authority; every machine, material and shipment must account for its physical state.</p>
-                  <small className="menu-credit-note">Full production credits will accompany the public release.</small>
+                  <p>{t("ui.menu.credits.line-1")}</p>
+                  <p>{t("ui.menu.credits.line-2")}</p>
+                  <small className="menu-credit-note">{t("ui.menu.credits.note")}</small>
                 </div>
               )}
             </>
@@ -559,15 +569,15 @@ export default function MainMenu(props: Props) {
             <p className="menu-feedback" role="status">{feedback ?? props.notice?.message}</p>
           )}
           <footer className="main-menu-footer">
-            <span>LOCAL ARCHIVE · THIS DEVICE</span>
+            <span>{t("ui.menu.footer.local")}</span>
             <span>{activePackLabel}</span>
           </footer>
         </IndustrialPanelFrame>
-        <aside className="main-menu-scene-caption" aria-label="Site identity">
+        <aside className="main-menu-scene-caption" aria-label={t("ui.menu.scene.aria")}>
           <span className="scene-caption-rule" />
-          <small>EXTRAPLANETARY SITE · FIELD OPERATIONS</small>
-          <strong>THE FUTURE IS FORGED BY LABOR.</strong>
-          <span className="scene-caption-sub">A STATE-OPERATED INDUSTRIAL EXPEDITION</span>
+          <small>{t("ui.menu.scene.eyebrow")}</small>
+          <strong>{t("ui.menu.scene.slogan")}</strong>
+          <span className="scene-caption-sub">{t("ui.menu.scene.sub")}</span>
         </aside>
       </div>
     </main>
