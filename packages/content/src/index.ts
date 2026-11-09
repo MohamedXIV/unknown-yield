@@ -19,6 +19,13 @@ export {
   validateLocaleCoverage,
   type LocaleCatalog,
 } from "./locale";
+export {
+  lintVoice,
+  summarizeVoice,
+  voiceRuleLabels,
+  type VoiceNote,
+  type VoiceRule,
+} from "./voice";
 export { fixture } from "./fixture";
 
 export {
