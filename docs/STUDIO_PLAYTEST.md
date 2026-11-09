@@ -6,6 +6,10 @@ Run `npm run dev:studio` and open `http://127.0.0.1:3000/studio-entry/`. Content
 
 Your local draft autosaves to `unknown-yield-studio-draft-v1` in local browser storage after edits. It stores **TinyBase working tables**, even if reactions, references or locale keys are currently invalid, along with the last validated base. On editor reload the draft is restored without attempting to start a game or publish anything. A corrupt or unavailable local draft reports an error; it does not replace the game save. **Reset Studio draft to built-in content** explicitly discards it; that action does not delete player saves or published content packs.
 
+## Repo files (single source of truth)
+
+The built-in world and English copy are `packages/content/data/content.json` and `packages/content/data/locale.en.json` (see D-042). While `npm run dev:studio` is running, the **Repo files** section of the Studio offers **Save draft to repo files** (writes both files only if the whole bundle validates) and **Reload from repo files** (picks up edits made by hand or by an agent). Review the resulting git diff and commit it like any other change. The local API is not present in any other mode.
+
 ## Edit → validate → export → playtest
 
 1. Select an entity and edit it or use **Create** with a stable ID. Machine costs/operations and reaction inputs/outputs have dedicated fields. Add any required locale keys.

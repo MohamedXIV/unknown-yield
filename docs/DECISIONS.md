@@ -550,3 +550,18 @@ Machines specify capabilities, operating envelopes, resource needs, reliability 
 Implementation is deliberately incremental: **P0 presentation → P1 compatibility → P2 reliability → P3 rich outcomes/Studio**, with a small real extractor/material vertical proof before breadth. No chemistry solver, arbitrary JSON scripting, Rust/ECS rewrite or regression to generic fixed tier gates.
 
 **Source of truth:** [DATA_DRIVEN_INDUSTRIAL_BEHAVIOR_V1.md](DATA_DRIVEN_INDUSTRIAL_BEHAVIOR_V1.md). D-023's prior narrow authored hazards and exact-match reactions remain the **implemented** behavior until explicitly migrated; this decision expands the approved *target* rather than falsely claiming those systems have already been replaced.
+
+
+---
+
+## D-042 — Built-in content and English copy live in JSON data files
+
+**Status:** accepted 2026-11-10.
+
+The built-in world is `packages/content/data/content.json` and the English catalog is `packages/content/data/locale.en.json`. `fixture` and `enCatalog` are those files parsed through the existing validators, so the schema, stable IDs, localization-key coverage and hidden-knowledge rules are unchanged, and the validated bundle is byte-identical to the former TypeScript literals (content packs and their fingerprints are unaffected).
+
+Both people and agents may edit these files directly, or through the development Studio, which can save its validated draft back to them (`Save draft to repo files`) and reload them. That local API exists only under `npm run dev:studio`: it is a generated route, requires a custom header and a local Origin, validates the whole bundle before writing anything, and is removed before every production build. Production remains a static export with no Studio code.
+
+Rationale comments that used to sit beside fixture literals are kept in `packages/content/data/README.md`, since JSON cannot carry comments.
+
+**Source of truth:** [STUDIO_PLAYTEST.md](STUDIO_PLAYTEST.md), `packages/content/data/README.md`.
