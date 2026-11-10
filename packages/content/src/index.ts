@@ -26,6 +26,14 @@ export {
   type VoiceNote,
   type VoiceRule,
 } from "./voice";
+export {
+  identityFields,
+  identityKey,
+  identityKinds,
+  orphanIdentityKeys,
+  type IdentityField,
+  type IdentityKind,
+} from "./identity";
 export { fixture } from "./fixture";
 
 export {

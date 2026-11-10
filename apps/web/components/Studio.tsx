@@ -8,6 +8,7 @@ import {
   enCatalog,
   fixture,
   lintVoice,
+  orphanIdentityKeys,
   summarizeVoice,
   voiceRuleLabels,
   type Content,
@@ -172,6 +173,16 @@ export default function Studio() {
     // `revision` changes whenever the store is edited.
   }, [store, revision]);
   const voiceSummary = summarizeVoice(voiceNotes);
+  const orphanKeys = useMemo(
+    () =>
+      new Set(
+        validationError
+          ? []
+          : orphanIdentityKeys(currentContent, catalogFromStore(store)),
+      ),
+    // `revision` changes whenever the store is edited.
+    [revision, validationError],
+  );
   const usedKeys = useMemo(
     () => new Set(validationError ? [] : contentKeys(currentContent)),
     // `revision` changes whenever the store is edited.
@@ -1027,6 +1038,7 @@ export default function Studio() {
           revision={revision}
           contentKeys={usedKeys}
           voiceNotes={voiceNotes}
+          orphanKeys={orphanKeys}
           onEdit={touch}
           onMessage={setMessage}
           repo={repoApi ? { save: saveToRepo, reload: reloadFromRepo } : null}

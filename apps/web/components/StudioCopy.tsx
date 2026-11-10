@@ -18,6 +18,8 @@ type Props = {
   revision: number;
   contentKeys: ReadonlySet<string>;
   voiceNotes: readonly VoiceNote[];
+  /** Identity keys (description/designation/nickname) with no matching entity. */
+  orphanKeys: ReadonlySet<string>;
   onEdit: (action: () => void) => void;
   onMessage: (message: string) => void;
   /** Present only under `npm run dev:studio`. */
@@ -34,6 +36,7 @@ export default function StudioCopy({
   revision,
   contentKeys,
   voiceNotes,
+  orphanKeys,
   onEdit,
   onMessage,
   repo,
@@ -142,9 +145,11 @@ export default function StudioCopy({
             <div className="studio-editor-header">
               <h2>{selected.key}</h2>
               <span>
-                {selected.inContent
-                  ? "Used by content: keep the key, change the wording"
-                  : "Not referenced by content (UI or free copy)"}
+                {orphanKeys.has(selected.key)
+                  ? "No machine or storage has this ID: check the key for a typo"
+                  : selected.inContent
+                    ? "Used by content: keep the key, change the wording"
+                    : "Not referenced by content (UI or free copy)"}
               </span>
             </div>
             <label className="studio-field">
