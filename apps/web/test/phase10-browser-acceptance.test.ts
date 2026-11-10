@@ -1154,7 +1154,7 @@ browserIt(
       );
       await waitForExpression(
         `document.querySelector('[data-onboarding-beat="camera-build"]')
-          ?.textContent?.includes("Read the site before you automate it.") === true`,
+          ?.textContent?.includes("Report to Site 41.") === true`,
       );
 
       const initialState = await evaluate<{
