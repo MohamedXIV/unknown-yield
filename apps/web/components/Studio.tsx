@@ -1,9 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import StudioCopy from "./StudioCopy";
 import { clearStudioDraft, restoreStudioDraft, saveStudioDraft } from "../game/studio-draft";
-import { enCatalog, fixture, type Content } from "@site/content";
 import {
+  contentKeys,
+  enCatalog,
+  fixture,
+  lintVoice,
+  orphanIdentityKeys,
+  summarizeVoice,
+  voiceRuleLabels,
+  type Content,
+  type VoiceRule,
+} from "@site/content";
+import {
+  catalogFromStore,
   createContentStore,
   parseStudioBundle,
   referencesTo,
@@ -96,6 +108,7 @@ export default function Studio() {
   );
   const [preview, setPreview] = useState<StudioReactionPreview | null>(null);
   const [draftReady, setDraftReady] = useState(false);
+  const [copyMode, setCopyMode] = useState(false);
   // Only `npm run dev:studio` serves this local API; anywhere else it is absent.
   const [repoApi, setRepoApi] = useState(false);
   useEffect(() => {
@@ -150,6 +163,32 @@ export default function Studio() {
     validationError = errorText(error);
   }
 
+  // Advisory only: a locale that cannot be read yields no notes, never an error.
+  const voiceNotes = useMemo(() => {
+    try {
+      return lintVoice(catalogFromStore(store));
+    } catch {
+      return [];
+    }
+    // `revision` changes whenever the store is edited.
+  }, [store, revision]);
+  const voiceSummary = summarizeVoice(voiceNotes);
+  const orphanKeys = useMemo(
+    () =>
+      new Set(
+        validationError
+          ? []
+          : orphanIdentityKeys(currentContent, catalogFromStore(store)),
+      ),
+    // `revision` changes whenever the store is edited.
+    [revision, validationError],
+  );
+  const usedKeys = useMemo(
+    () => new Set(validationError ? [] : contentKeys(currentContent)),
+    // `revision` changes whenever the store is edited.
+    [revision, validationError],
+  );
+
   const ids = studioEntityIds(store, kind).filter((id) => {
     if (!search.trim()) return true;
     const needle = search.toLowerCase();
@@ -171,6 +210,39 @@ export default function Studio() {
   const touch = (action: () => void) => {
     action();
     setRevision((value) => value + 1);
+  };
+  const saveToRepo = async () => {
+    try {
+      const serialized = serializeStudioBundle(store, base);
+      const response = await fetch(REPO_API, {
+        method: "PUT",
+        headers: REPO_HEADERS,
+        body: serialized,
+      });
+      const result = (await response.json()) as { error?: string };
+      if (!response.ok) throw new Error(result.error ?? "Save failed");
+      setMessage(
+        "Saved to packages/content/data. Review the diff and commit it.",
+      );
+    } catch (error) {
+      setMessage(errorText(error));
+    }
+  };
+  const reloadFromRepo = async () => {
+    try {
+      const response = await fetch(REPO_API, { headers: REPO_HEADERS });
+      if (!response.ok) throw new Error("Load failed");
+      const bundle = parseStudioBundle(await response.text());
+      setBase(bundle.content);
+      setStore(createContentStore(bundle.content, bundle.locale));
+      setKind("material");
+      setSelectedId(bundle.content.materials[0]?.id ?? "");
+      setPreview(null);
+      setRevision((value) => value + 1);
+      setMessage("Loaded current repo files into the draft.");
+    } catch (error) {
+      setMessage(errorText(error));
+    }
   };
   const perform = (action: () => void) => {
     try {
@@ -941,15 +1013,37 @@ export default function Studio() {
         {kinds.map((entry) => (
           <button
             key={entry}
-            className={kind === entry ? "active" : ""}
-            onClick={() => chooseKind(entry)}
+            className={!copyMode && kind === entry ? "active" : ""}
+            onClick={() => {
+              setCopyMode(false);
+              chooseKind(entry);
+            }}
           >
             {plural[entry]}
             <small>{studioEntityIds(store, entry).length}</small>
           </button>
         ))}
+        <button
+          className={copyMode ? "active" : ""}
+          onClick={() => setCopyMode(true)}
+        >
+          Copy
+          <small>{store.getRowIds("locale").length}</small>
+        </button>
       </nav>
 
+      {copyMode ? (
+        <StudioCopy
+          store={store}
+          revision={revision}
+          contentKeys={usedKeys}
+          voiceNotes={voiceNotes}
+          orphanKeys={orphanKeys}
+          onEdit={touch}
+          onMessage={setMessage}
+          repo={repoApi ? { save: saveToRepo, reload: reloadFromRepo } : null}
+        />
+      ) : (
       <div className="studio-shell">
         <aside className="studio-list-panel">
           <input
@@ -1104,6 +1198,47 @@ export default function Studio() {
             )}
           </section>
 
+          <section data-testid="studio-voice">
+            <div className="studio-section-title">
+              Voice notes · {voiceNotes.length}
+            </div>
+            {voiceNotes.length ? (
+              <>
+                <ul className="studio-voice-summary">
+                  {(Object.keys(voiceSummary) as VoiceRule[])
+                    .filter((rule) => voiceSummary[rule] > 0)
+                    .map((rule) => (
+                      <li key={rule}>
+                        <span>{voiceRuleLabels[rule]}</span>
+                        <strong>{voiceSummary[rule]}</strong>
+                      </li>
+                    ))}
+                </ul>
+                <ul className="studio-reference-list">
+                  {voiceNotes.slice(0, 8).map((note) => (
+                    <li key={note.key + note.rule}>
+                      <strong>{note.key}</strong>
+                      <span>
+                        {voiceRuleLabels[note.rule]} · {note.excerpt}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                {voiceNotes.length > 8 && (
+                  <p className="muted">
+                    {voiceNotes.length - 8} more. Search a key in the Locale
+                    list to see its wording.
+                  </p>
+                )}
+              </>
+            ) : (
+              <p className="muted">No voice notes.</p>
+            )}
+            <p className="muted">
+              Advice only. These notes never block validation or export.
+            </p>
+          </section>
+
           <section>
             <div className="studio-section-title">Reverse references</div>
             {validationError ? (
@@ -1208,53 +1343,13 @@ export default function Studio() {
               <div className="studio-bundle-actions">
                 <button
                   className="primary"
-                  onClick={async () => {
-                    try {
-                      const serialized = serializeStudioBundle(store, base);
-                      const response = await fetch(REPO_API, {
-                        method: "PUT",
-                        headers: REPO_HEADERS,
-                        body: serialized,
-                      });
-                      const result = (await response.json()) as {
-                        error?: string;
-                      };
-                      if (!response.ok)
-                        throw new Error(result.error ?? "Save failed");
-                      setMessage(
-                        "Saved to packages/content/data. Review the diff and commit it.",
-                      );
-                    } catch (error) {
-                      setMessage(errorText(error));
-                    }
-                  }}
+                  onClick={saveToRepo}
                 >
                   Save draft to repo files
                 </button>
                 <button
                   className="secondary"
-                  onClick={async () => {
-                    try {
-                      const response = await fetch(REPO_API, {
-                        headers: REPO_HEADERS,
-                      });
-                      if (!response.ok) throw new Error("Load failed");
-                      const bundle = parseStudioBundle(
-                        await response.text(),
-                      );
-                      setBase(bundle.content);
-                      setStore(
-                        createContentStore(bundle.content, bundle.locale),
-                      );
-                      setKind("material");
-                      setSelectedId(bundle.content.materials[0]?.id ?? "");
-                      setPreview(null);
-                      setRevision((value) => value + 1);
-                      setMessage("Loaded current repo files into the draft.");
-                    } catch (error) {
-                      setMessage(errorText(error));
-                    }
-                  }}
+                  onClick={reloadFromRepo}
                 >
                   Reload from repo files
                 </button>
@@ -1357,6 +1452,7 @@ export default function Studio() {
           </section>
         </aside>
       </div>
+      )}
 
       <footer className="studio-status">
         <span>{message}</span>
