@@ -1,9 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { clearStudioDraft, restoreStudioDraft, saveStudioDraft } from "../game/studio-draft";
-import { enCatalog, fixture, type Content } from "@site/content";
 import {
+  enCatalog,
+  fixture,
+  lintVoice,
+  summarizeVoice,
+  voiceRuleLabels,
+  type Content,
+  type VoiceRule,
+} from "@site/content";
+import {
+  catalogFromStore,
   createContentStore,
   parseStudioBundle,
   referencesTo,
@@ -149,6 +158,17 @@ export default function Studio() {
   } catch (error) {
     validationError = errorText(error);
   }
+
+  // Advisory only: a locale that cannot be read yields no notes, never an error.
+  const voiceNotes = useMemo(() => {
+    try {
+      return lintVoice(catalogFromStore(store));
+    } catch {
+      return [];
+    }
+    // `revision` changes whenever the store is edited.
+  }, [store, revision]);
+  const voiceSummary = summarizeVoice(voiceNotes);
 
   const ids = studioEntityIds(store, kind).filter((id) => {
     if (!search.trim()) return true;
@@ -1102,6 +1122,47 @@ export default function Studio() {
                 Complete content + locale bundle validates.
               </p>
             )}
+          </section>
+
+          <section data-testid="studio-voice">
+            <div className="studio-section-title">
+              Voice notes · {voiceNotes.length}
+            </div>
+            {voiceNotes.length ? (
+              <>
+                <ul className="studio-voice-summary">
+                  {(Object.keys(voiceSummary) as VoiceRule[])
+                    .filter((rule) => voiceSummary[rule] > 0)
+                    .map((rule) => (
+                      <li key={rule}>
+                        <span>{voiceRuleLabels[rule]}</span>
+                        <strong>{voiceSummary[rule]}</strong>
+                      </li>
+                    ))}
+                </ul>
+                <ul className="studio-reference-list">
+                  {voiceNotes.slice(0, 8).map((note) => (
+                    <li key={note.key + note.rule}>
+                      <strong>{note.key}</strong>
+                      <span>
+                        {voiceRuleLabels[note.rule]} · {note.excerpt}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                {voiceNotes.length > 8 && (
+                  <p className="muted">
+                    {voiceNotes.length - 8} more. Search a key in the Locale
+                    list to see its wording.
+                  </p>
+                )}
+              </>
+            ) : (
+              <p className="muted">No voice notes.</p>
+            )}
+            <p className="muted">
+              Advice only. These notes never block validation or export.
+            </p>
           </section>
 
           <section>
