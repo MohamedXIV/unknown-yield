@@ -143,7 +143,7 @@ export function requestImportCommand(
   if (!allocations && s.fuel < definition.fuelCost)
     return {
       ok: false,
-      message: "Not enough company fuel for import",
+      message: "Not enough state fuel for import",
       messageKey: "ui.terminal.import.result.fuel",
     };
   const destination = importDestination(c, s, definition);

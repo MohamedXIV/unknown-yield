@@ -1155,7 +1155,7 @@ function GameClientInner() {
           </span>
           <span
             className={snapshot.fuel < 10 ? "low" : ""}
-            title="Company fuel allocation"
+            title="State fuel allocation"
           >
             <Glyph type="fuel" />
             <b data-testid="fuel">{snapshot.fuel}</b>
@@ -1348,7 +1348,7 @@ function GameClientInner() {
                     Shipment
                   </button>
                   <button onClick={() => scrollContextTo("terminal-company")}>
-                    Company
+                    State
                   </button>
                 </nav>
               </>
