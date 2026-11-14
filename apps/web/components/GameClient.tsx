@@ -1283,14 +1283,8 @@ function GameClientInner() {
           className={"context-panel context-panel--" + panel}
           dataPanelKind={panel}
           bodyClassName="context-body"
-          title={panel === "knowledge" ? "FIELD NOTEBOOK"
-            : panel === "terminal" ? locationText("terminal").toUpperCase()
-            : panel === "configuration" ? "GAME CONFIGURATION"
-            : panel === "menu" ? "EXPEDITION MENU" : "INSPECT"}
-          subtitle={panel === "knowledge" ? "FIELD LAB / RECORDED EVIDENCE"
-            : panel === "terminal" ? locationText("terminal-subtitle")
-            : panel === "selection" ? "SITE SERVICE DOSSIER"
-            : panel === "configuration" ? "OPERATOR CONTROLS" : "FIELD OPERATIONS"}
+          title={panel === "terminal" ? locationText("terminal").toUpperCase() : t("ui.panel." + panel + ".title")}
+          subtitle={panel === "terminal" ? locationText("terminal-subtitle") : t("ui.panel." + panel + ".subtitle")}
           onClose={close}
         >
             {panel === "selection" && overview(inspectorSummary)}
