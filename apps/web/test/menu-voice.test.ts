@@ -17,7 +17,7 @@ describe("main menu voice", () => {
       "ui.menu.home.notice-body",
       "ui.menu.new.dispatch",
     ])
-      expect(enCatalog[key], key).toMatch(/Site 41|Territory Nine/i);
+      expect(enCatalog[key], key).toMatch(/\{\{(site|SITE|PLANET|planet)\}\}/);
   });
 
   it("keeps the action labels that players and the browser acceptance test rely on", () => {

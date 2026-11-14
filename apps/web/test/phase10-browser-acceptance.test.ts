@@ -1517,11 +1517,11 @@ browserIt(
       );
       await evaluate(`(() => {
         document.querySelector('button[aria-label="Knowledge notebook"]')?.click();
-        document.querySelector('button[aria-label="Company terminal"]')?.click();
+        document.querySelector('button[aria-label="Dispatch Annex 41"]')?.click();
         return true;
       })()`);
       await waitForExpression(
-        `document.body.textContent?.includes("COMPANY TERMINAL") === true &&
+        `document.body.textContent?.includes("DISPATCH ANNEX 41") === true &&
           !!document.querySelector(".context-overview") &&
           !!document.querySelector('nav[aria-label="Terminal sections"]') &&
           !!document.querySelector("#terminal-shipment") &&
@@ -1546,7 +1546,7 @@ browserIt(
       const terminalIndustrialScreenshot = await captureEvidence("industrial-ui-terminal.png");
       console.log("INDUSTRIAL_UI_TERMINAL " + JSON.stringify(terminalIndustrialScreenshot));
       await evaluate(`(() => {
-        document.querySelector('button[aria-label="Company terminal"]')?.click();
+        document.querySelector('button[aria-label="Dispatch Annex 41"]')?.click();
         return true;
       })()`);
 

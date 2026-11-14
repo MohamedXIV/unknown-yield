@@ -2,6 +2,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { I18nextProvider, useTranslation } from "react-i18next";
 import { i18n, setRuntimeContentLocale } from "../game/i18n";
+import { locationText } from "../game/location";
 import { entityIdentity } from "../game/identity";
 import EquipmentIdentity from "./EquipmentIdentity";
 import {
@@ -243,7 +244,7 @@ function GameClientInner() {
         if (cancelled || !pack) return;
         // Source selection always creates a new world, before Phaser mounts.
         session.usePack(pack);
-        setRuntimeContentLocale(pack.bundle.locale);
+        setRuntimeContentLocale(pack.bundle.locale, pack.bundle.content);
         setActivePack(pack);
       })
       .catch((error: unknown) => {
@@ -446,7 +447,7 @@ function GameClientInner() {
     try {
       // An explicit, named new expedition is the only point where content changes.
       session.usePack(pack);
-      setRuntimeContentLocale(pack?.bundle.locale ?? null);
+      setRuntimeContentLocale(pack?.bundle.locale ?? null, pack?.bundle.content);
       setActivePack(pack);
       setPendingPack(null);
       setMode(DEFAULT_MODE);
@@ -1143,7 +1144,7 @@ function GameClientInner() {
         <div className="site-mark">
           <span className="brand-symbol" role="img" aria-label="Unknown Yield industrial seal" />
           <div>
-            UNKNOWN YIELD<small>THE PALE REACH · SITE 01</small>
+            UNKNOWN YIELD<small>{locationText("hud")}</small>
           </div>
           <div className="uy-hud-fasteners" aria-hidden="true"><span /><span /></div>
         </div>
@@ -1179,9 +1180,9 @@ function GameClientInner() {
             {fresh > 0 && <i>{fresh}</i>}
           </button>
           <button
-            aria-label="Company terminal"
+            aria-label={locationText("terminal")}
             aria-pressed={panel === "terminal"}
-            title="Company terminal"
+            title={locationText("terminal")}
             onClick={() => {
               setOnboarding((state) => ({ ...state, terminalOpened: true }));
               setPanel(panel === "terminal" ? null : "terminal");
@@ -1283,11 +1284,11 @@ function GameClientInner() {
           dataPanelKind={panel}
           bodyClassName="context-body"
           title={panel === "knowledge" ? "FIELD NOTEBOOK"
-            : panel === "terminal" ? "COMPANY TERMINAL"
+            : panel === "terminal" ? locationText("terminal").toUpperCase()
             : panel === "configuration" ? "GAME CONFIGURATION"
             : panel === "menu" ? "EXPEDITION MENU" : "INSPECT"}
           subtitle={panel === "knowledge" ? "FIELD LAB / RECORDED EVIDENCE"
-            : panel === "terminal" ? "FREIGHT & ALLOCATION"
+            : panel === "terminal" ? locationText("terminal-subtitle")
             : panel === "selection" ? "SITE SERVICE DOSSIER"
             : panel === "configuration" ? "OPERATOR CONTROLS" : "FIELD OPERATIONS"}
           onClose={close}

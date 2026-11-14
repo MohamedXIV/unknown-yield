@@ -1,4 +1,5 @@
 import type { MachineStatus, MachineView, PlayerSnapshot } from "@site/sim-core";
+import { locationText } from "./location";
 
 export type KnowledgeFilter = "all" | "open" | "hazards" | "confirmed";
 
@@ -180,7 +181,7 @@ export function terminalOverview(snapshot: PlayerSnapshot): ContextOverview & {
   if (openOpportunities > 0)
     return {
       tone: "calm",
-      eyebrow: "COMPANY WORK",
+      eyebrow: locationText("work-eyebrow"),
       title: openOpportunities + " active opportunit" + (openOpportunities === 1 ? "y" : "ies"),
       detail: "These offers react to what the expedition has already demonstrated; they do not reveal hidden recipes.",
       manifestSelected,

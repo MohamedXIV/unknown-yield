@@ -1,6 +1,24 @@
 {
   "version": "world-01-v27",
   "tickMs": 100,
+  "locations": {
+    "activeSiteId": "concord-shelf",
+    "planets": [
+      {
+        "id": "outer-territory-nine",
+        "designation": "9",
+        "nameKey": "planet.outer-territory-nine.name"
+      }
+    ],
+    "sites": [
+      {
+        "id": "concord-shelf",
+        "planetId": "outer-territory-nine",
+        "designation": "41",
+        "nameKey": "site.concord-shelf.name"
+      }
+    ]
+  },
   "containmentCapabilities": [
     {
       "id": "corrosion-resistant",

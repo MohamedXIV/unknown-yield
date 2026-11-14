@@ -18,6 +18,8 @@ export type LocaleCatalog = z.infer<typeof localeCatalogSchema>;
 
 export function contentKeys(c: Content): string[] {
   return [
+    ...(c.locations?.planets.map((p) => p.nameKey) ?? []),
+    ...(c.locations?.sites.map((x) => x.nameKey) ?? []),
     ...(c.liquidLogistics?.pump.containmentFailure
       ? [
           c.liquidLogistics.pump.containmentFailure.nameKey,
@@ -84,3 +86,35 @@ export function validateLocaleCoverage(
 
 /** English catalog. Edit `packages/content/data/locale.en.json`, not this file. */
 export const enCatalog: LocaleCatalog = localeCatalogSchema.parse(enCatalogData);
+
+/** Names the player-facing tokens a catalog may use: `{{site}}`, `{{SITE}}`, `{{siteNumber}}`, `{{planet}}`, `{{PLANET}}`. */
+export function locationTokens(
+  c: Content,
+  catalog: Record<string, string>,
+): Record<string, string> {
+  const loc = c.locations;
+  const site = loc?.sites.find((x) => x.id === loc.activeSiteId);
+  const planet = loc?.planets.find((x) => x.id === site?.planetId);
+  if (!loc || !site || !planet) return {};
+  const siteName = catalog[site.nameKey] ?? site.id;
+  const planetName = catalog[planet.nameKey] ?? planet.id;
+  return {
+    site: siteName,
+    SITE: siteName.toUpperCase(),
+    siteNumber: site.designation,
+    planet: planetName,
+    PLANET: planetName.toUpperCase(),
+  };
+}
+
+export function applyLocationTokens(
+  catalog: LocaleCatalog,
+  tokens: Record<string, string>,
+): LocaleCatalog {
+  const names = Object.keys(tokens);
+  if (!names.length) return catalog;
+  const pattern = new RegExp(`\\{\\{(${names.join("|")})\\}\\}`, "g");
+  return Object.fromEntries(
+    Object.entries(catalog).map(([k, v]) => [k, v.replace(pattern, (_, n: string) => tokens[n]!)]),
+  );
+}
