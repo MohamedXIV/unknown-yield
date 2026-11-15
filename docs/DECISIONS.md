@@ -634,3 +634,15 @@ Everything the fiction speaks (HUD, panel titles, evidence labels, the return pr
 `deposit` and `material` join `machine` and `storage` as identity kinds (D-043). Every deposit, hidden ones included, has `deposit.<id>.{name,designation,nickname,description}`: the name overrides the plain material name, the designation is a survey tag (`SURVEY TAG 41-F1`), the nickname is the crew's word for the field. Only materials the player already knows (`known: true`) have a `material.<id>.description`; the deposit panel shows it under the deposit's own. Copy never names a material the player has not met (tested). `orphanIdentityKeys` also reports `deposit.<id>.name` for a removed deposit.
 
 **Source of truth:** `packages/content/src/identity.ts`, `packages/content/test/mineral-identity.test.ts`, `apps/web/components/GameClient.tsx` (deposit panel).
+
+## D-049 — A second playable site ships as a built-in bundle; one expedition plays one site
+
+**Status:** accepted 2026-11-16 (stage 2 of D-046, in its smaller form).
+
+Running several sites inside one save would touch about 200 `content.site` uses in sim-core, and nothing needs it yet. Instead each site is its own content bundle: `content.json` stays Site 41, and `data/sites/<id>.json` overrides parts of the base `site` block, registers its planet and site, and carries its own locale lines. The New Expedition menu lists the sites; choosing one validates and fingerprints the bundle like an imported pack, so saves, reloads and the "new expedition only" rule need no new code.
+
+Site 52, Harmony Terrace on The Pale Reach, is the first: a 72×56 shelf with its own deposits, survey signals, plume and terminal, same rules and machines, same starting stock. Its balance is a first pass.
+
+Not in scope: moving between sites inside one save, shared progress across sites, and Studio editing of site files (the Studio edits `content.json` only).
+
+**Source of truth:** `packages/content/src/sites.ts`, `packages/content/data/sites/harmony-terrace.json`, `packages/content/test/sites.test.ts`, `packages/sim-core/test/second-site.test.ts`.

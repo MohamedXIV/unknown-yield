@@ -3,6 +3,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { I18nextProvider, useTranslation } from "react-i18next";
 import { i18n, setRuntimeContentLocale } from "../game/i18n";
 import { locationText } from "../game/location";
+import { siteChoices } from "@site/content/sites";
 import { entityIdentity } from "../game/identity";
 import EquipmentIdentity from "./EquipmentIdentity";
 import {
@@ -462,6 +463,21 @@ function GameClientInner() {
       }
     } catch (error) {
       setNotice({ ok: false, message: "Could not start expedition: " + String(error) });
+    }
+  };
+
+  const chooseSite = async (id: string) => {
+    const choice = siteChoices().find((entry) => entry.id === id);
+    if (!choice) return;
+    if (!choice.bundle) {
+      choosePack(null);
+      return;
+    }
+    try {
+      // A site is a built-in content bundle, validated and fingerprinted like any pack.
+      choosePack(await parseRuntimePack(JSON.stringify(choice.bundle)));
+    } catch (error) {
+      setNotice({ ok: false, message: "Site could not be opened: " + String(error) });
     }
   };
 
@@ -1075,6 +1091,16 @@ function GameClientInner() {
         activeFingerprint={session.activePackFingerprint()}
         activePack={activePack}
         pendingPack={pendingPack}
+        sites={siteChoices().map((choice) => ({
+          id: choice.id,
+          siteName: choice.siteName,
+          planetName: choice.planetName,
+          selected: choice.bundle
+            ? activePack !== null &&
+              JSON.stringify(activePack.bundle) === JSON.stringify(choice.bundle)
+            : activePack === null,
+        }))}
+        onChooseSite={chooseSite}
         preferences={preferences}
         notice={notice}
         onResume={resumeFromMenu}
