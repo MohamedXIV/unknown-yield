@@ -19,8 +19,10 @@ describe("equipment identity keys", () => {
       "storage.gone.designation": "ST-0",
       // Not an identity field: ordinary content keys are never reported.
       "machine.no-such-machine.name": "Not checked",
+      "deposit.no-such-field.name": "Ghost field",
     };
     expect(orphanIdentityKeys(fixture, catalog)).toEqual([
+      "deposit.no-such-field.name",
       "machine.no-such-machine.nickname",
       "storage.gone.designation",
     ]);

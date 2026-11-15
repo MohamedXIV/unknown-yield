@@ -2846,17 +2846,29 @@ function GameClientInner() {
                 )}
                 {deposit && (
                   <>
-                    <small className="eyebrow">SURFACE DEPOSIT</small>
-                    <h2>{materialName(deposit.material)}</h2>
+                    <small className="eyebrow">{t("ui.deposit.eyebrow")}</small>
+                    <EquipmentIdentity
+                      identity={entityIdentity(
+                        "deposit",
+                        deposit.id,
+                        i18n.exists("deposit." + deposit.id + ".name")
+                          ? "deposit." + deposit.id + ".name"
+                          : snapshot.materials.find((m) => m.id === deposit.material)?.nameKey ?? "ui.deposit.eyebrow",
+                        { t: (key) => t(key), exists: (key) => i18n.exists(key) },
+                        { built: true },
+                      )}
+                    />
+                    {i18n.exists("material." + deposit.material + ".description") && (
+                      <p className="identity-description">
+                        {t("material." + deposit.material + ".description")}
+                      </p>
+                    )}
                     <div className="facts">
                       <span>
-                        Remaining<b>{deposit.remaining}</b>
+                        {t("ui.deposit.remaining")}<b>{deposit.remaining}</b>
                       </span>
                     </div>
-                    <p className="hint">
-                      Place an extractor entirely inside this field. Route its
-                      output to a processor.
-                    </p>
+                    <p className="hint">{t("ui.deposit.hint")}</p>
                     <button
                       className="primary"
                       onClick={() => setTool("extractor")}

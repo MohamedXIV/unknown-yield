@@ -626,3 +626,11 @@ Stage 2 (not started): sim-core running more than one site in a save (about 200 
 Everything the fiction speaks (HUD, panel titles, evidence labels, the return prompt, terminal and notebook headings, hints, orders) is a locale key, so the Studio Copy tab edits it and the voice lint covers it. The Game Configuration panel, the controls list, inspector engineering headings and error notices that end in a raw error message are interface chrome. They stay in code until the game is localized, because they carry no voice and change with the UI rather than with the world.
 
 **Source of truth:** `packages/content/data/locale.en.json`, `apps/web/components/GameClient.tsx`.
+
+## D-048 — Deposits and materials carry identity layers; the deposit panel shows them
+
+**Status:** accepted 2026-11-15 (copy only; no ID, save or simulation change).
+
+`deposit` and `material` join `machine` and `storage` as identity kinds (D-043). Every deposit, hidden ones included, has `deposit.<id>.{name,designation,nickname,description}`: the name overrides the plain material name, the designation is a survey tag (`SURVEY TAG 41-F1`), the nickname is the crew's word for the field. Only materials the player already knows (`known: true`) have a `material.<id>.description`; the deposit panel shows it under the deposit's own. Copy never names a material the player has not met (tested). `orphanIdentityKeys` also reports `deposit.<id>.name` for a removed deposit.
+
+**Source of truth:** `packages/content/src/identity.ts`, `packages/content/test/mineral-identity.test.ts`, `apps/web/components/GameClient.tsx` (deposit panel).
