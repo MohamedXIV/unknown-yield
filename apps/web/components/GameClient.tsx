@@ -2,6 +2,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { I18nextProvider, useTranslation } from "react-i18next";
 import { i18n, setRuntimeContentLocale } from "../game/i18n";
+import { entityIdentity } from "../game/identity";
+import EquipmentIdentity from "./EquipmentIdentity";
 import {
   clearRuntimePack,
   loadRuntimePack,
@@ -1849,7 +1851,15 @@ function GameClientInner() {
                     <small className="eyebrow">
                       {machine.id.toUpperCase()} · AUTOMATED EQUIPMENT
                     </small>
-                    <h2>{t(machine.nameKey)}</h2>
+                    <EquipmentIdentity
+                      identity={entityIdentity(
+                        "machine",
+                        machine.definitionId,
+                        machine.nameKey,
+                        { t: (key) => t(key), exists: (key) => i18n.exists(key) },
+                        { built: true },
+                      )}
+                    />
                     <div
                       className={
                         "status-line " +
@@ -2786,13 +2796,17 @@ function GameClientInner() {
                     <small className="eyebrow">
                       {storage.id.toUpperCase()} · BULK STORAGE
                     </small>
-                    <h2>
-                      {t(
+                    <EquipmentIdentity
+                      identity={entityIdentity(
+                        "storage",
+                        storage.definitionId,
                         snapshot.storageDefinitions.find(
                           (d) => d.id === storage.definitionId,
                         )?.nameKey ?? storage.definitionId,
+                        { t: (key) => t(key), exists: (key) => i18n.exists(key) },
+                        { built: true },
                       )}
-                    </h2>
+                    />
                     <div className="facts">
                       <span>
                         Stored
@@ -3455,7 +3469,7 @@ function GameClientInner() {
                             [key]: Number(event.currentTarget.value),
                           })
                         }
-                      />
+                    />
                       <output>{preferences.camera[key].toFixed(1)}×</output>
                     </label>
                   ))}

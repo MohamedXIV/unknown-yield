@@ -7,6 +7,10 @@ Edit either file directly, or use the development Studio (`npm run dev:studio`, 
 
 `fixture.ts` and `locale.ts` only parse these files. Do not add content there.
 
+## Optional equipment identity keys
+
+Beside `machine.<id>.name` and `storage.<id>.name` you may add `<kind>.<id>.description` (what it is for, one plain sentence), `.designation` (the code on its typeplate) and `.nickname` (the workshop's name; shown only for equipment the player has built). They are optional, need no schema change, and must never name a hidden recipe or outcome. The Studio Copy tab flags keys whose machine or storage does not exist.
+
 ## Design notes that used to be comments
 
 These sat beside the TypeScript literals before the move. They describe intent, not structure. Exact placement is in the git history of `src/fixture.ts`.

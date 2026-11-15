@@ -565,3 +565,16 @@ Both people and agents may edit these files directly, or through the development
 Rationale comments that used to sit beside fixture literals are kept in `packages/content/data/README.md`, since JSON cannot carry comments.
 
 **Source of truth:** [STUDIO_PLAYTEST.md](STUDIO_PLAYTEST.md), `packages/content/data/README.md`.
+
+
+---
+
+## D-043 — Equipment identity layers are optional locale keys by convention
+
+**Status:** accepted 2026-11-10.
+
+Every machine and storage may carry, beside its plain `name`, an optional `description` (what it is for), `designation` (the official code on its typeplate) and `nickname` (what the workshop calls it). They are ordinary locale keys named `<kind>.<id>.<field>` (for example `machine.extractor.nickname`), so adding one needs no schema change, save migration or content-pack change, and a missing key simply shows nothing. The plain name stays the label everywhere a player must recognise the thing; the other layers appear in the equipment inspector.
+
+The nickname is shown only for equipment the player has built, and none of the layers may name a hidden recipe or outcome (the hidden-knowledge rule applies to these strings as to any copy). Identity keys whose entity does not exist are flagged in the Studio Copy tab. Materials, deposits and the site are not covered yet: their wording can leak what the player has not yet learned, so they need an evidence-gating design first.
+
+**Source of truth:** `packages/content/src/identity.ts`, `apps/web/game/identity.ts`, [WORLD_IDENTITY.md](WORLD_IDENTITY.md).
