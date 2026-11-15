@@ -77,6 +77,9 @@ function commaList(value: unknown) {
   }
 }
 
+const REPO_API = "/studio-entry/api/";
+const REPO_HEADERS = { "x-studio": "1" };
+
 export default function Studio() {
   const [base, setBase] = useState<Content>(() => structuredClone(fixture));
   const [store, setStore] = useState(() =>
@@ -93,6 +96,21 @@ export default function Studio() {
   );
   const [preview, setPreview] = useState<StudioReactionPreview | null>(null);
   const [draftReady, setDraftReady] = useState(false);
+  // Only `npm run dev:studio` serves this local API; anywhere else it is absent.
+  const [repoApi, setRepoApi] = useState(false);
+  useEffect(() => {
+    let live = true;
+    fetch(REPO_API, { headers: REPO_HEADERS })
+      .then((response) => {
+        if (live) setRepoApi(response.ok);
+      })
+      .catch(() => {
+        if (live) setRepoApi(false);
+      });
+    return () => {
+      live = false;
+    };
+  }, []);
 
   useEffect(() => {
     try {
@@ -1183,6 +1201,71 @@ export default function Studio() {
               </p>
             )}
           </section>
+
+          {repoApi && (
+            <section data-testid="studio-repo-files">
+              <div className="studio-section-title">Repo files</div>
+              <div className="studio-bundle-actions">
+                <button
+                  className="primary"
+                  onClick={async () => {
+                    try {
+                      const serialized = serializeStudioBundle(store, base);
+                      const response = await fetch(REPO_API, {
+                        method: "PUT",
+                        headers: REPO_HEADERS,
+                        body: serialized,
+                      });
+                      const result = (await response.json()) as {
+                        error?: string;
+                      };
+                      if (!response.ok)
+                        throw new Error(result.error ?? "Save failed");
+                      setMessage(
+                        "Saved to packages/content/data. Review the diff and commit it.",
+                      );
+                    } catch (error) {
+                      setMessage(errorText(error));
+                    }
+                  }}
+                >
+                  Save draft to repo files
+                </button>
+                <button
+                  className="secondary"
+                  onClick={async () => {
+                    try {
+                      const response = await fetch(REPO_API, {
+                        headers: REPO_HEADERS,
+                      });
+                      if (!response.ok) throw new Error("Load failed");
+                      const bundle = parseStudioBundle(
+                        await response.text(),
+                      );
+                      setBase(bundle.content);
+                      setStore(
+                        createContentStore(bundle.content, bundle.locale),
+                      );
+                      setKind("material");
+                      setSelectedId(bundle.content.materials[0]?.id ?? "");
+                      setPreview(null);
+                      setRevision((value) => value + 1);
+                      setMessage("Loaded current repo files into the draft.");
+                    } catch (error) {
+                      setMessage(errorText(error));
+                    }
+                  }}
+                >
+                  Reload from repo files
+                </button>
+              </div>
+              <p className="hint">
+                Writes content.json and locale.en.json only when the whole
+                draft validates. Editing those files directly works too;
+                reload to see changes made outside the Studio.
+              </p>
+            </section>
+          )}
 
           <section>
             <div className="studio-section-title">Bundle</div>

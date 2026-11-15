@@ -72,7 +72,7 @@ Open http://127.0.0.1:3000. The world is the primary play surface. There are no 
 - Knowledge, terminal policies and save/load are available from the compact top-right controls.
 - Saves are manual and local to this browser. Unsupported save/content versions reject atomically and leave the running world unchanged.
 
-`npm run dev:studio` opens the separate development content editor. It is excluded from player production exports. No Studio expansion is part of this change.
+`npm run dev:studio` opens the separate development content editor. It is excluded from player production exports, and it can save to and reload the content files in `packages/content/data/`.
 
 ## Verify
 
