@@ -24,6 +24,8 @@ type Props = {
   activeFingerprint: string | null;
   activePack: RuntimePack | null;
   pendingPack: RuntimePack | null;
+  sites: readonly { id: string; siteName: string; planetName: string; selected: boolean }[];
+  onChooseSite: (id: string) => void;
   preferences: GamePreferences;
   notice: CommandResult | null;
   onResume: () => CommandResult;
@@ -97,9 +99,12 @@ export default function MainMenu(props: Props) {
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const resumeSlot = props.listing?.slots.find((slot) => slot.id === props.resumeSlotId);
-  const activePackLabel = props.activeFingerprint
+  const activeSite = props.sites.find((site) => site.selected);
+  const activePackLabel = props.activeFingerprint && !activeSite
     ? tx("ui.menu.pack.imported", { fingerprint: props.activeFingerprint.slice(0, 12).toUpperCase() })
-    : t("ui.menu.pack.builtin");
+    : activeSite && props.activeFingerprint
+      ? activeSite.siteName + " · " + activeSite.planetName
+      : t("ui.menu.pack.builtin");
 
   const report = (result: CommandResult) => {
     setFeedback(result.message);
@@ -273,6 +278,25 @@ export default function MainMenu(props: Props) {
                     {t("ui.menu.new.dispatch")}
                     <small>{t("ui.menu.new.dispatch-source")}</small>
                   </blockquote>
+                  {props.sites.length > 1 && (
+                    <fieldset className="menu-site-picker">
+                      <legend>{t("ui.menu.new.site")}</legend>
+                      {props.sites.map((site) => (
+                        <label key={site.id} className={site.selected ? "is-selected" : ""}>
+                          <input
+                            type="radio"
+                            name="assignment-site"
+                            checked={site.selected}
+                            onChange={() => props.onChooseSite(site.id)}
+                          />
+                          <span>
+                            <strong>{site.siteName}</strong>
+                            <small>{site.planetName}</small>
+                          </span>
+                        </label>
+                      ))}
+                    </fieldset>
+                  )}
                   <label className="menu-field">
                     <span>{t("ui.menu.new.designation")}</span>
                     <input

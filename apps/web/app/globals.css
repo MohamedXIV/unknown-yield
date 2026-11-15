@@ -2071,3 +2071,9 @@ kbd {
   margin: 4px 0 8px;
   line-height: 1.45;
 }
+.menu-site-picker{display:flex;flex-direction:column;gap:6px;margin:13px 0;padding:10px 12px;border:1px solid #8b8a7554;background:#0c171ca6}
+.menu-site-picker legend{padding:0 6px;color:#c6a36d;font:8px var(--menu-mono);letter-spacing:1px;text-transform:uppercase}
+.menu-site-picker label{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid transparent;cursor:pointer}
+.menu-site-picker label.is-selected{border-color:#c6a36d99;background:#c6a36d14}
+.menu-site-picker strong{display:block;color:#e1ddce;font:11px var(--menu-mono)}
+.menu-site-picker small{display:block;color:#929e99;font:9px var(--menu-mono)}

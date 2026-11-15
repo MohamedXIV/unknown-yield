@@ -722,6 +722,7 @@
   "ui.menu.new.hint": "1–80 characters. This name can be changed later in Personnel Archives.",
   "ui.menu.new.placeholder": "Name this expedition",
   "ui.menu.new.role": "COMRADE DIRECTOR / SITE OPERATOR",
+  "ui.menu.new.site": "Assigned site",
   "ui.menu.new.title": "Begin Assignment",
   "ui.menu.pack.builtin": "BUILT-IN DIRECTORATE CONTENT",
   "ui.menu.pack.imported": "IMPORTED CONTENT · {{fingerprint}}",
