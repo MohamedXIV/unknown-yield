@@ -1022,7 +1022,7 @@ function GameClientInner() {
       <Glyph type={toolGlyph(tool)} size={25} />
       <span>{toolName(tool)}</span>
       {toolLocked(tool) ? (
-        <em>LOCKED</em>
+        <em>{t("ui.tool.locked")}</em>
       ) : toolCost(tool) ? (
         <em>
           {toolCost(tool)}
@@ -1152,7 +1152,7 @@ function GameClientInner() {
           <span title="Construction stock">
             <Glyph type="plates" />
             <b data-testid="plates">{snapshot.stock.plates ?? 0}</b>
-            <small>PLATES</small>
+            <small>{t("ui.hud.plates")}</small>
           </span>
           <span
             className={snapshot.fuel < 10 ? "low" : ""}
@@ -1272,7 +1272,7 @@ function GameClientInner() {
           </button>
         </div>
       )}
-      {paused && <div className="paused-label">PAUSED</div>}
+      {paused && <div className="paused-label">{t("ui.hud.paused")}</div>}
       {panel && (
         <IndustrialPanelFrame
           as="aside"
@@ -1297,7 +1297,7 @@ function GameClientInner() {
                       : notebookSummary.open > 0
                         ? "warn"
                         : "calm",
-                  eyebrow: "EVIDENCE STATUS",
+                  eyebrow: t("ui.evidence.status"),
                   title:
                     notebookSummary.open +
                     " open · " +
@@ -2017,13 +2017,13 @@ function GameClientInner() {
                         <h3>{t(machine.incident.nameKey)}</h3>
                         <p>{t(machine.incident.textKey)}</p>
                         <p>{t(machine.incident.evidenceKey)}</p>
-                        <strong>SAFER NEXT TEST</strong>
+                        <strong>{t("ui.evidence.safer-next-test")}</strong>
                         <p>{t(machine.incident.saferHintKey)}</p>
                         {Object.values(machine.incidentInventory).some(
                           (quantity) => quantity > 0,
                         ) && (
                           <>
-                            <strong>TRAPPED MATERIAL</strong>
+                            <strong>{t("ui.evidence.trapped-material")}</strong>
                             {buffer(machine.incidentInventory)}
                             {machine.incidentRecovery && (
                               <div className="hint">
@@ -2922,7 +2922,7 @@ function GameClientInner() {
                       <h3>{t(entry.nameKey)}</h3>
                       <p>{t(entry.textKey)}</p>
                       <p>{t(entry.evidenceKey)}</p>
-                      <strong>SAFER NEXT TEST</strong>
+                      <strong>{t("ui.evidence.safer-next-test")}</strong>
                       <p>{t(entry.saferHintKey)}</p>
                       <span>
                         {materialName(entry.inputId)} → {operationName}
@@ -2952,10 +2952,10 @@ function GameClientInner() {
                     <article className="observation" key={entry.id}>
                       <small>
                         {entry.state === "hinted"
-                          ? "UNCONFIRMED"
+                          ? t("ui.evidence.unconfirmed")
                           : entry.initial
-                            ? "KNOWN METHOD"
-                            : "OBSERVED"}{" "}
+                            ? t("ui.evidence.known-method")
+                            : t("ui.evidence.observed")}{" "}
                         · {operationName.toUpperCase()}
                       </small>
                       <h3>
@@ -3985,8 +3985,8 @@ function GameClientInner() {
           </label>
         )}
         <div className="bottom-caption">
-          <span>NO CREW. JUST MACHINES.</span>
-          <span>R rotate · Esc cancel · Home center</span>
+          <span>{t("ui.hud.caption")}</span>
+          <span>{t("ui.hud.keys")}</span>
         </div>
       </div>
       {returnPrompt && (
@@ -4007,25 +4007,24 @@ function GameClientInner() {
               kind="expedition"
               className="uy-confirmation-board"
               bodyClassName="uy-confirmation-body"
-              title="FIELD OPERATIONS"
-              subtitle="UNSAVED FIELD ACTIVITY"
+              title={t("ui.menu-return.title")}
+              subtitle={t("ui.menu-return.subtitle")}
               onClose={() => setReturnPrompt(false)}
             >
-              <small>UNSAVED FIELD ACTIVITY</small>
-              <h2 id="menu-return-title">Return to the Main Menu?</h2>
+              <small>{t("ui.menu-return.subtitle")}</small>
+              <h2 id="menu-return-title">{t("ui.menu-return.question")}</h2>
             <p>
-              This expedition has changed since its last save. Save the current
-              world, restore its last saved revision, or remain on site.
+              {t("ui.menu-return.body")}
             </p>
             <div className="menu-return-actions">
               <button className="menu-primary" onClick={saveAndReturnToMenu}>
-                Save &amp; Return
+                {t("ui.menu-return.save")}
               </button>
               <button className="menu-danger" onClick={discardAndReturnToMenu}>
-                Discard Unsaved Changes
+                {t("ui.menu-return.discard")}
               </button>
               <button className="menu-secondary" onClick={() => setReturnPrompt(false)}>
-                Stay in Expedition
+                {t("ui.menu-return.stay")}
               </button>
             </div>
             </IndustrialPanelFrame>
@@ -4075,7 +4074,7 @@ function GameClientInner() {
               className="uy-dismantle-board"
               bodyClassName="uy-dismantle-board-body"
               title={t("ui.dismantle.review.title")}
-              subtitle="AREA REVIEW / PHYSICAL RECLAIM"
+              subtitle={t("ui.dismantle.review.subtitle")}
               onClose={cancelAreaReview}
             >
             <small>{t("ui.dismantle.review.eyebrow")}</small>
