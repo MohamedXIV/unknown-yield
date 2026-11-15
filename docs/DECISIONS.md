@@ -591,3 +591,18 @@ Each onboarding beat now has two voices: the state gives only the order (eyebrow
 Beat logic, conditions and the six-step count are unchanged; only copy moved, and every beat has its own `eyebrow` key. Terms that name a thing the player must find use the in-game label (the terminal is "the terminal" until it is renamed in the UI), so a hint is never a lore term the interface does not show.
 
 **Source of truth:** [PHASE16_ONBOARDING.md](PHASE16_ONBOARDING.md), `apps/web/game/onboarding.ts`, `ui.onboarding.*` in `packages/content/data/locale.en.json`.
+
+
+---
+
+## D-045 — Copy names a speaker; ordinary operating fuel is displayed as "state fuel"
+
+**Status:** accepted 2026-11-11 (display wording only; no ID, save or simulation change).
+
+"The company" no longer appears in player-facing copy, because nobody in the fiction is "the company". Each line now belongs to a speaker: the **Institute** (research requests, characterization, its seed and binder), the **Yard** (what is accepted, what demand does), and the **state** (the ordinary operating fuel allocation, assistance, milestones, orders and opportunities). Neutral interface labels use plain words (for example "Market opportunity").
+
+`Save.fuel` is displayed as **state fuel**. The data field, its IDs and saves keep their names; only text changed, including a handful of strings that still lived in code (HUD tooltip, production hints, four command messages). The "Company terminal" control and the internal `company` snapshot field are untouched pending a separate decision on renaming the terminal.
+
+The voice lint's company rule is now a regression guard: the catalog must contain zero hits.
+
+**Source of truth:** [WORLD_IDENTITY.md](WORLD_IDENTITY.md), [PHASE15_FUEL_PROGRESSION.md](PHASE15_FUEL_PROGRESSION.md), `packages/content/test/speaker-voice.test.ts`.
