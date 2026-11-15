@@ -191,4 +191,60 @@ describe("contextual production onboarding", () => {
     ])
       expect(copy).not.toContain(hiddenId);
   });
+
+  it("resolves every beat's wording from the locale catalog", () => {
+    const base = establishedWorld().sim.snapshot();
+    const learned = structuredClone(base);
+    learned.observations.push({
+      operationId: "heat",
+      inputId: "raw",
+      outputId: "granules",
+      textKey: "reaction.test.observation",
+      initial: false,
+      observedAt: { x: 27, y: 27 },
+    });
+    const exported = structuredClone(learned);
+    exported.exported = 1;
+    const incident = structuredClone(base);
+    incident.machines[0]!.incident = {
+      classId: "thermal",
+      classNameKey: "hazard-class.thermal.name",
+      nameKey: "hazard.test.name",
+      textKey: "hazard.test.observation",
+      evidenceKey: "thermal",
+      saferHintKey: "hazard.test.safer-hint",
+    };
+    const noFactory = structuredClone(base);
+    noFactory.factories = [];
+    const noExtractor = new Simulation(fixture).snapshot();
+    const done = (patch: Partial<OnboardingSignals>) =>
+      signals({ knowledgeOpened: true, factoryToggleCount: 2, ...patch });
+
+    const beats = [
+      onboardingBeat(noExtractor, signals()),
+      onboardingBeat(noFactory, signals()),
+      onboardingBeat(base, signals()),
+      onboardingBeat(learned, signals()),
+      onboardingBeat(learned, signals({ knowledgeOpened: true })),
+      onboardingBeat(
+        learned,
+        signals({ knowledgeOpened: true, factoryToggleCount: 1 }),
+      ),
+      onboardingBeat(learned, done({})),
+      onboardingBeat(learned, done({ terminalOpened: true })),
+      onboardingBeat(exported, done({ terminalOpened: true })),
+      onboardingBeat(incident, done({})),
+    ];
+
+    expect(new Set(beats.map((beat) => beat.id)).size).toBe(8);
+    for (const beat of beats)
+      for (const text of [beat.eyebrow, beat.title, beat.body, beat.hint]) {
+        expect(text.length).toBeGreaterThan(0);
+        expect(text).not.toMatch(/^ui\./);
+      }
+    expect(
+      new Set(beats.map((beat) => beat.body)).size,
+      "each of the 10 states has its own copy",
+    ).toBe(10);
+  });
 });
