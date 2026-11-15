@@ -578,3 +578,16 @@ Every machine and storage may carry, beside its plain `name`, an optional `descr
 The nickname is shown only for equipment the player has built, and none of the layers may name a hidden recipe or outcome (the hidden-knowledge rule applies to these strings as to any copy). Identity keys whose entity does not exist are flagged in the Studio Copy tab. Materials, deposits and the site are not covered yet: their wording can leak what the player has not yet learned, so they need an evidence-gating design first.
 
 **Source of truth:** `packages/content/src/identity.ts`, `apps/web/game/identity.ts`, [WORLD_IDENTITY.md](WORLD_IDENTITY.md).
+
+
+---
+
+## D-044 — The tutorial is a series of assignment orders with an engineering hint
+
+**Status:** accepted 2026-11-10 (wording is provisional; structure and rules are the decision).
+
+Each onboarding beat now has two voices: the state gives only the order (eyebrow, title, body), and the engineering voice supplies the hint that says how to do it, using the controls the player can actually see (book icon, terminal icon, F, right-drag). The order never explains a mechanic before the player needs it and never names a hidden recipe. The incident beat is the exception: it carries no joke or bureaucratic voice, only the truthful recovery instruction.
+
+Beat logic, conditions and the six-step count are unchanged; only copy moved, and every beat has its own `eyebrow` key. Terms that name a thing the player must find use the in-game label (the terminal is "the terminal" until it is renamed in the UI), so a hint is never a lore term the interface does not show.
+
+**Source of truth:** [PHASE16_ONBOARDING.md](PHASE16_ONBOARDING.md), `apps/web/game/onboarding.ts`, `ui.onboarding.*` in `packages/content/data/locale.en.json`.

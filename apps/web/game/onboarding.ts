@@ -31,13 +31,14 @@ const TOTAL = 6;
 
 /**
  * Player-facing wording lives in the locale catalog under
- * `ui.onboarding.<copy>.{title,body,hint}`. This module only decides which
+ * `ui.onboarding.<copy>.{eyebrow,title,body,hint}`. This module only decides which
  * beat applies; it never embeds display strings.
  */
 function copy(
   key: string,
-): Pick<OnboardingBeat, "title" | "body" | "hint"> {
+): Pick<OnboardingBeat, "eyebrow" | "title" | "body" | "hint"> {
   return {
+    eyebrow: t("ui.onboarding." + key + ".eyebrow"),
     title: t("ui.onboarding." + key + ".title"),
     body: t("ui.onboarding." + key + ".body"),
     hint: t("ui.onboarding." + key + ".hint"),
@@ -55,7 +56,6 @@ export function onboardingBeat(
   if (incident)
     return {
       id: "recovery",
-      eyebrow: t("ui.onboarding.recovery.eyebrow"),
       ...copy("recovery"),
       step: null,
       total: TOTAL,
@@ -64,7 +64,6 @@ export function onboardingBeat(
   if (!snapshot.machines.some((machine) => machine.role === "extractor"))
     return {
       id: "camera-build",
-      eyebrow: t("ui.onboarding.eyebrow"),
       ...copy("camera-build"),
       step: 1,
       total: TOTAL,
@@ -73,7 +72,6 @@ export function onboardingBeat(
   if (!snapshot.factories.length)
     return {
       id: "physical-inventory",
-      eyebrow: t("ui.onboarding.eyebrow"),
       ...copy("physical-inventory"),
       step: 2,
       total: TOTAL,
@@ -85,7 +83,6 @@ export function onboardingBeat(
   if (!learned)
     return {
       id: "experiment",
-      eyebrow: t("ui.onboarding.eyebrow"),
       ...copy("experiment"),
       step: 3,
       total: TOTAL,
@@ -94,7 +91,6 @@ export function onboardingBeat(
   if (!signals.knowledgeOpened)
     return {
       id: "evidence",
-      eyebrow: t("ui.onboarding.eyebrow"),
       ...copy("evidence"),
       step: 4,
       total: TOTAL,
@@ -103,7 +99,6 @@ export function onboardingBeat(
   if (signals.factoryToggleCount < 2)
     return {
       id: "factory-cycle",
-      eyebrow: t("ui.onboarding.eyebrow"),
       ...copy(
         signals.factoryToggleCount === 0
           ? "factory-cycle-close"
@@ -116,7 +111,6 @@ export function onboardingBeat(
   if (snapshot.exported <= 0)
     return {
       id: "terminal-export",
-      eyebrow: t("ui.onboarding.eyebrow"),
       ...copy(
         signals.terminalOpened ? "terminal-export-open" : "terminal-export",
       ),
@@ -126,7 +120,6 @@ export function onboardingBeat(
 
   return {
     id: "complete",
-    eyebrow: t("ui.onboarding.eyebrow-complete"),
     ...copy("complete"),
     step: null,
     total: TOTAL,

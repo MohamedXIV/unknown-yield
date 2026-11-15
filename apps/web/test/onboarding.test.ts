@@ -1,4 +1,4 @@
-import { fixture } from "@site/content";
+import { enCatalog, fixture, lintVoice } from "@site/content";
 import { Simulation, type GameCommand } from "@site/sim-core";
 import { describe, expect, it } from "vitest";
 import {
@@ -101,7 +101,7 @@ describe("contextual production onboarding", () => {
     ).toMatchObject({
       id: "factory-cycle",
       step: 5,
-      title: "Reopen it without rebuilding it.",
+      title: "Re-open for inspection.",
     });
 
     expect(
@@ -121,7 +121,7 @@ describe("contextual production onboarding", () => {
           terminalOpened: true,
           factoryToggleCount: 2,
         }),
-      ).body,
+      ).hint,
     ).toContain("shipment manifest");
 
     const exported = structuredClone(learned);
@@ -167,7 +167,7 @@ describe("contextual production onboarding", () => {
       ),
     ).toMatchObject({
       id: "recovery",
-      eyebrow: "RECOVERY",
+      eyebrow: "INCIDENT",
       step: null,
     });
   });
@@ -243,8 +243,26 @@ describe("contextual production onboarding", () => {
         expect(text).not.toMatch(/^ui\./);
       }
     expect(
-      new Set(beats.map((beat) => beat.body)).size,
+      new Set(beats.map((beat) => [beat.title, beat.body, beat.hint].join("|")))
+        .size,
       "each of the 10 states has its own copy",
     ).toBe(10);
+  });
+
+  it("keeps the assignment-order voice free of voice-lint notes", () => {
+    const notes = lintVoice(enCatalog).filter((note) =>
+      note.key.startsWith("ui.onboarding."),
+    );
+    expect(notes).toEqual([]);
+  });
+
+  it("gives the incident beat no bureaucratic joke and names the real controls", () => {
+    const incident = enCatalog["ui.onboarding.recovery.body"]! +
+      enCatalog["ui.onboarding.recovery.hint"]!;
+    expect(incident).not.toMatch(/Directorate|Institute|Yard|Order/);
+    expect(enCatalog["ui.onboarding.terminal-export.hint"]).toContain(
+      "terminal icon",
+    );
+    expect(enCatalog["ui.onboarding.evidence.hint"]).toContain("book icon");
   });
 });
