@@ -10,6 +10,7 @@ describe("voice lint", () => {
       "ui.a.body:em-dash",
     ]);
     expect(rules({ "ui.a.body": "Open it, then wait." })).toEqual([]);
+    expect(rules({ "ui.a.source": "— Appointment Notice 41/1" })).toEqual([]);
   });
 
   it("flags contrast framing", () => {

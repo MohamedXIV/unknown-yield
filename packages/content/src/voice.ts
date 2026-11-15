@@ -87,7 +87,8 @@ function wordCount(sentence: string): number {
 function lintEntry(key: string, raw: string): VoiceNote[] {
   const notes: VoiceNote[] = [];
   // Placeholders are interpolated values; their names must not trigger rules.
-  const text = raw.replace(PLACEHOLDER, "{}");
+  // A leading dash is an attribution marker ("— Notice 41"), not prose.
+  const text = raw.replace(PLACEHOLDER, "{}").replace(/^[—–]\s*/, "");
   const add = (rule: VoiceRule, message: string, at: number) =>
     notes.push({ key, rule, message, excerpt: excerpt(raw, Math.max(0, at)) });
 
