@@ -16,8 +16,31 @@ export const standardContainmentProfile = {
   capabilities: [],
   additionalCost: { pipe: 0, tank: 0, pump: 0 },
 };
+/**
+ * Where the game happens. Planets and sites are data: adding one is a registry
+ * entry plus locale keys (`planet.<id>.name`, `site.<id>.name`, and the optional
+ * `site.<id>.{slogan,hud,terminal,terminal-subtitle}`). The simulation still
+ * plays one site at a time (`site`), named by `activeSiteId`.
+ */
+export const locationsSchema = z.object({
+  activeSiteId: id,
+  planets: z
+    .array(z.object({ id, designation: z.string().min(1).max(12), nameKey: localeKeySchema }))
+    .min(1),
+  sites: z
+    .array(
+      z.object({
+        id,
+        planetId: id,
+        designation: z.string().min(1).max(12),
+        nameKey: localeKeySchema,
+      }),
+    )
+    .min(1),
+});
 export const contentSchema = z.object({
   version: z.string().min(1),
+  locations: locationsSchema.optional(),
   tickMs: z.number().int().min(20).max(1000),
   containmentCapabilities: z
     .array(z.object({ id, nameKey: localeKeySchema }))
@@ -605,6 +628,17 @@ function validateContentInternal(
   validateContainmentDefinitions(c);
   const materials = new Set(c.materials.map((m) => m.id)),
     operations = new Set(c.operations.map((o) => o.id));
+  if (c.locations) {
+    const planetIds = new Set(c.locations.planets.map((p) => p.id));
+    if (planetIds.size !== c.locations.planets.length)
+      throw new Error("Duplicate planet ID");
+    if (new Set(c.locations.sites.map((x) => x.id)).size !== c.locations.sites.length)
+      throw new Error("Duplicate site ID");
+    if (c.locations.sites.some((x) => !planetIds.has(x.planetId)))
+      throw new Error("Site references an unknown planet");
+    if (!c.locations.sites.some((x) => x.id === c.locations!.activeSiteId))
+      throw new Error("activeSiteId names no site");
+  }
   if (!c.materials.find((m) => m.id === c.site.buildMaterial)?.known)
     throw new Error("Construction material must be initially known");
   if (c.site.factoryMin < 4 || c.site.factoryMax < c.site.factoryMin)

@@ -1,4 +1,5 @@
 import * as Phaser from "phaser";
+import { locationText } from "./location";
 import {
   contains,
   socket,
@@ -1292,7 +1293,7 @@ export function createWorld(
         17,
       );
       this.structures.add(
-        this.text((t.x + 2) * X, (t.y + 4) * Y + 16, "COMPANY TERMINAL", 10),
+        this.text((t.x + 2) * X, (t.y + 4) * Y + 16, locationText("terminal").toUpperCase(), 10),
       );
       for (const route of snapshot.undergroundSolids) {
         if (!route.cargo) continue;

@@ -606,3 +606,15 @@ Beat logic, conditions and the six-step count are unchanged; only copy moved, an
 The voice lint's company rule is now a regression guard: the catalog must contain zero hits.
 
 **Source of truth:** [WORLD_IDENTITY.md](WORLD_IDENTITY.md), [PHASE15_FUEL_PROGRESSION.md](PHASE15_FUEL_PROGRESSION.md), `packages/content/test/speaker-voice.test.ts`.
+
+## D-046 — Planets and sites are data; the simulation plays one site at a time
+
+**Status:** accepted 2026-11-14 (stage 1 of 2; no save or simulation change).
+
+The game will gain many planets and sites. Stage 1 makes their identity data: `locations` in `content.json` lists `planets[]` and `sites[]` (id, designation, `nameKey`) and an `activeSiteId`. Names live in the locale (`planet.<id>.name`, `site.<id>.name`); optional per-site lines use `site.<id>.{hud,terminal,terminal-subtitle,work-eyebrow}` and fall back to `ui.location.*`.
+
+Generic copy uses reserved tokens `{{site}}`, `{{SITE}}`, `{{siteNumber}}`, `{{planet}}`, `{{PLANET}}`, filled from the active site when the locale bundle is installed (`applyLocationTokens`). The HUD, menu, tutorial order numbers, terminal button, panel title and map label read from this instead of hard-coded text. The terminal is now "Dispatch Annex {{siteNumber}}" (edit `ui.location.terminal` in the Studio Copy tab).
+
+Stage 2 (not started): sim-core running more than one site in a save (about 200 `content.site` uses). Until then, adding a site is a registry entry plus its own `site` data in a content pack.
+
+**Source of truth:** `packages/content/src/schema.ts` (`locationsSchema`), `packages/content/src/locale.ts`, `apps/web/game/location.ts`, `packages/content/test/locations.test.ts`.
