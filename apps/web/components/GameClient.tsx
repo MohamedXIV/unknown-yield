@@ -1139,24 +1139,24 @@ function GameClientInner() {
           disarmTouchArea,
           sample,
         }}
-      /> : <div className="world-host" role="status">Validating selected content pack…</div>}
+      /> : <div className="world-host" role="status">{t("ui.hud.validating-pack")}</div>}
       <header className="hud-top">
         <div className="site-mark">
-          <span className="brand-symbol" role="img" aria-label="Unknown Yield industrial seal" />
+          <span className="brand-symbol" role="img" aria-label={t("ui.hud.seal")} />
           <div>
             UNKNOWN YIELD<small>{locationText("hud")}</small>
           </div>
           <div className="uy-hud-fasteners" aria-hidden="true"><span /><span /></div>
         </div>
         <div className="resources">
-          <span title="Construction stock">
+          <span title={t("ui.hud.stock-tip")}>
             <Glyph type="plates" />
             <b data-testid="plates">{snapshot.stock.plates ?? 0}</b>
             <small>{t("ui.hud.plates")}</small>
           </span>
           <span
             className={snapshot.fuel < 10 ? "low" : ""}
-            title="State fuel allocation"
+            title={t("ui.hud.fuel-tip")}
           >
             <Glyph type="fuel" />
             <b data-testid="fuel">{snapshot.fuel}</b>
@@ -1166,9 +1166,9 @@ function GameClientInner() {
         </div>
         <nav className="hud-actions" aria-label="Game controls">
           <button
-            aria-label="Knowledge notebook"
+            aria-label={t("ui.hud.notebook")}
             aria-pressed={panel === "knowledge"}
-            title="Knowledge"
+            title={t("ui.hud.notebook-tip")}
             onClick={() => {
               setOnboarding((state) => ({ ...state, knowledgeOpened: true }));
               if (panel !== "knowledge") setKnowledgeFilter("all");
@@ -1192,8 +1192,8 @@ function GameClientInner() {
             <Glyph type="terminal" />
           </button>
           <button
-            aria-label="Center camera"
-            title="Center camera · Home"
+            aria-label={t("ui.hud.center")}
+            title={t("ui.hud.center-tip")}
             onClick={() => setHomeToken((n) => n + 1)}
           >
             <Glyph type="home" />
@@ -1210,9 +1210,9 @@ function GameClientInner() {
             <Glyph type={paused ? "play" : "pause"} />
           </button>
           <button
-            aria-label="Game configuration"
+            aria-label={t("ui.hud.config")}
             aria-pressed={panel === "configuration"}
-            title="Game configuration"
+            title={t("ui.hud.config")}
             onClick={() => {
               setPanel(panel === "configuration" ? null : "configuration");
               setMode((m) => ({ ...m, tool: "select", selected: null }));
@@ -1221,9 +1221,9 @@ function GameClientInner() {
             <Glyph type="settings" />
           </button>
           <button
-            aria-label="Game menu"
+            aria-label={t("ui.hud.menu")}
             aria-pressed={panel === "menu"}
-            title="Expedition menu"
+            title={t("ui.hud.menu-tip")}
             onClick={() => setPanel(panel === "menu" ? null : "menu")}
           >
             <Glyph type="menu" />
@@ -1238,7 +1238,7 @@ function GameClientInner() {
           aria-live="polite"
         >
           <button
-            aria-label="Close field brief"
+            aria-label={t("ui.hud.brief-close")}
             onClick={() => setGuide(false)}
           >
             ×
@@ -1255,7 +1255,7 @@ function GameClientInner() {
       {!guide && (
         <button
           className="guide-toggle"
-          aria-label="Open field brief"
+          aria-label={t("ui.hud.brief-open")}
           onClick={() => setGuide(true)}
         >
           <Glyph type="help" size={16} />
@@ -1265,7 +1265,7 @@ function GameClientInner() {
         <div role="status" className={"toast " + (notice.ok ? "" : "error")}>
           {notice.ok ? "◇" : "!"} <span>{notice.message}</span>
           <button
-            aria-label="Dismiss notification"
+            aria-label={t("ui.hud.dismiss")}
             onClick={() => setNotice(null)}
           >
             ×
@@ -2869,10 +2869,9 @@ function GameClientInner() {
             )}
             {panel === "knowledge" && (
               <>
-                <h2>Learn by doing.</h2>
+                <h2>{t("ui.knowledge.heading")}</h2>
                 <p className="hint">
-                  Known construction methods and your observed discoveries.
-                  There is no complete recipe book.
+                  {t("ui.knowledge.intro")}
                 </p>
                 {snapshot.knowledgeInsights.length > 0 && (
                   <>
@@ -2979,8 +2978,8 @@ function GameClientInner() {
             )}
             {panel === "terminal" && (
               <>
-                <small className="eyebrow">ORBITAL UPLINK · CONNECTED</small>
-                <h2>Keep the expedition moving.</h2>
+                <small className="eyebrow">{t("ui.terminal.uplink")}</small>
+                <h2>{t("ui.terminal.heading")}</h2>
                 <div className="facts">
                   <span>
                     Exported<b data-testid="exported">{snapshot.exported}</b>

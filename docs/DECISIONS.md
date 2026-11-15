@@ -618,3 +618,11 @@ Generic copy uses reserved tokens `{{site}}`, `{{SITE}}`, `{{siteNumber}}`, `{{p
 Stage 2 (not started): sim-core running more than one site in a save (about 200 `content.site` uses). Until then, adding a site is a registry entry plus its own `site` data in a content pack.
 
 **Source of truth:** `packages/content/src/schema.ts` (`locationsSchema`), `packages/content/src/locale.ts`, `apps/web/game/location.ts`, `packages/content/test/locations.test.ts`.
+
+## D-047 — World-facing copy lives in the locale; settings chrome stays in code for now
+
+**Status:** accepted 2026-11-15 (no wording change).
+
+Everything the fiction speaks (HUD, panel titles, evidence labels, the return prompt, terminal and notebook headings, hints, orders) is a locale key, so the Studio Copy tab edits it and the voice lint covers it. The Game Configuration panel, the controls list, inspector engineering headings and error notices that end in a raw error message are interface chrome. They stay in code until the game is localized, because they carry no voice and change with the UI rather than with the world.
+
+**Source of truth:** `packages/content/data/locale.en.json`, `apps/web/components/GameClient.tsx`.
