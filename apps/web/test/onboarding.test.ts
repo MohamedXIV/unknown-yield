@@ -266,3 +266,34 @@ describe("contextual production onboarding", () => {
     expect(enCatalog["ui.onboarding.evidence.hint"]).toContain("book icon");
   });
 });
+
+describe("First Assignment is synchronized with operational permits", () => {
+  it("never asks for an instrument the Directorate has not issued", () => {
+    const sim = new Simulation(fixture, { guided: true });
+    const check = (sg: Partial<OnboardingSignals> = {}) => {
+      const snap = sim.snapshot();
+      const beat = onboardingBeat(snap, signals(sg));
+      for (const tool of beat.tools)
+        expect(snap.unauthorizedTools, beat.id + " asks for " + tool).not.toContain(tool);
+      return beat;
+    };
+    expect(check().id).toBe("camera-build");
+    build(sim, { type: "placeMachine", definitionId: "extractor", x: 18, y: 26, direction: 0 });
+    expect(check().id).toBe("physical-inventory");
+    const factory = build(sim, { type: "placeFactory", x: 24, y: 22, width: 10, height: 10 });
+    expect(check().id).toBe("experiment");
+    for (const x of [24, 33])
+      build(sim, { type: "placePort", factoryId: factory, x, y: 27, direction: 0 });
+    build(sim, { type: "placeMachine", definitionId: "crusher", x: 27, y: 26, direction: 0 });
+    for (let i = 0; i < 40; i++) sim.step(1000);
+    check({ knowledgeOpened: true, factoryToggleCount: 2 });
+  });
+
+  it("dismissing the brief never issues anything (state-derived only)", () => {
+    const sim = new Simulation(fixture, { guided: true });
+    const before = sim.snapshot().unauthorizedTools;
+    onboardingBeat(sim.snapshot(), signals({ knowledgeOpened: true, terminalOpened: true, factoryToggleCount: 9 }));
+    expect(sim.snapshot().unauthorizedTools).toEqual(before);
+    expect(before).toContain("factory");
+  });
+});

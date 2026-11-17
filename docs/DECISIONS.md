@@ -674,3 +674,7 @@ The state celebrates everything. Every authorization, unlock, discovery and mile
 - Art is SVG in code (`PosterArt`), per illustration type. `ProclamationModal` accepts an optional raster `image` so authored poster art can replace it later.
 - `subscribeProclamations` is the hook for future announcer voice/audio.
 - Reseeded per slot and pack fingerprint, so loading a save never replays old proclamations.
+
+## D-052 — First Assignment is synchronized with permits, not scripted
+
+The Field Brief stays state-derived (`onboardingBeat(snapshot, signals)`); it never mints, unlocks or authorizes anything. Each beat now declares the instruments it asks for (`tools`) and the brief shows them as "ISSUED: ...". A test walks a guided world through the beats and asserts no beat asks for a tool still in `unauthorizedTools`, so a future permit or beat change that would create a dead end fails CI. Dismissing the brief changes no authorization.
