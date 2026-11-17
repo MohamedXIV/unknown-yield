@@ -18,6 +18,7 @@ export type LocaleCatalog = z.infer<typeof localeCatalogSchema>;
 
 export function contentKeys(c: Content): string[] {
   return [
+    ...c.permits.flatMap((p) => [p.nameKey, p.noticeKey]),
     ...(c.locations?.planets.map((p) => p.nameKey) ?? []),
     ...(c.locations?.sites.map((x) => x.nameKey) ?? []),
     ...(c.liquidLogistics?.pump.containmentFailure

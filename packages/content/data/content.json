@@ -1,6 +1,52 @@
 {
   "version": "world-01-v27",
   "tickMs": 100,
+  "permits": [
+    {
+      "id": "premises",
+      "nameKey": "permit.premises.name",
+      "noticeKey": "permit.premises.notice",
+      "earnedBy": { "kind": "machine", "definitionId": "extractor" },
+      "tools": ["factory", "port"]
+    },
+    {
+      "id": "reduction",
+      "nameKey": "permit.reduction.name",
+      "noticeKey": "permit.reduction.notice",
+      "earnedBy": { "kind": "factory" },
+      "tools": ["crusher", "furnace", "depot"]
+    },
+    {
+      "id": "expansion",
+      "nameKey": "permit.expansion.name",
+      "noticeKey": "permit.expansion.notice",
+      "earnedBy": { "kind": "export" },
+      "tools": [
+        "deep-extractor",
+        "atmospheric-intake",
+        "gas-collector",
+        "sinterer",
+        "liquefier",
+        "precipitator",
+        "vaporizer",
+        "sealed-furnace",
+        "oversealed-furnace",
+        "relief-furnace",
+        "phase-quencher",
+        "phase-stabilizer",
+        "isolation-depot",
+        "pipe",
+        "tank",
+        "pump",
+        "pressure-line",
+        "pressure-vessel",
+        "compressor",
+        "underground-solid",
+        "underground-liquid",
+        "elevated-solid"
+      ]
+    }
+  ],
   "locations": {
     "activeSiteId": "concord-shelf",
     "planets": [

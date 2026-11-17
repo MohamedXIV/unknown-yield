@@ -43,6 +43,7 @@ import { importSupplyViews, terminalImportOutlet } from "./imports";
 import { advanceUndergroundRoutes } from "./underground";
 import { advanceElevatedRoutes } from "./elevated";
 import { fuelClassViews } from "./fuel";
+import { guided, refreshPermits, unauthorizedTools } from "./permits";
 import {
   experimentEvidenceKey,
   total,
@@ -55,9 +56,13 @@ export class Simulation {
   private state: Save;
   private discoveryLocations = new Map<string, { x: number; y: number }>();
   private readonly factoryThroughput = new FactoryThroughputMonitor();
-  constructor(content: Content) {
+  /**
+   * `guided` starts a world under the Directorate's permits (only when the
+   * content defines any). Worlds restored with `load` take their mode from the save.
+   */
+  constructor(content: Content, options: { guided?: boolean } = {}) {
     this.content = validateSimulationContent(content);
-    this.state = initialState(this.content);
+    this.state = initialState(this.content, options.guided === true);
   }
   command(input: unknown): CommandResult {
     const commandInput =
@@ -78,6 +83,7 @@ export class Simulation {
           ? commandInput?.route === "alternate"
           : undefined,
       result = applyCommand(this.content, this.state, input, true);
+    if (result.ok) refreshPermits(this.content, this.state);
     if (
       result.ok &&
       commandType === "placeBelts" &&
@@ -135,6 +141,7 @@ export class Simulation {
         this.discoveryLocations.set(id, { x: m.x, y: m.y }),
       );
       refreshMilestones(c, s);
+      refreshPermits(c, s);
       if (s.tick % c.site.transportEveryTicks === 0) {
         advanceUndergroundRoutes(s);
         advanceElevatedRoutes(s);
@@ -307,6 +314,13 @@ export class Simulation {
             remaining: s.atmosphericSources[source.id],
           }),
         ),
+      unauthorizedTools: unauthorizedTools(c, s),
+      permits: c.permits.map((permit) => ({
+        id: permit.id,
+        nameKey: permit.nameKey,
+        noticeKey: permit.noticeKey,
+        earned: !guided(s) || s.permits!.includes(permit.id),
+      })),
       definitions: c.machines.map((definition) =>
         publicMachineDefinition(definition, machineUnlocked(s, definition)),
       ),

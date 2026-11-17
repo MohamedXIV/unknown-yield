@@ -360,6 +360,8 @@ export type TerminalModuleView = Content["site"]["terminalModules"][number] & {
     "locked" | "installed" | "needs-stock" | "not-installed" | "loaded" | null;
 };
 export type Save = {
+  /** Present only in guided worlds: the Directorate permits earned so far. */
+  permits?: string[];
   terminalModules: Record<string, TerminalModuleContents>;
   schemaVersion: number;
   contentVersion: string;
@@ -703,6 +705,9 @@ export type PlayerSnapshot = {
   sensingObservations: SensingObservation[];
   deposits: (Content["site"]["deposits"][number] & { remaining: number })[];
   atmosphericSources: AtmosphericSourceView[];
+  /** Build tools a guided world may not use yet; empty when nothing is gated. */
+  unauthorizedTools: string[];
+  permits: { id: string; nameKey: string; noticeKey: string; earned: boolean }[];
   definitions: MachineDefinitionView[];
   fuelClasses: FuelClassView[];
   storageDefinitions: StorageDefinition[];

@@ -646,3 +646,20 @@ Site 52, Harmony Terrace on The Pale Reach, is the first: a 72×56 shelf with it
 Not in scope: moving between sites inside one save, shared progress across sites, and Studio editing of site files (the Studio edits `content.json` only).
 
 **Source of truth:** `packages/content/src/sites.ts`, `packages/content/data/sites/harmony-terrace.json`, `packages/content/test/sites.test.ts`, `packages/sim-core/test/second-site.test.ts`.
+
+## D-050 — Operational permits: a guided world earns build tools from real play
+
+**Status:** accepted 2026-11-17 (P2, #345). Save schema unchanged.
+
+A new expedition is **guided**: it starts with only the tools no permit names (Inspect, Extractor, Belt, Dismantle) and earns the rest by doing real things. Content defines `permits[]`; each lists the tools it grants and one condition read from world state: a machine placed, a factory shell built, or a first export. Shipped order: `premises` (extractor placed → factory shell, wall port), `reduction` (shell built → crusher, furnace, depot), `expansion` (first export → everything else, including pipes, tanks, gas and phase equipment). A tool no permit names is always available.
+
+- **Authority is the simulation.** `applyCommand` refuses a gated placement ("Not authorized yet"), preview included. The palette only hides what the sim would refuse; no padlock wall.
+- **Monotonic.** An earned permit is kept in `save.permits` (an optional field) even if the machine that earned it is dismantled.
+- **Old worlds are untouched.** A save without `permits`, and every world built with `new Simulation(content)`, is unguided and keeps every tool. Only the game's own new-expedition paths pass `{ guided: true }`. Content without permits gates nothing.
+- **No soft-lock.** Content validation simulates the chain from an empty world and rejects a permit that cannot be earned or that gates its own earning tool.
+- **Separate from science.** Evidence unlocks still apply on top; permits never reveal a recipe.
+- **Announcement.** Earning a permit shows the Directorate's notice once, during play, not on load.
+
+Not in scope: tying orders 41-A to 41-E to permits (P3), event-driven dispatches (P4).
+
+**Source of truth:** `packages/sim-core/src/permits.ts`, `packages/content/src/schema.ts` (`permitSchema`), `packages/sim-core/test/permits*.test.ts`.

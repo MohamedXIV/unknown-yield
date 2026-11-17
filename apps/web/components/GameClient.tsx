@@ -283,10 +283,26 @@ function GameClientInner() {
   useEffect(() => {
     if (mode.dismantleReview) dismantleDialog.current?.focus();
   }, [mode.dismantleReview]);
+  const earnedPermits = snapshot.permits.filter((permit) => permit.earned).length;
+  const seenPermits = useRef<{ slot: string | null; count: number } | null>(null);
+  const permitSlot = session.activeSlotId();
+  useEffect(() => {
+    // Announce a permit only when it is earned during play, never on load or a slot change.
+    const seen = seenPermits.current;
+    if (seen && seen.slot === permitSlot && earnedPermits > seen.count) {
+      const fresh = snapshot.permits.filter((permit) => permit.earned).at(-1);
+      if (fresh) setNotice({ ok: true, message: t(fresh.noticeKey) });
+    }
+    seenPermits.current = { slot: permitSlot, count: earnedPermits };
+  }, [earnedPermits, permitSlot]);
   const unlockFor = (tool: Tool) =>
     snapshot.definitions.find((definition) => definition.id === tool)?.unlock;
   const toolLocked = (tool: Tool) => unlockFor(tool)?.unlocked === false;
+  // Directorate permits (D-050): tools not yet authorized are left out of the palette.
+  const unauthorized = new Set(snapshot.unauthorizedTools);
+  const toolHidden = (tool: Tool) => unauthorized.has(tool);
   const setTool = (tool: Tool) => {
+    if (toolHidden(tool)) return;
     const unlock = unlockFor(tool);
     if (unlock && !unlock.unlocked) {
       setNotice({ ok: false, message: t(unlock.hintKey) });
@@ -876,13 +892,17 @@ function GameClientInner() {
   const packStorageTools = additionalStorageTools(snapshot);
   const groupFor = (id: ToolGroupId) =>
     TOOL_GROUPS.find((group) => group.id === id)!;
-  const groupPrimary = (id: ToolGroupId) =>
-    effectiveBuildGroupPrimary(
+  const groupPrimary = (id: ToolGroupId) => {
+    const primary = effectiveBuildGroupPrimary(
       id,
       preferences.buildPalette.promoteLastUsed,
       preferences.buildPalette.lastUsedByGroup,
-      (tool) => !toolLocked(tool),
+      (tool) => !toolLocked(tool) && !toolHidden(tool),
     );
+    return toolHidden(primary)
+      ? (groupFor(id).tools.find((tool) => !toolHidden(tool)) ?? primary)
+      : primary;
+  };
   const rememberGroupSelection = (tool: Tool) => {
     const group = toolGroupFor(tool);
     if (
@@ -3903,6 +3923,7 @@ function GameClientInner() {
             }
 
             const group = groupFor(entry.groupId);
+            if (group.tools.every(toolHidden)) return null;
             const primary = groupPrimary(group.id);
             const open = openToolGroup === group.id;
             const groupActive = group.tools.includes(mode.tool) ||
@@ -3916,7 +3937,7 @@ function GameClientInner() {
                     role="menu"
                     aria-label={toolName(primary) + " related tools"}
                   >
-                    {group.tools.map((tool) => {
+                    {group.tools.filter((tool) => !toolHidden(tool)).map((tool) => {
                       const shortcut = buildContextShortcutForTool(group.id, tool);
                       return (
                         <button

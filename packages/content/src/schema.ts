@@ -38,9 +38,28 @@ export const locationsSchema = z.object({
     )
     .min(1),
 });
+/**
+ * Directorate operational permits (D-050). A permit makes a group of build
+ * tools available to a guided expedition once the player has really done
+ * something: placed a machine, built a factory shell, shipped cargo. A tool
+ * named by no permit is always available. Scientific unlocks (evidence) are a
+ * separate lane and still apply on top.
+ */
+export const permitSchema = z.object({
+  id,
+  nameKey: localeKeySchema,
+  noticeKey: localeKeySchema,
+  earnedBy: z.discriminatedUnion("kind", [
+    z.object({ kind: z.literal("machine"), definitionId: id }),
+    z.object({ kind: z.literal("factory") }),
+    z.object({ kind: z.literal("export") }),
+  ]),
+  tools: z.array(id).min(1),
+});
 export const contentSchema = z.object({
   version: z.string().min(1),
   locations: locationsSchema.optional(),
+  permits: z.array(permitSchema).default([]),
   tickMs: z.number().int().min(20).max(1000),
   containmentCapabilities: z
     .array(z.object({ id, nameKey: localeKeySchema }))
@@ -628,6 +647,54 @@ function validateContentInternal(
   validateContainmentDefinitions(c);
   const materials = new Set(c.materials.map((m) => m.id)),
     operations = new Set(c.operations.map((o) => o.id));
+  if (new Set(c.permits.map((p) => p.id)).size !== c.permits.length)
+    throw new Error("Duplicate permit ID");
+  {
+    const seen = new Set<string>();
+    for (const permit of c.permits) {
+      for (const tool of permit.tools) {
+        if (seen.has(tool)) throw new Error("Tool named by two permits");
+        seen.add(tool);
+      }
+      const by = permit.earnedBy;
+      if (by.kind === "machine" && !c.machines.some((m) => m.id === by.definitionId))
+        throw new Error("Permit is earned by an unknown machine");
+    }
+    // A permit may never gate the tool that earns it, or the world soft-locks.
+    for (const permit of c.permits) {
+      const by = permit.earnedBy;
+      if (by.kind === "machine" && permit.tools.includes(by.definitionId))
+        throw new Error("Permit gates its own earning tool");
+    }
+  }
+  {
+    // Every permit must be reachable from an empty world, or it soft-locks.
+    const gated = new Set(c.permits.flatMap((p) => p.tools));
+    const open = (tool: string) => !gated.has(tool);
+    const earned = new Set<string>();
+    const have = (tool: string) =>
+      open(tool) ||
+      c.permits.some((p) => earned.has(p.id) && p.tools.includes(tool));
+    for (let changed = true; changed; ) {
+      changed = false;
+      for (const permit of c.permits) {
+        if (earned.has(permit.id)) continue;
+        const by = permit.earnedBy;
+        const ok =
+          by.kind === "machine"
+            ? have(by.definitionId)
+            : by.kind === "factory"
+              ? have("factory")
+              : have("factory") && have("port") && have("belt");
+        if (ok) {
+          earned.add(permit.id);
+          changed = true;
+        }
+      }
+    }
+    if (earned.size !== c.permits.length)
+      throw new Error("A permit cannot be earned from an empty world");
+  }
   if (c.locations) {
     const planetIds = new Set(c.locations.planets.map((p) => p.id));
     if (planetIds.size !== c.locations.planets.length)

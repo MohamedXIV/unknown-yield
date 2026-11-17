@@ -9,9 +9,9 @@
 | §4 Main Menu, Concept C | Shipped | P1 (#344); menu copy in the Directorate's voice, D-044 |
 | §5 Multiple independent saves | Shipped | P0 (#343) |
 | §6 One dim planet | Shipped | P5 (#348) |
-| §2 First Assignment as tutorial | Partly | Six beats rewritten as assignment orders 41-A to 41-E with an engineering hint under each (D-044). Still the old unlock order: no operational authorizations (P2) |
+| §2 First Assignment as tutorial | Partly | Six beats rewritten as assignment orders 41-A to 41-E with an engineering hint under each (D-044). The orders are not yet tied to permits (P3) |
 | §8 Directorate personality | Partly | Voice pass over menu, tutorial and notices; the state is a named speaker, fuel is "state fuel" (D-044, D-045). No event-driven dispatches yet (P4) |
-| §3A Operational authorizations | Not started | P2 (#345) |
+| §3A Operational authorizations | Shipped | P2 (#345), D-050 |
 | §7 Phaser 4 lighting | Not started | P6 (#349) |
 | Integrated journey gate | Not started | P7 (#350) |
 
