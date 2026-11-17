@@ -140,6 +140,24 @@ export function proclamationsBetween(prev: PlayerSnapshot, next: PlayerSnapshot)
         bodyKey: milestone.hintKey,
       });
 
+  // Dispatches: ceremonial notice of real "firsts". The authorization already
+  // celebrates the same event in a guided world, so a dispatch never doubles it.
+  const authorized = out.some((p) => p.kind === "authorization");
+  const dispatch = (id: string, tools?: string[]) =>
+    out.push({ id: `dispatch:${id}`, kind: "announcement", weight: "minor", illustration: "bulletin", tools });
+  const hadExtractor = prev.machines.some((m) => m.role === "extractor");
+  if (!authorized && !hadExtractor && next.machines.some((m) => m.role === "extractor"))
+    dispatch("first-extractor");
+  if (!authorized && !prev.factories.length && next.factories.length) dispatch("first-shell");
+  if (
+    !prev.machines.some((m) => m.role === "processor" && m.status === "processing") &&
+    next.machines.some((m) => m.role === "processor" && m.status === "processing")
+  )
+    dispatch("first-flow");
+  const observed = (s: PlayerSnapshot) => s.observations.some((o) => !o.initial);
+  if (!observed(prev) && observed(next)) dispatch("first-observation");
+  if (!authorized && prev.exported <= 0 && next.exported > 0) dispatch("first-shipment");
+
   return out;
 }
 
