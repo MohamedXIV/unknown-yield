@@ -2077,3 +2077,35 @@ kbd {
 .menu-site-picker label.is-selected{border-color:#c6a36d99;background:#c6a36d14}
 .menu-site-picker strong{display:block;color:#e1ddce;font:11px var(--menu-mono)}
 .menu-site-picker small{display:block;color:#929e99;font:9px var(--menu-mono)}
+
+/* Proclamations: poster-styled announcements (D-051) */
+.poster-art{display:block;width:100%;height:100%}
+.poster-art .pa-paper{fill:#e8dcc0}.poster-art .pa-ink{fill:#1d1c1a}.poster-art .pa-red{fill:#b43a28}
+.poster-art .pa-rays path{fill:#b43a28;opacity:.9}.poster-art .pa-sun{fill:#d9c9a0}
+.poster-art .pa-smoke{fill:#6d625a;opacity:.8}.poster-art .pa-star{fill:#e3b04a;stroke:#1d1c1a;stroke-width:1.5}
+.poster-art .pa-line{stroke:#1d1c1a;stroke-width:3;fill:none}.poster-art .pa-pipes{stroke-width:5}
+.poster-art .pa-grain{fill:url(#none);fill-opacity:0;stroke:#1d1c1a;stroke-opacity:.25;stroke-width:6}
+.proclamation-scrim{position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:16px;background:#050809b8}
+.proclamation-card{width:min(440px,100%);max-height:calc(100vh - 32px);overflow:auto;background:#e8dcc0;color:#1d1c1a;border:3px solid #1d1c1a;box-shadow:0 0 0 5px #b43a28,0 18px 60px #000a;padding:0 0 14px;animation:proclaim-in .35s cubic-bezier(.2,.9,.3,1.2)}
+.proclamation-head{display:flex;flex-direction:column;gap:2px;padding:10px 16px;background:#b43a28;color:#f4e9cc;font:600 10px/1.2 ui-monospace,Menlo,monospace;letter-spacing:.14em;text-transform:uppercase}
+.proclamation-head b{font:800 22px/1.1 "Arial Narrow",Impact,system-ui,sans-serif;letter-spacing:.04em}
+.proclamation-art{aspect-ratio:16/9;border-bottom:3px solid #1d1c1a;background:#e8dcc0}.proclamation-art img{width:100%;height:100%;object-fit:cover}
+.proclamation-card h2{margin:14px 16px 6px;font:800 24px/1.15 "Arial Narrow",Impact,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.02em;text-wrap:balance}
+.proclamation-card p{margin:0 16px 10px;font-size:14px;line-height:1.5;color:#2c2a27}
+.proclamation-items{list-style:none;display:flex;flex-wrap:wrap;gap:6px;margin:0 16px 12px;padding:0}
+.proclamation-items li{padding:4px 9px;border:2px solid #1d1c1a;background:#f4e9cc;font:700 11px ui-monospace,Menlo,monospace;letter-spacing:.08em;text-transform:uppercase}
+.proclamation-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 16px;padding-top:10px;border-top:2px solid #1d1c1a}
+.proclamation-foot em{font:700 11px/1.3 ui-monospace,Menlo,monospace;letter-spacing:.12em;text-transform:uppercase;color:#b43a28}
+.proclamation-foot button{flex:none;padding:9px 14px;background:#1d1c1a;color:#f4e9cc;font:700 11px ui-monospace,Menlo,monospace;letter-spacing:.14em;text-transform:uppercase;border:0;cursor:pointer}
+.proclamation-foot button:focus-visible{outline:3px solid #b43a28;outline-offset:2px}
+.proclamation-waiting{display:block;margin:8px 16px 0;font:600 10px ui-monospace,Menlo,monospace;letter-spacing:.1em;text-transform:uppercase;color:#6d625a}
+.proclamation-banner{position:absolute;top:88px;left:50%;transform:translateX(-50%);z-index:11;display:flex;align-items:stretch;gap:0;width:min(460px,calc(100vw - 32px));background:#e8dcc0;color:#1d1c1a;border:2px solid #1d1c1a;box-shadow:0 0 0 3px #b43a28,0 8px 28px #0008;animation:proclaim-in .3s ease-out}
+.proclamation-banner-art{flex:none;width:92px;border-right:2px solid #1d1c1a}
+.proclamation-banner>div:nth-child(2){display:flex;flex-direction:column;gap:2px;padding:8px 10px;min-width:0}
+.proclamation-banner small{font:600 9px ui-monospace,Menlo,monospace;letter-spacing:.12em;text-transform:uppercase;color:#b43a28}
+.proclamation-banner strong{font:800 14px/1.2 "Arial Narrow",Impact,system-ui,sans-serif;text-transform:uppercase}
+.proclamation-banner span{font-size:12px;line-height:1.35;color:#2c2a27}
+.proclamation-banner button{flex:none;align-self:flex-start;padding:4px 9px;font-size:18px;color:#1d1c1a;background:none;border:0;cursor:pointer}
+@keyframes proclaim-in{from{opacity:0;transform:translate(var(--px,0),10px) scale(.96)}to{opacity:1;transform:translate(var(--px,0),0) scale(1)}}
+.proclamation-banner{--px:-50%}
+@media (prefers-reduced-motion:reduce){.proclamation-card,.proclamation-banner{animation:none}}

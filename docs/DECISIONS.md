@@ -663,3 +663,14 @@ A new expedition is **guided**: it starts with only the tools no permit names (I
 Not in scope: tying orders 41-A to 41-E to permits (P3), event-driven dispatches (P4).
 
 **Source of truth:** `packages/sim-core/src/permits.ts`, `packages/content/src/schema.ts` (`permitSchema`), `packages/sim-core/test/permits*.test.ts`.
+
+## D-051 — Proclamations: one announcement API for every milestone
+
+The state celebrates everything. Every authorization, unlock, discovery and milestone is announced as a poster-style Directorate proclamation instead of a toast.
+
+- `proclamationsBetween(prev, next)` is pure: it diffs two player snapshots and returns proclamations (new permits, science unlocks, first/next confirmed knowledge, completed milestones). Anything else can enqueue the same `Proclamation` shape (`kind`, `weight`, `illustration`, `params`).
+- Weight decides presentation: `major` is a modal poster (acknowledge with button, Enter, Space or Esc); `minor` is a banner that auto-dismisses. `enqueueProclamations` dedupes and puts majors first.
+- Wording lives in locale: `proclamation.<slug>.{kicker,title,body,slogan}`; missing keys fall back to generic `proclamation.<kind>.*`. Authored text exists for the three permits.
+- Art is SVG in code (`PosterArt`), per illustration type. `ProclamationModal` accepts an optional raster `image` so authored poster art can replace it later.
+- `subscribeProclamations` is the hook for future announcer voice/audio.
+- Reseeded per slot and pack fingerprint, so loading a save never replays old proclamations.

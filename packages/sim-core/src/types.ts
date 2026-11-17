@@ -707,7 +707,7 @@ export type PlayerSnapshot = {
   atmosphericSources: AtmosphericSourceView[];
   /** Build tools a guided world may not use yet; empty when nothing is gated. */
   unauthorizedTools: string[];
-  permits: { id: string; nameKey: string; noticeKey: string; earned: boolean }[];
+  permits: { id: string; nameKey: string; noticeKey: string; tools: string[]; earned: boolean }[];
   definitions: MachineDefinitionView[];
   fuelClasses: FuelClassView[];
   storageDefinitions: StorageDefinition[];

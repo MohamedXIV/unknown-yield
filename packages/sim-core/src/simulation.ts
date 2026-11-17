@@ -319,6 +319,7 @@ export class Simulation {
         id: permit.id,
         nameKey: permit.nameKey,
         noticeKey: permit.noticeKey,
+        tools: [...permit.tools],
         earned: !guided(s) || s.permits!.includes(permit.id),
       })),
       definitions: c.machines.map((definition) =>

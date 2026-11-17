@@ -3,6 +3,14 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { I18nextProvider, useTranslation } from "react-i18next";
 import { i18n, setRuntimeContentLocale } from "../game/i18n";
 import { locationText } from "../game/location";
+import {
+  enqueueProclamations,
+  notifyProclamation,
+  proclamationsBetween,
+  proclamationText,
+  type Proclamation,
+} from "../game/proclamations";
+import { ProclamationBanner, ProclamationModal } from "./proclamation/ProclamationView";
 import { siteChoices } from "@site/content/sites";
 import { entityIdentity } from "../game/identity";
 import EquipmentIdentity from "./EquipmentIdentity";
@@ -16,7 +24,7 @@ import {
 } from "../game/runtime-content";
 import { machineStatusLabel } from "../game/machine-status";
 import { factoryContractPresentation } from "../game/factory-presentation";
-import { beltArms } from "@site/sim-core";
+import { beltArms, type PlayerSnapshot } from "@site/sim-core";
 import type {
   GameCommand,
   CommandResult,
@@ -283,18 +291,28 @@ function GameClientInner() {
   useEffect(() => {
     if (mode.dismantleReview) dismantleDialog.current?.focus();
   }, [mode.dismantleReview]);
-  const earnedPermits = snapshot.permits.filter((permit) => permit.earned).length;
-  const seenPermits = useRef<{ slot: string | null; count: number } | null>(null);
-  const permitSlot = session.activeSlotId();
+  // Proclamations: announce what became true during play; never on load or a slot change.
+  const proclaimKey = (session.activeSlotId() ?? "") + "|" + (activePack?.fingerprint ?? "");
+  const proclaimBase = useRef<{ key: string; snap: PlayerSnapshot } | null>(null);
+  const [proclaims, setProclaims] = useState<Proclamation[]>([]);
   useEffect(() => {
-    // Announce a permit only when it is earned during play, never on load or a slot change.
-    const seen = seenPermits.current;
-    if (seen && seen.slot === permitSlot && earnedPermits > seen.count) {
-      const fresh = snapshot.permits.filter((permit) => permit.earned).at(-1);
-      if (fresh) setNotice({ ok: true, message: t(fresh.noticeKey) });
-    }
-    seenPermits.current = { slot: permitSlot, count: earnedPermits };
-  }, [earnedPermits, permitSlot]);
+    const base = proclaimBase.current;
+    if (base && base.key === proclaimKey) {
+      const fresh = proclamationsBetween(base.snap, snapshot);
+      if (fresh.length) {
+        fresh.forEach(notifyProclamation);
+        setProclaims((queue) => enqueueProclamations(queue, fresh));
+      }
+    } else setProclaims([]);
+    proclaimBase.current = { key: proclaimKey, snap: snapshot };
+  }, [snapshot, proclaimKey]);
+  const currentProclamation = proclaims[0] ?? null;
+  const dismissProclamation = () => setProclaims((queue) => queue.slice(1));
+  useEffect(() => {
+    if (currentProclamation?.weight !== "minor") return;
+    const timer = window.setTimeout(dismissProclamation, 9000);
+    return () => window.clearTimeout(timer);
+  }, [currentProclamation?.id]);
   const unlockFor = (tool: Tool) =>
     snapshot.definitions.find((definition) => definition.id === tool)?.unlock;
   const toolLocked = (tool: Tool) => unlockFor(tool)?.unlocked === false;
@@ -1318,6 +1336,30 @@ function GameClientInner() {
           </button>
         </div>
       )}
+      {currentProclamation && screen === "game" && (() => {
+        const text = proclamationText(currentProclamation, {
+          t: (key, params) => t(key, params),
+          exists: (key) => i18n.exists(key),
+          toolName: (tool) => toolName(tool),
+        });
+        const common = {
+          proclamation: currentProclamation,
+          text,
+          issuer: t("ui.proclamation.issuer"),
+          acknowledgeLabel: t("ui.proclamation.acknowledge"),
+          onAcknowledge: dismissProclamation,
+        };
+        return currentProclamation.weight === "major" ? (
+          <ProclamationModal
+            {...common}
+            items={(currentProclamation.tools ?? []).map((tool) => ({ id: tool, label: toolName(tool) }))}
+            waiting={proclaims.length - 1}
+            waitingLabel={t("ui.proclamation.waiting", { count: String(proclaims.length - 1) })}
+          />
+        ) : (
+          <ProclamationBanner {...common} />
+        );
+      })()}
       {paused && <div className="paused-label">{t("ui.hud.paused")}</div>}
       {panel && (
         <IndustrialPanelFrame
