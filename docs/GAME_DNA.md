@@ -1,6 +1,26 @@
 # Unknown Yield — Game DNA: The First Assignment & Planetary Atmosphere
 
-**Status:** player-approved *experience direction* (5 November 2026); implementation planned, not completed. This document records the agreed next gameplay/identity track, without changing the accepted simulation, economy, materials, industrial behavior, or current UI reskin approval.
+**Status:** player-approved *experience direction* (5 November 2026). Updated 17 November 2026: the menu, save slots, dim planet profile, assignment-order tutorial, Directorate voice, identity layers and a second site have shipped; operational authorizations, event-driven dispatches and the lighting pilot have not. See *Status on 17 November 2026* below. This document records the agreed next gameplay/identity track, without changing the accepted simulation, economy, materials, industrial behavior, or current UI reskin approval.
+
+## Status on 17 November 2026
+
+| Part of this document | State | Where it landed |
+| --- | --- | --- |
+| §4 Main Menu, Concept C | Shipped | P1 (#344); menu copy in the Directorate's voice, D-044 |
+| §5 Multiple independent saves | Shipped | P0 (#343) |
+| §6 One dim planet | Shipped | P5 (#348) |
+| §2 First Assignment as tutorial | Partly | Six beats rewritten as assignment orders 41-A to 41-E with an engineering hint under each (D-044). Still the old unlock order: no operational authorizations (P2) |
+| §8 Directorate personality | Partly | Voice pass over menu, tutorial and notices; the state is a named speaker, fuel is "state fuel" (D-044, D-045). No event-driven dispatches yet (P4) |
+| §3A Operational authorizations | Not started | P2 (#345) |
+| §7 Phaser 4 lighting | Not started | P6 (#349) |
+| Integrated journey gate | Not started | P7 (#350) |
+
+Also shipped since, outside the original plan:
+- **Identity layers** (D-043, D-048): machines, storages, deposits and known materials carry an optional description, designation and nickname; nicknames show only for built equipment.
+- **Data-driven content** (D-042, D-047): all fiction-facing copy lives in the locale and `content.json`; the local-only Studio edits both and runs a voice lint.
+- **More than one place** (D-046, D-049): planets and sites are data, and a second playable site (Site 52, The Pale Reach) ships as a built-in bundle chosen in New Expedition. One expedition plays one site. This narrows the "multiple planets deferred" statements below: site selection exists, planet generation and in-save travel do not.
+
+Two review gates named below are closed: the UI reskin (#339) was not merged, and the extractor art (#291) was reviewed in the game and not approved.
 
 **Why this exists:** a newcomer should enter a living industrial assignment, learn one meaningful operation at a time, recognize the fictional Directorate's absurd personality, and see a planet whose dim atmosphere makes their factories visibly come alive. This track is not permission to turn Unknown Yield into a narrative campaign or a web dashboard.
 

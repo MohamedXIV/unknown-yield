@@ -1,6 +1,6 @@
 # Roadmap — The First Assignment, Personnel Archives & Industrial Atmosphere
 
-**Status:** proposed next player-experience Epic (5 November 2026), ready for GitHub issue decomposition; not implemented by this document. **Design source:** [GAME_DNA.md](GAME_DNA.md). **Baseline:** main; independent of UI reskin PR #339 and extractor-art PR #291.
+**Status:** Epic [#342](https://github.com/MohamedXIV/unknown-yield/issues/342), partly delivered (17 November 2026). **Done:** P0 saves, P1 menu, P5 planet profile. **Partly done:** P3 (tutorial rewritten as assignment orders, D-044) and P4 (Directorate voice, D-044/D-045; no event-driven dispatches). **Not started:** P2 authorizations, P6 lighting, P7 gate. A second playable site also shipped (D-046, D-049), which the deferred list below predates. **Design source:** [GAME_DNA.md](GAME_DNA.md). **Baseline:** main; independent of UI reskin PR #339 and extractor-art PR #291 (both since closed without merging).
 
 ## Why this track
 
@@ -26,6 +26,8 @@ P0/P2/P5 can start independently from **main**. P1 uses P0. P3 requires P2 and P
 
 ## P0 — Personnel Archives: independent save slots
 
+**Status:** done (#343).
+
 **Question:** Can a player create and resume multiple expeditions without accidentally overwriting a prior world or importing the wrong content pack?
 
 - Extend the existing Session/localStorage boundary with stable slot IDs and a small index/metadata layer, no duplicated simulation authority.
@@ -36,6 +38,8 @@ P0/P2/P5 can start independently from **main**. P1 uses P0. P3 requires P2 and P
 **Acceptance:** two different worlds diverge, save and load without cross-contamination; old single-save records remain recoverable; incompatible and quota failures preserve current world; browser and unit tests cover index/slot changes.
 
 ## P1 — Main Menu: Propaganda Meets Reality
+
+**Status:** done (#344).
 
 **Question:** Does a first-time player understand who they are and how to start, resume or inspect an assignment?
 
@@ -48,6 +52,8 @@ P0/P2/P5 can start independently from **main**. P1 uses P0. P3 requires P2 and P
 
 ## P2 — Directorate operational authorizations
 
+**Status:** not started (#345).
+
 **Question:** Can the early build palette stay small and useful, growing after *actual* introductory achievements without disclosing unknown science?
 
 - Add authored, data-driven introductory authorization gates independent from existing knowledge/milestone-based scientific unlocks.
@@ -58,6 +64,8 @@ P0/P2/P5 can start independently from **main**. P1 uses P0. P3 requires P2 and P
 **Acceptance:** fresh world progresses through functional production without manually bypassing gates; later scientific capabilities still depend on evidence; progressed saves do not lose tools; hidden recipe truth remains private.
 
 ## P3 — The First Assignment: contextual official tutorial
+
+**Status:** partly done. The beats are written as assignment orders with an engineering hint (D-044); the gating that depends on P2 is not built (#346).
 
 **Question:** Can a player complete a real first export while feeling guided by an absurd-but-coherent industrial Directorate rather than a checklist?
 
@@ -70,6 +78,8 @@ P0/P2/P5 can start independently from **main**. P1 uses P0. P3 requires P2 and P
 
 ## P4 — Directorate dispatches and genuine industrial personality
 
+**Status:** partly done. The voice exists (D-044, D-045); dispatches tied to real events do not (#347).
+
 **Question:** Can the state glorify ordinary actions hilariously while all engineering/status information remains objectively accurate?
 
 - Authored short congratulatory notices / radio bulletins tied to real public evidence/events; separate ceremonial copy and factual diagnostic source.
@@ -80,6 +90,8 @@ P0/P2/P5 can start independently from **main**. P1 uses P0. P3 requires P2 and P
 **Acceptance:** observed dispatches correspond to actual state changes; no duplicate spamming after reload; every associated engineering action remains correct and accessible.
 
 ## P5 — Planet environment profile: one dim world
+
+**Status:** done (#348).
 
 **Question:** Can one authored alien landscape make the site feel like a distinct world before building a multi-planet system?
 
@@ -92,6 +104,8 @@ P0/P2/P5 can start independently from **main**. P1 uses P0. P3 requires P2 and P
 
 ## P6 — Phaser 4 limited dynamic-light pilot
 
+**Status:** not started (#349).
+
 **Question:** Can real world-space fixture lights improve 2D diesel-industrial depth within the measured browser/mobile budget?
 
 - Verify actual Phaser 4 WebGL lighting support on the current renderer/art mix; explicitly enable appropriate objects instead of assuming all Graphics benefit visually.
@@ -103,6 +117,8 @@ P0/P2/P5 can start independently from **main**. P1 uses P0. P3 requires P2 and P
 **Acceptance:** production-browser visual proof, measured baseline/delta, acceptable fallback, no impaired tile/port/cargo legibility and no authoritative simulation changes.
 
 ## P7 — Integrated first-expedition acceptance and human review
+
+**Status:** not started (#350).
 
 **Question:** Do all features together form a coherent, approachable, memorable first journey rather than seven isolated systems?
 
@@ -127,4 +143,4 @@ One continuous fresh-expedition scenario:
 - Propose and test the actual machinery unlock dependency order before writing propaganda dialogue.
 - The player may dismiss instructions; progression remains real and open-ended.
 
-**Deferred:** multi-planet selection, planet generation, day–night cycle, colony/citizen simulation, lengthy campaigns/dialogue trees, unproven global lighting conversion, cloud saves, general graphic UI reskin and full 3D production.
+**Deferred:** planet generation and travel between sites inside one save (selecting one of several built-in sites at New Expedition exists, D-049), planet generation, day–night cycle, colony/citizen simulation, lengthy campaigns/dialogue trees, unproven global lighting conversion, cloud saves, general graphic UI reskin and full 3D production.
