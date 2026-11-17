@@ -821,6 +821,7 @@
   "ui.onboarding.factory-cycle-reopen.eyebrow": "ORDER {{siteNumber}}-D",
   "ui.onboarding.factory-cycle-reopen.hint": "Open the same factory again. Everything inside is still there and can be changed.",
   "ui.onboarding.factory-cycle-reopen.title": "Re-open for inspection.",
+  "ui.onboarding.issued": "ISSUED:",
   "ui.onboarding.physical-inventory.body": "Material left in the open is the Operator's responsibility. The Directorate does not recognize piles.",
   "ui.onboarding.physical-inventory.eyebrow": "ORDER {{siteNumber}}-B",
   "ui.onboarding.physical-inventory.hint": "Extracted material stays in the machine, belt or storage that holds it. Draw a factory next, then connect it with belts and wall ports.",

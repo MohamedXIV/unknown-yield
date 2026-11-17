@@ -1314,6 +1314,12 @@ function GameClientInner() {
           <h2>{brief.title}</h2>
           <p className="guide-body">{brief.body}</p>
           <p>{brief.hint}</p>
+          {brief.tools.length > 0 && (
+            <p className="guide-issued" data-onboarding-tools={brief.tools.join(" ")}>
+              <span>{t("ui.onboarding.issued")}</span>{" "}
+              {brief.tools.map((tool) => toolName(tool as Tool)).join(" · ")}
+            </p>
+          )}
         </aside>
       )}
       {!guide && (

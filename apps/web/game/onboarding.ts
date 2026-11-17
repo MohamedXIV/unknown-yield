@@ -25,6 +25,20 @@ export type OnboardingBeat = {
   hint: string;
   step: number | null;
   total: number;
+  /** Tool ids this beat asks the player to use. Must all be authorized when the beat is active. */
+  tools: string[];
+};
+
+/** Instruments each beat's guidance depends on (an authorization tool id list). */
+const BEAT_TOOLS: Record<OnboardingBeatId, string[]> = {
+  "camera-build": ["extractor"],
+  "physical-inventory": ["factory", "port", "belt"],
+  experiment: ["crusher", "furnace"],
+  evidence: [],
+  "factory-cycle": [],
+  "terminal-export": [],
+  recovery: [],
+  complete: [],
 };
 
 const TOTAL = 6;
@@ -56,6 +70,7 @@ export function onboardingBeat(
   if (incident)
     return {
       id: "recovery",
+      tools: BEAT_TOOLS["recovery"],
       ...copy("recovery"),
       step: null,
       total: TOTAL,
@@ -64,6 +79,7 @@ export function onboardingBeat(
   if (!snapshot.machines.some((machine) => machine.role === "extractor"))
     return {
       id: "camera-build",
+      tools: BEAT_TOOLS["camera-build"],
       ...copy("camera-build"),
       step: 1,
       total: TOTAL,
@@ -72,6 +88,7 @@ export function onboardingBeat(
   if (!snapshot.factories.length)
     return {
       id: "physical-inventory",
+      tools: BEAT_TOOLS["physical-inventory"],
       ...copy("physical-inventory"),
       step: 2,
       total: TOTAL,
@@ -83,6 +100,7 @@ export function onboardingBeat(
   if (!learned)
     return {
       id: "experiment",
+      tools: BEAT_TOOLS["experiment"],
       ...copy("experiment"),
       step: 3,
       total: TOTAL,
@@ -91,6 +109,7 @@ export function onboardingBeat(
   if (!signals.knowledgeOpened)
     return {
       id: "evidence",
+      tools: BEAT_TOOLS["evidence"],
       ...copy("evidence"),
       step: 4,
       total: TOTAL,
@@ -99,6 +118,7 @@ export function onboardingBeat(
   if (signals.factoryToggleCount < 2)
     return {
       id: "factory-cycle",
+      tools: BEAT_TOOLS["factory-cycle"],
       ...copy(
         signals.factoryToggleCount === 0
           ? "factory-cycle-close"
@@ -111,6 +131,7 @@ export function onboardingBeat(
   if (snapshot.exported <= 0)
     return {
       id: "terminal-export",
+      tools: BEAT_TOOLS["terminal-export"],
       ...copy(
         signals.terminalOpened ? "terminal-export-open" : "terminal-export",
       ),
@@ -120,6 +141,7 @@ export function onboardingBeat(
 
   return {
     id: "complete",
+      tools: BEAT_TOOLS["complete"],
     ...copy("complete"),
     step: null,
     total: TOTAL,
