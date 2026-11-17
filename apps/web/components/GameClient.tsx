@@ -3,6 +3,14 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { I18nextProvider, useTranslation } from "react-i18next";
 import { i18n, setRuntimeContentLocale } from "../game/i18n";
 import { locationText } from "../game/location";
+import {
+  enqueueProclamations,
+  notifyProclamation,
+  proclamationsBetween,
+  proclamationText,
+  type Proclamation,
+} from "../game/proclamations";
+import { ProclamationBanner, ProclamationModal } from "./proclamation/ProclamationView";
 import { siteChoices } from "@site/content/sites";
 import { entityIdentity } from "../game/identity";
 import EquipmentIdentity from "./EquipmentIdentity";
@@ -16,7 +24,7 @@ import {
 } from "../game/runtime-content";
 import { machineStatusLabel } from "../game/machine-status";
 import { factoryContractPresentation } from "../game/factory-presentation";
-import { beltArms } from "@site/sim-core";
+import { beltArms, type PlayerSnapshot } from "@site/sim-core";
 import type {
   GameCommand,
   CommandResult,
@@ -283,10 +291,36 @@ function GameClientInner() {
   useEffect(() => {
     if (mode.dismantleReview) dismantleDialog.current?.focus();
   }, [mode.dismantleReview]);
+  // Proclamations: announce what became true during play; never on load or a slot change.
+  const proclaimKey = (session.activeSlotId() ?? "") + "|" + (activePack?.fingerprint ?? "");
+  const proclaimBase = useRef<{ key: string; snap: PlayerSnapshot } | null>(null);
+  const [proclaims, setProclaims] = useState<Proclamation[]>([]);
+  useEffect(() => {
+    const base = proclaimBase.current;
+    if (base && base.key === proclaimKey) {
+      const fresh = proclamationsBetween(base.snap, snapshot);
+      if (fresh.length) {
+        fresh.forEach(notifyProclamation);
+        setProclaims((queue) => enqueueProclamations(queue, fresh));
+      }
+    } else setProclaims([]);
+    proclaimBase.current = { key: proclaimKey, snap: snapshot };
+  }, [snapshot, proclaimKey]);
+  const currentProclamation = proclaims[0] ?? null;
+  const dismissProclamation = () => setProclaims((queue) => queue.slice(1));
+  useEffect(() => {
+    if (currentProclamation?.weight !== "minor") return;
+    const timer = window.setTimeout(dismissProclamation, 9000);
+    return () => window.clearTimeout(timer);
+  }, [currentProclamation?.id]);
   const unlockFor = (tool: Tool) =>
     snapshot.definitions.find((definition) => definition.id === tool)?.unlock;
   const toolLocked = (tool: Tool) => unlockFor(tool)?.unlocked === false;
+  // Directorate permits (D-050): tools not yet authorized are left out of the palette.
+  const unauthorized = new Set(snapshot.unauthorizedTools);
+  const toolHidden = (tool: Tool) => unauthorized.has(tool);
   const setTool = (tool: Tool) => {
+    if (toolHidden(tool)) return;
     const unlock = unlockFor(tool);
     if (unlock && !unlock.unlocked) {
       setNotice({ ok: false, message: t(unlock.hintKey) });
@@ -876,13 +910,17 @@ function GameClientInner() {
   const packStorageTools = additionalStorageTools(snapshot);
   const groupFor = (id: ToolGroupId) =>
     TOOL_GROUPS.find((group) => group.id === id)!;
-  const groupPrimary = (id: ToolGroupId) =>
-    effectiveBuildGroupPrimary(
+  const groupPrimary = (id: ToolGroupId) => {
+    const primary = effectiveBuildGroupPrimary(
       id,
       preferences.buildPalette.promoteLastUsed,
       preferences.buildPalette.lastUsedByGroup,
-      (tool) => !toolLocked(tool),
+      (tool) => !toolLocked(tool) && !toolHidden(tool),
     );
+    return toolHidden(primary)
+      ? (groupFor(id).tools.find((tool) => !toolHidden(tool)) ?? primary)
+      : primary;
+  };
   const rememberGroupSelection = (tool: Tool) => {
     const group = toolGroupFor(tool);
     if (
@@ -1298,6 +1336,30 @@ function GameClientInner() {
           </button>
         </div>
       )}
+      {currentProclamation && screen === "game" && (() => {
+        const text = proclamationText(currentProclamation, {
+          t: (key, params) => t(key, params),
+          exists: (key) => i18n.exists(key),
+          toolName: (tool) => toolName(tool),
+        });
+        const common = {
+          proclamation: currentProclamation,
+          text,
+          issuer: t("ui.proclamation.issuer"),
+          acknowledgeLabel: t("ui.proclamation.acknowledge"),
+          onAcknowledge: dismissProclamation,
+        };
+        return currentProclamation.weight === "major" ? (
+          <ProclamationModal
+            {...common}
+            items={(currentProclamation.tools ?? []).map((tool) => ({ id: tool, label: toolName(tool) }))}
+            waiting={proclaims.length - 1}
+            waitingLabel={t("ui.proclamation.waiting", { count: String(proclaims.length - 1) })}
+          />
+        ) : (
+          <ProclamationBanner {...common} />
+        );
+      })()}
       {paused && <div className="paused-label">{t("ui.hud.paused")}</div>}
       {panel && (
         <IndustrialPanelFrame
@@ -3903,6 +3965,7 @@ function GameClientInner() {
             }
 
             const group = groupFor(entry.groupId);
+            if (group.tools.every(toolHidden)) return null;
             const primary = groupPrimary(group.id);
             const open = openToolGroup === group.id;
             const groupActive = group.tools.includes(mode.tool) ||
@@ -3916,7 +3979,7 @@ function GameClientInner() {
                     role="menu"
                     aria-label={toolName(primary) + " related tools"}
                   >
-                    {group.tools.map((tool) => {
+                    {group.tools.filter((tool) => !toolHidden(tool)).map((tool) => {
                       const shortcut = buildContextShortcutForTool(group.id, tool);
                       return (
                         <button

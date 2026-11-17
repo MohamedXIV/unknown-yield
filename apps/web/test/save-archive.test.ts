@@ -68,19 +68,24 @@ describe("Personnel Archives — local multi-expedition persistence (#343)", () 
     expect(session.createSlot(storage, "Beta").ok).toBe(true);
     const beta = session.activeSlotId()!;
     expect(alpha).not.toBe(beta);
+    // A new expedition is guided: the factory shell needs an extractor first.
+    expect(session.command(factory).ok).toBe(false);
+    expect(session.command({ ...firstExtractor, y: 35 }).ok).toBe(true);
     expect(session.command(factory).ok).toBe(true);
     expect(session.save(storage).ok).toBe(true);
     const b = authoritative(storage, beta);
     expect(Object.keys(b.factories).length).toBe(1);
-    expect(Object.keys(b.machines).length).toBe(0);
+    expect(Object.keys(b.machines).length).toBe(1);
     expect(auditLedger(fixture, b).ok).toBe(true);
     expect(b.knowledge).toEqual(new Simulation(fixture).serialize().knowledge);
+    expect(a.permits).toEqual(["premises"]);
+    expect(b.permits).toEqual(["premises", "reduction"]);
 
     expect(session.loadSlot(storage, alpha).ok).toBe(true);
     expect(session.snapshot().machines.length).toBe(1);
     expect(session.loadSlot(storage, beta).ok).toBe(true);
     expect(session.snapshot().factories.length).toBe(1);
-    expect(session.snapshot().machines.length).toBe(0);
+    expect(session.snapshot().machines.length).toBe(1);
     expect(authoritative(storage, alpha)).toEqual(a);
     expect(authoritative(storage, beta)).toEqual(b);
   });

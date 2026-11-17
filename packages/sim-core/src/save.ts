@@ -197,6 +197,7 @@ const evidence = z.object({
   state: z.enum(["hinted", "confirmed"]),
 });
 const schema = z.object({
+  permits: z.array(safeId).optional(),
   schemaVersion: z.union([
     z.literal(4),
     z.literal(5),
@@ -371,8 +372,9 @@ const schema = z.object({
       importAllocations: {},
     }),
 });
-export function initialState(c: Content): Save {
+export function initialState(c: Content, guided = false): Save {
   const state: Save = {
+    ...(guided && c.permits.length ? { permits: [] } : {}),
     schemaVersion: CURRENT_SAVE_SCHEMA_VERSION,
     terminalModules: {},
     contentVersion: c.version,
@@ -739,6 +741,8 @@ export function parseSave(input: unknown, c: Content): Save {
   if (s.schemaVersion === 30) s.schemaVersion = 31;
   // Schema 32 allows a separately observable, irreversible wreck outcome.
   if (s.schemaVersion === 31) s.schemaVersion = 32;
+  if (s.permits?.some((id) => !c.permits.some((p) => p.id === id)))
+    throw new Error("Save names an unknown permit");
   if (s.contentVersion !== c.version || s.remainder >= c.tickMs)
     throw new Error("Incompatible content or timing");
   if (

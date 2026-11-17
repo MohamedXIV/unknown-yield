@@ -13,7 +13,7 @@ import {
   type ArchiveStorage, type ArchiveListing,
 } from "./save-archive";
 export class Session {
-  private sim = new Simulation(fixture);
+  private sim = new Simulation(fixture, { guided: true });
   private pack: RuntimePack | null = null;
   private slotId: string | null = null;
   private last: number | null = null;
@@ -90,7 +90,7 @@ export class Session {
   usePack(pack: RuntimePack | null) {
     // Build the replacement first: a failed constructor cannot damage the
     // running sim or the user's existing saves.
-    const next = new Simulation(pack?.bundle.content ?? fixture);
+    const next = new Simulation(pack?.bundle.content ?? fixture, { guided: true });
     this.sim = next;
     this.pack = pack;
     this.slotId = null;
@@ -121,7 +121,7 @@ export class Session {
     }
   }
   reset() {
-    this.sim = new Simulation(this.pack?.bundle.content ?? fixture);
+    this.sim = new Simulation(this.pack?.bundle.content ?? fixture, { guided: true });
     this.slotId = null;
     this.last = null;
     this.revision = 0;
@@ -131,7 +131,7 @@ export class Session {
   /** Create and persist a NEW world before replacing the running world. */
   createSlot(storage: ArchiveStorage, name: string): CommandResult {
     try {
-      const next = new Simulation(this.pack?.bundle.content ?? fixture);
+      const next = new Simulation(this.pack?.bundle.content ?? fixture, { guided: true });
       const slot = createExpedition(storage, name, this.activePackFingerprint(), next.serialize());
       this.sim = next;
       this.slotId = slot.id;

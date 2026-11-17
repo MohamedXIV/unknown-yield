@@ -1,4 +1,5 @@
 import { liquidConstructionCost } from "./containment";
+import { permitBlock } from "./permits";
 import { undergroundLiquidCost, undergroundSolidCost } from "./underground";
 import { elevatedSolidCost } from "./elevated";
 import {
@@ -309,6 +310,8 @@ export function applyCommand(
   const parsed = schema.safeParse(input);
   if (!parsed.success) return fail("Invalid command");
   const cmd = parsed.data;
+  const blocked = permitBlock(c, s, cmd);
+  if (blocked) return fail(blocked);
   const affordable = (cost: number) =>
     amount(s.stock, c.site.buildMaterial) >= cost;
   const pay = (cost: number) => change(s.stock, c.site.buildMaterial, -cost);

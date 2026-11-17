@@ -646,3 +646,31 @@ Site 52, Harmony Terrace on The Pale Reach, is the first: a 72×56 shelf with it
 Not in scope: moving between sites inside one save, shared progress across sites, and Studio editing of site files (the Studio edits `content.json` only).
 
 **Source of truth:** `packages/content/src/sites.ts`, `packages/content/data/sites/harmony-terrace.json`, `packages/content/test/sites.test.ts`, `packages/sim-core/test/second-site.test.ts`.
+
+## D-050 — Operational permits: a guided world earns build tools from real play
+
+**Status:** accepted 2026-11-17 (P2, #345). Save schema unchanged.
+
+A new expedition is **guided**: it starts with only the tools no permit names (Inspect, Extractor, Belt, Dismantle) and earns the rest by doing real things. Content defines `permits[]`; each lists the tools it grants and one condition read from world state: a machine placed, a factory shell built, or a first export. Shipped order: `premises` (extractor placed → factory shell, wall port), `reduction` (shell built → crusher, furnace, depot), `expansion` (first export → everything else, including pipes, tanks, gas and phase equipment). A tool no permit names is always available.
+
+- **Authority is the simulation.** `applyCommand` refuses a gated placement ("Not authorized yet"), preview included. The palette only hides what the sim would refuse; no padlock wall.
+- **Monotonic.** An earned permit is kept in `save.permits` (an optional field) even if the machine that earned it is dismantled.
+- **Old worlds are untouched.** A save without `permits`, and every world built with `new Simulation(content)`, is unguided and keeps every tool. Only the game's own new-expedition paths pass `{ guided: true }`. Content without permits gates nothing.
+- **No soft-lock.** Content validation simulates the chain from an empty world and rejects a permit that cannot be earned or that gates its own earning tool.
+- **Separate from science.** Evidence unlocks still apply on top; permits never reveal a recipe.
+- **Announcement.** Earning a permit shows the Directorate's notice once, during play, not on load.
+
+Not in scope: tying orders 41-A to 41-E to permits (P3), event-driven dispatches (P4).
+
+**Source of truth:** `packages/sim-core/src/permits.ts`, `packages/content/src/schema.ts` (`permitSchema`), `packages/sim-core/test/permits*.test.ts`.
+
+## D-051 — Proclamations: one announcement API for every milestone
+
+The state celebrates everything. Every authorization, unlock, discovery and milestone is announced as a poster-style Directorate proclamation instead of a toast.
+
+- `proclamationsBetween(prev, next)` is pure: it diffs two player snapshots and returns proclamations (new permits, science unlocks, first/next confirmed knowledge, completed milestones). Anything else can enqueue the same `Proclamation` shape (`kind`, `weight`, `illustration`, `params`).
+- Weight decides presentation: `major` is a modal poster (acknowledge with button, Enter, Space or Esc); `minor` is a banner that auto-dismisses. `enqueueProclamations` dedupes and puts majors first.
+- Wording lives in locale: `proclamation.<slug>.{kicker,title,body,slogan}`; missing keys fall back to generic `proclamation.<kind>.*`. Authored text exists for the three permits.
+- Art is SVG in code (`PosterArt`), per illustration type. `ProclamationModal` accepts an optional raster `image` so authored poster art can replace it later.
+- `subscribeProclamations` is the hook for future announcer voice/audio.
+- Reseeded per slot and pack fingerprint, so loading a save never replays old proclamations.
