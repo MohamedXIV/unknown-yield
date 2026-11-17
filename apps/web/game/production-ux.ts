@@ -1,4 +1,5 @@
 import type { MachineStatus, MachineView, PlayerSnapshot } from "@site/sim-core";
+import { locationText } from "./location";
 
 export type KnowledgeFilter = "all" | "open" | "hazards" | "confirmed";
 
@@ -71,7 +72,7 @@ const statusCopy: Record<
   "fuel-class-locked": {
     tone: "warn",
     title: "Operating fuel not certified",
-    detail: "The required company fuel class has not been unlocked by expedition evidence yet.",
+    detail: "The required state fuel class has not been unlocked by expedition evidence yet.",
   },
   "needs-special-fuel": {
     tone: "warn",
@@ -80,7 +81,7 @@ const statusCopy: Record<
   },
   "needs-fuel": {
     tone: "warn",
-    title: "Company fuel depleted",
+    title: "State fuel depleted",
     detail: "Restore fuel through exports or eligible assistance before this machine can run.",
   },
   ready: {
@@ -180,7 +181,7 @@ export function terminalOverview(snapshot: PlayerSnapshot): ContextOverview & {
   if (openOpportunities > 0)
     return {
       tone: "calm",
-      eyebrow: "COMPANY WORK",
+      eyebrow: locationText("work-eyebrow"),
       title: openOpportunities + " active opportunit" + (openOpportunities === 1 ? "y" : "ies"),
       detail: "These offers react to what the expedition has already demonstrated; they do not reveal hidden recipes.",
       manifestSelected,
@@ -191,7 +192,7 @@ export function terminalOverview(snapshot: PlayerSnapshot): ContextOverview & {
     tone: "calm",
     eyebrow: "TERMINAL IDLE",
     title: "No cargo staged",
-    detail: "Keep industrializing locally. The terminal becomes useful when physical cargo or company work reaches it.",
+    detail: "Keep industrializing locally. The terminal becomes useful when physical cargo or state orders reach it.",
     manifestSelected,
     exportableStaged,
     openOpportunities,

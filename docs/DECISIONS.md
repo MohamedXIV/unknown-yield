@@ -550,3 +550,99 @@ Machines specify capabilities, operating envelopes, resource needs, reliability 
 Implementation is deliberately incremental: **P0 presentation → P1 compatibility → P2 reliability → P3 rich outcomes/Studio**, with a small real extractor/material vertical proof before breadth. No chemistry solver, arbitrary JSON scripting, Rust/ECS rewrite or regression to generic fixed tier gates.
 
 **Source of truth:** [DATA_DRIVEN_INDUSTRIAL_BEHAVIOR_V1.md](DATA_DRIVEN_INDUSTRIAL_BEHAVIOR_V1.md). D-023's prior narrow authored hazards and exact-match reactions remain the **implemented** behavior until explicitly migrated; this decision expands the approved *target* rather than falsely claiming those systems have already been replaced.
+
+
+---
+
+## D-042 — Built-in content and English copy live in JSON data files
+
+**Status:** accepted 2026-11-10.
+
+The built-in world is `packages/content/data/content.json` and the English catalog is `packages/content/data/locale.en.json`. `fixture` and `enCatalog` are those files parsed through the existing validators, so the schema, stable IDs, localization-key coverage and hidden-knowledge rules are unchanged, and the validated bundle is byte-identical to the former TypeScript literals (content packs and their fingerprints are unaffected).
+
+Both people and agents may edit these files directly, or through the development Studio, which can save its validated draft back to them (`Save draft to repo files`) and reload them. That local API exists only under `npm run dev:studio`: it is a generated route, requires a custom header and a local Origin, validates the whole bundle before writing anything, and is removed before every production build. Production remains a static export with no Studio code.
+
+Rationale comments that used to sit beside fixture literals are kept in `packages/content/data/README.md`, since JSON cannot carry comments.
+
+**Source of truth:** [STUDIO_PLAYTEST.md](STUDIO_PLAYTEST.md), `packages/content/data/README.md`.
+
+
+---
+
+## D-043 — Equipment identity layers are optional locale keys by convention
+
+**Status:** accepted 2026-11-10.
+
+Every machine and storage may carry, beside its plain `name`, an optional `description` (what it is for), `designation` (the official code on its typeplate) and `nickname` (what the workshop calls it). They are ordinary locale keys named `<kind>.<id>.<field>` (for example `machine.extractor.nickname`), so adding one needs no schema change, save migration or content-pack change, and a missing key simply shows nothing. The plain name stays the label everywhere a player must recognise the thing; the other layers appear in the equipment inspector.
+
+The nickname is shown only for equipment the player has built, and none of the layers may name a hidden recipe or outcome (the hidden-knowledge rule applies to these strings as to any copy). Identity keys whose entity does not exist are flagged in the Studio Copy tab. Materials, deposits and the site are not covered yet: their wording can leak what the player has not yet learned, so they need an evidence-gating design first.
+
+**Source of truth:** `packages/content/src/identity.ts`, `apps/web/game/identity.ts`, [WORLD_IDENTITY.md](WORLD_IDENTITY.md).
+
+
+---
+
+## D-044 — The tutorial is a series of assignment orders with an engineering hint
+
+**Status:** accepted 2026-11-10 (wording is provisional; structure and rules are the decision).
+
+Each onboarding beat now has two voices: the state gives only the order (eyebrow, title, body), and the engineering voice supplies the hint that says how to do it, using the controls the player can actually see (book icon, terminal icon, F, right-drag). The order never explains a mechanic before the player needs it and never names a hidden recipe. The incident beat is the exception: it carries no joke or bureaucratic voice, only the truthful recovery instruction.
+
+Beat logic, conditions and the six-step count are unchanged; only copy moved, and every beat has its own `eyebrow` key. Terms that name a thing the player must find use the in-game label (the terminal is "the terminal" until it is renamed in the UI), so a hint is never a lore term the interface does not show.
+
+**Source of truth:** [PHASE16_ONBOARDING.md](PHASE16_ONBOARDING.md), `apps/web/game/onboarding.ts`, `ui.onboarding.*` in `packages/content/data/locale.en.json`.
+
+
+---
+
+## D-045 — Copy names a speaker; ordinary operating fuel is displayed as "state fuel"
+
+**Status:** accepted 2026-11-11 (display wording only; no ID, save or simulation change).
+
+"The company" no longer appears in player-facing copy, because nobody in the fiction is "the company". Each line now belongs to a speaker: the **Institute** (research requests, characterization, its seed and binder), the **Yard** (what is accepted, what demand does), and the **state** (the ordinary operating fuel allocation, assistance, milestones, orders and opportunities). Neutral interface labels use plain words (for example "Market opportunity").
+
+`Save.fuel` is displayed as **state fuel**. The data field, its IDs and saves keep their names; only text changed, including a handful of strings that still lived in code (HUD tooltip, production hints, four command messages). The "Company terminal" control and the internal `company` snapshot field are untouched pending a separate decision on renaming the terminal.
+
+The voice lint's company rule is now a regression guard: the catalog must contain zero hits.
+
+**Source of truth:** [WORLD_IDENTITY.md](WORLD_IDENTITY.md), [PHASE15_FUEL_PROGRESSION.md](PHASE15_FUEL_PROGRESSION.md), `packages/content/test/speaker-voice.test.ts`.
+
+## D-046 — Planets and sites are data; the simulation plays one site at a time
+
+**Status:** accepted 2026-11-14 (stage 1 of 2; no save or simulation change).
+
+The game will gain many planets and sites. Stage 1 makes their identity data: `locations` in `content.json` lists `planets[]` and `sites[]` (id, designation, `nameKey`) and an `activeSiteId`. Names live in the locale (`planet.<id>.name`, `site.<id>.name`); optional per-site lines use `site.<id>.{hud,terminal,terminal-subtitle,work-eyebrow}` and fall back to `ui.location.*`.
+
+Generic copy uses reserved tokens `{{site}}`, `{{SITE}}`, `{{siteNumber}}`, `{{planet}}`, `{{PLANET}}`, filled from the active site when the locale bundle is installed (`applyLocationTokens`). The HUD, menu, tutorial order numbers, terminal button, panel title and map label read from this instead of hard-coded text. The terminal is now "Dispatch Annex {{siteNumber}}" (edit `ui.location.terminal` in the Studio Copy tab).
+
+Stage 2 (not started): sim-core running more than one site in a save (about 200 `content.site` uses). Until then, adding a site is a registry entry plus its own `site` data in a content pack.
+
+**Source of truth:** `packages/content/src/schema.ts` (`locationsSchema`), `packages/content/src/locale.ts`, `apps/web/game/location.ts`, `packages/content/test/locations.test.ts`.
+
+## D-047 — World-facing copy lives in the locale; settings chrome stays in code for now
+
+**Status:** accepted 2026-11-15 (no wording change).
+
+Everything the fiction speaks (HUD, panel titles, evidence labels, the return prompt, terminal and notebook headings, hints, orders) is a locale key, so the Studio Copy tab edits it and the voice lint covers it. The Game Configuration panel, the controls list, inspector engineering headings and error notices that end in a raw error message are interface chrome. They stay in code until the game is localized, because they carry no voice and change with the UI rather than with the world.
+
+**Source of truth:** `packages/content/data/locale.en.json`, `apps/web/components/GameClient.tsx`.
+
+## D-048 — Deposits and materials carry identity layers; the deposit panel shows them
+
+**Status:** accepted 2026-11-15 (copy only; no ID, save or simulation change).
+
+`deposit` and `material` join `machine` and `storage` as identity kinds (D-043). Every deposit, hidden ones included, has `deposit.<id>.{name,designation,nickname,description}`: the name overrides the plain material name, the designation is a survey tag (`SURVEY TAG 41-F1`), the nickname is the crew's word for the field. Only materials the player already knows (`known: true`) have a `material.<id>.description`; the deposit panel shows it under the deposit's own. Copy never names a material the player has not met (tested). `orphanIdentityKeys` also reports `deposit.<id>.name` for a removed deposit.
+
+**Source of truth:** `packages/content/src/identity.ts`, `packages/content/test/mineral-identity.test.ts`, `apps/web/components/GameClient.tsx` (deposit panel).
+
+## D-049 — A second playable site ships as a built-in bundle; one expedition plays one site
+
+**Status:** accepted 2026-11-16 (stage 2 of D-046, in its smaller form).
+
+Running several sites inside one save would touch about 200 `content.site` uses in sim-core, and nothing needs it yet. Instead each site is its own content bundle: `content.json` stays Site 41, and `data/sites/<id>.json` overrides parts of the base `site` block, registers its planet and site, and carries its own locale lines. The New Expedition menu lists the sites; choosing one validates and fingerprints the bundle like an imported pack, so saves, reloads and the "new expedition only" rule need no new code.
+
+Site 52, Harmony Terrace on The Pale Reach, is the first: a 72×56 shelf with its own deposits, survey signals, plume and terminal, same rules and machines, same starting stock. Its balance is a first pass.
+
+Not in scope: moving between sites inside one save, shared progress across sites, and Studio editing of site files (the Studio edits `content.json` only).
+
+**Source of truth:** `packages/content/src/sites.ts`, `packages/content/data/sites/harmony-terrace.json`, `packages/content/test/sites.test.ts`, `packages/sim-core/test/second-site.test.ts`.

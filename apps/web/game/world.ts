@@ -1,4 +1,5 @@
 import * as Phaser from "phaser";
+import { locationText } from "./location";
 import {
   contains,
   socket,
@@ -47,6 +48,7 @@ import {
 } from "./camera-navigation";
 import { TouchGestureArbiter, type TouchPoint } from "./touch-gesture";
 import { DEFAULT_GAME_PREFERENCES, type GamePreferences } from "./preferences";
+import { COLD_TWILIGHT_SITE } from "./environment-profile";
 import {
   browserPerformanceEnabled,
   finishBrowserMetric,
@@ -81,6 +83,7 @@ export type WorldActions = {
   disarmTouchArea(): void;
   sample(id: string | null): void;
 };
+const ENV = COLD_TWILIGHT_SITE;
 const X = ART_CAMERA.cellWidth,
   Y = ART_CAMERA.cellHeight;
 const color = (value: string) => parseInt(value.slice(1), 16);
@@ -122,6 +125,12 @@ export function createWorld(
     private beltCornerOrder: BeltCornerOrder = "horizontal-first";
     private keys = new Set<string>();
     private readonly touch = new TouchGestureArbiter();
+    // Browser-native two-finger fallback. Phaser can miss the second pointer
+    // even when the canvas receives two real touches in Chromium, leaving the
+    // camera permanently at its zoom floor. The native pinch owns multi-touch
+    // only; ordinary single-finger inspect/build stays on Phaser's arbiter.
+    private nativePinchActive = false;
+    private nativePinchPrevious: { distance: number; center: TouchPoint } | null = null;
     private navigation!: CameraNavigation;
     private viewportWidth = 0;
     private viewportHeight = 0;
@@ -196,10 +205,10 @@ export function createWorld(
       // The bridge retains the scene for coarse snapshot and camera updates.
       // eslint-disable-next-line @typescript-eslint/no-this-alias
       scene = this;
-      this.cameras.main.setBackgroundColor("#343d30");
+      this.cameras.main.setBackgroundColor(ENV.terrain.background);
       const ground = this.add.graphics();
       ground
-        .fillStyle(0x3a4233)
+        .fillStyle(ENV.terrain.surface)
         .fillRect(0, 0, snapshot.map.width * X, snapshot.map.height * Y);
       const terrain = artAsset("terrain-basalt");
       this.add
@@ -211,27 +220,34 @@ export function createWorld(
           terrain.textureKey,
         )
         .setOrigin(0)
-        .setAlpha(0.14);
+        .setAlpha(ENV.terrain.textureOpacity);
       // A subtle perimeter makes the actual buildable map edge legible.
       this.mapBoundary = this.add.graphics();
       this.drawMapBoundary();
-      let seed = 131;
+      let seed = ENV.terrain.rockScatter.seed;
       const rand = () => {
         seed = (seed * 1664525 + 1013904223) >>> 0;
         return seed / 4294967296;
       };
-      for (let i = 0; i < 1700; i++) {
+      for (let i = 0; i < ENV.terrain.rockScatter.count; i++) {
         const x = rand() * snapshot.map.width * X,
           y = rand() * snapshot.map.height * Y,
           r = 1 + rand() * 5;
         ground
-          .fillStyle(i % 3 ? 0x252e25 : 0x72705a, 0.35)
+          .fillStyle(
+            i % 13 === 0
+              ? ENV.terrain.rockScatter.oxidized
+              : i % 3
+                ? ENV.terrain.rockScatter.shadow
+                : ENV.terrain.rockScatter.light,
+            ENV.terrain.rockScatter.opacity,
+          )
           .fillEllipse(x, y, r * 2, r);
       }
       for (const d of snapshot.deposits) {
         const mat = snapshot.materials.find((m) => m.id === d.material)!;
         ground
-          .fillStyle(color(mat.color), 0.12)
+          .fillStyle(color(mat.color), ENV.terrain.depositHaloOpacity)
           .fillRoundedRect(
             d.x * X - 10,
             d.y * Y - 10,
@@ -243,12 +259,12 @@ export function createWorld(
           const x = (d.x + rand() * d.width) * X,
             y = (d.y + rand() * d.height) * Y,
             w = 5 + rand() * 11;
-          ground.fillStyle(0x1d241c, 0.5).fillEllipse(x + 4, y + 5, w * 2, w);
+          ground.fillStyle(ENV.terrain.depositShadow, 0.5).fillEllipse(x + 4, y + 5, w * 2, w);
           ground
             .fillStyle(color(mat.color), 0.5 + rand() * 0.4)
             .fillTriangle(x - w, y + 3, x - w / 3, y - w / 2, x + w, y + 2);
           ground
-            .lineStyle(1, 0xe0c590, 0.45)
+            .lineStyle(1, ENV.terrain.depositEdge, ENV.terrain.depositEdgeOpacity)
             .lineBetween(x - w / 3, y - w / 2, x + w, y + 2);
         }
         if (d.material === "ferrite") {
@@ -268,12 +284,12 @@ export function createWorld(
           (d.y + d.height) * Y + 17,
           translate(mat.nameKey).toUpperCase(),
           9,
-          "#b6b397",
+          ENV.terrain.depositLabel,
         );
       }
       const t = snapshot.map.terminal;
       ground
-        .fillStyle(0x85836b, 0.15)
+        .fillStyle(ENV.terrain.terminalHalo, ENV.terrain.terminalHaloOpacity)
         .fillRoundedRect(
           t.x * X - 20,
           t.y * Y - 20,
@@ -310,7 +326,7 @@ export function createWorld(
         ground.destroy();
       }
       this.grid = this.add.graphics().setVisible(false);
-      this.grid.lineStyle(1, 0xc5c4a2, 0.12);
+      this.grid.lineStyle(1, ENV.guides.grid, ENV.guides.gridOpacity);
       for (let x = 0; x <= snapshot.map.width; x++)
         this.grid.lineBetween(x * X, 0, x * X, snapshot.map.height * Y);
       for (let y = 0; y <= snapshot.map.height; y++)
@@ -323,7 +339,7 @@ export function createWorld(
           fontFamily: "Consolas,monospace",
           fontSize: 12,
           color: "#e2dfc3",
-          backgroundColor: "#172018ed",
+          backgroundColor: ENV.guides.tooltipBackground,
           padding: { x: 9, y: 6 },
         })
         .setDepth(1000);
@@ -343,22 +359,107 @@ export function createWorld(
       this.events.once("shutdown", () =>
         this.reducedMotionQuery?.removeEventListener("change", mediaChanged),
       );
-      // The default pointer allocation is not enough for dependable pinch:
-      // request an additional independent touch pointer.
-      this.input.addPointer(1);
+      // Phaser remains authoritative for one-finger selection/build gestures.
+      // Reserve two independent touch pointers as recommended for multitouch.
+      this.input.addPointer(2);
       this.input.mouse?.disableContextMenu();
-      const cancelNativeTouch = () => this.cancelTouch();
-      this.game.canvas.addEventListener("touchcancel", cancelNativeTouch);
-      this.game.canvas.addEventListener("pointercancel", cancelNativeTouch);
+      const canvas = this.game.canvas;
+      const pair = (touches: TouchList) => {
+        if (touches.length !== 2) return null;
+        const a = touches.item(0), b = touches.item(1);
+        if (!a || !b) return null;
+        const rect = canvas.getBoundingClientRect();
+        if (rect.width <= 0 || rect.height <= 0) return null;
+        const scaleX = this.viewportWidth / rect.width;
+        const scaleY = this.viewportHeight / rect.height;
+        const ax = (a.clientX - rect.left) * scaleX;
+        const ay = (a.clientY - rect.top) * scaleY;
+        const bx = (b.clientX - rect.left) * scaleX;
+        const by = (b.clientY - rect.top) * scaleY;
+        const distance = Math.hypot(ax - bx, ay - by);
+        if (distance <= 0) return null;
+        return { distance, center: { x: (ax + bx) / 2, y: (ay + by) / 2 } };
+      };
+      const nativeTouchStart = (event: TouchEvent) => {
+        if (event.touches.length < 2) return;
+        if (!this.nativePinchActive) {
+          this.nativePinchActive = true;
+          // Cancel any active dismantle/build selection before zooming. Never
+          // allow a completed two-finger gesture to place or remove cargo.
+          this.cancelTouch();
+        }
+        this.nativePinchPrevious = pair(event.touches);
+      };
+      const nativeTouchMove = (event: TouchEvent) => {
+        if (!this.nativePinchActive) {
+          // Browsers may keep a touch pointer captured by the canvas after it
+          // crosses the visible boundary. Do not treat the eventual release as
+          // an in-world area-dismantle command.
+          if (event.touches.length === 1) {
+            const finger = event.touches.item(0);
+            const rect = canvas.getBoundingClientRect();
+            if (finger && (
+              finger.clientX < rect.left || finger.clientX >= rect.right ||
+              finger.clientY < rect.top || finger.clientY >= rect.bottom
+            )) this.cancelTouch();
+          }
+          return;
+        }
+        const current = pair(event.touches);
+        if (!current) return;
+        const previous = this.nativePinchPrevious;
+        if (previous) {
+          const factor = current.distance / previous.distance;
+          this.navigation.pinchBy(
+            Math.pow(factor, preferences.camera.zoomSensitivity),
+            previous.center, current.center,
+          );
+        }
+        this.nativePinchPrevious = current;
+      };
+      const nativeTouchEnd = (event: TouchEvent) => {
+        if (!this.nativePinchActive) return;
+        if (event.touches.length < 2) this.nativePinchPrevious = null;
+        // Keep ignoring the remaining finger until it lifts, preventing
+        // accidental tap/build commands after a zoom gesture.
+        if (event.touches.length === 0) {
+          this.nativePinchActive = false;
+          this.cancelTouch();
+        }
+      };
+      const cancelNativeTouch = () => {
+        this.nativePinchActive = false;
+        this.nativePinchPrevious = null;
+        this.cancelTouch();
+      };
+      // Pointer-capture variants of mobile browsers can dispatch the native
+      // PointerEvent outside the element while still targeting its canvas.
+      // Detect that exit before Phaser's subsequent pointerup can commit.
+      const nativePointerMove = (event: PointerEvent) => {
+        if (event.pointerType !== "touch" || this.nativePinchActive) return;
+        const rect = canvas.getBoundingClientRect();
+        if (
+          event.clientX < rect.left || event.clientX >= rect.right ||
+          event.clientY < rect.top || event.clientY >= rect.bottom
+        ) this.cancelTouch();
+      };
+      canvas.addEventListener("pointermove", nativePointerMove, true);
+      canvas.addEventListener("touchstart", nativeTouchStart);
+      canvas.addEventListener("touchmove", nativeTouchMove);
+      canvas.addEventListener("touchend", nativeTouchEnd);
+      canvas.addEventListener("touchcancel", cancelNativeTouch);
+      canvas.addEventListener("pointercancel", cancelNativeTouch);
       this.events.once("shutdown", () => {
-        this.game.canvas.removeEventListener("touchcancel", cancelNativeTouch);
-        this.game.canvas.removeEventListener(
-          "pointercancel",
-          cancelNativeTouch,
-        );
+        canvas.removeEventListener("pointermove", nativePointerMove, true);
+        canvas.removeEventListener("touchstart", nativeTouchStart);
+        canvas.removeEventListener("touchmove", nativeTouchMove);
+        canvas.removeEventListener("touchend", nativeTouchEnd);
+        canvas.removeEventListener("touchcancel", cancelNativeTouch);
+        canvas.removeEventListener("pointercancel", cancelNativeTouch);
       });
       this.input.on("pointermove", (p: Phaser.Input.Pointer) => {
         if (p.wasTouch) {
+          if (this.nativePinchActive) return;
           const gesture = this.touch.move(
             p.id,
             { x: p.x, y: p.y },
@@ -401,6 +502,7 @@ export function createWorld(
         if (preferences.interface.soundEffects)
           void feedbackAudio.enable().then(() => this.syncMachineAudio());
         if (p.wasTouch) {
+          if (this.nativePinchActive) return;
           const result = this.touch.down(p.id, { x: p.x, y: p.y });
           if (result?.kind === "cancel-build") {
             this.anchor = null;
@@ -436,6 +538,7 @@ export function createWorld(
       this.input.on("pointerup", (p: Phaser.Input.Pointer) => {
         this.invalidateOverlays();
         if (p.wasTouch) {
+          if (this.nativePinchActive) return;
           const gesture = this.touch.up(
             p.id,
             { x: p.x, y: p.y },
@@ -1190,7 +1293,7 @@ export function createWorld(
         17,
       );
       this.structures.add(
-        this.text((t.x + 2) * X, (t.y + 4) * Y + 16, "COMPANY TERMINAL", 10),
+        this.text((t.x + 2) * X, (t.y + 4) * Y + 16, locationText("terminal").toUpperCase(), 10),
       );
       for (const route of snapshot.undergroundSolids) {
         if (!route.cargo) continue;
@@ -2253,7 +2356,7 @@ export function createWorld(
   const game = new Phaser.Game({
     type: Phaser.AUTO,
     parent,
-    backgroundColor: "#343d30",
+    backgroundColor: ENV.terrain.background,
     antialias: true,
     scale: {
       mode: Phaser.Scale.RESIZE,

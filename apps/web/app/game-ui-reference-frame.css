@@ -1,0 +1,804 @@
+@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Lora:wght@400;500;600;700&family=Oswald:wght@500;600;700&display=swap");
+
+/* Canonical frame implementation from the supplied runnable
+   "UI Panel Frame Language (HTML/CSS/JS & React Reference)".
+   Unlike earlier v0.7 skins, the layers below are actual nested DOM nodes.
+   A CSS skin cannot grant simulator permissions, factory units or exports.
+   IMPORTANT: clip ONLY the noninteractive plate pseudo-elements, never the
+   reading surface, its scrollbars, live controls or focus ring. */
+
+.game.game .uy-panel-wrapper,
+.main-menu .uy-panel-wrapper {
+  --uy-metal-dark: #25292c;
+  --uy-metal-mid: #32373b;
+  --uy-metal-light: #43494e;
+  --uy-rust: #b8732a;
+  --uy-rust-deep: #7c3f16;
+  --uy-bezel: #7c6c52;
+  --uy-bezel-light: #9e8c6e;
+  --uy-crimson: #7c261d;
+  --uy-paper: #dfd0b5;
+  --uy-paper-ink: #291d14;
+  --uy-instrument: #122128;
+  --uy-ochre: #d8b382;
+  position: relative;
+  isolation: isolate;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  clip-path: none;
+  filter: none;
+}
+.game.game .context-panel.uy-panel-wrapper {
+  /* The shared root used to override this with position:relative, which
+     silently moved every live panel from the right edge to x=0. */
+  position: absolute;
+  top: 88px;
+  right: 20px;
+  left: auto;
+  width: min(388px, calc(100dvw - 34px));
+  max-height: calc(100dvh - 148px);
+  filter: drop-shadow(0 2px 0 #060b0e) drop-shadow(0 17px 24px #000b);
+}
+.game.game .context-panel.uy-panel-wrapper::before,
+.game.game .context-panel.uy-panel-wrapper::after {
+  /* Retain the older v0.7 screenshot probe but NOT the old clipped plate.
+     The visible steel shell is now a real child node below. */
+  opacity: 0;
+  pointer-events: none;
+}
+.game.game .uy-panel-wrapper .context-retainer { display: none !important; }
+
+/* LAYER 1: FORMED STEEL BOARD, worn paint and edge chamfers. */
+.uy-panel-wrapper .uy-outer-shell {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+  padding: 15px 15px 17px;
+  isolation: isolate;
+  filter: drop-shadow(0 7px 14px #030607b3);
+}
+.uy-panel-wrapper .uy-outer-shell::before,
+.uy-panel-wrapper .uy-outer-shell::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  clip-path: polygon(22px 0, calc(100% - 22px) 0,
+    100% 22px, 100% calc(100% - 22px), calc(100% - 22px) 100%,
+    22px 100%, 0 calc(100% - 22px), 0 22px);
+}
+.uy-panel-wrapper .uy-outer-shell::before {
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(ellipse 90px 28px at 18% 1.5%, #c47e3099 0, #a8601c44 55%, transparent 75%),
+    radial-gradient(ellipse 75px 22px at 84% 98.5%, #be782a99 0, transparent 70%),
+    radial-gradient(ellipse 26px 85px at 1.2% 38%, #ba722680 0, transparent 70%),
+    radial-gradient(ellipse 22px 70px at 98.8% 72%, #ba722673 0, transparent 70%),
+    repeating-linear-gradient(115deg, transparent 0 18px, #ffdda008 18px 19px),
+    linear-gradient(145deg, #3c4246 0%, #272b2e 38%, #1f2326 72%, #2c3034);
+  box-shadow: inset 0 2px 2px #ffffff38, inset 0 -3px 5px #000d;
+}
+.uy-panel-wrapper .uy-outer-shell::after {
+  inset: 2px;
+  z-index: -1;
+  border: 2px solid #c3a57666;
+  box-shadow: inset 0 0 0 3px #14191cbd, inset 0 1px #f4ddaf66;
+}
+.uy-panel-wrapper .uy-panel-bolts {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  pointer-events: none;
+}
+.uy-panel-wrapper .uy-bolt {
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 30%, #9b9384 0, #575248 55%, #262420 100%);
+  box-shadow: 0 1px 2px #000e, inset 0 1px 1px #ffffff59, 0 0 0 1.5px #1b1d1f;
+}
+.uy-panel-wrapper .uy-bolt::after {
+  content: "";
+  position: absolute;
+  top: 4.5px; left: 1.5px; right: 1.5px; height: 1.5px;
+  background: #1d1a17;
+  transform: rotate(var(--bolt-angle, -32deg));
+}
+.uy-panel-wrapper .uy-bolt-tl { top: 9px; left: 9px; --bolt-angle: 25deg; }
+.uy-panel-wrapper .uy-bolt-tr { top: 9px; right: 9px; --bolt-angle: -40deg; }
+.uy-panel-wrapper .uy-bolt-ml { top: 50%; left: 4px; --bolt-angle: 70deg; }
+.uy-panel-wrapper .uy-bolt-mr { top: 50%; right: 4px; --bolt-angle: 12deg; }
+.uy-panel-wrapper .uy-bolt-bl { bottom: 9px; left: 9px; --bolt-angle: -18deg; }
+.uy-panel-wrapper .uy-bolt-br { bottom: 9px; right: 9px; --bolt-angle: 55deg; }
+.uy-panel-wrapper .uy-clipboard-clamp {
+  position: absolute;
+  z-index: 17;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 118px;
+  height: 27px;
+  padding: 0 13px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+  background: radial-gradient(ellipse 35px 10px at 30% 20%, #c47e3075, transparent 70%),
+    linear-gradient(180deg, #52585c 0%, #34393c 45%, #23272a 100%);
+  clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 100%, 0 100%);
+  border-top: 2px solid #fff0d255;
+  box-shadow: 0 5px 10px #000c, inset 0 -2px 4px #0009;
+}
+.uy-panel-wrapper .uy-pin {
+  width: 7px;
+  height: 7px;
+  display: inline-block;
+  flex: 0 0 7px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #b89f74, #635139 65%, #2c2216);
+  box-shadow: 0 1px 2px #000b, inset 0 1px 1px #fff6;
+}
+.uy-panel-wrapper .uy-clip-aperture {
+  width: 39px;
+  height: 6px;
+  border: 1px solid #64686a;
+  background: #171c20;
+  border-radius: 4px;
+  box-shadow: inset 0 1px 2px #000a;
+}
+
+/* LAYER 2: GRADIENT BRASS BEZEL and recessed black inner mounting bed. */
+.game.game .uy-panel-wrapper .uy-inset-rim,
+.main-menu .uy-panel-wrapper .uy-inset-rim {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding: 6px;
+  background: linear-gradient(180deg, #6e5f47, #4e4434 50%, #63553f);
+  border: 1px solid #b4a18493;
+  box-shadow: inset 0 3px 8px #000d, 0 1px 0 #ffe6b940;
+  clip-path: polygon(15px 0, calc(100% - 15px) 0, 100% 15px,
+    100% calc(100% - 15px), calc(100% - 15px) 100%,
+    15px 100%, 0 calc(100% - 15px), 0 15px);
+}
+.game.game .uy-panel-wrapper .uy-inset-rim::before,
+.game.game .uy-panel-wrapper .uy-inset-rim::after {
+  content: none;
+}
+.game.game .uy-panel-wrapper .uy-inset-rim-inner,
+.main-menu .uy-panel-wrapper .uy-inset-rim-inner {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  padding: 4px;
+  background: linear-gradient(135deg, #171c1e, #101618);
+  box-shadow: inset 0 4px 10px #000f;
+  border: 1px solid #111719;
+  clip-path: polygon(12px 0, calc(100% - 12px) 0, 100% 12px,
+    100% calc(100% - 12px), calc(100% - 12px) 100%,
+    12px 100%, 0 calc(100% - 12px), 0 12px);
+}
+
+/* Header plate: Inspector is graphite/steel; institutional documents crimson. */
+.game.game .uy-panel-wrapper .context-header,
+.main-menu .uy-panel-wrapper .main-menu-brand {
+  position: relative;
+  flex: 0 0 auto;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px 10px 14px;
+  min-height: 55px;
+  border: 1px solid #71634b;
+  border-bottom: 3px solid #6b5c44;
+  border-radius: 0;
+  clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%, 0 10px);
+  box-shadow: inset 0 1px 1px #fff1c833, 0 3px 8px #000a;
+  background: radial-gradient(ellipse 80px 30px at 75% 15%, #b8732a40, transparent 70%),
+    linear-gradient(180deg, #32393d, #22272a 55%, #1b2023);
+}
+.game.game .uy-panel--terminal .context-header,
+.game.game .uy-panel--notebook .context-header,
+.game.game .uy-panel--expedition .context-header,
+.main-menu .uy-panel--menu .main-menu-brand {
+  background: radial-gradient(ellipse 90px 35px at 22% 10%, #d7734140, transparent 70%),
+    radial-gradient(circle at 88% 85%, #280a068c, transparent 60%),
+    linear-gradient(180deg, #892b21, #6e2017 55%, #591811);
+  border-bottom-color: #77664c;
+  box-shadow: inset 0 1px 1px #ffcca547, 0 4px 9px #000c;
+}
+.game.game .uy-panel-wrapper .context-header > span:first-child {
+  min-width: 0;
+  flex: 1 1 auto;
+  color: #f4e7d3;
+  font: 600 26px/1 "Oswald", "Barlow Condensed", Impact, sans-serif;
+  letter-spacing: 1px;
+  overflow-wrap: normal;
+  text-shadow: 0 2px #0009;
+}
+.game.game .uy-panel-wrapper .context-header-stamp {
+  flex: 0 1 auto;
+  max-width: 40%;
+  color: #e5cfb1;
+  font: 500 9px/1.23 "IBM Plex Mono", monospace;
+  letter-spacing: .4px;
+  text-align: right;
+}
+.game.game .uy-panel-wrapper .context-header .uy-close-btn {
+  flex: 0 0 28px;
+  width: 28px; height: 28px; min-height: 28px;
+  padding: 0; margin: 0;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(180deg, #2b2723, #1c1917);
+  color: #e6d7be;
+  border: 1.5px solid #8a775a;
+  border-radius: 3px;
+  box-shadow: 0 2px 4px #000a, inset 0 1px #fff3;
+  clip-path: none;
+  font: 700 22px/1 "Barlow Condensed", sans-serif;
+}
+.game.game .uy-panel-wrapper .context-header .uy-close-btn:hover {
+  background: linear-gradient(#963227, #6d1f17);
+  border-color: #d8b382;
+}
+.game.game .uy-panel--notebook .context-header > span:first-child {
+  white-space: nowrap;
+  font-size: 22px;
+}
+.game.game .uy-panel--notebook .context-header-stamp {
+  max-width: 78px;
+  font-size: 7.5px;
+  line-height: 1.17;
+}
+.game.game .uy-panel--terminal .context-header {
+  padding-left: 61px;
+}
+.game.game .uy-panel--terminal .context-header::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  top: 6px;
+  width: 40px;
+  height: 40px;
+  background: url("/ui/directorate-seal.svg") center / contain no-repeat;
+  pointer-events: none;
+}
+
+/* LAYER 3: a contained document or instrument inset, absolutely NOT floating
+   beyond the bezel. LAYER 4: a separate, functional React content frame. */
+.game.game .uy-panel-wrapper .uy-contained-surface,
+.main-menu .uy-panel-wrapper .uy-contained-surface {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+  display: block;
+  min-width: 0;
+  min-height: 0;
+  margin: 4px 0 0;
+  padding: 12px 10px 14px 12px;
+  border: 1px solid #45585e;
+  background-color: #132229;
+  background-image:
+    linear-gradient(#82a5af0b 1px, transparent 1px),
+    linear-gradient(90deg, #82a5af0b 1px, transparent 1px),
+    radial-gradient(circle at 50% 35%, #1c384473, #0c161bea 90%);
+  background-size: 18px 18px, 18px 18px, 100% 100%;
+  box-shadow: inset 0 3px 10px #000d;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #776649 #11191c;
+}
+.game.game .uy-panel--terminal .uy-contained-surface,
+.game.game .uy-panel--notebook .uy-contained-surface {
+  background-color: #dfd0b5;
+  background-image:
+    radial-gradient(circle at 50% 45%, #ebe0cba6, #ceba9873 75%, #a88e68a6 100%),
+    repeating-linear-gradient(0deg, #50371e05 0 1px, transparent 1px 3px),
+    url("/ui/archival-paper.svg");
+  background-blend-mode: normal, normal, multiply;
+  /* The inherited 18px dark-grid background-size would stretch the
+     160x160 archival stock into enormous vertical bars (observed in real
+     Chromium). Tile the genuine paper grain at its native size instead. */
+  background-size: 100% 100%, auto, 160px 160px;
+  background-repeat: no-repeat, repeat, repeat;
+  color: #291d14;
+  border-color: #917b5a;
+  box-shadow: inset 0 2px 8px #46301861, inset 0 0 24px #6e523047, 0 2px 4px #000a;
+}
+/* The old v0.7 suite specifically verifies the archival texture in computed
+   CSS, which remains true on the real physical surface. */
+.game.game .uy-panel-wrapper .uy-layer-4-content,
+.main-menu .uy-panel-wrapper .uy-layer-4-content {
+  position: relative;
+  min-width: 0;
+  padding: 10px 10px 12px;
+  border: 1px solid #b9a27a5c;
+  border-radius: 3px;
+  background: #0b1419a3;
+  box-shadow: inset 0 0 18px #0009;
+}
+.game.game .uy-panel--terminal .uy-layer-4-content,
+.game.game .uy-panel--notebook .uy-layer-4-content {
+  border-color: #624c346b;
+  border-radius: 0;
+  padding: 8px 9px 12px;
+  background: #eadeca52;
+  box-shadow: inset 0 0 12px #79573517;
+}
+.game.game .uy-panel--inspect .uy-layer-4-content {
+  background: #0b1419a3;
+}
+.game.game .uy-panel-wrapper .context-body {
+  font: 500 14px/1.42 "Barlow Condensed", "Arial Narrow", sans-serif;
+  color: #e6dac6;
+}
+.game.game .uy-panel--terminal .context-body,
+.game.game .uy-panel--notebook .context-body { color: #291d14; }
+.game.game .uy-panel--notebook .context-body h2,
+.game.game .uy-panel--notebook .context-body p,
+.game.game .uy-panel--notebook .context-overview > strong,
+.game.game .uy-panel--notebook .context-overview > p,
+.game.game .uy-panel--notebook .observation p {
+  font-family: "Lora", Georgia, serif;
+}
+.game.game .uy-panel--notebook .context-body h2 { font-size: 21px; line-height: 1.1; }
+
+/* Reference's physical + / - / home cluster, implemented as honest document
+   magnification and scroll. It MUST NOT edit physical inventory or discoveries. */
+.uy-panel-wrapper .uy-side-controls {
+  position: sticky;
+  float: right;
+  top: 4px;
+  z-index: 9;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 28px;
+  margin-right: 0;
+  margin-left: 6px;
+  margin-top: 0;
+  pointer-events: auto;
+}
+.uy-panel-wrapper .uy-side-btn {
+  flex: 0 0 28px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: linear-gradient(#343d42, #22282c 55%, #191e21);
+  border: 1px solid #6c7376;
+  border-radius: 3px;
+  box-shadow: 0 3px 5px #000a, inset 0 1px #fff3;
+  color: #e6d7be;
+  font: 600 17px/1 "IBM Plex Mono", monospace;
+}
+.uy-panel-wrapper .uy-side-btn:hover:not(:disabled) { background: #37444b; border-color: #d8b382; }
+.uy-panel-wrapper .uy-side-btn:disabled { opacity: .42; }
+.uy-panel-wrapper .uy-side-btn:focus-visible { outline: 2px solid #e4b77b; outline-offset: 2px; }
+
+/* Restore reference's compact paper tabs and contained informational wells. */
+.game.game .uy-panel--notebook .context-tabs,
+.game.game .uy-panel--terminal .context-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  margin: 10px 0 14px;
+  overflow: visible;
+}
+.game.game .uy-panel--notebook .context-tabs button,
+.game.game .uy-panel--terminal .context-tabs button {
+  width: 100%;
+  min-width: 0;
+  padding: 6px 1px;
+  border: 1px solid #9c8665;
+  border-bottom: 3px solid #9c8665;
+  border-radius: 3px;
+  color: #342418;
+  background: linear-gradient(#dfd0b6, #cebba0);
+  box-shadow: 0 1px 2px #0003, inset 0 1px #fff7;
+  font: 700 11px/1.1 "Barlow Condensed", sans-serif;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+.game.game .uy-panel--notebook .context-tabs button.active,
+.game.game .uy-panel--notebook .context-tabs button[aria-pressed="true"] {
+  background: linear-gradient(#8a2c22, #681e16);
+  border-color: #4a120c;
+  color: #f4ead8;
+}
+.game.game .uy-panel--terminal .context-overview {
+  border: 1px solid #4a443b;
+  border-left: 3px solid #a35d39;
+  background: linear-gradient(#101b21, #15232b);
+  box-shadow: inset 0 3px 8px #000d, 0 1px #fff6;
+}
+.game.game .uy-panel--notebook .context-overview {
+  border: 1px solid #9e8767;
+  border-left: 4px solid #8b382a;
+  background: #e9dcc5b3;
+  box-shadow: inset 0 2px 6px #735c3a3d;
+}
+.game.game .uy-panel--inspect .context-overview {
+  border: 1px solid #595548;
+  border-left: 3px solid #c79c67;
+  background: linear-gradient(#0d161b, #101b21);
+  box-shadow: inset 0 2px 6px #000c;
+}
+
+/* These are smaller engineering panels, not ceremonial marketing sheets. */
+.game.game .uy-panel--configuration .uy-contained-surface,
+.game.game .uy-panel--expedition .uy-contained-surface {
+  background-color: #16252b;
+  background-image: linear-gradient(#82a5af0a 1px,transparent 1px),
+    linear-gradient(90deg,#82a5af0a 1px,transparent 1px), linear-gradient(#142127,#0a1318);
+  color: #e6dac6;
+}
+
+/* Main Menu: same steel, bezel, crimson office header, contained instrument
+   with all actual save / settings / archive views, not an unrelated SaaS card. */
+.main-menu .main-menu-plaque.uy-panel-wrapper {
+  width: min(466px, 43vw);
+  height: min(824px, calc(100dvh - 62px));
+  min-height: 540px;
+  max-height: calc(100dvh - 36px);
+  display: flex;
+  flex-direction: column;
+  filter: drop-shadow(0 20px 28px #000c);
+}
+.main-menu .uy-panel--menu .uy-outer-shell { padding: 15px 15px 17px; }
+.main-menu .uy-panel--menu .uy-inset-rim { min-height: 0; }
+.main-menu .uy-panel--menu .main-menu-brand {
+  min-height: 72px;
+  padding: 8px 11px 8px 12px;
+  gap: 10px;
+}
+.main-menu .uy-panel--menu .directorate-seal {
+  flex: 0 0 52px;
+  width: 52px; height: 52px;
+  background: url("/ui/directorate-seal.svg") center / contain no-repeat;
+  border: none;
+  box-shadow: none;
+}
+.main-menu .uy-panel--menu .directorate-seal svg { display: none; }
+.main-menu .uy-panel--menu .main-menu-brand-copy > small {
+  color: #f2c99d;
+  font: 500 8px/1.15 "IBM Plex Mono", monospace;
+  letter-spacing: .3px;
+}
+.main-menu .uy-panel--menu .main-menu-brand-copy h1 {
+  color: #f4e7d3;
+  font: 700 34px/1 "Oswald", "Barlow Condensed", sans-serif;
+  letter-spacing: .7px;
+}
+.main-menu .uy-panel--menu .main-menu-brand-copy h1 span { color: #f4e7d3; }
+.main-menu .uy-panel--menu .main-menu-brand-copy p {
+  margin-top: 3px;
+  color: #e0be98;
+  font: 500 9px/1 "Barlow Condensed", sans-serif;
+}
+.main-menu .uy-panel--menu .uy-contained-surface.menu-board-body {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 13px 11px;
+  background-color: #122128;
+  background-image: linear-gradient(#82a5af0b 1px, transparent 1px),
+    linear-gradient(90deg, #82a5af0b 1px, transparent 1px),
+    linear-gradient(#142730, #0a1419);
+  overflow: hidden;
+}
+.main-menu .uy-panel--menu .uy-layer-4-content {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 9px 8px 4px;
+  background: #0b1419a3;
+  border-color: #bd99775c;
+}
+.main-menu .uy-panel--menu .main-menu-rule {
+  flex: 0 0 auto;
+  color: #e1b681;
+  margin: 0 0 9px;
+  padding: 1px 0 7px;
+  font: 500 10px/1.1 "IBM Plex Mono", monospace;
+}
+.main-menu .uy-panel--menu .main-menu-rule::before {
+  content: "";
+  width: 43px;
+  height: 6px;
+  background: repeating-linear-gradient(-55deg, #8c3227 0 8px, #222629 8px 15px);
+}
+.main-menu .uy-panel--menu .menu-view {
+  display: block;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0;
+  scrollbar-width: thin;
+  padding: 0 3px 12px;
+}
+.main-menu .uy-panel--menu .menu-appointment {
+  border: 1px solid #917b5a;
+  border-left: 4px solid #9b4030;
+  color: #291d14;
+  background-color: #dfd0b5;
+  background-image: radial-gradient(circle at 50% 45%, #ebe0cba6, #ceba9873 75%, #a88e68a6 100%),
+    url("/ui/archival-paper.svg");
+  box-shadow: inset 0 0 0 3px #f0dfc2, 0 3px 6px #0009;
+}
+.main-menu .uy-panel--menu .menu-appointment h2 {
+  color: #2b1e15;
+  font: 600 21px/1.14 "Oswald", "Barlow Condensed", sans-serif;
+}
+.main-menu .uy-panel--menu .menu-appointment p {
+  color: #423326;
+  font: 500 12px/1.37 "Lora", Georgia, serif;
+}
+.main-menu .uy-panel--menu .menu-appointment > small { color: #832c21; font-size: 9px; }
+.main-menu .uy-panel--menu .menu-action {
+  border: 1px solid #56636a;
+  border-bottom: 3px solid #252d31;
+  background: linear-gradient(#343d42, #22282c 55%, #191e21);
+  box-shadow: inset 0 1px #ffffff22, 0 2px 4px #0008;
+}
+.main-menu .uy-panel--menu .menu-action:hover:not(:disabled) { border-color: #d8b382; background: #35434a; }
+.main-menu .uy-panel--menu .menu-action-primary {
+  border: 1px solid #f2dec0;
+  border-bottom: 3px solid #aa7c46;
+  background: linear-gradient(#dfc092, #cfa974 55%, #be965f);
+  color: #231910;
+}
+.main-menu .uy-panel--menu .menu-action-primary .menu-action-copy small,
+.main-menu .uy-panel--menu .menu-action-primary .menu-action-mark,
+.main-menu .uy-panel--menu .menu-action-primary .menu-action-arrow { color: #49311f; }
+.main-menu .uy-panel--menu .menu-action-copy strong {
+  font: 700 15px/1.1 "Barlow Condensed", sans-serif;
+}
+.main-menu .uy-panel--menu .menu-action-copy small {
+  font: 500 10px/1.2 "Inter", sans-serif;
+}
+.main-menu .uy-panel--menu .menu-section-heading h2 {
+  font: 600 25px/1.12 "Oswald", "Barlow Condensed", sans-serif;
+}
+.main-menu .uy-panel--menu .menu-archive-card,
+.main-menu .uy-panel--menu .menu-settings-group,
+.main-menu .uy-panel--menu .menu-pack-summary,
+.main-menu .uy-panel--menu .menu-legacy {
+  border: 1px solid #917b5a;
+  border-left: 4px solid #a37c4c;
+  background: #ddcfb5 url("/ui/archival-paper.svg") repeat;
+  color: #291d14;
+  box-shadow: inset 0 0 0 2px #efe0c3, 0 2px 4px #0008;
+}
+.main-menu .uy-panel--menu .menu-archive-card *,
+.main-menu .uy-panel--menu .menu-settings-group *,
+.main-menu .uy-panel--menu .menu-pack-summary *,
+.main-menu .uy-panel--menu .menu-legacy * { /* live buttons still own their affordances */ }
+.main-menu .uy-panel--menu .menu-archive-card strong,
+.main-menu .uy-panel--menu .menu-pack-summary strong,
+.main-menu .uy-panel--menu .menu-settings-group h3,
+.main-menu .uy-panel--menu .menu-legacy > small {
+  color: #3e2b1e;
+}
+.main-menu .uy-panel--menu .menu-archive-card small,
+.main-menu .uy-panel--menu .menu-pack-summary small,
+.main-menu .uy-panel--menu .menu-settings-group small,
+.main-menu .uy-panel--menu .menu-legacy p { color: #5d4834; }
+.main-menu .uy-panel--menu .menu-settings-group h3 {
+  font: 700 15px/1.2 "Barlow Condensed", sans-serif;
+  letter-spacing: .6px;
+}
+.main-menu .uy-panel--menu .menu-toggle,
+.main-menu .uy-panel--menu .menu-range,
+.main-menu .uy-panel--menu .menu-select,
+.main-menu .uy-panel--menu .menu-legacy-row { color: #2f241b; border-color: #8c775663; }
+.main-menu .uy-panel--menu .menu-toggle small { color: #5d4935; }
+.main-menu .uy-panel--menu .menu-feedback { background: #503021ba; color: #efdec8; }
+.main-menu .uy-panel--menu .main-menu-footer {
+  flex: 0 0 auto;
+  border-top: 1px solid #88725c;
+  margin-top: 5px;
+  padding-top: 7px;
+  color: #d5c0a5;
+}
+
+/* While a physical board is mounted on desktop, reserve its footprint.
+   Shift the live build tray into the remaining world area so it cannot
+   obscure the lower steel/paper edge. Keep all commands and touch targets. */
+@media (min-width: 651px) {
+  .game.game:has(.context-panel.uy-panel-wrapper) .build-zone {
+    left: calc((100vw - 410px) / 2);
+    max-width: calc(100vw - 430px);
+  }
+  .game.game:has(.context-panel.uy-panel-wrapper) .world-zoom-controls {
+    right: calc(20px + 388px + 15px);
+  }
+}
+@media (min-width: 651px) and (max-width: 900px) {
+  .game.game:has(.context-panel.uy-panel-wrapper) .world-zoom-controls {
+    right: calc(12px + 388px + 15px);
+  }
+}
+
+/* Confirmation, too, is the SAME four physical DOM layers. The modal
+   itself remains the focus/keyboard owner; its child board owns the hardware. */
+.game.game .menu-return-dialog {
+  width: min(520px, 100%);
+  padding: 0;
+  border: 0;
+  outline: none;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+.game.game .menu-return-dialog .uy-confirmation-board {
+  display: flex;
+  width: 100%;
+  max-height: calc(100dvh - 36px);
+}
+.game.game .menu-return-dialog .uy-confirmation-board .uy-contained-surface {
+  max-height: calc(100dvh - 150px);
+  overflow-y: auto;
+  padding: 14px;
+}
+.game.game .menu-return-dialog h2 {
+  font: 600 26px/1.2 "Oswald", "Barlow Condensed", sans-serif;
+}
+.game.game .menu-return-dialog .menu-return-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.game.game .menu-return-dialog .menu-return-actions button {
+  min-height: 40px;
+  border-bottom-width: 3px;
+  font: 700 13px/1.2 "Barlow Condensed", sans-serif;
+}
+
+/* Dismantle confirmation remains a focusable genuine game dialog, with a
+   separate inset safety instrument for the very real material accounting. */
+.game.game .dismantle-review:has(.uy-dismantle-board) {
+  width: min(570px, 100%);
+  max-height: calc(100dvh - 36px);
+  overflow: visible;
+  padding: 0;
+  border: 0;
+  background: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+.game.game .dismantle-review .uy-dismantle-board {
+  width: 100%;
+  display: flex;
+  max-height: calc(100dvh - 36px);
+}
+.game.game .dismantle-review .uy-dismantle-board .uy-contained-surface {
+  min-height: 0;
+  max-height: calc(100dvh - 145px);
+  overflow-y: auto;
+  padding: 12px 14px;
+}
+.game.game .dismantle-review .uy-layer-4-content > small {
+  color: #cbb087;
+  font: 600 10px/1.2 "IBM Plex Mono", monospace;
+}
+.game.game .dismantle-review .uy-layer-4-content > p {
+  color: #c9c9be;
+  font: 500 13px/1.4 "Barlow Condensed", sans-serif;
+}
+.game.game .dismantle-review .uy-layer-4-content h2 {
+  font: 600 22px/1.15 "Oswald", sans-serif;
+}
+.game.game .dismantle-review .dismantle-review-counts > div,
+.game.game .dismantle-review .dismantle-review-refunds > div {
+  border: 1px solid #595548;
+  background: linear-gradient(#0d161b, #101b21);
+  border-radius: 2px;
+}
+.game.game .dismantle-review .dismantle-review-actions button {
+  border-bottom-width: 3px;
+  font: 700 13px/1.2 "Barlow Condensed", sans-serif;
+}
+@media (max-width: 700px) {
+  .game.game .dismantle-review .uy-dismantle-board .uy-contained-surface {
+    padding: 8px;
+  }
+  .game.game .dismantle-review .dismantle-review-counts,
+  .game.game .dismantle-review .dismantle-review-refunds { gap: 4px; }
+}
+
+/* Focus always survives the physical frame, including browser keyboard and
+   narrow touch panels. No global user-select:none; users may copy records. */
+.uy-panel-wrapper button:focus-visible,
+.uy-panel-wrapper input:focus-visible,
+.uy-panel-wrapper select:focus-visible {
+  outline: 2px solid #e6b473;
+  outline-offset: 2px;
+}
+@media (max-width: 1050px) {
+  .main-menu .main-menu-plaque.uy-panel-wrapper { width: min(446px, 52vw); }
+}
+@media (max-width: 700px) {
+  .game.game .context-panel.uy-panel-wrapper {
+    left: 9px; right: 9px;
+    top: 64px;
+    width: auto;
+    max-height: calc(100dvh - 73px);
+    filter: drop-shadow(0 11px 12px #000c);
+  }
+  .main-menu .main-menu-plaque.uy-panel-wrapper {
+    width: 100%;
+    height: calc(100dvh - 24px);
+    min-height: 0;
+    max-height: calc(100dvh - 24px);
+  }
+  .uy-panel-wrapper .uy-outer-shell { padding: 10px 10px 12px; }
+  .uy-panel-wrapper .uy-outer-shell::before,
+  .uy-panel-wrapper .uy-outer-shell::after {
+    clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 16px,
+      100% calc(100% - 16px), calc(100% - 16px) 100%,
+      16px 100%, 0 calc(100% - 16px), 0 16px);
+  }
+  .uy-panel-wrapper .uy-bolt-tl { left: 5px; top: 5px; }
+  .uy-panel-wrapper .uy-bolt-tr { right: 5px; top: 5px; }
+  .uy-panel-wrapper .uy-bolt-bl { left: 5px; bottom: 5px; }
+  .uy-panel-wrapper .uy-bolt-br { right: 5px; bottom: 5px; }
+  .uy-panel-wrapper .uy-clipboard-clamp { width: 82px; height: 21px; top: -6px; }
+  .game.game .uy-panel-wrapper .uy-inset-rim,
+  .main-menu .uy-panel-wrapper .uy-inset-rim { padding: 3px; }
+  .game.game .uy-panel-wrapper .uy-inset-rim-inner,
+  .main-menu .uy-panel-wrapper .uy-inset-rim-inner { padding: 2px; }
+  .game.game .uy-panel-wrapper .context-header { padding: 8px 7px 8px 9px; min-height: 48px; }
+  .game.game .uy-panel-wrapper .context-header > span:first-child { font-size: 20px; }
+  .game.game .uy-panel-wrapper .context-header-stamp { font-size: 7px; }
+  .game.game .uy-panel--terminal .context-header { padding-left: 42px; }
+  .game.game .uy-panel--terminal .context-header::before {
+    left: 6px; top: 6px; width: 32px; height: 32px;
+  }
+  .game.game .uy-panel-wrapper .uy-contained-surface {
+    padding: 8px 7px 11px 8px;
+  }
+  .game.game .uy-panel-wrapper .uy-layer-4-content { padding: 8px 6px; }
+  .main-menu .uy-panel--menu .main-menu-brand { min-height: 55px; padding: 6px 7px; }
+  .main-menu .uy-panel--menu .directorate-seal { width: 38px; height: 38px; flex-basis: 38px; }
+  .main-menu .uy-panel--menu .main-menu-brand-copy h1 { font-size: 25px; }
+  .main-menu .uy-panel--menu .main-menu-brand-copy > small { font-size: 6px; }
+  .main-menu .uy-panel--menu .menu-board-body { padding: 7px 8px; }
+  .main-menu .uy-panel--menu .uy-layer-4-content { padding: 7px 5px 3px; }
+  .main-menu .uy-panel--menu .menu-appointment { padding: 8px; margin-bottom: 9px; }
+  .main-menu .uy-panel--menu .menu-appointment h2 { font-size: 18px; }
+  .main-menu .uy-panel--menu .menu-appointment p { font-size: 10px; }
+  .main-menu .uy-panel--menu .menu-action { min-height: 40px; }
+  .main-menu .uy-panel--menu .menu-action-primary { min-height: 48px; }
+}
+@media (max-height: 700px) and (min-width: 701px) {
+  .main-menu .main-menu-plaque.uy-panel-wrapper { height: calc(100dvh - 24px); min-height: 0; }
+  .main-menu .uy-panel--menu .menu-appointment { margin-bottom: 7px; }
+  .main-menu .uy-panel--menu .menu-action { min-height: 40px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .uy-panel-wrapper *, .uy-panel-wrapper *::before, .uy-panel-wrapper *::after {
+    transition-duration: 0.01ms !important;
+  }
+}

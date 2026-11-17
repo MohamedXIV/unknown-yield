@@ -1,0 +1,495 @@
+/* Unknown Yield / compact instrument hardware v1
+   Companion to game-ui-reference-frame.css. Major panels retain their real
+   four-layer React frame; small permanent controls need a flatter, tactile
+   instrument construction to preserve the *world-first* viewport.
+   No generated images, new network requests or simulation-side state. */
+
+.game.game .site-mark,
+.game.game .resources,
+.game.game .hud-actions {
+  --uy-module-shell: #343b3e;
+  --uy-module-rim: #a58963;
+  position: relative;
+  isolation: isolate;
+  overflow: visible;
+  clip-path: none;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  backdrop-filter: none;
+  box-shadow: 0 8px 18px #0206077d;
+}
+
+/* The back plate and its recessed service face have their own independent
+   silhouettes. Never clip the actual labels, buttons, stock or focus rings. */
+.game.game .site-mark::before,
+.game.game .site-mark::after,
+.game.game .resources::before,
+.game.game .resources::after,
+.game.game .hud-actions::before,
+.game.game .hud-actions::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  /* Older site-mark/resources pseudo-elements had explicit marker widths.
+     Reset those dimensions or the actual inset plate becomes a 4px stripe. */
+  width: auto;
+  height: auto;
+  clip-path: polygon(9px 0, calc(100% - 9px) 0, 100% 9px,
+    100% calc(100% - 9px), calc(100% - 9px) 100%,
+    9px 100%, 0 calc(100% - 9px), 0 9px);
+}
+.game.game .site-mark::before,
+.game.game .resources::before,
+.game.game .hud-actions::before {
+  z-index: -2;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 48px 13px at 9% 2%, #b87b3990, transparent 90%),
+    radial-gradient(ellipse 40px 12px at 95% 95%, #995a3172, transparent 90%),
+    linear-gradient(145deg, #66615a 0%, #393d3e 23%, #222b2d 53%, #534d43 90%, #9a7853);
+  box-shadow: inset 0 1px #f4d4a972, inset 0 -3px #04080a9c;
+}
+.game.game .site-mark::after,
+.game.game .resources::after,
+.game.game .hud-actions::after {
+  z-index: -1;
+  inset: 4px;
+  background: linear-gradient(165deg, #29353a, #131e23 72%, #10191d);
+  border: 1px solid #9f85617c;
+  box-shadow: inset 0 0 0 2px #070c0f, inset 0 2px 7px #000a;
+}
+.game.game .site-mark::after {
+  /* Red enamel identity band belongs to the Directorate, not a dashboard. */
+  background: linear-gradient(105deg, #69271f 0 28%, #3b2623 29%, #18262a 47%, #131e22 100%);
+  border-color: #ad7f56a8;
+}
+.game.game .resources::after {
+  background:
+    repeating-linear-gradient(90deg, #e1ba7310 0 1px, transparent 1px 24px),
+    linear-gradient(165deg, #203338, #101e24 70%);
+}
+.game.game .hud-actions::after {
+  background: linear-gradient(180deg, #15242b, #0e1a20);
+}
+.game.game .site-mark > .uy-hud-fasteners,
+.game.game .resources > .uy-hud-fasteners,
+.game.game .hud-actions > .uy-hud-fasteners {
+  position: absolute;
+  inset: 3px 7px auto;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  width: auto;
+  height: 9px;
+  margin: 0;
+  padding: 0;
+  pointer-events: none;
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+.game.game .uy-hud-fasteners > span {
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 25%, #dec39b, #7b6c55 50%, #2b2d2a 87%);
+  box-shadow: 0 1px 2px #000b, 0 0 0 1px #171b1b;
+}
+.game.game .uy-hud-fasteners > span::after {
+  content: "";
+  display: block;
+  width: 5px;
+  height: 1px;
+  margin: 3px auto 0;
+  background: #262520;
+  transform: rotate(-30deg);
+}
+.game.game .site-mark {
+  min-height: 58px;
+  padding: 7px 16px 7px 8px;
+}
+.game.game .site-mark > div:not(.uy-hud-fasteners) {
+  font: 600 19px/1 "Oswald", "Barlow Condensed", Impact, sans-serif;
+  letter-spacing: 1.05px;
+  color: #f3e1c1;
+  text-shadow: 0 1px #000d;
+}
+.game.game .site-mark > div:not(.uy-hud-fasteners) small {
+  font: 500 8px/1.35 "IBM Plex Mono", Consolas, monospace;
+  color: #dec7a7;
+  margin-top: 5px;
+  letter-spacing: .15px;
+}
+.game.game .site-mark .brand-symbol {
+  width: 43px;
+  height: 43px;
+  flex: 0 0 43px;
+}
+.game.game .resources {
+  min-height: 58px;
+  gap: 7px;
+  padding: 7px 15px;
+}
+.game.game .resources > span {
+  position: relative;
+  z-index: 2;
+  padding: 4px 7px;
+  gap: 6px;
+  color: #bda478;
+}
+.game.game .resources > span + span {
+  border-left: 1px solid #bd97754c;
+  padding-left: 12px;
+}
+.game.game .resources b {
+  font: 600 17px/1 "IBM Plex Mono", Consolas, monospace;
+  color: #fff0d4;
+  min-width: 27px;
+  text-shadow: 0 1px #000d;
+}
+.game.game .resources small {
+  font: 700 10px/1 "Barlow Condensed", "Arial Narrow", sans-serif;
+  color: #cfbea0;
+  letter-spacing: .65px;
+}
+.game.game .resources .low,
+.game.game .resources .low b {
+  color: #ef9c81;
+}
+/* Readable controls stay real buttons: the active state is read from ARIA,
+   so notebook, terminal, paused simulation and settings never appear on
+   unless the corresponding actual panel or pause state is active. */
+.game.game .hud-actions {
+  min-height: 58px;
+  gap: 4px;
+  padding: 8px 10px;
+}
+.game.game .hud-actions button {
+  position: relative;
+  z-index: 2;
+  width: 35px;
+  height: 35px;
+  border: 1px solid #736d5e;
+  border-bottom: 3px solid #161b1e;
+  border-radius: 2px;
+  clip-path: none;
+  background: linear-gradient(160deg, #364144, #1a282d 78%, #101b20);
+  box-shadow: inset 0 1px #ffffff2b, 0 2px 3px #0009;
+  color: #e8dec5;
+}
+.game.game .hud-actions button:hover:not(:disabled),
+.game.game .hud-actions button:focus-visible {
+  color: #fff2d2;
+  border-color: #d2ad7b;
+  background: linear-gradient(#465353, #253339);
+}
+.game.game .hud-actions button[aria-pressed="true"] {
+  border-color: #e2b981;
+  border-bottom-color: #68412b;
+  background: linear-gradient(#774830, #44302a 74%);
+  color: #ffe9c7;
+  box-shadow: inset 0 2px 5px #0007, 0 0 0 1px #bb8d5659;
+}
+.game.game .hud-actions button[aria-label="Game menu"] {
+  color: #ffe1ca;
+  border-color: #ad6851;
+  background: linear-gradient(#8a3e32, #4b2421);
+}
+.game.game .hud-actions button[aria-label="Game menu"][aria-pressed="true"] {
+  border-color: #f0b78b;
+  background: linear-gradient(#ac513b, #6c2c23);
+}
+.game.game .hud-actions i {
+  z-index: 3;
+  background: #dfbd82;
+  color: #24201b;
+  font: 700 9px/1 "IBM Plex Mono", monospace;
+  border-radius: 2px;
+}
+
+/* Command cartridges: leave nav's direct button/group children untouched.
+   The original physical rail already has outer pseudo-metal; this pass
+   adds recessed key-wells and stronger active/locked truth, not a new overlay
+   that could intercept pointer/hold, popup or keyboard navigation. */
+.game.game .build-bar {
+  gap: 3px;
+  padding: 7px;
+  filter: drop-shadow(0 9px 14px #000b);
+}
+.game.game .build-bar::before,
+.game.game .build-submenu::before {
+  background:
+    radial-gradient(ellipse 48px 9px at 8% 0%, #dca56566, transparent 95%),
+    radial-gradient(ellipse 36px 10px at 91% 98%, #bd784b7a, transparent 95%),
+    linear-gradient(145deg, #b9a078, #60594e 17%, #2f3c3d 54%, #9e7653 86%, #342d29);
+}
+.game.game .build-bar::after,
+.game.game .build-submenu::after {
+  background:
+    repeating-linear-gradient(90deg, #debb7b0b 0 1px, transparent 1px 23px),
+    linear-gradient(170deg, #202c31, #111e24 82%);
+  box-shadow: inset 0 0 0 2px #070e12, inset 0 0 0 4px #88775b56, inset 0 5px 7px #0008;
+}
+.game.game .build-bar button,
+.game.game .build-submenu button {
+  position: relative;
+  border: 1px solid #706959;
+  border-bottom: 4px solid #181d20;
+  border-radius: 2px;
+  background:
+    linear-gradient(140deg, #58606423, transparent 20%),
+    linear-gradient(#303c42 0%, #18272d 80%, #122026);
+  box-shadow: inset 0 1px #fff3, inset 0 -2px #060e12aa, 0 1px #03090b;
+  color: #e4dec9;
+}
+.game.game .build-bar button:hover:not(:disabled),
+.game.game .build-submenu button:hover:not(:disabled),
+.game.game .build-bar button:focus-visible,
+.game.game .build-submenu button:focus-visible {
+  border-color: #d1ad7b;
+  background: linear-gradient(#495256, #25363c 88%);
+  color: #fff0d5;
+}
+.game.game .build-bar button.active,
+.game.game .build-bar button[aria-pressed="true"],
+.game.game .build-submenu button.active {
+  border-color: #ebc189;
+  border-bottom-color: #674027;
+  color: #fff1d5;
+  background: linear-gradient(170deg, #966039, #603b2b 65%, #3d2a25);
+  box-shadow: inset 0 1px #ffdda377, inset 0 -2px #2b1916, 0 1px #000d;
+}
+.game.game .build-bar button[aria-disabled="true"],
+.game.game .build-submenu button[aria-disabled="true"] {
+  color: #a8a9a2;
+  border-color: #555957;
+  background: repeating-linear-gradient(135deg, #1e292d, #1e292d 7px, #253035 7px, #253035 14px);
+}
+.game.game .build-bar button[aria-disabled="true"] svg,
+.game.game .build-submenu button[aria-disabled="true"] svg {
+  opacity: .6;
+}
+.game.game .build-bar .build-group > .group-primary .group-marker {
+  position: absolute;
+  right: 3px;
+  top: 4px;
+  color: #bc9866;
+  font-size: 9px;
+}
+.game.game .build-bar button.active .group-marker,
+.game.game .build-bar button[aria-pressed="true"] .group-marker {
+  color: #ffdb9f;
+}
+.game.game .build-bar button > small {
+  color: #c7a271;
+}
+.game.game .build-bar button > span {
+  color: inherit;
+  line-height: 1.07;
+}
+.game.game .build-submenu {
+  gap: 4px;
+  padding: 7px;
+  filter: drop-shadow(0 8px 12px #000b);
+}
+/* On real desktop, ten cartridges must remain a SINGLE mounted switch bank.
+   With flex-wrap:auto-width the ninth and tenth keys moved to a second row,
+   leaving a large empty trough (caught in actual Chromium screenshots).
+   A contextual side board or a smaller viewport may require wrapping. */
+@media (min-width: 901px) {
+  .game.game .build-bar {
+    width: max-content;
+    max-width: calc(100vw - 36px);
+    flex-wrap: nowrap;
+  }
+  .game.game:has(.context-panel.uy-panel-wrapper) .build-bar {
+    max-width: calc(100vw - 434px);
+    flex-wrap: wrap;
+  }
+}
+.game.game .build-submenu button {
+  min-height: 48px;
+}
+.game.game .build-hint {
+  border: 1px solid #927551;
+  border-left: 4px solid #c27a49;
+  border-bottom: 3px solid #342a24;
+  border-radius: 2px;
+  background: linear-gradient(170deg, #29373b, #111d23);
+  box-shadow: 0 4px 10px #0008, inset 0 1px #fff2;
+}
+.game.game .world-zoom-controls button {
+  border: 1px solid #9a8160;
+  border-bottom: 3px solid #262527;
+  border-radius: 2px;
+  background: linear-gradient(165deg, #37454a, #15252c);
+  color: #e8d9bd;
+  box-shadow: inset 0 1px #fff3, 0 3px 7px #0008;
+}
+.game.game .world-zoom-controls button:hover,
+.game.game .world-zoom-controls button:focus-visible {
+  border-color: #f1bf7c;
+  color: #fff0d3;
+  background: #344349;
+}
+.game.game .field-guide {
+  border: 1px solid #85745a;
+  border-left: 4px solid #9b3a2b;
+  border-bottom: 3px solid #211b17;
+  border-radius: 2px;
+  background:
+    linear-gradient(#bd955b12 1px, transparent 1px),
+    linear-gradient(90deg, #bd955b12 1px, transparent 1px),
+    linear-gradient(150deg, #182a31, #111c23 85%);
+  background-size: 22px 22px, 22px 22px, 100% 100%;
+  box-shadow: 0 8px 20px #000b, inset 0 0 0 3px #090f12, inset 0 1px #d2ad7755;
+  backdrop-filter: none;
+}
+.game.game .field-guide > small {
+  color: #e1b57f;
+  letter-spacing: .7px;
+}
+.game.game .field-guide h2 {
+  color: #ffebc9;
+  font: 600 18px/1.16 "Oswald", "Barlow Condensed", sans-serif;
+  letter-spacing: .25px;
+}
+.game.game .field-guide p,
+.game.game .field-guide .guide-body {
+  color: #d7d3c1;
+  font: 500 12px/1.43 "Barlow Condensed", sans-serif;
+}
+/* The recovery warning is an actual safety signal, not another routine
+   Directorate directive. Preserve its urgency after the common reskin. */
+.game.game .field-guide.beat-recovery {
+  border-color: #be7460;
+  border-left: 4px solid #dc8062;
+  background:
+    repeating-linear-gradient(90deg, #efb28b0b 0 1px, transparent 1px 19px),
+    linear-gradient(155deg, #4b2c2b, #251d20 88%);
+}
+.game.game .field-guide.beat-recovery > small { color: #ffba99; }
+.game.game .toast {
+  border: 1px solid #988068;
+  border-left: 4px solid #c39560;
+  border-radius: 2px;
+  background: linear-gradient(155deg, #26363a, #131f25);
+  box-shadow: 0 8px 18px #0009;
+}
+.game.game .toast.error {
+  border-left-color: #d7785b;
+  background: linear-gradient(#492b2b, #271e20);
+}
+
+/* Temporary tool controls are small mounted service instruments, NOT the
+   old green SaaS-like form chips. Keep native inputs and all access keys. */
+.game.game .guide-toggle,
+.game.game .build-sample-button {
+  border: 1px solid #ac865d;
+  border-bottom: 3px solid #322b25;
+  border-radius: 2px;
+  background: linear-gradient(#374248, #1a292f 82%);
+  box-shadow: inset 0 1px #ffffff31, 0 4px 9px #0008;
+  color: #f0d9b5;
+  backdrop-filter: none;
+}
+.game.game .guide-toggle:hover,
+.game.game .guide-toggle:focus-visible,
+.game.game .build-sample-button:hover:not(:disabled),
+.game.game .build-sample-button:focus-visible {
+  border-color: #e2bd85;
+  color: #fff1d4;
+  background: #435058;
+}
+.game.game .dismantle-modes,
+.game.game .keyboard-area-form {
+  border: 2px solid #987e5f;
+  border-bottom: 4px solid #312b27;
+  border-radius: 2px;
+  background: linear-gradient(165deg, #37413e, #15232a 62%, #111d22);
+  box-shadow: 0 8px 18px #000a, inset 0 0 0 2px #0a151a;
+  color: #e9ddc3;
+  backdrop-filter: none;
+}
+.game.game .dismantle-modes > span {
+  color: #e2b983;
+  font: 600 11px/1.2 "Barlow Condensed", sans-serif;
+}
+.game.game .dismantle-modes button,
+.game.game .keyboard-area-form button {
+  border: 1px solid #84745c;
+  border-bottom: 3px solid #1a2021;
+  border-radius: 2px;
+  background: linear-gradient(#344147, #1b2b30);
+  color: #e4dcc8;
+  font: 600 11px/1.15 "Barlow Condensed", sans-serif;
+}
+.game.game .dismantle-modes button.active,
+.game.game .dismantle-modes button[aria-pressed="true"] {
+  border-color: #e2b87c;
+  border-bottom-color: #71452c;
+  color: #fff0d5;
+  background: linear-gradient(#8b5235, #4c322a);
+}
+.game.game .dismantle-modes button:focus-visible,
+.game.game .keyboard-area-form button:focus-visible {
+  outline: 2px solid #efd2a2;
+  outline-offset: 2px;
+}
+.game.game .keyboard-area-form input {
+  border: 1px solid #9b8059;
+  border-radius: 1px;
+  background: #101e24;
+  color: #f3e5c9;
+}
+.game.game .paused-label {
+  border: 1px solid #bb825b;
+  border-bottom: 3px solid #462720;
+  border-radius: 2px;
+  background: linear-gradient(#682f27, #271f20);
+  color: #fff0d3;
+  font: 600 14px/1 "Oswald", "Barlow Condensed", sans-serif;
+}
+
+/* Main Menu's site caption becomes a proper small etched institutional
+   nameplate but remains outside the primary interaction board. */
+.main-menu .main-menu-scene-caption {
+  border: 1px solid #9f7951;
+  border-left: 4px solid #9e472e;
+  border-bottom: 3px solid #161b1e;
+  border-radius: 1px;
+  padding: 12px 15px;
+  background: linear-gradient(140deg, #243137ef, #101b22e8);
+  box-shadow: inset 0 0 0 3px #0d171bbd, 0 7px 20px #0008;
+}
+.main-menu .main-menu-scene-caption strong {
+  font: 600 21px/1.08 "Oswald", "Barlow Condensed", sans-serif;
+  letter-spacing: .65px;
+  color: #f3e2c5;
+}
+
+/* Phone: real tool footprints and safe area always win over ornament. */
+@media (max-width: 650px) {
+  .game.game .site-mark { display: none; }
+  .game.game .resources { min-height: 46px; gap: 0; padding: 5px 9px; }
+  .game.game .resources > span { padding: 3px 4px; gap: 4px; }
+  .game.game .resources > span + span { padding-left: 6px; }
+  .game.game .resources b { font-size: 13px; }
+  .game.game .resources small { font-size: 9px; }
+  .game.game .hud-actions { min-height: 46px; padding: 5px 6px; gap: 1px; }
+  .game.game .hud-actions button { width: 29px; height: 30px; }
+  .game.game .uy-hud-fasteners { display: none; }
+  .game.game .build-bar { gap: 0; padding: 4px; }
+  .game.game .build-bar button { border-bottom-width: 3px; }
+  .game.game .field-guide { width: min(255px, calc(100vw - 24px)); }
+  .main-menu .main-menu-scene-caption { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .game.game .hud-actions button,
+  .game.game .build-bar button,
+  .game.game .build-submenu button {
+    transition: none;
+  }
+}

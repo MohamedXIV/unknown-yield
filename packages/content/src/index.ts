@@ -17,8 +17,25 @@ export {
   localeCatalogSchema,
   localeKeySchema,
   validateLocaleCoverage,
+  locationTokens,
+  applyLocationTokens,
   type LocaleCatalog,
 } from "./locale";
+export {
+  lintVoice,
+  summarizeVoice,
+  voiceRuleLabels,
+  type VoiceNote,
+  type VoiceRule,
+} from "./voice";
+export {
+  identityFields,
+  identityKey,
+  identityKinds,
+  orphanIdentityKeys,
+  type IdentityField,
+  type IdentityKind,
+} from "./identity";
 export { fixture } from "./fixture";
 
 export {

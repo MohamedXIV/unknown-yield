@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">
+  <!-- Non-photographic archival stock: light ink fibers, corner staining, ruled grain. -->
+  <rect width="160" height="160" fill="#e7d8b6"/>
+  <g fill="#755e40" opacity=".09">
+    <circle cx="7" cy="14" r=".7"/><circle cx="69" cy="81" r=".7"/><circle cx="143" cy="127" r="1"/>
+    <circle cx="102" cy="30" r=".6"/><circle cx="122" cy="153" r=".8"/><circle cx="35" cy="57" r=".8"/>
+    <circle cx="12" cy="137" r=".8"/><circle cx="156" cy="21" r=".6"/><circle cx="83" cy="144" r=".8"/>
+    <circle cx="46" cy="111" r=".7"/><circle cx="103" cy="105" r=".8"/>
+  </g>
+  <g stroke="#654e33" stroke-opacity=".04" stroke-width=".8">
+    <path d="M0 24H160M0 67H160M0 111H160M0 150H160"/>
+    <path d="M22 0V160M117 0V160"/>
+  </g>
+</svg>

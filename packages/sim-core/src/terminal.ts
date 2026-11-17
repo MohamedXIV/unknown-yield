@@ -286,7 +286,7 @@ export function shipmentQuantityCommand(
     return shipmentResult(
       false,
       "unaccepted",
-      "The company does not accept this material",
+      "The Yard does not accept this material",
     );
   if (!terminalCanExport(c, s, id))
     return shipmentResult(false, "locked", "Terminal handling is not certified");

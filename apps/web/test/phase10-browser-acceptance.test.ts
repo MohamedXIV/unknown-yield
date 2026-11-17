@@ -70,6 +70,15 @@ const productionBrowser = browserAcceptanceMode.startsWith("production");
 const appUrl = "http://127.0.0.1:4010/?perf=1";
 const debugPort = 9333;
 
+// Read the latest authoritative snapshot from the built-in browser archive.
+const archiveReadExpression = String.raw`(() => {
+  const index = JSON.parse(localStorage.getItem("unknown-yield-expeditions-v1") ?? "{}");
+  const slot = index.slots?.find((entry) => entry.fingerprint === null);
+  if (!slot) return null;
+  const payload = localStorage.getItem(slot.current);
+  return payload ? JSON.stringify(JSON.parse(payload).save) : null;
+})()`;
+
 function build(sim: Simulation, command: GameCommand) {
   const result = sim.command(command);
   expect(result.ok, result.message).toBe(true);
@@ -679,6 +688,7 @@ browserIt(
           },
         );
     let serverLog = "";
+    const evidenceDirectory = process.env.UNKNOWN_YIELD_EVIDENCE_DIR;
     server.stdout?.on("data", (chunk) => {
       serverLog += String(chunk);
     });
@@ -802,6 +812,45 @@ browserIt(
           );
         return response.result?.value as T;
       };
+      const captureEvidence = async (name: string) => {
+        const screenshot = await call("Page.captureScreenshot", {
+          format: "png",
+          captureBeyondViewport: false,
+        });
+        const bytes = Buffer.from(
+          (screenshot as unknown as { data: string }).data,
+          "base64",
+        );
+        const sha256 = createHash("sha256").update(bytes).digest("hex");
+        if (evidenceDirectory) {
+          mkdirSync(evidenceDirectory, { recursive: true });
+          writeFileSync(join(evidenceDirectory, name), bytes);
+        }
+        return { bytes: bytes.length, sha256, retained: Boolean(evidenceDirectory) };
+      };
+
+      /** Test-only seed of an archive revision; Save/Load buttons remain real UI. */
+      const seedBrowserWorld = async (save: Save) => {
+        await evaluate<boolean>(`(() => {
+          const index = JSON.parse(localStorage.getItem("unknown-yield-expeditions-v1") ?? "null");
+          const slot = index?.slots?.find((entry) => entry.fingerprint === null);
+          if (!slot) throw new Error("Browser archive fixture is missing");
+          const key = "unknown-yield-expedition-payload-v1:" + slot.id + ":" + crypto.randomUUID();
+          localStorage.setItem(key, JSON.stringify({
+            version: 1, slotId: slot.id, fingerprint: null,
+            save: ${JSON.stringify(save)},
+          }));
+          slot.previous = slot.current;
+          slot.current = key;
+          slot.savedAt = Date.now();
+          slot.tick = ${save.tick};
+          slot.schemaVersion = ${save.schemaVersion};
+          slot.contentVersion = ${JSON.stringify(save.contentVersion)};
+          slot.exported = ${save.exported};
+          localStorage.setItem("unknown-yield-expeditions-v1", JSON.stringify(index));
+          return true;
+        })()`);
+      };
 
       const waitForExpression = async (
         expression: string,
@@ -813,6 +862,56 @@ browserIt(
           await sleep(100);
         }
         throw new Error("Browser condition timed out: " + expression);
+      };
+
+      const clickMainMenuAction = async (label: string) => {
+        await evaluate<boolean>(`(() => {
+          const button = [...document.querySelectorAll(".menu-action")]
+            .find((entry) => entry.textContent?.includes(${JSON.stringify(label)}));
+          if (!button || button.disabled) throw new Error("Main menu action unavailable: " + ${JSON.stringify(label)});
+          button.click();
+          return true;
+        })()`);
+      };
+      const resumeMostRecentExpedition = async () => {
+        await waitForExpression(`document.querySelector(".main-menu") !== null`);
+        await waitForExpression(`document.querySelector(".menu-home .menu-action") !== null`);
+        // Menu DOM mounts before the local archive is checked asynchronously.
+        // Waiting for a rendered button alone can intermittently catch the
+        // disabled loading state; require genuinely validated Continue.
+        await waitForExpression(`[...document.querySelectorAll(".menu-action")]
+          .some((button) => button.textContent?.includes("Resume Duty") && !button.disabled)`);
+        const enabled = await evaluate<boolean>(`[...document.querySelectorAll(".menu-action")]
+          .some((button) => button.textContent?.includes("Resume Duty") && !button.disabled)`);
+        expect(enabled, "Main Menu Continue must select a valid compatible expedition").toBe(true);
+        await clickMainMenuAction("Resume Duty");
+        await waitForExpression(`document.querySelector("canvas") !== null &&
+          document.querySelector('nav[aria-label="Build tools"]') !== null`);
+        // The React game shell and canvas can render before Phaser has
+        // finished scene creation and wired its opt-in camera probe.
+        // Do not send world-space pointer events before the camera exists.
+        await waitForExpression(`typeof window.__UNKNOWN_YIELD_PROJECT_WORLD__ === "function" &&
+          window.__UNKNOWN_YIELD_PROJECT_WORLD__(23.5 * 32, 24.5 * 24) !== null`);
+      };
+
+      const tapButtonByText = async (label: string) => {
+        const point = await evaluate<{ x: number; y: number } | null>(`(() => {
+          const button = [...document.querySelectorAll("button")]
+            .find((entry) => entry.textContent?.includes(${JSON.stringify(label)}));
+          if (!button || button.disabled) return null;
+          const rect = button.getBoundingClientRect();
+          return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+        })()`);
+        if (!point) throw new Error("Touch target unavailable: " + label);
+        await call("Input.dispatchTouchEvent", {
+          type: "touchStart",
+          touchPoints: [{ x: point.x, y: point.y, id: 1 }],
+        });
+        await sleep(60);
+        await call("Input.dispatchTouchEvent", {
+          type: "touchEnd",
+          touchPoints: [],
+        });
       };
 
       const openBuildGroup = async (identity: string): Promise<void> => {
@@ -981,14 +1080,81 @@ browserIt(
       await call("Page.enable");
       await call("Runtime.enable");
       await call("Page.navigate", { url: appUrl });
+      await waitForExpression(`document.readyState === "complete" &&
+        document.querySelector(".main-menu") !== null`);
+      await waitForExpression(`document.querySelector(".menu-home .menu-action") !== null`);
+      await waitForExpression(`getComputedStyle(document.querySelector(".main-menu-plaque"), "::before")
+        .backgroundImage.includes("steel-edge-wear.svg") &&
+        getComputedStyle(document.querySelector(".directorate-seal")).backgroundImage
+          .includes("directorate-seal.svg")`);
+      await waitForExpression(`(() => {
+        const board = document.querySelector(".main-menu-plaque");
+        const shell = board?.querySelector(":scope > .uy-outer-shell");
+        const rim = shell?.querySelector(":scope > .uy-inset-rim");
+        const bed = rim?.querySelector(":scope > .uy-inset-rim-inner");
+        const surface = bed?.querySelector(":scope > .uy-contained-surface");
+        const content = surface?.querySelector(":scope > .uy-layer-4-content");
+        return !!content &&
+          board.querySelectorAll(".uy-bolt").length === 6 &&
+          getComputedStyle(shell, "::before").backgroundImage.includes("linear-gradient") &&
+          getComputedStyle(surface).backgroundColor === "rgb(18, 33, 40)";
+      })()`);
+      const bootMenuScreenshot = await captureEvidence("main-menu-boot-desktop.png");
+      console.log("UNKNOWN_YIELD_MAIN_MENU_BOOT " + JSON.stringify(bootMenuScreenshot));
+      const emptyBoot = await evaluate<{
+        hasCanvas: boolean;
+        resumeDisabled: boolean;
+        hasNew: boolean;
+        hasQuit: boolean;
+      }>(`(() => {
+        const actions = [...document.querySelectorAll(".menu-action")];
+        return {
+          hasCanvas: !!document.querySelector("canvas"),
+          resumeDisabled: !!actions.find((button) => button.textContent?.includes("Resume Duty"))?.disabled,
+          hasNew: actions.some((button) => button.textContent?.includes("Begin Assignment")),
+          hasQuit: actions.some((button) => /quit|exit/i.test(button.textContent ?? "")),
+        };
+      })()`);
+      expect(emptyBoot).toEqual({ hasCanvas: false, resumeDisabled: true, hasNew: true, hasQuit: false });
+      await pressKey("Tab", "Tab", 9);
+      const firstKeyboardTarget = await evaluate<string>(`document.activeElement?.textContent?.replace(/\\s+/g, " ").trim() ?? ""`);
+      expect(firstKeyboardTarget).toContain("Begin Assignment");
+
+      await clickMainMenuAction("Personnel Archives");
+      await waitForExpression(`document.body.textContent?.includes("No archived expeditions have been recorded") === true`);
+      await waitForExpression(`document.activeElement?.classList.contains("menu-back") === true`);
+      const emptyArchiveScreenshot = await captureEvidence("main-menu-empty-archives.png");
+      console.log("UNKNOWN_YIELD_MAIN_MENU_EMPTY_ARCHIVES " + JSON.stringify(emptyArchiveScreenshot));
+      await evaluate<boolean>(`(() => { document.querySelector(".menu-back")?.click(); return true; })()`);
+      await waitForExpression(`document.activeElement?.textContent?.includes("Begin Assignment") === true`);
+      await clickMainMenuAction("Operational Regulations");
+      await waitForExpression(`document.body.textContent?.includes("Field controls") === true &&
+        document.querySelector('input[aria-label="Show performance counter"]') !== null`);
+      await waitForExpression(`document.activeElement?.classList.contains("menu-back") === true`);
+      await evaluate<boolean>(`(() => { document.querySelector(".menu-back")?.click(); return true; })()`);
+      await waitForExpression(`document.activeElement?.textContent?.includes("Begin Assignment") === true`);
+
+      await clickMainMenuAction("Begin Assignment");
+      await waitForExpression(`document.querySelector('input[aria-label="Expedition designation"]') !== null`);
+      const newAssignmentScreenshot = await captureEvidence("main-menu-new-assignment.png");
+      console.log("UNKNOWN_YIELD_MAIN_MENU_NEW_ASSIGNMENT " + JSON.stringify(newAssignmentScreenshot));
+      await evaluate<boolean>(`(() => {
+        const input = document.querySelector('input[aria-label="Expedition designation"]');
+        const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set;
+        setter.call(input, "Browser acceptance expedition");
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+        [...document.querySelectorAll("button")].find((button) =>
+          button.textContent?.includes("Create Expedition"))?.click();
+        return true;
+      })()`);
       await waitForExpression(
-        `document.readyState === "complete" &&
-          !!document.querySelector("canvas") &&
-          !!document.querySelector('nav[aria-label="Build tools"]')`,
+        `document.querySelector("canvas") !== null &&
+          document.querySelector('nav[aria-label="Build tools"]') !== null`,
       );
       await waitForExpression(
         `document.querySelector('[data-onboarding-beat="camera-build"]')
-          ?.textContent?.includes("Read the site before you automate it.") === true`,
+          ?.textContent?.includes("Report to Site 41.") === true`,
       );
 
       const initialState = await evaluate<{
@@ -1030,10 +1196,102 @@ browserIt(
         "8",
       ]);
 
+      const compactHardware = await evaluate<{
+        housings: number;
+        screws: number;
+        insetFaces: number;
+        fullWidthBezel: boolean;
+        commandKeyDepth: string;
+        pendingBook: boolean;
+        currentPlates: string;
+        commandCount: number;
+        commandRows: number;
+        firstFrameMaterial: string;
+      }>(`(() => {
+        const modules = [".site-mark", ".resources", ".hud-actions"]
+          .map((selector) => document.querySelector(selector));
+        const tray = document.querySelector('nav[aria-label="Build tools"]');
+        const key = tray.querySelector('button[aria-label="Inspect"]');
+        return {
+          housings: modules.filter(Boolean).length,
+          screws: modules.reduce((sum, element) => sum +
+            (element?.querySelectorAll(":scope > .uy-hud-fasteners > span").length ?? 0), 0),
+          insetFaces: modules.filter((element) =>
+            getComputedStyle(element, "::after").backgroundImage.includes("linear-gradient")).length,
+          fullWidthBezel: modules.every((element) =>
+            parseFloat(getComputedStyle(element, "::after").width) >=
+              element.getBoundingClientRect().width - 14),
+          commandKeyDepth: getComputedStyle(key).borderBottomWidth,
+          pendingBook: document.querySelector('button[aria-label="Knowledge notebook"]')
+            .getAttribute("aria-pressed") === "false",
+          currentPlates: document.querySelector('[data-testid="plates"]').textContent,
+          commandCount: tray.children.length,
+          commandRows: new Set(
+            [...tray.querySelectorAll(":scope > button, :scope > .build-group > button")]
+              .map((button) => Math.round(button.getBoundingClientRect().top))
+          ).size,
+          firstFrameMaterial: getComputedStyle(tray, "::before").backgroundImage,
+        };
+      })()`);
+      expect(compactHardware.housings).toBe(3);
+      expect(compactHardware.screws).toBe(6);
+      expect(compactHardware.insetFaces).toBe(3);
+      expect(compactHardware.fullWidthBezel).toBe(true);
+      expect(compactHardware.commandKeyDepth).toBe("4px");
+      expect(compactHardware.pendingBook).toBe(true);
+      expect(compactHardware.currentPlates).toBe("600");
+      expect(compactHardware.commandCount).toBe(10);
+      expect(compactHardware.commandRows).toBe(1);
+      expect(compactHardware.firstFrameMaterial).toContain("linear-gradient");
+      const instrumentRailShot = await captureEvidence("industrial-hud-and-command-tray.png");
+      console.log("INDUSTRIAL_HUD_COMMAND_TRAY " + JSON.stringify(instrumentRailShot));
+
       await evaluate(`(() => {
         document.querySelector('button[aria-label="Close field brief"]')?.click();
         return true;
       })()`);
+      await waitForExpression(`typeof window.__UNKNOWN_YIELD_PROJECT_WORLD__ === "function" &&
+        window.__UNKNOWN_YIELD_PROJECT_WORLD__(23.5 * 32, 24.5 * 24) !== null`);
+      const firstTwilightShot = await captureEvidence("planet-twilight-first-site.png");
+      console.log("PLANET_TWILIGHT_FIRST_SITE " + JSON.stringify(firstTwilightShot));
+
+      // Leaving a live site is never a silent discard: stay, save-and-return,
+      // then resume the exact valid local expedition through the boot menu.
+      await evaluate<boolean>(`(() => {
+        document.querySelector('button[aria-label="Game menu"]')?.click();
+        return true;
+      })()`);
+      await waitForExpression(`document.body.textContent?.includes("Return to Main Menu") === true`);
+      await evaluate<boolean>(`(() => {
+        [...document.querySelectorAll("button")].find((button) =>
+          button.textContent?.includes("Return to Main Menu"))?.click();
+        return true;
+      })()`);
+      await waitForExpression(`document.body.textContent?.includes("Return to the Main Menu?") === true`);
+      await evaluate<boolean>(`(() => {
+        [...document.querySelectorAll("button")].find((button) =>
+          button.textContent?.includes("Stay in Expedition"))?.click();
+        return true;
+      })()`);
+      await waitForExpression(`document.querySelector(".menu-return-dialog") === null &&
+        document.querySelector("canvas") !== null`);
+      await evaluate<boolean>(`(() => {
+        document.querySelector('button[aria-label="Game menu"]')?.click();
+        [...document.querySelectorAll("button")].find((button) =>
+          button.textContent?.includes("Return to Main Menu"))?.click();
+        return true;
+      })()`);
+      await waitForExpression(`document.querySelector(".menu-return-dialog") !== null`);
+      await evaluate<boolean>(`(() => {
+        [...document.querySelectorAll("button")].find((button) =>
+          button.textContent?.includes("Save & Return"))?.click();
+        return true;
+      })()`);
+      await waitForExpression(`document.querySelector(".main-menu") !== null &&
+        document.querySelector("canvas") === null`);
+      await resumeMostRecentExpedition();
+      await waitForExpression(`document.querySelector("canvas") !== null &&
+        document.querySelector('nav[aria-label="Build tools"]') !== null`);
 
       await pressKey("5", "Digit5", 53);
       await waitForExpression(
@@ -1177,6 +1435,68 @@ browserIt(
           document.body.textContent?.includes("Veined ore") === true &&
           document.body.textContent?.includes("Catalytic stone") === true`,
       );
+      await waitForExpression(`(() => {
+        const panel = document.querySelector(".context-panel--knowledge");
+        const paper = panel?.querySelector(".context-board-bed .context-body");
+        if (!panel || !paper) return false;
+        return getComputedStyle(paper).backgroundImage.includes("archival-paper.svg") &&
+          getComputedStyle(panel, "::before").backgroundImage.includes("steel-edge-wear.svg") &&
+          !!panel.querySelector(".context-retainer");
+      })()`);
+      // Capture only after the real 165ms panel arrival animation settles;
+      // a partially transparent first frame can ghost the Phaser world below.
+      await waitForExpression(`Number(getComputedStyle(
+        document.querySelector(".context-panel--knowledge")).opacity) >= 0.999`);
+      const frameGeometry = await evaluate<{
+        panelX: number; surfaceX: number; surfaceRight: number;
+        controlLeft: number; controlRight: number;
+        paperSize: string; bolts: number;
+      }>(`(() => {
+        const panel = document.querySelector(".context-panel--knowledge");
+        const surface = panel.querySelector(".uy-contained-surface");
+        const control = panel.querySelector('button[aria-label="Magnify panel content"]');
+        const p = panel.getBoundingClientRect();
+        const area = surface.getBoundingClientRect();
+        const button = control.getBoundingClientRect();
+        return {
+          panelX: p.x, surfaceX: area.x, surfaceRight: area.right,
+          controlLeft: button.left, controlRight: button.right,
+          paperSize: getComputedStyle(surface).backgroundSize,
+          bolts: panel.querySelectorAll(".uy-bolt").length,
+        };
+      })()`);
+      expect(frameGeometry.panelX).toBeGreaterThan(700);
+      expect(frameGeometry.bolts).toBe(6);
+      expect(frameGeometry.paperSize).toContain("160px 160px");
+      expect(frameGeometry.controlLeft).toBeGreaterThanOrEqual(frameGeometry.surfaceX);
+      expect(frameGeometry.controlRight).toBeLessThanOrEqual(frameGeometry.surfaceRight);
+      // The physical board owns the right-hand footprint: the real toolbar
+      // and camera controls cannot cover its rivets, scroll or paper.
+      const reservedWorld = await evaluate<{
+        boardLeft: number; toolbarRight: number; zoomRight: number;
+      }>(`(() => {
+        const board = document.querySelector(".context-panel--knowledge").getBoundingClientRect();
+        const toolbar = document.querySelector(".build-zone").getBoundingClientRect();
+        const zoom = document.querySelector(".world-zoom-controls").getBoundingClientRect();
+        return { boardLeft: board.left, toolbarRight: toolbar.right, zoomRight: zoom.right };
+      })()`);
+      expect(reservedWorld.toolbarRight).toBeLessThan(reservedWorld.boardLeft - 6);
+      expect(reservedWorld.zoomRight).toBeLessThan(reservedWorld.boardLeft - 6);
+      // Physical +/−/Home operate on reading only, never on production totals.
+      await evaluate<boolean>(`(() => {
+        document.querySelector('button[aria-label="Magnify panel content"]').click();
+        return true;
+      })()`);
+      await waitForExpression(`document.querySelector(".context-panel--knowledge .uy-layer-4-content")
+        ?.style.zoom === "1.1"`);
+      await evaluate<boolean>(`(() => {
+        document.querySelector('button[aria-label="Reduce panel content magnification"]').click();
+        return true;
+      })()`);
+      await waitForExpression(`document.querySelector(".context-panel--knowledge .uy-layer-4-content")
+        ?.style.zoom === "1"`);
+      const notebookIndustrialScreenshot = await captureEvidence("industrial-ui-notebook.png");
+      console.log("INDUSTRIAL_UI_NOTEBOOK " + JSON.stringify(notebookIndustrialScreenshot));
       const initialNotebook = await evaluate<string>(
         `document.querySelector(".context-panel")?.textContent ?? ""`,
       );
@@ -1197,18 +1517,36 @@ browserIt(
       );
       await evaluate(`(() => {
         document.querySelector('button[aria-label="Knowledge notebook"]')?.click();
-        document.querySelector('button[aria-label="Company terminal"]')?.click();
+        document.querySelector('button[aria-label="Dispatch Annex 41"]')?.click();
         return true;
       })()`);
       await waitForExpression(
-        `document.body.textContent?.includes("COMPANY TERMINAL") === true &&
+        `document.body.textContent?.includes("DISPATCH ANNEX 41") === true &&
           !!document.querySelector(".context-overview") &&
           !!document.querySelector('nav[aria-label="Terminal sections"]') &&
           !!document.querySelector("#terminal-shipment") &&
           !!document.querySelector("#terminal-company")`,
       );
+      await waitForExpression(`(() => {
+        const panel = document.querySelector(".context-panel--terminal");
+        const paper = panel?.querySelector(".context-board-bed .context-body");
+        return !!paper &&
+          getComputedStyle(paper).backgroundImage.includes("archival-paper.svg") &&
+          !!panel?.querySelector(".context-header-stamp");
+      })()`);
+      // Capture only after the real 165ms panel arrival animation settles;
+      // a partially transparent first frame can ghost the Phaser world below.
+      await waitForExpression(`Number(getComputedStyle(
+        document.querySelector(".context-panel--terminal")).opacity) >= 0.999`);
+      await waitForExpression(`(() => {
+        const panel = document.querySelector(".context-panel--terminal");
+        return panel.getBoundingClientRect().left > 700 &&
+          panel.querySelector(".uy-inset-rim-inner .uy-surface-paper .uy-paper-inner-frame") !== null;
+      })()`);
+      const terminalIndustrialScreenshot = await captureEvidence("industrial-ui-terminal.png");
+      console.log("INDUSTRIAL_UI_TERMINAL " + JSON.stringify(terminalIndustrialScreenshot));
       await evaluate(`(() => {
-        document.querySelector('button[aria-label="Company terminal"]')?.click();
+        document.querySelector('button[aria-label="Dispatch Annex 41"]')?.click();
         return true;
       })()`);
 
@@ -1261,7 +1599,6 @@ browserIt(
       const beltPreviewSha256 = createHash("sha256")
         .update(beltPreviewBytes)
         .digest("hex");
-      const evidenceDirectory = process.env.UNKNOWN_YIELD_EVIDENCE_DIR;
       if (evidenceDirectory) {
         mkdirSync(evidenceDirectory, { recursive: true });
         writeFileSync(
@@ -1286,17 +1623,17 @@ browserIt(
       })()`);
       await waitForExpression(
         `[...document.querySelectorAll("button")]
-          .some((button) => button.textContent?.includes("Save world"))`,
+          .some((button) => button.textContent?.includes("Save current expedition"))`,
       );
       await evaluate(`(() => {
         [...document.querySelectorAll("button")]
-          .find((button) => button.textContent?.includes("Save world"))
+          .find((button) => button.textContent?.includes("Save current expedition"))
           ?.click();
         return true;
       })()`);
       await waitForExpression(
         `document.querySelector('[role="status"]')
-          ?.textContent.includes("Field record saved on this device") === true`,
+          ?.textContent.includes("Expedition saved locally on this device") === true`,
       );
       await evaluate(`(() => {
         document.querySelector('button[aria-label="Game menu"]')?.click();
@@ -1304,13 +1641,13 @@ browserIt(
       })()`);
       await waitForExpression(
         `[...document.querySelectorAll("button")]
-          .some((button) => button.textContent?.includes("Save world")) === false`,
+          .some((button) => button.textContent?.includes("Save current expedition")) === false`,
       );
       const beltGapSave = await evaluate<{
         belts: Array<{ id: string; x: number; y: number; direction: number }>;
         plates: number;
       }>(`(() => {
-        const save = JSON.parse(localStorage.getItem("industrial-site-save-v15"));
+        const save = JSON.parse(${archiveReadExpression});
         return {
           belts: Object.values(save.belts).filter((belt) => belt.y === 18 && belt.x >= 15 && belt.x <= 17),
           plates: save.stock.plates,
@@ -1445,28 +1782,24 @@ browserIt(
       }));
 
       const p2Seed = phase20FlowBrowserWorld();
-      await evaluate(
-        `localStorage.setItem("industrial-site-save-v15", ${JSON.stringify(
-          JSON.stringify(p2Seed),
-        )})`,
-      );
+      await seedBrowserWorld(p2Seed);
       await evaluate(`(() => {
         document.querySelector('button[aria-label="Game menu"]')?.click();
         return true;
       })()`);
       await waitForExpression(
         `[...document.querySelectorAll("button")]
-          .some((button) => button.textContent?.includes("Load saved world"))`,
+          .some((button) => button.textContent?.includes("Load"))`,
       );
       await evaluate(`(() => {
         [...document.querySelectorAll("button")]
-          .find((button) => button.textContent?.includes("Load saved world"))
+          .find((button) => button.textContent?.includes("Load"))
           ?.click();
         return true;
       })()`);
       await waitForExpression(
         `document.querySelector('[role="status"]')
-          ?.textContent.includes("Site restored") === true`,
+          ?.textContent.includes("Expedition restored") === true`,
       );
       await clickBuildTool("solid-logistics", "Belt");
       await waitForExpression(
@@ -1550,23 +1883,23 @@ browserIt(
       })()`);
       await waitForExpression(
         `[...document.querySelectorAll("button")]
-          .some((button) => button.textContent?.includes("Save world"))`,
+          .some((button) => button.textContent?.includes("Save current expedition"))`,
       );
       await evaluate(`(() => {
         [...document.querySelectorAll("button")]
-          .find((button) => button.textContent?.includes("Save world"))
+          .find((button) => button.textContent?.includes("Save current expedition"))
           ?.click();
         return true;
       })()`);
       await waitForExpression(
         `document.querySelector('[role="status"]')
-          ?.textContent.includes("Field record saved on this device") === true`,
+          ?.textContent.includes("Expedition saved locally on this device") === true`,
       );
       const p2ProductionSave = await evaluate<{
         belts: Array<{ id: string; x: number; y: number; direction: number }>;
         storages: Record<string, { inventory: Record<string, number> }>;
       }>(`(() => {
-        const save = JSON.parse(localStorage.getItem("industrial-site-save-v15"));
+        const save = JSON.parse(${archiveReadExpression});
         return {
           belts: Object.values(save.belts).filter((belt) =>
             (belt.y === 25 && belt.x >= 17 && belt.x <= 21) ||
@@ -1590,30 +1923,14 @@ browserIt(
             .inventory,
         ).some((quantity) => quantity > 0),
       ).toBe(true);
+      const productionTwilightShot = await captureEvidence("planet-twilight-active-production.png");
+      console.log("PLANET_TWILIGHT_PRODUCTION " + JSON.stringify(productionTwilightShot));
       await call("Page.reload", { ignoreCache: true });
       await sleep(900);
-      await waitForExpression(
-        `document.querySelector("canvas") !== null &&
-          document.querySelector('button[aria-label="Game menu"]') !== null`,
-      );
-      await evaluate(`(() => {
-        document.querySelector('button[aria-label="Game menu"]')?.click();
-        return true;
-      })()`);
-      await waitForExpression(
-        `[...document.querySelectorAll("button")]
-          .some((button) => button.textContent?.includes("Load saved world"))`,
-      );
-      await evaluate(`(() => {
-        [...document.querySelectorAll("button")]
-          .find((button) => button.textContent?.includes("Load saved world"))
-          ?.click();
-        return true;
-      })()`);
-      await waitForExpression(
-        `document.querySelector('[role="status"]')
-          ?.textContent.includes("Site restored") === true`,
-      );
+      await waitForExpression(`document.querySelector(".main-menu") !== null`);
+      await resumeMostRecentExpedition();
+      await waitForExpression(`document.querySelector('[role="status"]')
+        ?.textContent.includes("Expedition restored") === true`);
       await clickCell(23, 24);
       await waitForExpression(
         `document.querySelector(".context-panel h2")?.textContent === "Depot"`,
@@ -1672,28 +1989,24 @@ browserIt(
       }
 
       const p3Seed = phase20LineReuseBrowserWorld();
-      await evaluate(
-        `localStorage.setItem("industrial-site-save-v15", ${JSON.stringify(
-          JSON.stringify(p3Seed.save),
-        )})`,
-      );
+      await seedBrowserWorld(p3Seed.save);
       await evaluate(`(() => {
         document.querySelector('button[aria-label="Game menu"]')?.click();
         return true;
       })()`);
       await waitForExpression(
         `[...document.querySelectorAll("button")]
-          .some((button) => button.textContent?.includes("Load saved world"))`,
+          .some((button) => button.textContent?.includes("Load"))`,
       );
       await evaluate(`(() => {
         [...document.querySelectorAll("button")]
-          .find((button) => button.textContent?.includes("Load saved world"))
+          .find((button) => button.textContent?.includes("Load"))
           ?.click();
         return true;
       })()`);
       await waitForExpression(
         `document.querySelector('[role="status"]')
-          ?.textContent.includes("Site restored") === true`,
+          ?.textContent.includes("Expedition restored") === true`,
       );
       await evaluate(`(() => {
         document.querySelector('button[aria-label="Close field brief"]')?.click();
@@ -1704,7 +2017,7 @@ browserIt(
       );
       await waitForExpression(
         `document.querySelector('[role="status"]')
-          ?.textContent.includes("Site restored") !== true`,
+          ?.textContent.includes("Expedition restored") !== true`,
       );
       await evaluate(`(() => {
         document.querySelector('button[aria-label="Pause simulation"]')?.click();
@@ -1804,17 +2117,17 @@ browserIt(
         })()`);
         await waitForExpression(
           `[...document.querySelectorAll("button")]
-            .some((button) => button.textContent?.includes("Save world"))`,
+            .some((button) => button.textContent?.includes("Save current expedition"))`,
         );
         await evaluate(`(() => {
           [...document.querySelectorAll("button")]
-            .find((button) => button.textContent?.includes("Save world"))
+            .find((button) => button.textContent?.includes("Save current expedition"))
             ?.click();
           return true;
         })()`);
         await waitForExpression(
           `document.querySelector('[role="status"]')
-            ?.textContent.includes("Field record saved on this device") === true`,
+            ?.textContent.includes("Expedition saved locally on this device") === true`,
         );
         await evaluate(`(() => {
           document.querySelector('button[aria-label="Game menu"]')?.click();
@@ -1850,7 +2163,7 @@ browserIt(
             containmentProfileId: string;
           }
         >;
-      }>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
+      }>(`JSON.parse(${archiveReadExpression})`);
       const pipeSegments = Object.values(pipeSave.pipes)
           .filter((pipe) => pipe.y === 20 && pipe.x >= 30 && pipe.x <= 34)
           .sort((a, b) => a.x - b.x),
@@ -1889,7 +2202,7 @@ browserIt(
 
       await waitForExpression(
         `document.querySelector('[role="status"]')
-          ?.textContent.includes("Field record saved on this device") !== true`,
+          ?.textContent.includes("Expedition saved locally on this device") !== true`,
       );
       await clickBuildTool("gas-logistics", "Pressure line");
       const gasPixels = await dragWorldRoute(
@@ -1918,9 +2231,9 @@ browserIt(
               materialId: string | null;
             }
           >;
-        }>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`),
+        }>(`JSON.parse(${archiveReadExpression})`),
         gasSaveBytes = await evaluate<string>(
-          `localStorage.getItem("industrial-site-save-v15")`,
+          `${archiveReadExpression}`,
         ),
         gasSegments = Object.values(gasSave.pressureLines)
           .filter((line) => line.y === 22 && line.x >= 30 && line.x <= 34)
@@ -1954,7 +2267,7 @@ browserIt(
       );
       await saveLoadedWorld();
       const repeatedSaveBytes = await evaluate<string>(
-        `localStorage.getItem("industrial-site-save-v15")`,
+        `${archiveReadExpression}`,
       );
       expect(repeatedSaveBytes).toBe(gasSaveBytes);
       console.log(
@@ -1984,24 +2297,20 @@ browserIt(
 
       const p5Seed = phase20DismantleBrowserWorld();
       const p7SeedWorldBytes = JSON.stringify(p5Seed.save);
-      await evaluate(
-        `localStorage.setItem("industrial-site-save-v15", ${JSON.stringify(
-          JSON.stringify(p5Seed.save),
-        )})`,
-      );
+      await seedBrowserWorld(p5Seed.save);
       await evaluate(`(() => {
         document.querySelector('button[aria-label="Game menu"]')?.click();
         return true;
       })()`);
       await waitForExpression(
-        `[...document.querySelectorAll("button")].some((button) => button.textContent?.includes("Load saved world"))`,
+        `[...document.querySelectorAll("button")].some((button) => button.textContent?.includes("Load"))`,
       );
       await evaluate(`(() => {
-        [...document.querySelectorAll("button")].find((button) => button.textContent?.includes("Load saved world"))?.click();
+        [...document.querySelectorAll("button")].find((button) => button.textContent?.includes("Load"))?.click();
         return true;
       })()`);
       await waitForExpression(
-        `document.querySelector('[role="status"]')?.textContent.includes("Site restored") === true`,
+        `document.querySelector('[role="status"]')?.textContent.includes("Expedition restored") === true`,
       );
       await evaluate(`(() => {
         document.querySelector('button[aria-label="Close field brief"]')?.click();
@@ -2031,9 +2340,8 @@ browserIt(
         },
       }))})`);
       await call("Page.reload", { ignoreCache: true });
-      await waitForExpression(
-        `document.readyState === "complete" && !!document.querySelector("canvas") && !!document.querySelector('nav[aria-label="Build tools"]')`,
-      );
+      await waitForExpression(`document.readyState === "complete" && document.querySelector(".main-menu") !== null`);
+      await resumeMostRecentExpedition();
       await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Game menu"]')?.click(); return true; })()`);
       await waitForExpression(
         `[...document.querySelectorAll("button")].some((button) => button.textContent?.includes("Game settings & controls"))`,
@@ -2067,13 +2375,13 @@ browserIt(
           lastUsedByGroup: p7PreferenceMemory,
         },
       });
-      expect(await evaluate<string>(`localStorage.getItem("industrial-site-save-v15")`)).toBe(p7SeedWorldBytes);
+      expect(await evaluate<string>(`${archiveReadExpression}`)).toBe(p7SeedWorldBytes);
       await evaluate<boolean>(`(() => { document.querySelector('[aria-label="Close panel"]')?.click(); return true; })()`);
       await waitForExpression(`document.querySelector(".context-panel") === null`);
       await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Game menu"]')?.click(); return true; })()`);
-      await waitForExpression(`[...document.querySelectorAll("button")].some((button) => button.textContent?.includes("Load saved world"))`);
-      await evaluate<boolean>(`(() => { [...document.querySelectorAll("button")].find((button) => button.textContent?.includes("Load saved world"))?.click(); return true; })()`);
-      await waitForExpression(`document.querySelector('[role="status"]')?.textContent.includes("Site restored") === true`);
+      await waitForExpression(`[...document.querySelectorAll("button")].some((button) => button.textContent?.includes("Load"))`);
+      await evaluate<boolean>(`(() => { [...document.querySelectorAll("button")].find((button) => button.textContent?.includes("Load"))?.click(); return true; })()`);
+      await waitForExpression(`document.querySelector('[role="status"]')?.textContent.includes("Expedition restored") === true`);
       await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Close field brief"]')?.click(); return true; })()`);
       await waitForExpression(`document.querySelector('button[aria-label="Close field brief"]') === null`);
       const p7RestoredPaused = await evaluate<boolean>(`document.querySelector(".paused-label") !== null`);
@@ -2081,7 +2389,7 @@ browserIt(
         await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Pause simulation"]')?.click(); return true; })()`);
       await waitForExpression(`document.querySelector(".paused-label") !== null`);
 
-      const p7InitialSave = await evaluate<Save>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
+      const p7InitialSave = await evaluate<Save>(`JSON.parse(${archiveReadExpression})`);
       const p7Oracle = new Simulation(fixture);
       expect(p7Oracle.load(p7InitialSave).ok).toBe(true);
       expect(auditLedger(fixture, p7InitialSave).mismatches).toEqual([]);
@@ -2131,7 +2439,7 @@ browserIt(
       const beltCommit = p7Oracle.command(beltCommand);
       expect(beltCommit.ok).toBe(true);
       await saveLoadedWorld();
-      const afterIntegratedBelts = await evaluate<Save>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
+      const afterIntegratedBelts = await evaluate<Save>(`JSON.parse(${archiveReadExpression})`);
       for (const [x, y] of [[15, 18], [15, 20], [17, 20]] as const)
         expect(afterIntegratedBelts.belts[`${x},${y}`]).toEqual(p7InitialSave.belts[`${x},${y}`]);
       expect(afterIntegratedBelts.belts["39,30"]).toEqual(p7InitialSave.belts["39,30"]);
@@ -2192,7 +2500,7 @@ browserIt(
       const pipeCommit = p7Oracle.command(pipeCommand);
       expect(pipeCommit.ok).toBe(true);
       await saveLoadedWorld();
-      const afterIntegratedPipes = await evaluate<Save>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
+      const afterIntegratedPipes = await evaluate<Save>(`JSON.parse(${archiveReadExpression})`);
       for (const x of [30, 32, 34])
         expect(afterIntegratedPipes.pipes[`${x},16`]).toEqual(p7InitialSave.pipes[`${x},16`]);
       expect(afterIntegratedPipes.pipes["32,16"]).toMatchObject({
@@ -2223,7 +2531,7 @@ browserIt(
       const gasCommit = p7Oracle.command(gasCommand);
       expect(gasCommit.ok).toBe(true);
       await saveLoadedWorld();
-      const afterIntegratedGas = await evaluate<Save>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
+      const afterIntegratedGas = await evaluate<Save>(`JSON.parse(${archiveReadExpression})`);
       for (const x of [30, 32, 34])
         expect(afterIntegratedGas.pressureLines[`${x},18`]).toEqual(p7InitialSave.pressureLines[`${x},18`]);
       expect(afterIntegratedGas.pressureLines["32,18"]).toMatchObject({ materialId: "gas-0", quantity: 1 });
@@ -2236,22 +2544,18 @@ browserIt(
       expect(auditLedger(fixture, afterIntegratedGas).mismatches).toEqual([]);
       expect(p7Oracle.serialize().pressureLines).toEqual(afterIntegratedGas.pressureLines);
 
-      const savedExpeditionBytes = await evaluate<string>(`localStorage.getItem("industrial-site-save-v15")`);
+      const savedExpeditionBytes = await evaluate<string>(`${archiveReadExpression}`);
       await call("Page.reload", { ignoreCache: true });
-      await waitForExpression(
-        `document.readyState === "complete" && !!document.querySelector("canvas") && !!document.querySelector('nav[aria-label="Build tools"]')`,
-      );
-      await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Game menu"]')?.click(); return true; })()`);
-      await waitForExpression(`[...document.querySelectorAll("button")].some((button) => button.textContent?.includes("Load saved world"))`);
-      await evaluate<boolean>(`(() => { [...document.querySelectorAll("button")].find((button) => button.textContent?.includes("Load saved world"))?.click(); return true; })()`);
-      await waitForExpression(`document.querySelector('[role="status"]')?.textContent.includes("Site restored") === true`);
+      await waitForExpression(`document.readyState === "complete" && document.querySelector(".main-menu") !== null`);
+      await resumeMostRecentExpedition();
+      await waitForExpression(`document.querySelector('[role="status"]')?.textContent.includes("Expedition restored") === true`);
       await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Close field brief"]')?.click(); return true; })()`);
       await waitForExpression(`document.querySelector('button[aria-label="Close field brief"]') === null`);
       const p7ReloadPaused = await evaluate<boolean>(`document.querySelector(".paused-label") !== null`);
       if (!p7ReloadPaused)
         await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Pause simulation"]')?.click(); return true; })()`);
       await waitForExpression(`document.querySelector(".paused-label") !== null`);
-      const reloadedSave = await evaluate<Save>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
+      const reloadedSave = await evaluate<Save>(`JSON.parse(${archiveReadExpression})`);
       expect(JSON.stringify(reloadedSave)).toBe(savedExpeditionBytes);
       expect(reloadedSave.belts).toEqual(afterIntegratedBelts.belts);
       expect(reloadedSave.pipes).toEqual(afterIntegratedPipes.pipes);
@@ -2277,7 +2581,7 @@ browserIt(
       await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Pause simulation"]')?.click(); return true; })()`);
       await waitForExpression(`document.querySelector(".paused-label") !== null`);
       await saveLoadedWorld();
-      const afterResumedSimulation = await evaluate<Save>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
+      const afterResumedSimulation = await evaluate<Save>(`JSON.parse(${archiveReadExpression})`);
       expect(tickAfterResume).toBeGreaterThan(tickBeforeResume);
       expect(auditLedger(fixture, afterResumedSimulation).mismatches).toEqual([]);
       const finalHiddenKnowledgeOracle = new Simulation(fixture);
@@ -2313,13 +2617,13 @@ browserIt(
       expect(singleClickPoint.y).toBeGreaterThan(singleClickPoint.rect.top);
       expect(singleClickPoint.y).toBeLessThan(singleClickPoint.rect.bottom);
       expect(singleClickPoint.target?.tag).toBe("CANVAS");
-      const p5BeforeSingle = await evaluate<Save>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
+      const p5BeforeSingle = await evaluate<Save>(`JSON.parse(${archiveReadExpression})`);
       await clickCell(39, 30);
       await sleep(400);
       const singleClickStatus = await evaluate<string>(`[...document.querySelectorAll('[role="status"]')].map((entry) => entry.textContent ?? "").join(" | ")`);
       const singleClickScreenshot = await captureP5Screenshot("p5-single-default-click.png");
       await saveLoadedWorld();
-      const p5AfterSingle = await evaluate<Save>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
+      const p5AfterSingle = await evaluate<Save>(`JSON.parse(${archiveReadExpression})`);
       console.log("PHASE20_P5_SINGLE_CLICK_DIAGNOSTIC " + JSON.stringify({ singleClickPoint, singleClickStatus, savedBelt: p5AfterSingle.belts["39,30"] ?? null, remainingAdjacentBelt: p5AfterSingle.belts["38,30"] ?? null, screenshot: singleClickScreenshot }));
       expect(p5AfterSingle.belts["39,30"]).toBeUndefined();
       expect(singleClickStatus).toContain("Belt and cargo reclaimed");
@@ -2375,14 +2679,14 @@ browserIt(
         "Blocked · kept in place": 1,
         "Ignored · outside filter or protected": 0,
       });
-      const beforeCancelSave = await evaluate<string>(`localStorage.getItem("industrial-site-save-v15")`);
+      const beforeCancelSave = await evaluate<string>(`${archiveReadExpression}`);
       const cancelScreenshot = await captureP5Screenshot("p5-area-cancel-review.png");
       const cancelPoint = await evaluate<{ x: number; y: number }>(`(() => { const r = document.querySelector('[data-testid="dismantle-review"]').getBoundingClientRect(); return {x:r.left+r.width/2,y:r.top+r.height/2}; })()`);
       await call("Input.dispatchMouseEvent", { type: "mousePressed", ...cancelPoint, button: "right", buttons: 2 });
       await call("Input.dispatchMouseEvent", { type: "mouseReleased", ...cancelPoint, button: "right", buttons: 0 });
       await waitForExpression(`document.querySelector('[data-testid="dismantle-review"]') === null`);
       await saveLoadedWorld();
-      expect(await evaluate<string>(`localStorage.getItem("industrial-site-save-v15")`)).toBe(beforeCancelSave);
+      expect(await evaluate<string>(`${archiveReadExpression}`)).toBe(beforeCancelSave);
 
       await dragWorldArea({ x: 30, y: 30 }, { x: 32, y: 30 });
       await waitForExpression(`document.querySelector('[data-testid="dismantle-review"]') !== null`);
@@ -2398,7 +2702,7 @@ browserIt(
       })()`);
       await waitForExpression(`document.querySelector('[role="status"]')?.textContent.includes("Removed 2") === true`);
       await saveLoadedWorld();
-      const p5AfterPartial = await evaluate<Save>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
+      const p5AfterPartial = await evaluate<Save>(`JSON.parse(${archiveReadExpression})`);
       expect(p5AfterPartial.stock.plates - p5AfterSingle.stock.plates).toBe(
         2 * fixture.site.beltCost,
       );
@@ -2437,7 +2741,7 @@ browserIt(
       await evaluate<boolean>(`(() => { document.querySelector('[data-testid="dismantle-review"] button.danger')?.click(); return true; })()`);
       await waitForExpression(`document.querySelector('[role="status"]')?.textContent.includes("Removed 2") === true`);
       await saveLoadedWorld();
-      const p5AfterExact = await evaluate<Save>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
+      const p5AfterExact = await evaluate<Save>(`JSON.parse(${archiveReadExpression})`);
       expect(Object.values(p5AfterExact.machines).filter((machine) => machine.x >= 26 && machine.x <= 36 && machine.y === 21).map((machine) => machine.definitionId)).toEqual(["furnace"]);
       expect(p5AfterExact.stock.plates - p5AfterPartial.stock.plates).toBe(
         2 * fixture.machines.find((machine) => machine.id === "crusher")!.cost,
@@ -2453,7 +2757,7 @@ browserIt(
       await evaluate<boolean>(`(() => { document.querySelector('[data-testid="dismantle-review"] button.danger')?.click(); return true; })()`);
       await waitForExpression(`document.querySelector('[role="status"]')?.textContent.includes("Removed 3") === true`);
       await saveLoadedWorld();
-      const p5AfterFamily = await evaluate<Save>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
+      const p5AfterFamily = await evaluate<Save>(`JSON.parse(${archiveReadExpression})`);
       expect(p5AfterFamily.belts["30,32"]).toBeUndefined();
       expect(p5AfterFamily.pipes["31,32"]).toBeUndefined();
       expect(p5AfterFamily.pressureLines["32,32"]).toBeUndefined();
@@ -2477,7 +2781,7 @@ browserIt(
       await evaluate<boolean>(`(() => { document.querySelector('[data-testid="dismantle-review"] button.danger')?.click(); return true; })()`);
       await waitForExpression(`document.querySelector('[role="status"]')?.textContent.includes("Removed 1") === true`);
       await saveLoadedWorld();
-      const p5AfterEmptyFactory = await evaluate<Save>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
+      const p5AfterEmptyFactory = await evaluate<Save>(`JSON.parse(${archiveReadExpression})`);
       expect(p5AfterEmptyFactory.factories[p5Seed.emptyFactoryId]).toBeUndefined();
       expect(p5AfterEmptyFactory.stock.plates - p5BeforeEmptyFactory.stock.plates).toBe(
         6 * 6 * fixture.site.factoryCellCost,
@@ -2510,9 +2814,9 @@ browserIt(
       await waitForExpression(`document.querySelector('[data-testid="dismantle-review"]') !== null`);
       expect(await reviewCounts()).toEqual(forwardCounts);
       await cancelDismantleReview();
-      const beforeReverseSave = await evaluate<string>(`localStorage.getItem("industrial-site-save-v15")`);
+      const beforeReverseSave = await evaluate<string>(`${archiveReadExpression}`);
       await saveLoadedWorld();
-      expect(await evaluate<string>(`localStorage.getItem("industrial-site-save-v15")`)).toBe(beforeReverseSave);
+      expect(await evaluate<string>(`${archiveReadExpression}`)).toBe(beforeReverseSave);
 
       await dragWorldArea({ x: 40, y: 40 }, { x: 40, y: 40 });
       await waitForExpression(`document.querySelector('[data-testid="dismantle-review"]') !== null`);
@@ -2577,7 +2881,7 @@ browserIt(
       await waitForExpression(`document.querySelector('[role="status"]')?.textContent.includes("Removed 2") === true`);
       await waitForExpression(`document.querySelector('[data-testid="dismantle-review"]') === null && document.querySelector('.context-panel') === null`);
       await saveLoadedWorld();
-      const p5AfterFactory = await evaluate<Save>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
+      const p5AfterFactory = await evaluate<Save>(`JSON.parse(${archiveReadExpression})`);
       expect(p5AfterFactory.factories[p5Seed.factoryId]).toBeUndefined();
       expect(p5AfterFactory.machines[p5Seed.childId]).toBeUndefined();
 
@@ -2617,7 +2921,7 @@ browserIt(
       await waitForExpression(`document.querySelector('[data-testid="dismantle-review"]') === null`);
       await waitForExpression(`document.querySelector('[role="status"]')?.textContent.includes("Removed 1") === true`);
       await saveLoadedWorld();
-      const p5AfterKeyboardConfirm = await evaluate<Save>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
+      const p5AfterKeyboardConfirm = await evaluate<Save>(`JSON.parse(${archiveReadExpression})`);
       expect(p5AfterKeyboardConfirm.belts["38,30"]).toBeUndefined();
 
       await call("Emulation.setDeviceMetricsOverride", {
@@ -2629,15 +2933,19 @@ browserIt(
       await call("Emulation.setTouchEmulationEnabled", { enabled: true, maxTouchPoints: 3 });
       await waitForExpression(`window.innerWidth === 390 && window.innerHeight === 844`);
       await call("Page.navigate", { url: appUrl });
-      await waitForExpression(
-        `document.readyState === "complete" &&
-          !!document.querySelector("canvas") &&
-          !!document.querySelector('nav[aria-label="Build tools"]')`,
-      );
-      await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Game menu"]')?.click(); return true; })()`);
-      await waitForExpression(`document.body.textContent?.includes("Expedition controls") === true`);
-      await evaluate<boolean>(`(() => { [...document.querySelectorAll("button")].find((button) => button.textContent?.includes("Load saved world"))?.click(); return true; })()`);
-      await waitForExpression(`document.querySelector('[role="status"]')?.textContent.includes("Site restored") === true`);
+      await waitForExpression(`document.readyState === "complete" && document.querySelector(".main-menu") !== null`);
+      await waitForExpression(`document.querySelector(".menu-home .menu-action") !== null`);
+      const mobileMenuScreenshot = await captureEvidence("main-menu-boot-mobile.png");
+      console.log("UNKNOWN_YIELD_MAIN_MENU_BOOT_MOBILE " + JSON.stringify(mobileMenuScreenshot));
+      await clickMainMenuAction("Personnel Archives");
+      await waitForExpression(`document.querySelector(".menu-archive-card") !== null`);
+      await evaluate<boolean>(`(() => {
+        [...document.querySelectorAll("button")].find((button) =>
+          button.textContent?.includes("Load expedition"))?.click();
+        return true;
+      })()`);
+      await waitForExpression(`document.querySelector("canvas") !== null &&
+        document.querySelector('nav[aria-label="Build tools"]') !== null`);
       await evaluate<boolean>(`(() => { document.querySelector('nav[aria-label="Build tools"] button[aria-label="Dismantle"]')?.click(); return true; })()`);
       await waitForExpression(`document.querySelector('[data-testid="dismantle-mode-single"]') !== null`);
       await chooseMode("area-all");
@@ -2658,18 +2966,63 @@ browserIt(
       expect(await evaluate<boolean>(`document.querySelector('[data-testid="dismantle-review"]') === null`)).toBe(true);
 
       const center = canvasCenter;
+      // Temporary read-only DOM trace helps distinguish CDP coalescing,
+      // native touch cancellation and Phaser's gesture arbiter. Nothing is
+      // injected into the authoritative game input handlers.
+      await evaluate<boolean>(`(() => {
+        const canvas = document.querySelector(".world-host canvas");
+        window.__UY_TEST_TOUCH_TRACE__ = [];
+        const record = (type, payload) => {
+          const traces = window.__UY_TEST_TOUCH_TRACE__;
+          traces.push({ type, ...payload });
+          if (traces.length > 75) traces.shift();
+        };
+        for (const type of ["pointerdown", "pointermove", "pointerup", "pointercancel"]) {
+          canvas.addEventListener(type, (event) =>
+            record(type, { id: event.pointerId, isPrimary: event.isPrimary,
+              pointerType: event.pointerType, x: Math.round(event.clientX) }));
+        }
+        for (const type of ["touchstart", "touchmove", "touchend", "touchcancel"]) {
+          canvas.addEventListener(type, (event) =>
+            record(type, { active: event.touches.length, changed: event.changedTouches.length }));
+        }
+        return true;
+      })()`);
       const cameraBeforePinch = await evaluate<{ zoom: number }>(`window.__UNKNOWN_YIELD_CAMERA__()`);
-      await sendTouch("touchStart", [
-        { x: center.x - 35, y: center.y, id: 2 },
-        { x: center.x + 35, y: center.y, id: 3 },
-      ]);
-      await sendTouch("touchMove", [
-        { x: center.x - 65, y: center.y, id: 2 },
-        { x: center.x + 65, y: center.y, id: 3 },
-      ]);
-      await sendTouch("touchEnd", []);
-      await evaluate<void>(`new Promise((resolve) => setTimeout(resolve, 350))`);
-      const cameraAfterPinch = await evaluate<{ zoom: number }>(`window.__UNKNOWN_YIELD_CAMERA__()`);
+      // Chrome's input dispatch may coalesce an immediate start/move/end
+      // burst, dropping either pointermove before Phaser's second pointer
+      // enters the gesture arbiter. Exercise a realistic progressive gesture,
+      // and try the other direction if the first was already at its zoom bound.
+      const performMobilePinch = async (startHalfDistance: number, steps: number[]) => {
+        await sendTouch("touchStart", [
+          { x: center.x - startHalfDistance, y: center.y, id: 2 },
+          { x: center.x + startHalfDistance, y: center.y, id: 3 },
+        ]);
+        await sleep(70);
+        for (const halfDistance of steps) {
+          await sendTouch("touchMove", [
+            { x: center.x - halfDistance, y: center.y, id: 2 },
+            { x: center.x + halfDistance, y: center.y, id: 3 },
+          ]);
+          await sleep(70);
+        }
+        await sendTouch("touchEnd", []);
+        await sleep(450);
+        return evaluate<{ zoom: number }>(`window.__UNKNOWN_YIELD_CAMERA__()`);
+      };
+      const cameraAfterOutwardPinch = await performMobilePinch(35, [48, 65]);
+      const outwardDelta = Math.abs(cameraAfterOutwardPinch.zoom - cameraBeforePinch.zoom);
+      const cameraAfterPinch = outwardDelta > 0.001
+        ? cameraAfterOutwardPinch
+        : await performMobilePinch(65, [45, 27]);
+      console.log("UY_REAL_TOUCH_PINCH_ZOOM " + JSON.stringify({
+        before: cameraBeforePinch.zoom,
+        afterOutward: cameraAfterOutwardPinch.zoom,
+        afterFinal: cameraAfterPinch.zoom,
+        domTrace: await evaluate(`window.__UY_TEST_TOUCH_TRACE__`),
+      }));
+      // Never assert success from a DOM click or synthetic game-state edit.
+      // At least one real two-finger browser gesture must change Phaser zoom.
       expect(Math.abs(cameraAfterPinch.zoom - cameraBeforePinch.zoom)).toBeGreaterThan(0.001);
       expect(await evaluate<boolean>(`document.querySelector('[data-testid="dismantle-review"]') === null`)).toBe(true);
 
@@ -2747,7 +3100,7 @@ browserIt(
       await tapSelector('[data-testid="dismantle-review"] button.danger');
       await waitForExpression(`document.querySelector('[data-testid="dismantle-review"]') === null`);
       await saveLoadedWorld();
-      const p5AfterTouchConfirm = await evaluate<Save>(`JSON.parse(localStorage.getItem("industrial-site-save-v15"))`);
+      const p5AfterTouchConfirm = await evaluate<Save>(`JSON.parse(${archiveReadExpression})`);
       expect(p5AfterTouchConfirm.belts["36,30"]).toBeUndefined();
       expect(p5AfterTouchConfirm.belts["37,30"]).toBeUndefined();
       await call("Emulation.setTouchEmulationEnabled", { enabled: false });
@@ -2826,7 +3179,7 @@ browserIt(
       await waitForExpression(`document.querySelector(".paused-label") !== null`);
       await cancelDismantleReview();
       await saveLoadedWorld();
-      const staleTarget = await evaluate<boolean>(`Object.values(JSON.parse(localStorage.getItem("industrial-site-save-v15") ?? "null").machines).some((machine) => machine.x === 15 && machine.y === 25)`);
+      const staleTarget = await evaluate<boolean>(`Object.values(JSON.parse(${archiveReadExpression} ?? "null").machines).some((machine) => machine.x === 15 && machine.y === 25)`);
       expect(staleTarget).toBe(true);
 
       console.log("PHASE20_P5_DESKTOP_BROWSER_EVIDENCE " + JSON.stringify({
@@ -2868,29 +3221,27 @@ browserIt(
       expect(beforeEvidence).not.toContain("Vitrified slag jam");
       expect(beforeEvidence).not.toContain("extra confinement caused the jam");
 
-      await evaluate(
-        `localStorage.setItem("industrial-site-save-v15", ${JSON.stringify(
-          JSON.stringify(learned),
-        )})`,
-      );
+      await seedBrowserWorld(learned);
       await evaluate(`(() => {
         document.querySelector('button[aria-label="Game menu"]')?.click();
         return true;
       })()`);
       await waitForExpression(
         `[...document.querySelectorAll("button")]
-          .some((button) => button.textContent?.includes("Load saved world"))`,
+          .some((button) => button.textContent?.includes("Load"))`,
       );
       await evaluate(`(() => {
         [...document.querySelectorAll("button")]
-          .find((button) => button.textContent?.includes("Load saved world"))
+          .find((button) => button.textContent?.includes("Load"))
           ?.click();
         return true;
       })()`);
       await waitForExpression(
         `document.querySelector('[role="status"]')
-          ?.textContent.includes("Site restored") === true`,
+          ?.textContent.includes("Expedition restored") === true`,
       );
+      const incidentTwilightShot = await captureEvidence("planet-twilight-real-incident.png");
+      console.log("PLANET_TWILIGHT_INCIDENT " + JSON.stringify(incidentTwilightShot));
       await evaluate(`(() => {
         document.querySelector('button[aria-label="Knowledge notebook"]')?.click();
         return true;
@@ -2992,17 +3343,17 @@ browserIt(
       })()`);
       await waitForExpression(
         `[...document.querySelectorAll("button")]
-          .some((button) => button.textContent?.includes("Save world"))`,
+          .some((button) => button.textContent?.includes("Save current expedition"))`,
       );
       await evaluate(`(() => {
         [...document.querySelectorAll("button")]
-          .find((button) => button.textContent?.includes("Save world"))
+          .find((button) => button.textContent?.includes("Save current expedition"))
           ?.click();
         return true;
       })()`);
       await waitForExpression(
         `document.querySelector('[role="status"]')
-          ?.textContent.includes("Field record saved on this device") === true`,
+          ?.textContent.includes("Expedition saved locally on this device") === true`,
       );
       const recovered = await evaluate<{
         incident: string | null;
@@ -3012,7 +3363,7 @@ browserIt(
         hazardEvidence: string[];
       }>(`(() => {
         const save = JSON.parse(
-          localStorage.getItem("industrial-site-save-v15") ?? "null"
+          ${archiveReadExpression} ?? "null"
         );
         const processor = Object.values(save.machines)
           .find((machine) => machine.definitionId === "oversealed-furnace");
@@ -3033,31 +3384,27 @@ browserIt(
       });
 
       const phase12 = phase12BrowserWorld();
-      await evaluate(
-        `localStorage.setItem("industrial-site-save-v15", ${JSON.stringify(
-          JSON.stringify(phase12.save),
-        )})`,
-      );
+      await seedBrowserWorld(phase12.save);
       await evaluate(`(() => {
         const loadVisible = [...document.querySelectorAll("button")]
-          .some((button) => button.textContent?.includes("Load saved world"));
+          .some((button) => button.textContent?.includes("Load"));
         if (!loadVisible)
           document.querySelector('button[aria-label="Game menu"]')?.click();
         return true;
       })()`);
       await waitForExpression(
         `[...document.querySelectorAll("button")]
-          .some((button) => button.textContent?.includes("Load saved world"))`,
+          .some((button) => button.textContent?.includes("Load"))`,
       );
       await evaluate(`(() => {
         [...document.querySelectorAll("button")]
-          .find((button) => button.textContent?.includes("Load saved world"))
+          .find((button) => button.textContent?.includes("Load"))
           ?.click();
         return true;
       })()`);
       await waitForExpression(
         `document.querySelector('[role="status"]')
-          ?.textContent.includes("Site restored") === true`,
+          ?.textContent.includes("Expedition restored") === true`,
       );
       await evaluate(`(() => {
         document.querySelector('button[aria-label="Center camera"]')?.click();
@@ -3133,17 +3480,17 @@ browserIt(
           })()`);
           await waitForExpression(
             `[...document.querySelectorAll("button")]
-              .some((button) => button.textContent?.includes("Save world"))`,
+              .some((button) => button.textContent?.includes("Save current expedition"))`,
           );
           await evaluate(`(() => {
             [...document.querySelectorAll("button")]
-              .find((button) => button.textContent?.includes("Save world"))
+              .find((button) => button.textContent?.includes("Save current expedition"))
               ?.click();
             return true;
           })()`);
           persisted = await evaluate(`(() => {
             const save = JSON.parse(
-              localStorage.getItem("industrial-site-save-v15") ?? "null"
+              ${archiveReadExpression} ?? "null"
             );
             return {
               factory: Object.values(save.factories ?? {})
@@ -3216,17 +3563,17 @@ browserIt(
       })()`);
       await waitForExpression(
         `[...document.querySelectorAll("button")]
-          .some((button) => button.textContent?.includes("Save world"))`,
+          .some((button) => button.textContent?.includes("Save current expedition"))`,
       );
       await evaluate(`(() => {
         [...document.querySelectorAll("button")]
-          .find((button) => button.textContent?.includes("Save world"))
+          .find((button) => button.textContent?.includes("Save current expedition"))
           ?.click();
         return true;
       })()`);
       await waitForExpression(
         `document.querySelector('[role="status"]')
-          ?.textContent.includes("Field record saved on this device") === true`,
+          ?.textContent.includes("Expedition saved locally on this device") === true`,
       );
 
       const phase12Saved = await evaluate<{
@@ -3240,7 +3587,7 @@ browserIt(
         diverter: { switched: boolean };
       }>(`(() => {
         const save = JSON.parse(
-          localStorage.getItem("industrial-site-save-v15") ?? "null"
+          ${archiveReadExpression} ?? "null"
         );
         const factory = save.factories[${JSON.stringify(phase12.factoryId)}];
         const machine = save.machines[${JSON.stringify(phase12.machineId)}];
@@ -3315,7 +3662,7 @@ browserIt(
           promoteLastUsed: preferences.buildPalette.promoteLastUsed,
           lastUsedByGroup: preferences.buildPalette.lastUsedByGroup,
           expeditionSaveStillPresent:
-            localStorage.getItem("industrial-site-save-v15") !== null,
+            ${archiveReadExpression} !== null,
         };
       })()`);
       expect(preferenceRecord).toEqual({
@@ -3332,10 +3679,9 @@ browserIt(
       });
 
       await call("Page.navigate", { url: appUrl });
-      await waitForExpression(
-        `document.readyState === "complete" &&
-          !!document.querySelector('button[aria-label="Game configuration"]')`,
-      );
+      await waitForExpression(`document.readyState === "complete" && document.querySelector(".main-menu") !== null`);
+      await resumeMostRecentExpedition();
+      await waitForExpression(`document.querySelector('button[aria-label="Game configuration"]') !== null`);
       await evaluate(`(() => {
         document.querySelector('button[aria-label="Game configuration"]')?.click();
         return true;
@@ -3444,11 +3790,10 @@ browserIt(
       );
 
       await call("Page.navigate", { url: appUrl });
-      await waitForExpression(
-        `document.readyState === "complete" &&
-          document.querySelector('[data-build-group="thermal"]')
-            ?.getAttribute("aria-label") === "Sealed furnace group"`,
-      );
+      await waitForExpression(`document.readyState === "complete" && document.querySelector(".main-menu") !== null`);
+      await resumeMostRecentExpedition();
+      await waitForExpression(`document.querySelector('[data-build-group="thermal"]')
+        ?.getAttribute("aria-label") === "Sealed furnace group"`);
       const promotedAfterReload = await evaluate<{
         promoteLastUsed: boolean;
         thermal: string | null;
@@ -3551,10 +3896,9 @@ browserIt(
       );
 
       await call("Page.navigate", { url: appUrl });
-      await waitForExpression(
-        `document.readyState === "complete" &&
-          !!document.querySelector('button[aria-label="Game configuration"]')`,
-      );
+      await waitForExpression(`document.readyState === "complete" && document.querySelector(".main-menu") !== null`);
+      await resumeMostRecentExpedition();
+      await waitForExpression(`document.querySelector('button[aria-label="Game configuration"]') !== null`);
       await evaluate(`(() => {
         document.querySelector('button[aria-label="Game configuration"]')?.click();
         return true;
@@ -3593,7 +3937,7 @@ browserIt(
         return {
           version: saved.version,
           memory: saved.buildPalette.lastUsedByGroup,
-          worldSave: localStorage.getItem("industrial-site-save-v15") !== null,
+          worldSave: ${archiveReadExpression} !== null,
         };
       })()`);
       expect(afterReset).toEqual({ version: 2, memory: {}, worldSave: true });
@@ -3672,10 +4016,10 @@ browserIt(
       // Read-only camera diagnostics are opt-in; ordinary players do not
       // expose the probe. These assertions run against the production export.
       await call("Page.navigate", { url: appUrl });
-      await waitForExpression(
-        `typeof window.__UNKNOWN_YIELD_CAMERA__ === "function" &&
-          window.__UNKNOWN_YIELD_CAMERA__()?.zoom > 0`,
-      );
+      await waitForExpression(`document.readyState === "complete" && document.querySelector(".main-menu") !== null`);
+      await resumeMostRecentExpedition();
+      await waitForExpression(`typeof window.__UNKNOWN_YIELD_CAMERA__ === "function" &&
+        window.__UNKNOWN_YIELD_CAMERA__()?.zoom > 0`);
       const initialCamera = await evaluate<{
         scrollX: number;
         scrollY: number;
@@ -3780,11 +4124,16 @@ browserIt(
         maxTouchPoints: 3,
       });
       await call("Page.navigate", { url: appUrl });
-      await waitForExpression(
-        `typeof window.__UNKNOWN_YIELD_CAMERA__ === "function" &&
-          window.__UNKNOWN_YIELD_CAMERA__()?.zoom > 0 &&
-          document.querySelector(".world-host canvas") !== null`,
-      );
+      await waitForExpression(`document.readyState === "complete" && document.querySelector(".main-menu") !== null`);
+      await waitForExpression(`document.querySelector(".menu-home .menu-action") !== null`);
+      const mobileTouchMenuScreenshot = await captureEvidence("main-menu-boot-mobile-touch.png");
+      console.log("UNKNOWN_YIELD_MAIN_MENU_BOOT_MOBILE_TOUCH " + JSON.stringify(mobileTouchMenuScreenshot));
+      await tapButtonByText("Personnel Archives");
+      await waitForExpression(`document.querySelector(".menu-archive-card") !== null`);
+      await tapButtonByText("Load expedition");
+      await waitForExpression(`typeof window.__UNKNOWN_YIELD_CAMERA__ === "function" &&
+        window.__UNKNOWN_YIELD_CAMERA__()?.zoom > 0 &&
+        document.querySelector(".world-host canvas") !== null`);
       expect(
         await evaluate<string>(
           `getComputedStyle(document.querySelector(".world-host canvas"))
@@ -4069,16 +4418,38 @@ browserIt(
           return true;
         })()`);
         await waitForExpression(
-          `[...document.querySelectorAll("button")].some(b => b.textContent?.includes("Play new expedition with imported pack"))`,
+          `[...document.querySelectorAll("button")].some(b => b.textContent?.includes("Return to Main Menu to use this pack"))`,
         );
         await evaluate<boolean>(`(() => {
-          [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Play new expedition with imported pack"))?.click();
+          [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Return to Main Menu to use this pack"))?.click();
+          return true;
+        })()`);
+        await waitForExpression(`document.querySelector(".menu-return-dialog") !== null`);
+        await evaluate<boolean>(`(() => {
+          [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Save & Return"))?.click();
+          return true;
+        })()`);
+        await waitForExpression(`document.querySelector(".main-menu") !== null`);
+        await clickMainMenuAction("Content Packs");
+        await waitForExpression(`document.querySelector(".menu-pack-pending") !== null`);
+        await evaluate<boolean>(`(() => {
+          [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Use this pack"))?.click();
+          return true;
+        })()`);
+        await waitForExpression(`document.querySelector('input[aria-label="Expedition designation"]') !== null`);
+        await evaluate<boolean>(`(() => {
+          const input = document.querySelector('input[aria-label="Expedition designation"]');
+          const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set;
+          setter.call(input, "Imported browser pack");
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+          input.dispatchEvent(new Event("change", { bubbles: true }));
+          [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Create Expedition"))?.click();
           return true;
         })()`);
         await waitForExpression(
-          `localStorage.getItem("unknown-yield-active-pack-v1") !== null`,
+          `localStorage.getItem("unknown-yield-active-pack-v1") !== null &&
+            document.querySelector("canvas") !== null`,
         );
-        await waitForExpression(`document.querySelector("canvas") !== null`);
         await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Close field brief"]')?.click(); return true; })()`);
         await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Center camera"]')?.click(); return true; })()`);
         await sleep(150);
@@ -4140,8 +4511,7 @@ browserIt(
           `document.querySelector('button[aria-label="Game menu"]') !== null`,
         );
         await evaluate<boolean>(`(() => {
-          if (!document.body.textContent?.includes("Expedition controls"))
-            document.querySelector('button[aria-label="Game menu"]')?.click();
+          document.querySelector('button[aria-label="Game menu"]')?.click();
           return true;
         })()`);
         await waitForExpression(
@@ -4155,9 +4525,10 @@ browserIt(
         );
         expect(packMenuText).toContain("Offline content packs");
         await evaluate<boolean>(`(() => {
-          [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Save world"))?.click();
+          [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Save current expedition"))?.click();
           return true;
         })()`);
+        await waitForExpression(`document.querySelector('[role="status"]')?.textContent.includes("Expedition saved locally on this device") === true`);
         const packEvidence = await evaluate<{
           id: string;
           scopedSave: boolean;
@@ -4167,7 +4538,7 @@ browserIt(
           const id = stored.fingerprint;
           return {
             id,
-            scopedSave: localStorage.getItem("industrial-site-save-v15-pack-" + id) !== null,
+            scopedSave: JSON.parse(localStorage.getItem("unknown-yield-expeditions-v1")).slots.some((slot) => slot.fingerprint === id && !!localStorage.getItem(slot.current)),
             locale: stored.bundle.locale["material.powder.name"],
           };
         })()`);
@@ -4175,16 +4546,12 @@ browserIt(
         expect(packEvidence.scopedSave).toBe(true);
         expect(packEvidence.locale).toBe("Polished powder");
         await call("Page.reload", { ignoreCache: true });
-        // CDP Page.reload acknowledges navigation start, not React hydration.
-        // The static export and async persisted-pack verification both finish
-        // before the test attempts to load a pack-scoped world.
+        // A reload returns to the boot menu; continue must select the latest
+        // valid expedition for the now-restored exact content-pack identity.
         await sleep(900);
-        await waitForExpression(
-          `document.body.textContent?.includes("UNKNOWN YIELD") === true`,
-        );
-        await waitForExpression(
-          `document.querySelector('button[aria-label="Game menu"]') !== null`,
-        );
+        await waitForExpression(`document.querySelector(".main-menu") !== null`);
+        await resumeMostRecentExpedition();
+        await waitForExpression(`document.querySelector('button[aria-label="Game menu"]') !== null`);
         await evaluate<boolean>(`(() => {
           document.querySelector('button[aria-label="Game menu"]')?.click();
           return true;
@@ -4192,27 +4559,22 @@ browserIt(
         await waitForExpression(
           `document.body.textContent?.includes("Offline content packs") === true`,
         );
-        await waitForExpression(
-          `[...document.querySelectorAll("button")].some(b => b.textContent?.includes("Start new expedition with built-in content"))`,
-        );
         await evaluate<boolean>(`(() => {
-          [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Load saved world"))?.click();
+          [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Return to Main Menu to switch to built-in content"))?.click();
           return true;
         })()`);
-        await waitForExpression(
-          `document.body.textContent?.includes("Site restored") === true`,
-        );
-        // A successful Load closes the menu, so reopen it before rollback.
+        await waitForExpression(`document.querySelector(".menu-return-dialog") !== null`);
         await evaluate<boolean>(`(() => {
-          if (!document.body.textContent?.includes("Expedition controls"))
-            document.querySelector('button[aria-label="Game menu"]')?.click();
+          [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Save & Return"))?.click();
           return true;
         })()`);
+        await waitForExpression(`document.querySelector(".main-menu") !== null`);
+        await clickMainMenuAction("Content Packs");
         await waitForExpression(
-          `[...document.querySelectorAll("button")].some(b => b.textContent?.includes("Start new expedition with built-in content"))`,
+          `[...document.querySelectorAll("button")].some(b => b.textContent?.includes("Switch to built-in content"))`,
         );
         await evaluate<boolean>(`(() => {
-          [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Start new expedition with built-in content"))?.click();
+          [...document.querySelectorAll("button")].find(b => b.textContent?.includes("Switch to built-in content"))?.click();
           return true;
         })()`);
         await waitForExpression(
@@ -4221,7 +4583,7 @@ browserIt(
         expect(
           await evaluate<boolean>(`(() => {
           const keys = Object.keys(localStorage);
-          return keys.some(k => k.startsWith("industrial-site-save-v15-pack-"));
+          return JSON.parse(localStorage.getItem("unknown-yield-expeditions-v1")).slots.some((slot) => slot.fingerprint !== null && !!localStorage.getItem(slot.current));
         })()`),
         ).toBe(true);
         console.log(

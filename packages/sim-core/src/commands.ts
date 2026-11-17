@@ -1109,7 +1109,7 @@ export function applyCommand(
         );
       if (!mat || !known) return fail("Unknown material");
       if (cmd.policy === "export" && !exchangeDefinition(c, mat.id))
-        return fail("The company does not accept this material");
+        return fail("The Yard does not accept this material");
       if (apply) s.policies[cmd.materialId] = cmd.policy;
       return ok("Terminal policy updated");
     }
@@ -1140,7 +1140,7 @@ export function applyCommand(
         };
       if (apply) applyAssistance(c, s, cmd.packageId);
       return {
-        ...ok("Corporate assistance approved; exports repay the obligation"),
+        ...ok("State assistance approved; exports repay the obligation"),
         messageKey: "ui.terminal.assistance.result.approved",
       };
     }

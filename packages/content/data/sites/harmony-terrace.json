@@ -1,0 +1,78 @@
+{
+  "id": "harmony-terrace",
+  "planet": {
+    "id": "pale-reach",
+    "designation": "3",
+    "nameKey": "planet.pale-reach.name"
+  },
+  "site": {
+    "id": "harmony-terrace",
+    "planetId": "pale-reach",
+    "designation": "52",
+    "nameKey": "site.harmony-terrace.name"
+  },
+  "siteOverrides": {
+    "width": 72,
+    "height": 56,
+    "terminal": { "x": 34, "y": 24, "width": 4, "height": 4 },
+    "deposits": [
+      { "id": "harmony-ferrite", "material": "ferrite", "x": 12, "y": 22, "width": 6, "height": 6, "units": 2400 },
+      { "id": "white-veins", "material": "raw", "x": 10, "y": 34, "width": 6, "height": 6, "units": 2800 },
+      { "id": "salt-cap", "material": "catalyst", "x": 4, "y": 46, "width": 5, "height": 5, "units": 100 },
+      { "id": "lower-ferrite", "material": "ferrite", "x": 44, "y": 40, "width": 6, "height": 5, "units": 2400 },
+      { "id": "far-veins", "material": "raw", "x": 54, "y": 10, "width": 7, "height": 5, "units": 2800 }
+    ],
+    "hiddenDeposits": [
+      { "id": "under-vein", "material": "raw", "x": 40, "y": 12, "width": 5, "height": 7, "units": 1000, "surveySignalId": "anomaly-a", "requiredSensingCapabilityId": "core-probe" },
+      { "id": "cap-seam", "material": "catalyst", "x": 50, "y": 28, "width": 5, "height": 5, "units": 700, "surveySignalId": "anomaly-d", "requiredSensingCapabilityId": "resonance-probe" },
+      { "id": "glass-seam", "material": "phase-lattice", "x": 62, "y": 44, "width": 6, "height": 6, "units": 480, "surveySignalId": "anomaly-e", "requiredSensingCapabilityId": "phase-probe" }
+    ],
+    "surveySignals": [
+      { "id": "anomaly-a", "x": 43, "y": 15, "strength": 8, "depth": 14 },
+      { "id": "anomaly-b", "x": 47, "y": 42, "strength": 5, "depth": 4 },
+      { "id": "anomaly-c", "x": 62, "y": 24, "strength": 7, "depth": 1 },
+      { "id": "anomaly-d", "x": 52, "y": 30, "strength": 8, "depth": 9 },
+      { "id": "anomaly-e", "x": 64, "y": 47, "strength": 9, "depth": 18 }
+    ],
+    "atmosphericSources": [
+      { "id": "atmospheric-plume-a", "nameKey": "source.atmospheric-plume-a.name", "material": "gas-0", "x": 60, "y": 22, "width": 5, "height": 5, "units": 600, "surveySignalId": "anomaly-c", "requiredSensingCapabilityId": "core-probe" }
+    ]
+  },
+  "locale": {
+    "planet.pale-reach.name": "The Pale Reach",
+    "site.harmony-terrace.name": "Site 52",
+    "site.harmony-terrace.nickname": "the Salt Pan",
+    "deposit.harmony-ferrite.name": "Harmony Ferrite",
+    "deposit.harmony-ferrite.designation": "SURVEY TAG 52-F1",
+    "deposit.harmony-ferrite.nickname": "the Larder",
+    "deposit.harmony-ferrite.description": "Ferrite rubble on the terrace floor. The terrace was named before it was surveyed.",
+    "deposit.lower-ferrite.name": "Lower Ferrite",
+    "deposit.lower-ferrite.designation": "SURVEY TAG 52-F2",
+    "deposit.lower-ferrite.nickname": "the Basement",
+    "deposit.lower-ferrite.description": "A second ferrite field, downslope. Everything on this terrace is downslope of the terminal.",
+    "deposit.white-veins.name": "White Veins",
+    "deposit.white-veins.designation": "SURVEY TAG 52-V1",
+    "deposit.white-veins.nickname": "the Lace",
+    "deposit.white-veins.description": "Pale-veined ore at the foot of the terrace wall. It needs processing before it is good for anything.",
+    "deposit.far-veins.name": "Far Veins",
+    "deposit.far-veins.designation": "SURVEY TAG 52-V2",
+    "deposit.far-veins.nickname": "the Long Lace",
+    "deposit.far-veins.description": "The longest seam on the terrace, at the far end of it. The haul is the whole of the terrace.",
+    "deposit.salt-cap.name": "Salt Cap",
+    "deposit.salt-cap.designation": "SURVEY TAG 52-C1",
+    "deposit.salt-cap.nickname": "the Thimble",
+    "deposit.salt-cap.description": "A small pale cap of catalytic stone. It was counted before anyone stood on it.",
+    "deposit.under-vein.name": "Under Vein",
+    "deposit.under-vein.designation": "SURVEY TAG 52-D1",
+    "deposit.under-vein.nickname": "the Sump",
+    "deposit.under-vein.description": "Veined ore under the terrace floor. The Extractor cannot reach it.",
+    "deposit.cap-seam.name": "Cap Seam",
+    "deposit.cap-seam.designation": "SURVEY TAG 52-C2",
+    "deposit.cap-seam.nickname": "the Saltcellar",
+    "deposit.cap-seam.description": "Catalytic stone in a buried seam, directly beneath nothing in particular.",
+    "deposit.glass-seam.name": "Glass Seam",
+    "deposit.glass-seam.designation": "SURVEY TAG 52-L1",
+    "deposit.glass-seam.nickname": "the Window",
+    "deposit.glass-seam.description": "A buried seam with a regular internal structure. The Institute has not said what it is."
+  }
+}

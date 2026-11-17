@@ -1,6 +1,7 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
-import { enCatalog, type LocaleCatalog } from "@site/content/locale";
+import { enCatalog, applyLocationTokens, locationTokens, type LocaleCatalog } from "@site/content/locale";
+import { fixture, type Content } from "@site/content";
 
 /**
  * Shared localization runtime (Issue #14).
@@ -15,16 +16,29 @@ void i18n.use(initReactI18next).init({
   lng: "en",
   fallbackLng: "en",
   defaultNS: "translation",
-  resources: { en: { translation: enCatalog } },
+  resources: { en: { translation: applyLocationTokens(enCatalog, locationTokens(fixture, enCatalog)) } },
   react: { useSuspense: false },
   returnEmptyString: false,
 });
 
+let currentSiteId = fixture.locations?.activeSiteId ?? "";
+export const activeSiteId = (): string => currentSiteId;
 export { i18n };
 export const t: typeof i18n.t = i18n.t.bind(i18n);
 
 /** Locale belongs to selected new-world content, never to hidden sim state. */
-export function setRuntimeContentLocale(locale: LocaleCatalog | null): void {
+export function setRuntimeContentLocale(
+  locale: LocaleCatalog | null,
+  content: Content = fixture,
+): void {
+  currentSiteId = content.locations?.activeSiteId ?? "";
+  const merged = { ...enCatalog, ...(locale ?? {}) };
   i18n.removeResourceBundle("en", "translation");
-  i18n.addResourceBundle("en", "translation", { ...enCatalog, ...(locale ?? {}) }, true, true);
+  i18n.addResourceBundle(
+    "en",
+    "translation",
+    applyLocationTokens(merged, locationTokens(content, merged)),
+    true,
+    true,
+  );
 }

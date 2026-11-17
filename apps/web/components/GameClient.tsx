@@ -2,6 +2,10 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { I18nextProvider, useTranslation } from "react-i18next";
 import { i18n, setRuntimeContentLocale } from "../game/i18n";
+import { locationText } from "../game/location";
+import { siteChoices } from "@site/content/sites";
+import { entityIdentity } from "../game/identity";
+import EquipmentIdentity from "./EquipmentIdentity";
 import {
   clearRuntimePack,
   loadRuntimePack,
@@ -20,6 +24,7 @@ import type {
   MachineStatus,
 } from "@site/sim-core";
 import { Session } from "../game/session";
+import type { ArchiveListing } from "../game/save-archive";
 import {
   BUILD_PALETTE,
   DEFAULT_MODE,
@@ -60,6 +65,9 @@ import {
   type GamePreferences,
 } from "../game/preferences";
 import GameHost from "./GameHost";
+import ExpeditionArchive from "./ExpeditionArchive";
+import MainMenu from "./MainMenu";
+import IndustrialPanelFrame from "./IndustrialPanelFrame";
 import { sampleBuildTool } from "../game/tool-sampling";
 import { previewDismantleArea, sameDismantleAreaReview } from "../game/dismantle-review";
 import { classifyDismantleEntity, dismantleEntityGeometry } from "../game/dismantle-selection";
@@ -165,6 +173,8 @@ function GameClientInner() {
   };
   const [session] = useState(() => new Session()),
     [snapshot, setSnapshot] = useState(() => session.snapshot());
+  const [screen, setScreen] = useState<"menu" | "game">("menu");
+  const [returnPrompt, setReturnPrompt] = useState(false);
   const [mode, setMode] = useState<WorldMode>(DEFAULT_MODE),
     [panel, setPanel] = useState<
       | "selection"
@@ -177,10 +187,9 @@ function GameClientInner() {
     [knowledgeFilter, setKnowledgeFilter] =
       useState<KnowledgeFilter>("all");
   const [notice, setNotice] = useState<CommandResult | null>(null),
-    [paused, setPaused] = useState(false),
+    [paused, setPaused] = useState(true),
     [guide, setGuide] = useState(true),
     [homeToken, setHomeToken] = useState(0),
-    [confirmReset, setConfirmReset] = useState(false),
     [openToolGroup, setOpenToolGroup] = useState<ToolGroupId | null>(null),
     [preferences, setPreferences] = useState<GamePreferences>(
       DEFAULT_GAME_PREFERENCES,
@@ -188,6 +197,10 @@ function GameClientInner() {
     [activePack, setActivePack] = useState<RuntimePack | null>(null),
     [pendingPack, setPendingPack] = useState<RuntimePack | null>(null),
     [packReady, setPackReady] = useState(false),
+    [archiveView, setArchiveView] = useState<ArchiveListing | null>(null),
+    [archiveError, setArchiveError] = useState<string | null>(null),
+    [loadableSlotIds, setLoadableSlotIds] = useState<string[]>([]),
+    [resumeSlotId, setResumeSlotId] = useState<string | null>(null),
     [keyboardAreaOpen, setKeyboardAreaOpen] = useState(false),
     [keyboardBounds, setKeyboardBounds] = useState({ fromX: 0, fromY: 0, toX: 0, toY: 0 });
   const cancelGroupHold = useRef<(() => void) | null>(null);
@@ -232,7 +245,7 @@ function GameClientInner() {
         if (cancelled || !pack) return;
         // Source selection always creates a new world, before Phaser mounts.
         session.usePack(pack);
-        setRuntimeContentLocale(pack.bundle.locale);
+        setRuntimeContentLocale(pack.bundle.locale, pack.bundle.content);
         setActivePack(pack);
       })
       .catch((error: unknown) => {
@@ -425,15 +438,21 @@ function GameClientInner() {
     }
   };
   const choosePack = (pack: RuntimePack | null) => {
+    if (screen === "game") {
+      setNotice({
+        ok: false,
+        message: "Content packs can only be changed from the Main Menu. Return there first; this expedition remains unchanged.",
+      });
+      return;
+    }
     try {
-      // An explicit new expedition is the only point where content changes.
+      // An explicit, named new expedition is the only point where content changes.
       session.usePack(pack);
-      setRuntimeContentLocale(pack?.bundle.locale ?? null);
+      setRuntimeContentLocale(pack?.bundle.locale ?? null, pack?.bundle.content);
       setActivePack(pack);
       setPendingPack(null);
       setMode(DEFAULT_MODE);
       setPanel(null);
-      setConfirmReset(false);
       setGuide(true);
       setHomeToken((n) => n + 1);
       try {
@@ -446,21 +465,149 @@ function GameClientInner() {
       setNotice({ ok: false, message: "Could not start expedition: " + String(error) });
     }
   };
-  const persist = (load: boolean) => {
+
+  const chooseSite = async (id: string) => {
+    const choice = siteChoices().find((entry) => entry.id === id);
+    if (!choice) return;
+    if (!choice.bundle) {
+      choosePack(null);
+      return;
+    }
     try {
-      const result = load
-        ? session.restore(localStorage)
-        : session.save(localStorage);
-      setNotice(result);
-      if (load && result.ok) {
-        setMode(DEFAULT_MODE);
-        setPanel(null);
+      // A site is a built-in content bundle, validated and fingerprinted like any pack.
+      choosePack(await parseRuntimePack(JSON.stringify(choice.bundle)));
+    } catch (error) {
+      setNotice({ ok: false, message: "Site could not be opened: " + String(error) });
+    }
+  };
+
+  const refreshArchives = () => {
+    try {
+      const listing = session.list(window.localStorage);
+      const loadable = session.loadableSlotIds(window.localStorage);
+      setArchiveView(listing);
+      setLoadableSlotIds(loadable);
+      setResumeSlotId(listing.slots.find((slot) => loadable.includes(slot.id))?.id ?? null);
+      setArchiveError(null);
+    } catch (error) {
+      setArchiveView(null);
+      setLoadableSlotIds([]);
+      setResumeSlotId(null);
+      setArchiveError(String(error));
+    }
+  };
+  useEffect(() => {
+    if (!packReady || (screen !== "menu" && panel !== "menu")) return;
+    try {
+      const listing = session.list(window.localStorage);
+      const loadable = session.loadableSlotIds(window.localStorage);
+      setArchiveView(listing);
+      setLoadableSlotIds(loadable);
+      setResumeSlotId(listing.slots.find((slot) => loadable.includes(slot.id))?.id ?? null);
+      setArchiveError(null);
+    } catch (error) {
+      setArchiveView(null);
+      setLoadableSlotIds([]);
+      setResumeSlotId(null);
+      setArchiveError(String(error));
+    }
+  }, [packReady, screen, panel, session, activePack]);
+  const archiveAction = (result: CommandResult, switched = false, newWorld = false) => {
+    setNotice(result);
+    refreshArchives();
+    if (result.ok && switched) {
+      setMode(DEFAULT_MODE);
+      setPanel(null);
+      // Resuming a saved site must not revive a previously dismissed brief
+      // or unexpectedly reposition the player's camera.
+      if (newWorld) {
+        setGuide(true);
+        setHomeToken((n) => n + 1);
       }
-    } catch {
-      setNotice({
-        ok: false,
-        message: "Storage is unavailable. Your running site is unchanged.",
-      });
+    }
+  };
+  const enterGame = (result: CommandResult, newWorld = false) => {
+    setNotice(result);
+    refreshArchives();
+    if (result.ok) {
+      setScreen("game");
+      setPaused(false);
+      setPanel(null);
+      setMode(DEFAULT_MODE);
+      setReturnPrompt(false);
+      setGuide(newWorld);
+      if (newWorld) setHomeToken((n) => n + 1);
+    }
+    return result;
+  };
+  const startNewFromMenu = (name: string) => {
+    try {
+      return enterGame(session.createSlot(window.localStorage, name), true);
+    } catch (error) {
+      return { ok: false, message: "New expedition not created. " + String(error) };
+    }
+  };
+  const resumeFromMenu = () => {
+    if (!resumeSlotId)
+      return { ok: false, message: "No valid compatible expedition is available." };
+    try {
+      return enterGame(session.loadSlot(window.localStorage, resumeSlotId), false);
+    } catch (error) {
+      return { ok: false, message: "Expedition not loaded. " + String(error) };
+    }
+  };
+  const loadFromMenu = (slotId: string) => {
+    try {
+      return enterGame(session.loadSlot(window.localStorage, slotId), false);
+    } catch (error) {
+      return { ok: false, message: "Expedition not loaded. " + String(error) };
+    }
+  };
+  const importLegacyFromMenu = (key: string, name: string) => {
+    try {
+      return enterGame(session.importLegacy(window.localStorage, key, name), false);
+    } catch (error) {
+      return { ok: false, message: "Legacy import failed. " + String(error) };
+    }
+  };
+  const requestMainMenu = () => {
+    if (session.hasUnsavedChanges()) {
+      setReturnPrompt(true);
+      return;
+    }
+    setScreen("menu");
+    setPaused(true);
+    setPanel(null);
+    refreshArchives();
+  };
+  const saveAndReturnToMenu = () => {
+    try {
+      const result = session.save(window.localStorage);
+      setNotice(result);
+      if (result.ok) {
+        setReturnPrompt(false);
+        setScreen("menu");
+        setPaused(true);
+        setPanel(null);
+        refreshArchives();
+      }
+    } catch (error) {
+      setNotice({ ok: false, message: "Save failed. " + String(error) });
+    }
+  };
+  const discardAndReturnToMenu = () => {
+    try {
+      const result = session.restore(window.localStorage);
+      setNotice(result);
+      if (result.ok) {
+        setReturnPrompt(false);
+        setScreen("menu");
+        setPaused(true);
+        setPanel(null);
+        refreshArchives();
+      }
+    } catch (error) {
+      setNotice({ ok: false, message: "Could not restore the last saved expedition. " + String(error) });
     }
   };
   const commitPreferences = (next: GamePreferences) => {
@@ -891,7 +1038,7 @@ function GameClientInner() {
       <Glyph type={toolGlyph(tool)} size={25} />
       <span>{toolName(tool)}</span>
       {toolLocked(tool) ? (
-        <em>LOCKED</em>
+        <em>{t("ui.tool.locked")}</em>
       ) : toolCost(tool) ? (
         <em>
           {toolCost(tool)}
@@ -932,6 +1079,67 @@ function GameClientInner() {
       <p>{entry.detail}</p>
     </section>
   );
+  if (screen === "menu") {
+    return (
+      <MainMenu
+        ready={packReady}
+        listing={archiveView}
+        archiveError={archiveError}
+        loadableSlotIds={loadableSlotIds}
+        resumeSlotId={resumeSlotId}
+        activeSlotId={session.activeSlotId()}
+        activeFingerprint={session.activePackFingerprint()}
+        activePack={activePack}
+        pendingPack={pendingPack}
+        sites={siteChoices().map((choice) => ({
+          id: choice.id,
+          siteName: choice.siteName,
+          planetName: choice.planetName,
+          selected: choice.bundle
+            ? activePack !== null &&
+              JSON.stringify(activePack.bundle) === JSON.stringify(choice.bundle)
+            : activePack === null,
+        }))}
+        onChooseSite={chooseSite}
+        preferences={preferences}
+        notice={notice}
+        onResume={resumeFromMenu}
+        onStartNew={startNewFromMenu}
+        onLoad={loadFromMenu}
+        onRename={(id, name) => {
+          try {
+            const result = session.renameSlot(window.localStorage, id, name);
+            archiveAction(result);
+            return result;
+          } catch (error) {
+            return { ok: false, message: "Rename failed. " + String(error) };
+          }
+        }}
+        onDelete={(id) => {
+          try {
+            const result = session.deleteSlot(window.localStorage, id);
+            archiveAction(result);
+            return result;
+          } catch (error) {
+            return { ok: false, message: "Delete failed. " + String(error) };
+          }
+        }}
+        onImportLegacy={importLegacyFromMenu}
+        onRecover={() => {
+          try {
+            const result = session.recoverArchive(window.localStorage);
+            archiveAction(result);
+            return result;
+          } catch (error) {
+            return { ok: false, message: "Archive recovery failed. " + String(error) };
+          }
+        }}
+        onImportPack={(file) => { void importPack(file); }}
+        onUsePack={choosePack}
+        onPreferencesChange={commitPreferences}
+      />
+    );
+  }
   return (
     <main
       className="game"
@@ -957,33 +1165,36 @@ function GameClientInner() {
           disarmTouchArea,
           sample,
         }}
-      /> : <div className="world-host" role="status">Validating selected content pack…</div>}
+      /> : <div className="world-host" role="status">{t("ui.hud.validating-pack")}</div>}
       <header className="hud-top">
         <div className="site-mark">
-          <span className="brand-symbol">Y</span>
+          <span className="brand-symbol" role="img" aria-label={t("ui.hud.seal")} />
           <div>
-            UNKNOWN YIELD<small>THE PALE REACH · SITE 01</small>
+            UNKNOWN YIELD<small>{locationText("hud")}</small>
           </div>
+          <div className="uy-hud-fasteners" aria-hidden="true"><span /><span /></div>
         </div>
         <div className="resources">
-          <span title="Construction stock">
+          <span title={t("ui.hud.stock-tip")}>
             <Glyph type="plates" />
             <b data-testid="plates">{snapshot.stock.plates ?? 0}</b>
-            <small>PLATES</small>
+            <small>{t("ui.hud.plates")}</small>
           </span>
           <span
             className={snapshot.fuel < 10 ? "low" : ""}
-            title="Company fuel allocation"
+            title={t("ui.hud.fuel-tip")}
           >
             <Glyph type="fuel" />
             <b data-testid="fuel">{snapshot.fuel}</b>
             <small>FUEL</small>
           </span>
+          <div className="uy-hud-fasteners" aria-hidden="true"><span /><span /></div>
         </div>
         <nav className="hud-actions" aria-label="Game controls">
           <button
-            aria-label="Knowledge notebook"
-            title="Knowledge"
+            aria-label={t("ui.hud.notebook")}
+            aria-pressed={panel === "knowledge"}
+            title={t("ui.hud.notebook-tip")}
             onClick={() => {
               setOnboarding((state) => ({ ...state, knowledgeOpened: true }));
               if (panel !== "knowledge") setKnowledgeFilter("all");
@@ -995,8 +1206,9 @@ function GameClientInner() {
             {fresh > 0 && <i>{fresh}</i>}
           </button>
           <button
-            aria-label="Company terminal"
-            title="Company terminal"
+            aria-label={locationText("terminal")}
+            aria-pressed={panel === "terminal"}
+            title={locationText("terminal")}
             onClick={() => {
               setOnboarding((state) => ({ ...state, terminalOpened: true }));
               setPanel(panel === "terminal" ? null : "terminal");
@@ -1006,14 +1218,15 @@ function GameClientInner() {
             <Glyph type="terminal" />
           </button>
           <button
-            aria-label="Center camera"
-            title="Center camera · Home"
+            aria-label={t("ui.hud.center")}
+            title={t("ui.hud.center-tip")}
             onClick={() => setHomeToken((n) => n + 1)}
           >
             <Glyph type="home" />
           </button>
           <button
             aria-label={paused ? "Resume simulation" : "Pause simulation"}
+            aria-pressed={paused}
             title={paused ? "Resume" : "Pause"}
             onClick={() => {
               session.suspend();
@@ -1023,8 +1236,9 @@ function GameClientInner() {
             <Glyph type={paused ? "play" : "pause"} />
           </button>
           <button
-            aria-label="Game configuration"
-            title="Game configuration"
+            aria-label={t("ui.hud.config")}
+            aria-pressed={panel === "configuration"}
+            title={t("ui.hud.config")}
             onClick={() => {
               setPanel(panel === "configuration" ? null : "configuration");
               setMode((m) => ({ ...m, tool: "select", selected: null }));
@@ -1033,12 +1247,14 @@ function GameClientInner() {
             <Glyph type="settings" />
           </button>
           <button
-            aria-label="Game menu"
-            title="Expedition menu"
+            aria-label={t("ui.hud.menu")}
+            aria-pressed={panel === "menu"}
+            title={t("ui.hud.menu-tip")}
             onClick={() => setPanel(panel === "menu" ? null : "menu")}
           >
             <Glyph type="menu" />
           </button>
+          <div className="uy-hud-fasteners" aria-hidden="true"><span /><span /></div>
         </nav>
       </header>
       {guide && (
@@ -1048,7 +1264,7 @@ function GameClientInner() {
           aria-live="polite"
         >
           <button
-            aria-label="Close field brief"
+            aria-label={t("ui.hud.brief-close")}
             onClick={() => setGuide(false)}
           >
             ×
@@ -1065,7 +1281,7 @@ function GameClientInner() {
       {!guide && (
         <button
           className="guide-toggle"
-          aria-label="Open field brief"
+          aria-label={t("ui.hud.brief-open")}
           onClick={() => setGuide(true)}
         >
           <Glyph type="help" size={16} />
@@ -1075,33 +1291,28 @@ function GameClientInner() {
         <div role="status" className={"toast " + (notice.ok ? "" : "error")}>
           {notice.ok ? "◇" : "!"} <span>{notice.message}</span>
           <button
-            aria-label="Dismiss notification"
+            aria-label={t("ui.hud.dismiss")}
             onClick={() => setNotice(null)}
           >
             ×
           </button>
         </div>
       )}
-      {paused && <div className="paused-label">PAUSED</div>}
+      {paused && <div className="paused-label">{t("ui.hud.paused")}</div>}
       {panel && (
-        <aside className="context-panel">
-          <div className="context-header">
-            <span>
-              {panel === "knowledge"
-                ? "FIELD NOTEBOOK"
-                : panel === "terminal"
-                  ? "COMPANY TERMINAL"
-                  : panel === "configuration"
-                    ? "GAME CONFIGURATION"
-                    : panel === "menu"
-                      ? "EXPEDITION MENU"
-                      : "INSPECT"}
-            </span>
-            <button aria-label="Close panel" onClick={close}>
-              ×
-            </button>
-          </div>
-          <div className="context-body">
+        <IndustrialPanelFrame
+          as="aside"
+          kind={panel === "knowledge" ? "notebook"
+            : panel === "terminal" ? "terminal"
+            : panel === "selection" ? "inspect"
+            : panel === "configuration" ? "configuration" : "expedition"}
+          className={"context-panel context-panel--" + panel}
+          dataPanelKind={panel}
+          bodyClassName="context-body"
+          title={panel === "terminal" ? locationText("terminal").toUpperCase() : t("ui.panel." + panel + ".title")}
+          subtitle={panel === "terminal" ? locationText("terminal-subtitle") : t("ui.panel." + panel + ".subtitle")}
+          onClose={close}
+        >
             {panel === "selection" && overview(inspectorSummary)}
             {panel === "knowledge" && (
               <>
@@ -1112,7 +1323,7 @@ function GameClientInner() {
                       : notebookSummary.open > 0
                         ? "warn"
                         : "calm",
-                  eyebrow: "EVIDENCE STATUS",
+                  eyebrow: t("ui.evidence.status"),
                   title:
                     notebookSummary.open +
                     " open · " +
@@ -1158,7 +1369,7 @@ function GameClientInner() {
                     Shipment
                   </button>
                   <button onClick={() => scrollContextTo("terminal-company")}>
-                    Company
+                    State
                   </button>
                 </nav>
               </>
@@ -1661,7 +1872,15 @@ function GameClientInner() {
                     <small className="eyebrow">
                       {machine.id.toUpperCase()} · AUTOMATED EQUIPMENT
                     </small>
-                    <h2>{t(machine.nameKey)}</h2>
+                    <EquipmentIdentity
+                      identity={entityIdentity(
+                        "machine",
+                        machine.definitionId,
+                        machine.nameKey,
+                        { t: (key) => t(key), exists: (key) => i18n.exists(key) },
+                        { built: true },
+                      )}
+                    />
                     <div
                       className={
                         "status-line " +
@@ -1824,13 +2043,13 @@ function GameClientInner() {
                         <h3>{t(machine.incident.nameKey)}</h3>
                         <p>{t(machine.incident.textKey)}</p>
                         <p>{t(machine.incident.evidenceKey)}</p>
-                        <strong>SAFER NEXT TEST</strong>
+                        <strong>{t("ui.evidence.safer-next-test")}</strong>
                         <p>{t(machine.incident.saferHintKey)}</p>
                         {Object.values(machine.incidentInventory).some(
                           (quantity) => quantity > 0,
                         ) && (
                           <>
-                            <strong>TRAPPED MATERIAL</strong>
+                            <strong>{t("ui.evidence.trapped-material")}</strong>
                             {buffer(machine.incidentInventory)}
                             {machine.incidentRecovery && (
                               <div className="hint">
@@ -2598,13 +2817,17 @@ function GameClientInner() {
                     <small className="eyebrow">
                       {storage.id.toUpperCase()} · BULK STORAGE
                     </small>
-                    <h2>
-                      {t(
+                    <EquipmentIdentity
+                      identity={entityIdentity(
+                        "storage",
+                        storage.definitionId,
                         snapshot.storageDefinitions.find(
                           (d) => d.id === storage.definitionId,
                         )?.nameKey ?? storage.definitionId,
+                        { t: (key) => t(key), exists: (key) => i18n.exists(key) },
+                        { built: true },
                       )}
-                    </h2>
+                    />
                     <div className="facts">
                       <span>
                         Stored
@@ -2649,17 +2872,29 @@ function GameClientInner() {
                 )}
                 {deposit && (
                   <>
-                    <small className="eyebrow">SURFACE DEPOSIT</small>
-                    <h2>{materialName(deposit.material)}</h2>
+                    <small className="eyebrow">{t("ui.deposit.eyebrow")}</small>
+                    <EquipmentIdentity
+                      identity={entityIdentity(
+                        "deposit",
+                        deposit.id,
+                        i18n.exists("deposit." + deposit.id + ".name")
+                          ? "deposit." + deposit.id + ".name"
+                          : snapshot.materials.find((m) => m.id === deposit.material)?.nameKey ?? "ui.deposit.eyebrow",
+                        { t: (key) => t(key), exists: (key) => i18n.exists(key) },
+                        { built: true },
+                      )}
+                    />
+                    {i18n.exists("material." + deposit.material + ".description") && (
+                      <p className="identity-description">
+                        {t("material." + deposit.material + ".description")}
+                      </p>
+                    )}
                     <div className="facts">
                       <span>
-                        Remaining<b>{deposit.remaining}</b>
+                        {t("ui.deposit.remaining")}<b>{deposit.remaining}</b>
                       </span>
                     </div>
-                    <p className="hint">
-                      Place an extractor entirely inside this field. Route its
-                      output to a processor.
-                    </p>
+                    <p className="hint">{t("ui.deposit.hint")}</p>
                     <button
                       className="primary"
                       onClick={() => setTool("extractor")}
@@ -2672,10 +2907,9 @@ function GameClientInner() {
             )}
             {panel === "knowledge" && (
               <>
-                <h2>Learn by doing.</h2>
+                <h2>{t("ui.knowledge.heading")}</h2>
                 <p className="hint">
-                  Known construction methods and your observed discoveries.
-                  There is no complete recipe book.
+                  {t("ui.knowledge.intro")}
                 </p>
                 {snapshot.knowledgeInsights.length > 0 && (
                   <>
@@ -2725,7 +2959,7 @@ function GameClientInner() {
                       <h3>{t(entry.nameKey)}</h3>
                       <p>{t(entry.textKey)}</p>
                       <p>{t(entry.evidenceKey)}</p>
-                      <strong>SAFER NEXT TEST</strong>
+                      <strong>{t("ui.evidence.safer-next-test")}</strong>
                       <p>{t(entry.saferHintKey)}</p>
                       <span>
                         {materialName(entry.inputId)} → {operationName}
@@ -2755,10 +2989,10 @@ function GameClientInner() {
                     <article className="observation" key={entry.id}>
                       <small>
                         {entry.state === "hinted"
-                          ? "UNCONFIRMED"
+                          ? t("ui.evidence.unconfirmed")
                           : entry.initial
-                            ? "KNOWN METHOD"
-                            : "OBSERVED"}{" "}
+                            ? t("ui.evidence.known-method")
+                            : t("ui.evidence.observed")}{" "}
                         · {operationName.toUpperCase()}
                       </small>
                       <h3>
@@ -2782,8 +3016,8 @@ function GameClientInner() {
             )}
             {panel === "terminal" && (
               <>
-                <small className="eyebrow">ORBITAL UPLINK · CONNECTED</small>
-                <h2>Keep the expedition moving.</h2>
+                <small className="eyebrow">{t("ui.terminal.uplink")}</small>
+                <h2>{t("ui.terminal.heading")}</h2>
                 <div className="facts">
                   <span>
                     Exported<b data-testid="exported">{snapshot.exported}</b>
@@ -3267,7 +3501,7 @@ function GameClientInner() {
                             [key]: Number(event.currentTarget.value),
                           })
                         }
-                      />
+                    />
                       <output>{preferences.camera[key].toFixed(1)}×</output>
                     </label>
                   ))}
@@ -3402,17 +3636,50 @@ function GameClientInner() {
                   <Glyph type="settings" size={17} />
                   Game settings &amp; controls
                 </button>
-                <button className="primary" onClick={() => persist(false)}>
-                  <Glyph type="save" size={17} />
-                  Save world
+                <button className="secondary" onClick={requestMainMenu}>
+                  Return to Main Menu
                 </button>
-                <button className="secondary" onClick={() => persist(true)}>
-                  Load saved world
-                </button>
-                <p className="hint">
-                  Saved locally on this device. Worlds pause while the tab is
-                  hidden. Old fixed-site saves are incompatible.
-                </p>
+                <ExpeditionArchive
+                  listing={archiveView}
+                  error={archiveError}
+                  activeSlotId={session.activeSlotId()}
+                  activeFingerprint={session.activePackFingerprint()}
+                  onRecover={() => {
+                    const result = session.recoverArchive(window.localStorage);
+                    archiveAction(result);
+                    return result;
+                  }}
+                  onSave={() => {
+                    const result = session.save(window.localStorage);
+                    archiveAction(result);
+                    return result;
+                  }}
+                  onCreate={(name) => {
+                    const result = session.createSlot(window.localStorage, name);
+                    archiveAction(result, result.ok, true);
+                    return result;
+                  }}
+                  onLoad={(id) => {
+                    const result = session.loadSlot(window.localStorage, id);
+                    archiveAction(result, result.ok);
+                    return result;
+                  }}
+                  onRename={(id, name) => {
+                    const result = session.renameSlot(window.localStorage, id, name);
+                    archiveAction(result);
+                    return result;
+                  }}
+                  onDelete={(id) => {
+                    const result = session.deleteSlot(window.localStorage, id);
+                    archiveAction(result);
+                    return result;
+                  }}
+                  onImportLegacy={(key, name) => {
+                    const result = session.importLegacy(window.localStorage, key, name);
+                    archiveAction(result, result.ok);
+                    return result;
+                  }}
+                />
                 <section className="configuration-section">
                   <h3>Offline content packs</h3>
                   <p className="hint">Import a validated Studio JSON bundle into this already-built client. Selecting it always starts a NEW expedition; existing saves stay separate.</p>
@@ -3432,15 +3699,15 @@ function GameClientInner() {
                   {pendingPack && (
                     <div className="reset-confirm">
                       <p>Validated SHA-256: {pendingPack.fingerprint.slice(0, 16)}. Start a NEW expedition? Unsaved world progress will be lost; all existing saved worlds remain stored.</p>
-                      <button className="primary" onClick={() => choosePack(pendingPack)}>
-                        Play new expedition with imported pack
+                      <button className="primary" onClick={requestMainMenu}>
+                        Return to Main Menu to use this pack
                       </button>
                       <button className="secondary" onClick={() => setPendingPack(null)}>Cancel import</button>
                     </div>
                   )}
                   {activePack && (
-                    <button className="secondary" onClick={() => choosePack(null)}>
-                      Start new expedition with built-in content
+                    <button className="secondary" onClick={requestMainMenu}>
+                      Return to Main Menu to switch to built-in content
                     </button>
                   )}
                 </section>
@@ -3465,44 +3732,9 @@ function GameClientInner() {
                   <dt>Dismantle</dt>
                   <dd>X</dd>
                 </dl>
-                {confirmReset ? (
-                  <div className="reset-confirm">
-                    <p>
-                      Start a new expedition? Unsaved progress will be lost;
-                      your saved world stays available.
-                    </p>
-                    <button
-                      className="danger"
-                      onClick={() => {
-                        session.reset();
-                        setMode(DEFAULT_MODE);
-                        setPanel(null);
-                        setConfirmReset(false);
-                        setGuide(true);
-                        setHomeToken((n) => n + 1);
-                      }}
-                    >
-                      Start new expedition
-                    </button>
-                    <button
-                      className="secondary"
-                      onClick={() => setConfirmReset(false)}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    className="danger"
-                    onClick={() => setConfirmReset(true)}
-                  >
-                    New expedition
-                  </button>
-                )}
               </>
             )}
-          </div>
-        </aside>
+        </IndustrialPanelFrame>
       )}
       <div className="build-zone">
         {mode.tool === "demolish" && (
@@ -3790,10 +4022,52 @@ function GameClientInner() {
           </label>
         )}
         <div className="bottom-caption">
-          <span>NO CREW. JUST MACHINES.</span>
-          <span>R rotate · Esc cancel · Home center</span>
+          <span>{t("ui.hud.caption")}</span>
+          <span>{t("ui.hud.keys")}</span>
         </div>
       </div>
+      {returnPrompt && (
+        <div className="menu-return-backdrop">
+          <section
+            className="menu-return-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="menu-return-title"
+            onKeyDown={(event) => {
+              if (event.key === "Escape") {
+                event.preventDefault();
+                setReturnPrompt(false);
+              }
+            }}
+          >
+            <IndustrialPanelFrame
+              kind="expedition"
+              className="uy-confirmation-board"
+              bodyClassName="uy-confirmation-body"
+              title={t("ui.menu-return.title")}
+              subtitle={t("ui.menu-return.subtitle")}
+              onClose={() => setReturnPrompt(false)}
+            >
+              <small>{t("ui.menu-return.subtitle")}</small>
+              <h2 id="menu-return-title">{t("ui.menu-return.question")}</h2>
+            <p>
+              {t("ui.menu-return.body")}
+            </p>
+            <div className="menu-return-actions">
+              <button className="menu-primary" onClick={saveAndReturnToMenu}>
+                {t("ui.menu-return.save")}
+              </button>
+              <button className="menu-danger" onClick={discardAndReturnToMenu}>
+                {t("ui.menu-return.discard")}
+              </button>
+              <button className="menu-secondary" onClick={() => setReturnPrompt(false)}>
+                {t("ui.menu-return.stay")}
+              </button>
+            </div>
+            </IndustrialPanelFrame>
+          </section>
+        </div>
+      )}
       {mode.dismantleReview && (
         <div className="dismantle-review-backdrop">
           <section
@@ -3832,6 +4106,14 @@ function GameClientInner() {
               }
             }}
           >
+            <IndustrialPanelFrame
+              kind="inspect"
+              className="uy-dismantle-board"
+              bodyClassName="uy-dismantle-board-body"
+              title={t("ui.dismantle.review.title")}
+              subtitle={t("ui.dismantle.review.subtitle")}
+              onClose={cancelAreaReview}
+            >
             <small>{t("ui.dismantle.review.eyebrow")}</small>
             <h2 id="dismantle-review-title">{t("ui.dismantle.review.title")}</h2>
             <p id="dismantle-review-summary">
@@ -3878,6 +4160,7 @@ function GameClientInner() {
                 {t("ui.dismantle.review.confirm")}
               </button>
             </div>
+            </IndustrialPanelFrame>
           </section>
         </div>
       )}

@@ -42,3 +42,11 @@ jobs:
         run: npx vitest run apps/web/test/phase10-browser-acceptance.test.ts --reporter=verbose
         env:
           UNKNOWN_YIELD_BROWSER_ACCEPTANCE: production
+          UNKNOWN_YIELD_EVIDENCE_DIR: ${{ runner.temp }}/unknown-yield-evidence
+      - name: Upload browser acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unknown-yield-browser-evidence
+          path: ${{ runner.temp }}/unknown-yield-evidence
+          if-no-files-found: ignore
