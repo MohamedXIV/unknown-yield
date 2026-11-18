@@ -23,6 +23,7 @@ import {
   type DismantleSelectionRequest,
 } from "./dismantle-selection";
 import { t as translate } from "./i18n";
+import { hexToRgbInt, lightPlan } from "./lighting";
 import { machineStatusLabel } from "./machine-status";
 import { observationKey, unseenObservations } from "./observations";
 import { factoryContractPresentation } from "./factory-presentation";
@@ -84,6 +85,8 @@ export type WorldActions = {
   sample(id: string | null): void;
 };
 const ENV = COLD_TWILIGHT_SITE;
+/** Below this sustained frame rate the pilot lights switch themselves off. */
+const LIGHT_MIN_FPS = 24;
 const X = ART_CAMERA.cellWidth,
   Y = ART_CAMERA.cellHeight;
 const color = (value: string) => parseInt(value.slice(1), 16);
@@ -139,6 +142,9 @@ export function createWorld(
         ? window.matchMedia("(prefers-reduced-motion: reduce)")
         : null;
     private dirty = true;
+    // Presentation-only WebGL lights (D-054); null on Canvas or with ?lights=off.
+    private litGround: Phaser.GameObjects.Image | null = null;
+    private lights3: Map<string, Phaser.GameObjects.Light> = new Map();
     private machineAudioElapsedMs = 0;
     // World overlays are world-space Graphics, not animations. Redrawing them
     // every RAF creates fresh geometry/upload work even when only camera
@@ -323,6 +329,7 @@ export function createWorld(
         ground.generateTexture(groundKey, worldWidth, worldHeight);
         const groundSprite = this.add.image(0, 0, groundKey).setOrigin(0);
         this.children.sendToBack(groundSprite);
+        this.enableGroundLighting(groundSprite);
         ground.destroy();
       }
       this.grid = this.add.graphics().setVisible(false);
@@ -806,6 +813,58 @@ export function createWorld(
     private syncCameraLimits() {
       const limits = cameraZoomLimits(this.cameraGeometry(), this.homeZoom());
       this.navigation.setZoomLimits(limits.minZoom, limits.maxZoom);
+    }
+    /**
+     * D-054: only the baked ground is lit. Graphics-based machines, belts, ports and
+     * overlays stay unlit so every cue keeps its authored contrast.
+     */
+    private enableGroundLighting(ground: Phaser.GameObjects.Image) {
+      const off =
+        typeof window !== "undefined" &&
+        new URLSearchParams(window.location.search).get("lights") === "off";
+      const webgl = this.game.renderer.type === Phaser.WEBGL;
+      if (off || !webgl) return;
+      this.lights.enable();
+      this.lights.setAmbientColor(hexToRgbInt(ENV.lightDirection.ambientColor));
+      ground.setLighting(true);
+      this.litGround = ground;
+      this.syncLights();
+      // Quality guard (D-054): a device that cannot hold a steady frame rate with
+      // lighting on falls back to the unlit ground rather than lose responsiveness.
+      // Wall-clock timer: Phaser's own clock slows down on exactly the slow devices we guard.
+      const guard = window.setTimeout(() => {
+        if (this.litGround && this.game.loop.actualFps < LIGHT_MIN_FPS) this.disableLighting();
+      }, 5000);
+      this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => window.clearTimeout(guard));
+    }
+    private disableLighting() {
+      for (const light of this.lights3.values()) this.lights.removeLight(light);
+      this.lights3.clear();
+      this.litGround?.setLighting(false);
+      this.litGround = null;
+      this.lights.disable();
+    }
+    syncLightsFromSnapshot() {
+      this.syncLights();
+    }
+    private syncLights() {
+      if (!this.litGround) return;
+      const plan = lightPlan(snapshot, ENV);
+      const keep = new Set(plan.map((spec) => spec.id));
+      for (const [id, light] of this.lights3)
+        if (!keep.has(id)) {
+          this.lights.removeLight(light);
+          this.lights3.delete(id);
+        }
+      for (const spec of plan) {
+        const x = spec.x * X, y = spec.y * Y, radius = spec.radius * X;
+        const rgb = hexToRgbInt(spec.color);
+        const existing = this.lights3.get(spec.id);
+        if (existing) {
+          existing.setPosition(x, y).setRadius(radius).setColor(rgb).setIntensity(spec.intensity);
+        } else
+          this.lights3.set(spec.id, this.lights.addLight(x, y, radius, rgb, spec.intensity));
+      }
     }
     syncMapBounds() {
       this.navigation.setWorldSize(
@@ -2385,6 +2444,7 @@ export function createWorld(
       }
       scene?.feedback(events);
       scene?.refresh();
+      scene?.syncLightsFromSnapshot();
       scene?.invalidateOverlays();
       finishBrowserMetric("world-sync", startedAt);
     },
