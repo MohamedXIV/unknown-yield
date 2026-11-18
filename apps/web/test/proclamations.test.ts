@@ -42,7 +42,7 @@ describe("proclamations", () => {
     const s = new Simulation(fixture);
     const before = s.snapshot();
     s.command(extractor);
-    expect(proclamationsBetween(before, s.snapshot())).toEqual([]);
+    expect(proclamationsBetween(before, s.snapshot()).filter((p) => p.kind === "authorization")).toEqual([]);
   });
 
   it("uses authored wording for a permit and generic wording for the rest", () => {
@@ -77,5 +77,28 @@ describe("proclamations", () => {
     expect(queue.map((p) => p.id)).toEqual(["b", "a"]);
     const many = enqueueProclamations([], Array.from({ length: 20 }, (_, i) => mk("n" + i, "minor")), 5);
     expect(many).toHaveLength(5);
+  });
+});
+
+describe("dispatches", () => {
+  it("announce real firsts once and are worded for every dispatch id", () => {
+    const s = new Simulation(fixture); // unguided: no permits, so dispatches speak
+    const before = s.snapshot();
+    s.command(extractor);
+    const found = proclamationsBetween(before, s.snapshot());
+    expect(found.map((p) => p.id)).toContain("dispatch:first-extractor");
+    for (const id of ["appointment", "first-extractor", "first-shell", "first-flow", "first-observation", "first-shipment"])
+      expect(
+        proclamationText({ id: "dispatch:" + id, kind: "announcement", weight: "minor", illustration: "bulletin" }, lookup).title,
+      ).not.toBe("The state informs you");
+  });
+
+  it("does not double an authorization, and stays silent on a reseed", () => {
+    const s = new Simulation(fixture, { guided: true });
+    const before = s.snapshot();
+    s.command(extractor);
+    const ids = proclamationsBetween(before, s.snapshot()).map((p) => p.id);
+    expect(ids).not.toContain("dispatch:first-extractor");
+    expect(proclamationsBetween(s.snapshot(), s.snapshot())).toEqual([]);
   });
 });

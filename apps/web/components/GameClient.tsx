@@ -295,24 +295,52 @@ function GameClientInner() {
   const proclaimKey = (session.activeSlotId() ?? "") + "|" + (activePack?.fingerprint ?? "");
   const proclaimBase = useRef<{ key: string; snap: PlayerSnapshot } | null>(null);
   const [proclaims, setProclaims] = useState<Proclamation[]>([]);
+  // Readable history of this expedition's bulletins (presentation only, not saved).
+  const [bulletins, setBulletins] = useState<Proclamation[]>([]);
+  const announce = (fresh: Proclamation[]) => {
+    fresh.forEach(notifyProclamation);
+    setProclaims((queue) => enqueueProclamations(queue, fresh));
+    setBulletins((log) => [...log, ...fresh].slice(-30));
+  };
   useEffect(() => {
     const base = proclaimBase.current;
     if (base && base.key === proclaimKey) {
       const fresh = proclamationsBetween(base.snap, snapshot);
-      if (fresh.length) {
-        fresh.forEach(notifyProclamation);
-        setProclaims((queue) => enqueueProclamations(queue, fresh));
-      }
-    } else setProclaims([]);
+      if (fresh.length) announce(fresh);
+    } else {
+      setProclaims([]);
+      setBulletins([]);
+    }
     proclaimBase.current = { key: proclaimKey, snap: snapshot };
   }, [snapshot, proclaimKey]);
+  // The appointment is announced once per expedition, on its very first moment in the world.
+  useEffect(() => {
+    const slot = session.activeSlotId();
+    if (screen !== "game" || !slot) return;
+    if (snapshot.tick > 0 || snapshot.machines.length || snapshot.factories.length) return;
+    const flag = "uy.dispatch.appointment." + slot;
+    try {
+      if (window.localStorage.getItem(flag)) return;
+      window.localStorage.setItem(flag, "1");
+    } catch {
+      return;
+    }
+    announce([
+      { id: "dispatch:appointment", kind: "announcement", weight: "major", illustration: "bulletin" },
+    ]);
+  }, [screen, proclaimKey]);
   const currentProclamation = proclaims[0] ?? null;
   const dismissProclamation = () => setProclaims((queue) => queue.slice(1));
+  // A real incident keeps its recovery controls reachable: no modal over it, only a banner.
+  const incidentActive =
+    snapshot.machines.some((machine) => machine.incident) ||
+    snapshot.pumps.some((pump) => pump.incident);
+  const proclaimAsBanner = currentProclamation?.weight === "minor" || incidentActive;
   useEffect(() => {
-    if (currentProclamation?.weight !== "minor") return;
+    if (!currentProclamation || !proclaimAsBanner) return;
     const timer = window.setTimeout(dismissProclamation, 9000);
     return () => window.clearTimeout(timer);
-  }, [currentProclamation?.id]);
+  }, [currentProclamation?.id, proclaimAsBanner]);
   const unlockFor = (tool: Tool) =>
     snapshot.definitions.find((definition) => definition.id === tool)?.unlock;
   const toolLocked = (tool: Tool) => unlockFor(tool)?.unlocked === false;
@@ -1355,7 +1383,7 @@ function GameClientInner() {
           acknowledgeLabel: t("ui.proclamation.acknowledge"),
           onAcknowledge: dismissProclamation,
         };
-        return currentProclamation.weight === "major" ? (
+        return !proclaimAsBanner ? (
           <ProclamationModal
             {...common}
             items={(currentProclamation.tools ?? []).map((tool) => ({ id: tool, label: toolName(tool) }))}
@@ -3697,6 +3725,28 @@ function GameClientInner() {
             {panel === "menu" && (
               <>
                 <h2>Expedition controls</h2>
+                <details className="bulletin-history">
+                  <summary>{t("ui.proclamation.history")}</summary>
+                  {bulletins.length === 0 ? (
+                    <p>{t("ui.proclamation.history-empty")}</p>
+                  ) : (
+                    <ol>
+                      {[...bulletins].reverse().map((entry) => {
+                        const text = proclamationText(entry, {
+                          t: (key, params) => t(key, params),
+                          exists: (key) => i18n.exists(key),
+                          toolName: (tool) => toolName(tool as Tool),
+                        });
+                        return (
+                          <li key={entry.id}>
+                            <strong>{text.title}</strong>
+                            <span>{text.body}</span>
+                          </li>
+                        );
+                      })}
+                    </ol>
+                  )}
+                </details>
                 <button
                   className="secondary"
                   onClick={() => setPanel("configuration")}

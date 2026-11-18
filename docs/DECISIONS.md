@@ -678,3 +678,7 @@ The state celebrates everything. Every authorization, unlock, discovery and mile
 ## D-052 — First Assignment is synchronized with permits, not scripted
 
 The Field Brief stays state-derived (`onboardingBeat(snapshot, signals)`); it never mints, unlocks or authorizes anything. Each beat now declares the instruments it asks for (`tools`) and the brief shows them as "ISSUED: ...". A test walks a guided world through the beats and asserts no beat asks for a tool still in `unauthorizedTools`, so a future permit or beat change that would create a dead end fails CI. Dismissing the brief changes no authorization.
+
+## D-053 — Directorate dispatches: ceremony for real firsts
+
+Dispatches are `announcement` proclamations (minor banners, `dispatch:<id>`) derived by `proclamationsBetween` from public snapshot changes only: first extractor, first shell, first processor run, first non-initial observation, first shipment. In a guided world the permit authorization already celebrates the extractor, shell and shipment, so those dispatches are suppressed instead of doubling it. The appointment is a major poster issued once per expedition (per-slot flag), at its first moment in the world, so loading a slot never replays it. A real incident turns any major proclamation into a banner so recovery controls stay reachable. Wording is locale data (`proclamation.dispatch-<id>.*`), contains no recipe or output clues and never states game numbers; factual diagnostics remain in the existing notices. The Expedition menu keeps a readable Bulletins history for the session.
