@@ -24,6 +24,7 @@ import {
 } from "./dismantle-selection";
 import { t as translate } from "./i18n";
 import { hexToRgbInt, lightPlan } from "./lighting";
+import { shortcutKey } from "./keyboard";
 import { machineStatusLabel } from "./machine-status";
 import { observationKey, unseenObservations } from "./observations";
 import { factoryContractPresentation } from "./factory-presentation";
@@ -641,7 +642,7 @@ export function createWorld(
         if (editing()) return;
         if (preferences.interface.soundEffects)
           void feedbackAudio.enable().then(() => this.syncMachineAudio());
-        const k = e.key.toLowerCase();
+        const k = shortcutKey(e);
         this.keys.add(k);
         if (
           ["arrowup", "arrowdown", "arrowleft", "arrowright", " "].includes(k)
@@ -686,7 +687,7 @@ export function createWorld(
         )
           actions.toggleFactory(mode.selected);
       };
-      const up = (e: KeyboardEvent) => this.keys.delete(e.key.toLowerCase());
+      const up = (e: KeyboardEvent) => this.keys.delete(shortcutKey(e));
       const blur = () => {
         this.keys.clear();
         this.touch.cancel();
