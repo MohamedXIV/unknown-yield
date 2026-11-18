@@ -1,6 +1,6 @@
 # Roadmap — The First Assignment, Personnel Archives & Industrial Atmosphere
 
-**Status:** Epic [#342](https://github.com/MohamedXIV/unknown-yield/issues/342), partly delivered (17 November 2026). **Done:** P0 saves, P1 menu, P5 planet profile. **Partly done:** P3 (tutorial rewritten as assignment orders, D-044) and P4 (Directorate voice, D-044/D-045; no event-driven dispatches). **Not started:** P6 lighting, P7 gate. P2 authorizations are done (D-050). A second playable site also shipped (D-046, D-049), which the deferred list below predates. **Design source:** [GAME_DNA.md](GAME_DNA.md). **Baseline:** main; independent of UI reskin PR #339 and extractor-art PR #291 (both since closed without merging).
+**Status:** Epic [#342](https://github.com/MohamedXIV/unknown-yield/issues/342), implemented through P6 (18 November 2026). **Done:** P0 saves, P1 menu, P2 authorizations (D-050), P3 First Assignment synced to permits (D-052), P4 dispatches (D-053), P5 planet profile, P6 bounded light pilot (D-054). **P7 gate:** automated real-browser playthrough passes (D-055); the human visual playtest and physical-GPU verdict are still open, so the Epic is not closed. A second playable site also shipped (D-046, D-049). **Design source:** [GAME_DNA.md](GAME_DNA.md). **Baseline:** main.
 
 ## Why this track
 
