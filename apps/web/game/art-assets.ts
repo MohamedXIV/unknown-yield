@@ -87,12 +87,22 @@ export const ART_ASSETS: readonly RuntimeArtAsset[] = [
   {
     id: "machine-extractor",
     textureKey: "art:machine-extractor",
-    src: "/art/phase16/machine-extractor.svg",
-    sourceSize: { width: 96, height: 88 },
-    anchor: { x: 0.5, y: 0.78 },
+    src: "/art/pixel/machine-extractor.png",
+    sourceSize: { width: 112, height: 116 },
+    // Opaque pixels span x 7..105 and y 4..113, so the base rests on the footprint edge.
+    anchor: { x: 0.5, y: 113 / 116 },
     footprint: { width: 2, height: 2 },
     layer: "machine",
     tags: ["machine", "extractor", "moving-subpart-ready"],
+    format: "pixel",
+    working: {
+      textureKey: "art:machine-extractor:working",
+      src: "/art/pixel/machine-extractor-working.png",
+      frameWidth: 112,
+      frameHeight: 116,
+      frames: 8,
+      fps: 8,
+    },
   },
   {
     id: "logistics-belt",
@@ -127,22 +137,12 @@ export const ART_ASSETS: readonly RuntimeArtAsset[] = [
   {
     id: "machine-crusher",
     textureKey: "art:machine-crusher",
-    src: "/art/pixel/machine-crusher.png",
-    sourceSize: { width: 112, height: 116 },
-    // Opaque pixels span x 7..105 and y 4..113, so the base rests on the footprint edge.
-    anchor: { x: 0.5, y: 113 / 116 },
+    src: "/art/phase16/machine-crusher.svg",
+    sourceSize: { width: 96, height: 80 },
+    anchor: { x: 0.5, y: 0.75 },
     footprint: { width: 2, height: 2 },
     layer: "machine",
     tags: ["machine", "crusher", "interior"],
-    format: "pixel",
-    working: {
-      textureKey: "art:machine-crusher:working",
-      src: "/art/pixel/machine-crusher-working.png",
-      frameWidth: 112,
-      frameHeight: 116,
-      frames: 8,
-      fps: 8,
-    },
   },
   {
     id: "terminal-core",

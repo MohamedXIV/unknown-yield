@@ -117,7 +117,7 @@ describe("Phase 16 representative art contract", () => {
     expect(PIXEL_ART.cellArtWidth * PIXEL_ART.worldPerArtPixel).toBe(ART_CAMERA.cellWidth);
     expect(PIXEL_ART.cellArtHeight * PIXEL_ART.worldPerArtPixel).toBe(ART_CAMERA.cellHeight);
     expect(snapToArtPixel(10.1)).toBeCloseTo(10.4, 10);
-    expect(artAsset("machine-crusher").format).toBe("pixel");
+    expect(artAsset("machine-extractor").format).toBe("pixel");
   });
 
   it("maps only representative machine definitions to art overrides", () => {
