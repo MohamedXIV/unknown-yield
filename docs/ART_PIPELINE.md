@@ -273,3 +273,21 @@ Before building a large library, create a small scene containing:
 - one accident/damage effect.
 
 If these assets read coherently at intended game zoom, the pipeline is viable.
+
+## 15. Pixel-art production contract (D-056)
+
+Unit and structure art is hand-drawn pixel art (Aseprite). SVG art stays as the placeholder for anything not yet drawn; the two formats coexist per asset (`format: "pixel"` in `art-assets.ts`).
+
+**Scale.** 1 art pixel = 0.8 world px. At the default zoom (1.25) that is 1:1 on screen; at max zoom (2.5) it is 2:1. One grid cell = 40x30 art px (32x24 world px). A 2x2 machine canvas is about 112x116 (80x60 base plus overhang). Zoom stops 0.625 / 1.25 / 2.5 are the pixel-perfect ones; other zooms stay acceptable but not exact.
+
+**Rendering.** Pixel sprites are never rotated or stretched. Nearest filtering is set per pixel texture (not the global `pixelArt` flag, so SVG and UI text stay smooth). Positions snap to the 0.8 grid. Anchor is bottom-centre of the opaque body.
+
+**One body per machine, built for four sides.** Draw bodies near-square and roughly symmetrical so a connection can enter or leave on any side without a redraw. Do not paint a lamp, glow, cargo or an arrow into the body: the status lamp, input/output arrows (cyan in, yellow out) and state overlays are drawn by code. Direction is therefore never baked into the sprite and no per-direction variants are needed. If a variant is ever needed, a horizontal flip is lossless.
+
+**Generic output chute (optional).** One small shared overlay in four directions (N/E/S/W), placed on any machine's output side by code. Four tiny sprites serve every machine; they are not part of any body sheet.
+
+**Animation.** `<id>-working.png` is a horizontal strip of N frames, same canvas as the static sprite; frame 0 must equal the static sprite. Frames follow the wall clock (not a per-object animation), so redraws never restart the loop. Smoke and steam live in the strip, not in code.
+
+**Source and AI.** Pixels are drawn by hand. AI output is reference only (silhouette and material sheets), never the shipped asset.
+
+**Identity.** Base-world silhouettes stay Dieselpunk per docs/WORLD_IDENTITY.md; Atompunk is limited to printed propaganda graphics.

@@ -28,6 +28,26 @@ export type ArtAssetId =
   | "logistics-underground"
   | "effect-scorch";
 
+/**
+ * Pixel-art contract (D-056). One art pixel is 0.8 world pixels, so at the default camera
+ * zoom (1.25) it is exactly one screen pixel and at the maximum zoom (2.5) exactly two.
+ * One map cell is therefore 40x30 art pixels. Pixel sprites are never rotated.
+ */
+export const PIXEL_ART = {
+  worldPerArtPixel: 0.8,
+  cellArtWidth: 40,
+  cellArtHeight: 30,
+} as const;
+
+export type WorkingAnimation = {
+  textureKey: string;
+  src: string;
+  frameWidth: number;
+  frameHeight: number;
+  frames: number;
+  fps: number;
+};
+
 export type RuntimeArtAsset = {
   id: ArtAssetId;
   textureKey: string;
@@ -37,6 +57,10 @@ export type RuntimeArtAsset = {
   footprint: { width: number; height: number };
   layer: ArtLayer;
   tags: readonly string[];
+  /** `pixel` sprites use nearest-neighbour filtering, the pixel scale and never rotate. Default `svg`. */
+  format?: "svg" | "pixel";
+  /** Looping spritesheet shown while the machine is working. */
+  working?: WorkingAnimation;
 };
 
 export const ART_ASSETS: readonly RuntimeArtAsset[] = [
@@ -103,12 +127,22 @@ export const ART_ASSETS: readonly RuntimeArtAsset[] = [
   {
     id: "machine-crusher",
     textureKey: "art:machine-crusher",
-    src: "/art/phase16/machine-crusher.svg",
-    sourceSize: { width: 96, height: 80 },
-    anchor: { x: 0.5, y: 0.75 },
+    src: "/art/pixel/machine-crusher.png",
+    sourceSize: { width: 112, height: 116 },
+    // Opaque pixels span x 7..105 and y 4..113, so the base rests on the footprint edge.
+    anchor: { x: 0.5, y: 113 / 116 },
     footprint: { width: 2, height: 2 },
     layer: "machine",
     tags: ["machine", "crusher", "interior"],
+    format: "pixel",
+    working: {
+      textureKey: "art:machine-crusher:working",
+      src: "/art/pixel/machine-crusher-working.png",
+      frameWidth: 112,
+      frameHeight: 116,
+      frames: 8,
+      fps: 8,
+    },
   },
   {
     id: "terminal-core",
@@ -160,13 +194,33 @@ export function artAsset(id: ArtAssetId): RuntimeArtAsset {
   return asset;
 }
 
-export type SvgLoader = {
+export type ArtLoader = {
   svg(key: string, url: string): unknown;
+  image(key: string, url: string): unknown;
+  spritesheet(
+    key: string,
+    url: string,
+    frame: { frameWidth: number; frameHeight: number },
+  ): unknown;
 };
+/** @deprecated kept for older call sites; use ArtLoader. */
+export type SvgLoader = ArtLoader;
 
-export function preloadRepresentativeArt(loader: SvgLoader): void {
-  for (const asset of ART_ASSETS) loader.svg(asset.textureKey, asset.src);
+export function preloadRepresentativeArt(loader: ArtLoader): void {
+  for (const asset of ART_ASSETS) {
+    if (asset.format === "pixel") loader.image(asset.textureKey, asset.src);
+    else loader.svg(asset.textureKey, asset.src);
+    if (asset.working)
+      loader.spritesheet(asset.working.textureKey, asset.working.src, {
+        frameWidth: asset.working.frameWidth,
+        frameHeight: asset.working.frameHeight,
+      });
+  }
 }
+
+/** Pixel sprites are placed on the art-pixel grid so they never shimmer between pixels. */
+export const snapToArtPixel = (value: number): number =>
+  Math.round(value / PIXEL_ART.worldPerArtPixel) * PIXEL_ART.worldPerArtPixel;
 
 export function representativeMachineAsset(
   definitionId: string,
