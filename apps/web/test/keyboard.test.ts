@@ -19,3 +19,31 @@ describe("shortcutKey", () => {
     expect(shortcutKey({ key: " ", code: "Space" })).toBe(" ");
   });
 });
+
+import { focusOwnsKey } from "../game/keyboard";
+
+const el = (over: { selectors?: string[]; dialog?: boolean; editable?: boolean }) => ({
+  matches: (s: string) => (over.selectors ?? []).some((x) => s.split(",").includes(x)),
+  closest: () => (over.dialog ? {} : null),
+  isContentEditable: over.editable ?? false,
+});
+
+describe("focusOwnsKey", () => {
+  it("lets Esc, R, WASD and arrows through a focused build button", () => {
+    const button = el({ selectors: ["button"] });
+    for (const key of ["escape", "r", "f", "w", "a", "s", "d", "arrowleft", "1"])
+      expect(focusOwnsKey(button, key), key).toBe(false);
+  });
+  it("keeps Space and Enter for the focused button or link", () => {
+    expect(focusOwnsKey(el({ selectors: ["button"] }), " ")).toBe(true);
+    expect(focusOwnsKey(el({ selectors: ["a[href]"] }), "enter")).toBe(true);
+  });
+  it("always keeps text entry and open dialogs", () => {
+    expect(focusOwnsKey(el({ selectors: ["input"] }), "escape")).toBe(true);
+    expect(focusOwnsKey(el({ editable: true }), "r")).toBe(true);
+    expect(focusOwnsKey(el({ selectors: ["button"], dialog: true }), "escape")).toBe(true);
+  });
+  it("owns nothing when nothing is focused", () => {
+    expect(focusOwnsKey(null, "escape")).toBe(false);
+  });
+});

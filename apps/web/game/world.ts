@@ -24,7 +24,7 @@ import {
 } from "./dismantle-selection";
 import { t as translate } from "./i18n";
 import { hexToRgbInt, lightPlan } from "./lighting";
-import { shortcutKey } from "./keyboard";
+import { focusOwnsKey, shortcutKey } from "./keyboard";
 import { machineStatusLabel } from "./machine-status";
 import { observationKey, unseenObservations } from "./observations";
 import { factoryContractPresentation } from "./factory-presentation";
@@ -91,13 +91,9 @@ const LIGHT_MIN_FPS = 24;
 const X = ART_CAMERA.cellWidth,
   Y = ART_CAMERA.cellHeight;
 const color = (value: string) => parseInt(value.slice(1), 16);
-const editing = () => {
+const editing = (key: string | null = null) => {
   const el = document.activeElement;
-  return (
-    el instanceof HTMLElement &&
-    (el.matches("input,textarea,select,button,a[href],[role=button],[role=menuitem]") ||
-      el.isContentEditable)
-  );
+  return el instanceof HTMLElement && focusOwnsKey(el, key);
 };
 export function createWorld(
   parent: HTMLElement,
@@ -639,7 +635,7 @@ export function createWorld(
         },
       );
       const down = (e: KeyboardEvent) => {
-        if (editing()) return;
+        if (editing(shortcutKey(e))) return;
         if (preferences.interface.soundEffects)
           void feedbackAudio.enable().then(() => this.syncMachineAudio());
         const k = shortcutKey(e);
