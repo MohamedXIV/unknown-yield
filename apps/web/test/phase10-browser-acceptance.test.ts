@@ -852,6 +852,20 @@ browserIt(
         })()`);
       };
 
+      /** Directorate posters (appointment, equipment issued) own the keyboard until acknowledged. */
+      const acknowledgeProclamations = async () => {
+        for (let i = 0; i < 6; i += 1) {
+          if (!(await evaluate<boolean>(`document.querySelector(".proclamation-scrim") !== null`))) return;
+          await evaluate<boolean>(`(() => {
+            [...document.querySelectorAll(".proclamation-scrim button")].find((button) =>
+              button.textContent?.includes("Acknowledged"))?.click();
+            return true;
+          })()`);
+          await sleep(500);
+        }
+        await waitForExpression(`document.querySelector(".proclamation-scrim") === null`);
+      };
+
       const waitForExpression = async (
         expression: string,
         timeoutMs = 30000,
@@ -1288,6 +1302,10 @@ browserIt(
       await resumeMostRecentExpedition();
       await waitForExpression(`document.querySelector("canvas") !== null &&
         document.querySelector('nav[aria-label="Build tools"]') !== null`);
+      // The replaced slot has never been appointed, so the Directorate's appointment
+      // poster opens on resume (D-053) and owns the keyboard until acknowledged.
+      await waitForExpression(`document.querySelector(".proclamation-scrim") !== null`);
+      await acknowledgeProclamations();
 
       await pressKey("5", "Digit5", 53);
       await waitForExpression(
@@ -3417,6 +3435,7 @@ browserIt(
         5000,
       );
 
+      await acknowledgeProclamations();
       await clickCell(28, 37);
       await waitForExpression(
         `[...document.querySelectorAll("button")]
