@@ -1182,19 +1182,11 @@ browserIt(
       })()`);
       expect(initialState.canvas).toBe(true);
       expect(initialState.extractorGroup).toBe(true);
-      expect(initialState.topLevelEntries).toBe(10);
-      expect(initialState.groupedEntries).toBe(8);
+      // A new expedition is guided (D-050): only the tools no permit names are issued.
+      expect(initialState.topLevelEntries).toBe(4);
+      expect(initialState.groupedEntries).toBe(2);
       expect(initialState.standaloneLabels).toEqual(["Inspect", "Dismantle"]);
-      expect(initialState.groupShortcuts).toEqual([
-        "1",
-        "2",
-        "3",
-        "4",
-        "5",
-        "6",
-        "7",
-        "8",
-      ]);
+      expect(initialState.groupShortcuts).toEqual(["1", "5"]);
 
       const compactHardware = await evaluate<{
         housings: number;
@@ -1240,7 +1232,7 @@ browserIt(
       expect(compactHardware.commandKeyDepth).toBe("4px");
       expect(compactHardware.pendingBook).toBe(true);
       expect(compactHardware.currentPlates).toBe("600");
-      expect(compactHardware.commandCount).toBe(10);
+      expect(compactHardware.commandCount).toBe(4);
       expect(compactHardware.commandRows).toBe(1);
       expect(compactHardware.firstFrameMaterial).toContain("linear-gradient");
       const instrumentRailShot = await captureEvidence("industrial-hud-and-command-tray.png");
@@ -1289,6 +1281,10 @@ browserIt(
       })()`);
       await waitForExpression(`document.querySelector(".main-menu") !== null &&
         document.querySelector("canvas") === null`);
+      // The guided start above is the first-expedition contract. The hierarchical
+      // build UX below needs every tool, so the saved slot is replaced with an
+      // unguided world (no permits field, exactly like a pre-permit save).
+      await seedBrowserWorld(new Simulation(fixture).serialize());
       await resumeMostRecentExpedition();
       await waitForExpression(`document.querySelector("canvas") !== null &&
         document.querySelector('nav[aria-label="Build tools"]') !== null`);
