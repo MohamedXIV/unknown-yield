@@ -30,9 +30,12 @@ import { observationKey, unseenObservations } from "./observations";
 import { factoryContractPresentation } from "./factory-presentation";
 import { beltPresentations } from "./belt-presentation";
 import {
+  ART_ASSETS,
   ART_CAMERA,
+  PIXEL_ART,
   artAsset,
   preloadRepresentativeArt,
+  snapToArtPixel,
   type ArtAssetId,
 } from "./art-assets";
 import { deriveFeedbackEvents, type FeedbackEvent } from "./feedback";
@@ -114,6 +117,8 @@ export function createWorld(
     private grid!: Phaser.GameObjects.Graphics;
     private mapBoundary!: Phaser.GameObjects.Graphics;
     private structures!: Phaser.GameObjects.Container;
+    /** Working pixel sprites of the current rebuild; frames follow the wall clock so a rebuild never restarts the loop. */
+    private workingSprites: { sprite: Phaser.GameObjects.Sprite; frames: number; fps: number }[] = [];
     private dynamic!: Phaser.GameObjects.Graphics;
     private ghost!: Phaser.GameObjects.Graphics;
     private labels = new Map<string, Phaser.GameObjects.Text>();
@@ -171,6 +176,36 @@ export function createWorld(
       this.structures.add(image);
       return image;
     }
+    /**
+     * Pixel-art machine sprite (D-056): drawn at the fixed art-pixel scale on the art-pixel grid,
+     * never rotated or stretched, and animated while the machine is working.
+     */
+    private pixelMachine(id: ArtAssetId, x: number, y: number, working: boolean, alpha = 1) {
+      const asset = artAsset(id);
+      const scale = PIXEL_ART.worldPerArtPixel;
+      const px = snapToArtPixel(x), py = snapToArtPixel(y);
+      const sprite =
+        working && asset.working
+          ? this.add.sprite(px, py, asset.working.textureKey, this.workingFrame(asset.working.frames, asset.working.fps))
+          : this.add.sprite(px, py, asset.textureKey);
+      if (working && asset.working)
+        this.workingSprites.push({ sprite, frames: asset.working.frames, fps: asset.working.fps });
+      sprite.setOrigin(asset.anchor.x, asset.anchor.y).setScale(scale).setAlpha(alpha);
+      this.structures.add(sprite);
+      return sprite;
+    }
+    private workingFrame(frames: number, fps: number) {
+      return Math.floor((this.time.now / 1000) * fps) % frames;
+    }
+    private prepareArt() {
+      for (const asset of ART_ASSETS) {
+        if (asset.format !== "pixel") continue;
+        this.textures.get(asset.textureKey).setFilter(Phaser.Textures.FilterMode.NEAREST);
+        if (!asset.working) continue;
+        const key = asset.working.textureKey;
+        this.textures.get(key).setFilter(Phaser.Textures.FilterMode.NEAREST);
+      }
+    }
     private text(x: number, y: number, t: string, size = 10, c = "#c4c7b0") {
       return this.add
         .text(x, y, t, {
@@ -209,6 +244,7 @@ export function createWorld(
       // eslint-disable-next-line @typescript-eslint/no-this-alias
       scene = this;
       this.cameras.main.setBackgroundColor(ENV.terrain.background);
+      this.prepareArt();
       const ground = this.add.graphics();
       ground
         .fillStyle(ENV.terrain.surface)
@@ -1011,6 +1047,7 @@ export function createWorld(
     rebuild() {
       if (!this.structures) return;
       this.structures.removeAll(true);
+      this.workingSprites = [];
       this.labels.clear();
       const g = this.add.graphics();
       this.structures.add(g);
@@ -1415,25 +1452,31 @@ export function createWorld(
       }
       for (const m of snapshot.machines) {
         if (m.factoryId && !mode.openFactories.includes(m.factoryId)) continue;
-        this.box(
-          g,
+        const presentation = resolveMachinePresentation(
           m,
-          m.role === "extractor"
-            ? 0x87937a
-            : m.definitionId === "crusher"
-              ? 0x9ca582
-              : 0xaba084,
-          0x56634d,
-          10,
+          snapshot.definitions.find((d) => d.id === m.definitionId),
+          m.physicalCondition,
         );
-        const x = (m.x + m.width / 2) * X,
-          y = (m.y + m.height / 2) * Y,
-          representativeArt = resolveMachinePresentation(
+        const representativeArt = presentation.assetId;
+        const pixelArt = representativeArt !== null && artAsset(representativeArt).format === "pixel";
+        // A pixel sprite carries its own body, so the procedural placeholder box is not drawn.
+        if (!pixelArt)
+          this.box(
+            g,
             m,
-            snapshot.definitions.find((d) => d.id === m.definitionId),
-            m.physicalCondition,
-          ).assetId;
-        if (representativeArt)
+            m.role === "extractor"
+              ? 0x87937a
+              : m.definitionId === "crusher"
+                ? 0x9ca582
+                : 0xaba084,
+            0x56634d,
+            10,
+          );
+        const x = (m.x + m.width / 2) * X,
+          y = (m.y + m.height / 2) * Y;
+        if (representativeArt && pixelArt)
+          this.pixelMachine(representativeArt, x, (m.y + m.height) * Y + 3, presentation.operation === "working", 0.95);
+        else if (representativeArt)
           this.artImage(
             representativeArt,
             x,
@@ -1868,6 +1911,7 @@ export function createWorld(
       );
     }
     update(_time: number, delta: number) {
+      for (const w of this.workingSprites) w.sprite.setFrame(this.workingFrame(w.frames, w.fps));
       if (!this.dynamic) return;
       recordBrowserMetric("frame-interval", delta);
       if (this.dirty) {
