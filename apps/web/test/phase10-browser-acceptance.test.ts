@@ -58,7 +58,11 @@ function runtimePackBrowserFixture(): string {
   store.setCell("reactions", "polish-raw", "inputAmount", 2);
   store.setCell("reactions", "polish-raw", "output", "powder");
   store.setCell("reactions", "polish-raw", "outputAmount", 1);
-  return serializeStudioBundle(store, fixture);
+  // This fixture checks runtime-defined machines, not the Directorate's permits (D-050).
+  // A content pack without permits starts an unguided world, so every tool is issued.
+  const bundle = JSON.parse(serializeStudioBundle(store, fixture)) as { content: { permits: unknown[] } };
+  bundle.content.permits = [];
+  return JSON.stringify(bundle);
 }
 
 const browserAcceptanceMode =
@@ -4465,6 +4469,7 @@ browserIt(
           `localStorage.getItem("unknown-yield-active-pack-v1") !== null &&
             document.querySelector("canvas") !== null`,
         );
+        await acknowledgeProclamations();
         await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Close field brief"]')?.click(); return true; })()`);
         await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Center camera"]')?.click(); return true; })()`);
         await sleep(150);
