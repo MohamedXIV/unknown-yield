@@ -50,6 +50,7 @@ import {
   type WorldMode,
   type Tool,
 } from "../game/interaction";
+import { shortcutKey } from "../game/keyboard";
 import { onboardingBeat, type OnboardingSignals } from "../game/onboarding";
 import {
   knowledgeOverview,
@@ -1015,7 +1016,7 @@ function GameClientInner() {
     };
     const onKeyDown = (event: KeyboardEvent) => {
       if (editingInput()) return;
-      const shortcut = event.key.toLowerCase();
+      const shortcut = shortcutKey(event);
 
       const context = buildKeyboardContext.current;
       if (!context) return;
@@ -1058,7 +1059,7 @@ function GameClientInner() {
     };
     const onKeyUp = (event: KeyboardEvent) => {
       const pending = keyboardGroupHold.current;
-      if (!pending || event.key.toLowerCase() !== pending.shortcut) return;
+      if (!pending || shortcutKey(event) !== pending.shortcut) return;
 
       ownEvent(event);
       pending.cancel();

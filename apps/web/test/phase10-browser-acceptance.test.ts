@@ -58,7 +58,11 @@ function runtimePackBrowserFixture(): string {
   store.setCell("reactions", "polish-raw", "inputAmount", 2);
   store.setCell("reactions", "polish-raw", "output", "powder");
   store.setCell("reactions", "polish-raw", "outputAmount", 1);
-  return serializeStudioBundle(store, fixture);
+  // This fixture checks runtime-defined machines, not the Directorate's permits (D-050).
+  // A content pack without permits starts an unguided world, so every tool is issued.
+  const bundle = JSON.parse(serializeStudioBundle(store, fixture)) as { content: { permits: unknown[] } };
+  bundle.content.permits = [];
+  return JSON.stringify(bundle);
 }
 
 const browserAcceptanceMode =
@@ -852,6 +856,20 @@ browserIt(
         })()`);
       };
 
+      /** Directorate posters (appointment, equipment issued) own the keyboard until acknowledged. */
+      const acknowledgeProclamations = async () => {
+        for (let i = 0; i < 6; i += 1) {
+          if (!(await evaluate<boolean>(`document.querySelector(".proclamation-scrim") !== null`))) return;
+          await evaluate<boolean>(`(() => {
+            [...document.querySelectorAll(".proclamation-scrim button")].find((button) =>
+              button.textContent?.includes("Acknowledged"))?.click();
+            return true;
+          })()`);
+          await sleep(500);
+        }
+        await waitForExpression(`document.querySelector(".proclamation-scrim") === null`);
+      };
+
       const waitForExpression = async (
         expression: string,
         timeoutMs = 30000,
@@ -1182,19 +1200,11 @@ browserIt(
       })()`);
       expect(initialState.canvas).toBe(true);
       expect(initialState.extractorGroup).toBe(true);
-      expect(initialState.topLevelEntries).toBe(10);
-      expect(initialState.groupedEntries).toBe(8);
+      // A new expedition is guided (D-050): only the tools no permit names are issued.
+      expect(initialState.topLevelEntries).toBe(4);
+      expect(initialState.groupedEntries).toBe(2);
       expect(initialState.standaloneLabels).toEqual(["Inspect", "Dismantle"]);
-      expect(initialState.groupShortcuts).toEqual([
-        "1",
-        "2",
-        "3",
-        "4",
-        "5",
-        "6",
-        "7",
-        "8",
-      ]);
+      expect(initialState.groupShortcuts).toEqual(["1", "5"]);
 
       const compactHardware = await evaluate<{
         housings: number;
@@ -1240,7 +1250,7 @@ browserIt(
       expect(compactHardware.commandKeyDepth).toBe("4px");
       expect(compactHardware.pendingBook).toBe(true);
       expect(compactHardware.currentPlates).toBe("600");
-      expect(compactHardware.commandCount).toBe(10);
+      expect(compactHardware.commandCount).toBe(4);
       expect(compactHardware.commandRows).toBe(1);
       expect(compactHardware.firstFrameMaterial).toContain("linear-gradient");
       const instrumentRailShot = await captureEvidence("industrial-hud-and-command-tray.png");
@@ -1289,9 +1299,17 @@ browserIt(
       })()`);
       await waitForExpression(`document.querySelector(".main-menu") !== null &&
         document.querySelector("canvas") === null`);
+      // The guided start above is the first-expedition contract. The hierarchical
+      // build UX below needs every tool, so the saved slot is replaced with an
+      // unguided world (no permits field, exactly like a pre-permit save).
+      await seedBrowserWorld(new Simulation(fixture).serialize());
       await resumeMostRecentExpedition();
       await waitForExpression(`document.querySelector("canvas") !== null &&
         document.querySelector('nav[aria-label="Build tools"]') !== null`);
+      // The replaced slot has never been appointed, so the Directorate's appointment
+      // poster opens on resume (D-053) and owns the keyboard until acknowledged.
+      await waitForExpression(`document.querySelector(".proclamation-scrim") !== null`);
+      await acknowledgeProclamations();
 
       await pressKey("5", "Digit5", 53);
       await waitForExpression(
@@ -3421,6 +3439,7 @@ browserIt(
         5000,
       );
 
+      await acknowledgeProclamations();
       await clickCell(28, 37);
       await waitForExpression(
         `[...document.querySelectorAll("button")]
@@ -4450,6 +4469,7 @@ browserIt(
           `localStorage.getItem("unknown-yield-active-pack-v1") !== null &&
             document.querySelector("canvas") !== null`,
         );
+        await acknowledgeProclamations();
         await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Close field brief"]')?.click(); return true; })()`);
         await evaluate<boolean>(`(() => { document.querySelector('button[aria-label="Center camera"]')?.click(); return true; })()`);
         await sleep(150);
