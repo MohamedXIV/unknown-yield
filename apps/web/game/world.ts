@@ -118,6 +118,8 @@ export function createWorld(
     private mapBoundary!: Phaser.GameObjects.Graphics;
     private structures!: Phaser.GameObjects.Container;
     /** Working pixel sprites of the current rebuild; frames follow the wall clock so a rebuild never restarts the loop. */
+    /** Presentation clock for sprite loops: advances only while the simulation runs (not paused, tab visible). */
+    private animClockMs = 0;
     private workingSprites: { sprite: Phaser.GameObjects.Sprite; frames: number; fps: number }[] = [];
     private dynamic!: Phaser.GameObjects.Graphics;
     private ghost!: Phaser.GameObjects.Graphics;
@@ -195,7 +197,7 @@ export function createWorld(
       return sprite;
     }
     private workingFrame(frames: number, fps: number) {
-      return Math.floor((this.time.now / 1000) * fps) % frames;
+      return Math.floor((this.animClockMs / 1000) * fps) % frames;
     }
     private prepareArt() {
       for (const asset of ART_ASSETS) {
@@ -1911,6 +1913,7 @@ export function createWorld(
       );
     }
     update(_time: number, delta: number) {
+      if (audible) this.animClockMs += Math.min(delta, 100);
       for (const w of this.workingSprites) w.sprite.setFrame(this.workingFrame(w.frames, w.fps));
       if (!this.dynamic) return;
       recordBrowserMetric("frame-interval", delta);
